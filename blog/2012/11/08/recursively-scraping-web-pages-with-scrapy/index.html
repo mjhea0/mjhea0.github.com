@@ -1,0 +1,326 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Recursively Scraping Web Pages with Scrapy - Michael Herman</title>
+  <meta name="author" content="Michael Herman">
+
+  
+  <meta name="description" content="In the first tutorial, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data to a &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://mjhea0.github.com/blog/2012/11/08/recursively-scraping-web-pages-with-scrapy/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Michael Herman" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-37074204-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Michael Herman</a></h1>
+  
+    <h2>get more from your data</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:mjhea0.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/youtube-tutorials">Youtube</a></li>
+</ul>
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Recursively Scraping Web Pages With Scrapy</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-08T15:39:00-08:00" pubdate data-updated="true">Nov 8<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><em>In the first <a href="http://mherman.org/blog/2012/11/05/scraping-web-pages-with-scrapy/">tutorial</a>, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data to a CSV file. This tutorial continues from where we left off, adding to the existing code, in order to build a recursive crawler to scrape multiple pages. Make sure you read the first tutorial first.</em></p>
+
+<p><strong>CrawlSpider:</strong> Last time, we created a new Scrapy project, updated the Item Class, and then wrote the spider to pull jobs from a single page. This time, we just need to do some basic changes to add the ability to follow links and scrape more than one page. The first change is that this spider will inherit CrawlSpider and not BaseSpider.</p>
+
+<p><strong>Rules: </strong>We need to add in some Rules objects to define how the crawler follows the links. We will be using the following <a href="https://scrapy.readthedocs.org/en/latest/topics/spiders.html?highlight=crawlspider#crawling-rules">rules</a>:</p>
+
+<ul>
+<li><em>SgmlLinkExtractor: </em>defines how you want the spider to follow the links
+
+<ul>
+<li><em>allow:</em> defines the link href</li>
+<li><em>restrict_xpaths: </em>restricts the link to a certain Xpath</li>
+</ul>
+</li>
+<li><em>callback: </em>calls the parsing function after each page is scraped*</li>
+<li><em>follow: </em>instructs whether to continue following the links as long as they exist</li>
+</ul>
+
+
+<p>*Please Note: Make sure you rename the parsing function to something besides &#8220;parse&#8221; as the CrawlSpider uses the parse method to implement its logic.</p>
+
+<p><em><em>Release:</em> </em>Once updated, the final code looks like this:</p>
+
+<pre><code>from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.selector import HtmlXPathSelector
+from craigslist_sample.items import CraigslistSampleItem
+
+class MySpider(CrawlSpider):
+    name = "craigs"
+    allowed_domains = ["craigslist.org"]
+    start_urls = ["http://sfbay.craigslist.org/npo/"]
+
+    rules = (Rule (SgmlLinkExtractor(allow=("indexd00.html", )
+    restrict_xpaths=('//p[@id="nextpage"]',))
+    , callback="parse_items", follow= True),
+    )
+
+def parse_items(self, response):
+    hxs = HtmlXPathSelector(response)
+    titles = hxs.select("//p")
+    items = []
+    for titles in titles:
+        item = CraigslistSampleItem()
+        item ["title"] = titles.select("a/text()").extract()
+        item ["link"] = titles.select("a/@href").extract()
+        items.append(item)
+    return items
+</code></pre>
+
+<p>Now run the following command to release the spider and save the scraped data to a CSV file:</p>
+
+<pre><code>scrapy crawl craigs -o items.csv -t csv
+</code></pre>
+
+<p><em>In essence, this spider started crawling at http://sfbay.craigslist.org/npo/ and then followed the &#8220;next 100 postings&#8221; link at the bottom, scraping the next page, until there where no more links to crawl. Again, this can be used to create some powerful crawlers, so use with caution and set delays to throttle the crawling speed if necessary.</em></p>
+
+<p>You can find the source code on <a href="https://github.com/mjhea0/Scrapy-Samples">Github</a>.</p>
+
+<hr />
+
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/P-_TpZ54Vcw "></iframe></div>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Michael Herman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-08T15:39:00-08:00" pubdate data-updated="true">Nov 8<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/python/'>python</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mjhea0.github.com/blog/2012/11/08/recursively-scraping-web-pages-with-scrapy/" data-via="" data-counturl="http://mjhea0.github.com/blog/2012/11/08/recursively-scraping-web-pages-with-scrapy/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/11/05/scraping-web-pages-with-scrapy/" title="Previous Post: Scraping Web Pages with Scrapy">&laquo; Scraping Web Pages with Scrapy</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/11/09/51-new-excel-2013-functions/" title="Next Post: 51 New Excel 2013 Functions">51 New Excel 2013 Functions &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+	<br />
+	<a class="sitelink" href="https://twitter.com/mikeherman" target="_blank"><img class="icon" src="https://raw.github.com/mjhea0/mjhea0.github.com/master/images/social/24px/twitter.png"/></a>
+	<a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4" target="_blank"><img alt="" src="https://raw.github.com/mjhea0/mjhea0.github.com/master/images/social/24px/linkedin.png"/></a>
+	<a href="http://bit.ly/TzGt2K" target="_blank"><img alt="" src="https://raw.github.com/mjhea0/mjhea0.github.com/master/images/social/24px/youtube.png"/></a>
+	<a href="https://github.com/mjhea0" target="_blank"><img alt="" src="https://raw.github.com/mjhea0/mjhea0.github.com/master/images/social/24px/github.png"/></a>
+	
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/12/12/excel-tips-how-to-cut-down-on-calculations-using-sumif-and-sumifs/">Excel Tips: How to Cut Down on Calculations Using SUMIF and SUMIFS</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/12/10/crash-course-in-web2py-part-5-modifying-the-appearance-and-deploying-the-web-form/">Crash Course in web2py (part 5 - modifying the appearance and deploying the web form)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/">Crash Course in web2py (part 4 - managing form records)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/">Crash Course in web2py (part 3 - form validation)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/">Crash Course in web2py (part 2 - web forms)</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  <h1>Categories</h1>
+  <ul id="categories">
+    <li class='category'><a href='/blog/categories/analytics/'>analytics (5)</a></li>
+<li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>
+<li class='category'><a href='/blog/categories/python/'>python (8)</a></li>
+
+  </ul>
+</section><section>
+
+</section>
+
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Michael Herman &copy; 2012 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span> -
+  <a href="https://github.com/mjhea0/mjhea0.github.com">Fork me on Github</a>
+
+</p>
+
+</footer>
+  
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
