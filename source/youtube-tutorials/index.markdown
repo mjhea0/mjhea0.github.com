@@ -10,6 +10,14 @@ footer: true
 
 *   [Chartio: Demo and Review](http://www.youtube.com/watch?v=haItDUXuPhM "Chartio: Demo and Review")
 
+**Django**
+
+*   [Django Basics - Part 1 of 4 - Installing and Setting up Django ](http://www.youtube.com/watch?v=ZgfGdRYVXjw "Django Basics - Part 1 of 4 - Installing and Setting up Django")
+*	[Django Basics - Part 2 of 4 - Creating the Database Model ](http://www.youtube.com/watch?v=aHLQpo3UHek "Django Basics - Part 2 of 4 - Creating the Database Model")
+*   [Django Basics - Part 3 of 4 - Django API vs Admin site ](http://www.youtube.com/watch?v=SEV9Adp-AFQ "Django Basics - Part 3 of 4 - Django API vs Admin site")
+*	[Django Basics - Part 4 of 4 - Django Templates and Views](http://www.youtube.com/watch?v=_cPM7CgG-Fc "Django Basics - Part 4 of 4 - Django Templates and Views")
+
+
 **Eclipse**
 
 *   [Configure Selenium WebDriver with Eclipse](http://www.youtube.com/watch?v=xaWLIBKAQps "Configure Selenium WebDriver with Eclipse")
