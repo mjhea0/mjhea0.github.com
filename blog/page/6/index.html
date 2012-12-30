@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="At one time, when a business or IT person spoke of &#8220;business analytics,&#8221; they were talking primarily about reporting. Today, the &hellip;">
+  <meta name="description" content="I just finished a basic Python script for a client that I&#8217;d like to share with you. He needed an easy means of moving data back and forth &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -84,6 +84,115 @@
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2012/09/30/import-data-from-excel-into-mysql-using-python/">Import Data From Excel Into MySQL Using Python</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-30T13:13:00-07:00" pubdate data-updated="true">Sep 30<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I just finished a basic Python script for a client that I&#8217;d like to share with you. He needed an easy means of moving data back and forth between MySQL and Excel, and sometimes he needed to do a bit of manipulation between along the way. In the past I may have relied solely on VBA for this, but I have found it to be much easier with Python. In this post and the accompanying video, I show just part of the project - importing data from Excel into MySQL via Python. Let&#8217;s get started.</p>
+
+<p>Assuming you have Python installed (I&#8217;m using version 2.7), download and install the xlrd library and MySQLdb module-</p>
+
+<ul>
+<li><a href="http://pypi.python.org/pypi/xlrd">http://pypi.python.org/pypi/xlrd</a></li>
+<li><a href="http://sourceforge.net/projects/mysql-python/">http://sourceforge.net/projects/mysql-python/</a></li>
+</ul>
+
+
+<p>Then tailor the following script to fit your needs:</p>
+
+<pre><code>import xlrd
+import MySQLdb
+
+# Open the workbook and define the worksheet
+book = xlrd.open_workbook("pytest.xls") 
+sheet = book.sheet_by_name("source")
+
+# Establish a MySQL connection
+database = MySQLdb.connect (host="localhost", user = "root", passwd = "", db = "mysqlPython")
+
+# Get the cursor, which is used to traverse the database, line by line
+cursor = database.cursor()
+
+# Create the INSERT INTO sql query
+query = """INSERT INTO orders (product, customer_type, rep, date, actual, expected, open_opportunities, closed_opportunities, city, state, zip, population, region) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+
+# Create a For loop to iterate through each row in the XLS file, starting at row 2 to skip the headers
+for r in range(1, sheet.nrows):
+        product     = sheet.cell(r,).value
+        customer    = sheet.cell(r,1).value
+        rep         = sheet.cell(r,2).value
+        date        = sheet.cell(r,3).value
+        actual      = sheet.cell(r,4).value
+        expected    = sheet.cell(r,5).value
+        open        = sheet.cell(r,6).value
+        closed      = sheet.cell(r,7).value
+        city        = sheet.cell(r,8).value
+        state       = sheet.cell(r,9).value
+        zip         = sheet.cell(r,10).value
+        pop         = sheet.cell(r,11).value
+        region  = sheet.cell(r,12).value
+
+        # Assign values from each row
+        values = (product, customer, rep, date, actual, expected, open, closed, city, state, zip, pop, region)
+
+        # Execute sql Query
+        cursor.execute(query, values)
+
+# Close the cursor
+cursor.close()
+
+# Commit the transaction
+database.commit()
+
+# Close the database connection
+database.close()
+
+# Print results
+print ""
+print "All Done! Bye, for now."
+print ""
+columns = str(sheet.ncols)
+rows = str(sheet.nrows)
+print "I just imported " %2B columns %2B " columns and " %2B rows %2B " rows to MySQL!"
+</code></pre>
+
+<p>Hope this is useful. More to come!</p>
+
+<hr />
+
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/YLXFEQLCogM "></iframe></div>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2012/09/01/predictive-analytics-top-5-trends-going-forward/">Predictive Analytics - Top 5 Trends Going Forward</a></h1>
     
     
@@ -149,6 +258,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/12/30/django-basics/">Django Basics</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/12/12/excel-tips-how-to-cut-down-on-calculations-using-sumif-and-sumifs/">Excel Tips: How to Cut Down on Calculations Using SUMIF and SUMIFS</a>
       </li>
     
@@ -164,10 +277,6 @@
         <a href="/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/">Crash Course in web2py (part 3 - form validation)</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/">Crash Course in web2py (part 2 - web forms)</a>
-      </li>
-    
   </ul>
 </section>
 <section>
@@ -175,7 +284,7 @@
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (5)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>
-<li class='category'><a href='/blog/categories/python/'>python (8)</a></li>
+<li class='category'><a href='/blog/categories/python/'>python (9)</a></li>
 
   </ul>
 </section><section>

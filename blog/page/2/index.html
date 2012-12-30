@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="Well, in the last tutorial I showed you how to create a basic web form that stores the submitted data in a SQLite database. In this tutorial, we&# &hellip;">
+  <meta name="description" content="Alright. In this tutorial I&#8217;ll show you how to modify the controller so that the end user can update and delete records. At this point, I &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -78,6 +78,136 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/">Crash Course in Web2py (Part 4 - Managing Form Records)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-09T22:32:00-08:00" pubdate data-updated="true">Dec 9<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Alright. In this tutorial I&#8217;ll show you how to modify the controller so that the end user can update and delete records. At this point, I assume:</p>
+
+<ol>
+<li>You have web2py already installed => <a href="http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/">part 1</a></li>
+<li>You know what a web form is</li>
+<li>You created the skeleton web form => <a href="http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/">part 2</a></li>
+<li>You added data validation (with the help of Han Solo) => <a href="http://mherman.org/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/">part 3</a></li>
+</ol>
+
+
+<p>Let&#8217;s begin &#8230;</p>
+
+<p>(1) Launch the server. (2) Go to the admin interface. (3) Edit the &#8220;form&#8221; application.</p>
+
+<h2><strong>Controller</strong></h2>
+
+<p>Add the following code to <em>default.py</em> just before the SQLFORM function, then add the variable to the function itself:</p>
+
+<pre><code>update = db.register(request.args())
+    form = SQLFORM(db.register, update)
+</code></pre>
+
+<p>Essentially, <em>request.args()</em> pulls up a user record associated with a specific unique ID.</p>
+
+<h2><strong>Test</strong></h2>
+
+<p>Test this out by adding a new record to the database @ <a href="http://127.0.0.1:8000/form/default/display_your_form.html">http://127.0.0.1:8000/form/default/display_your_form.html</a>. Make note of the unique id in the <em>Accepted Fields</em> section.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-08_2055.png" alt="" /></p>
+
+<p>Now append that unique id to the end of the base URL - e.g., <a href="http://127.0.0.1:8000/form/default/display_your_form/21">http://127.0.0.1:8000/form/default/display_your_form/21</a> - and the record should appear on a new page, which the user can update.</p>
+
+<hr />
+
+<p>Please note: you can add <em>writable=False</em> or <em>readable=False</em> to the fields in the database to prevent a user from either editing or viewing a particular field. In the example below, I added <em>writable=False</em> to the <em>first_name</em> field.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-08_2111.png" alt="" /></p>
+
+<p>So, now the user can only edit the last name and email fields.</p>
+
+<hr />
+
+<p>Moving on, for this process to work right, the user making the edits must know the unique id beforehand, which is unrealistic. web2py has a solution for that - <em>grid</em>.</p>
+
+<h2><strong>Controller</strong></h2>
+
+<p>The <em>grid</em> method is just wonderful. You have to see it to believe it. Quickly now, add the following function to <em>default.py</em>:</p>
+
+<pre><code>def all_records():
+      grid = SQLFORM.grid(db.register,user_signature=False)
+      return locals()
+</code></pre>
+
+<p>Navigate to the following URL - <a href="http://127.0.0.1:8000/form/default/all_records">http://127.0.0.1:8000/form/default/all_records</a></p>
+
+<p>Wow.</p>
+
+<p>The end user can now perform the CRUD functions as well as search and sort all the records in the database - and it literally took twenty seconds to add this functionality. You can, of course, also require user authentication so only certain users can edit, while other users have read-only access.</p>
+
+<h2><strong>Model</strong></h2>
+
+<p>Finally, let&#8217;s add two more validators to the form. Go to your database.</p>
+
+<p>I want the user to validate his/her email address and I want it to be unique, so update db.py with the following code:</p>
+
+<pre><code>db = DAL('sqlite://webform.sqlite')
+db.define_table('register',
+    Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
+    Field('last_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
+    Field('email', unique=True, requires=[IS_NOT_EMPTY(), IS_EMAIL()]),
+    Field('email_validate',requires=IS_EQUAL_TO(request.vars.email)))
+db.register.email.requires=IS_NOT_IN_DB(db,'register.email')
+</code></pre>
+
+<p>Take note of lines 5, 6, and 7.</p>
+
+<h2><strong>Test</strong></h2>
+
+<p>Test this by first trying two different email addresses:</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-08_2238.png" alt="" /></p>
+
+<p>Then test it again with an email you know is already in the database.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-08_2240.png" alt="" /></p>
+
+<p>Perfect.</p>
+
+<p>Well, we could edit the actual errors that populate, but that&#8217;s a bit more complicated. They&#8217;ll suffice for now.</p>
+
+<h2><strong>Recap</strong></h2>
+
+<p>Again, by adding just a few statements we added much functionality to our form, highlighting the power of such web frameworks like web2py. Well. that&#8217;s it for now. In the next tutorial, I&#8217;ll show you in brief how to modify the form&#8217;s appearance via the CSS files. Oh - and we&#8217;ll finally deploy the finished app!</p>
+
+<p>You can find the new code for db.py, display_your_form.html, and default.py <a href="https://github.com/mjhea0/web2py/tree/master/form%20-%20part%203">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -363,102 +493,6 @@ db.define_table('register',
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/11/27/crash-course-in-web2py-part-1/">Crash Course in Web2py (Part 1)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-11-27T19:53:00-08:00" pubdate data-updated="true">Nov 27<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This tutorial shows how to create a basic web app using the web2py framework. I came across the framework last night and literally created and deployed a web app in less than ten minutes.</p>
-
-<p>Web2py is an open source web application framework that focuses on rapid development. By placing a strong emphasis on ease of use and productivity, it&#8217;s one of the easiest frameworks to learn and use. Despite its simplicity, though, web2py is jam packed with features and is quite powerful and flexible - much like the Python language itself.</p>
-
-<h2>Download and Run</h2>
-
-<p>Start by downloading the <a href="http://www.web2py.com/examples/default/download">latest</a> stable release.</p>
-
-<p>Unpack the zip, run the web2py executable file, and choose an admin password.</p>
-
-<p><img src="http://www.backwardsteps.com/uploads/2012-11-25_1642.png" alt="" /></p>
-
-<h2>Create an App</h2>
-
-<p>Click the Administrative Interface link on the right side of the page-</p>
-
-<p><img src="http://www.backwardsteps.com/uploads/2012-11-25_1659.png" alt="" /></p>
-
-<p>-and enter your password. The admin page shows your installed apps and provides an interface for creating and deploying new apps. On the right side of the page, under the <em>New simple application</em> header, type the name of a new app - in this example I used &#8220;helloWorld&#8221; - and then click Create.</p>
-
-<p><img src="http://www.backwardsteps.com/uploads/2012-11-25_1704.png" alt="" /></p>
-
-<p>You will then be redirected to the design interface page. You can also view the generic page for your app at this address - <a href="http://127.0.0.1:8000/helloWorld">http://127.0.0.1:8000/helloWorld</a>.</p>
-
-<h2>Edit the App</h2>
-
-<p>Back on the  page, click the edit button next to &#8220;default.py&#8221; in the Controllers section.</p>
-
-<p><img src="http://www.backwardsteps.com/uploads/2012-11-25_2035.png" alt="" /></p>
-
-<p>Then change the default code for the index function to-</p>
-
-<p><img src="http://www.backwardsteps.com/uploads/2012-11-25_2046.png" alt="" /></p>
-
-<p>Hit CTRL-S on your keyboard to save the changes, then refresh <a href="http://127.0.0.1:8000/helloWorld/default/index">http://127.0.0.1:8000/helloWorld/default/index</a> to see the changes made.</p>
-
-<h2>Deploy the App</h2>
-
-<p>Go back to the admin page (<a href="http://127.0.0.1:8000/admin/default/site">http://127.0.0.1:8000/admin/default/site</a>) and click Pack All. Save the  w2p-package to your computer.</p>
-
-<p><img src="http://www.backwardsteps.com/uploads/2012-11-25_2317.png" alt="" /></p>
-
-<p>Now you need to deploy the app to a cloud platform. The easiest one to use with web2py is <a href="https://www.pythonanywhere.com/">PythonAnywhere</a>. Go ahead and sign up. Once registered and logged in, click Web, Replace  with a new web app, and then click the button for web2py.</p>
-
-<p>Enter an admin password, and then click Next. Once the app is setup, go to the admin interface at <a href="https://your_user_name.pythonanywhere.com/admin">https://user_name.pythonanywhere.com/admin</a> (replace user_name with your user name) and enter your admin password to log-in. Now, to create your app, go to the <em>Upload and install packed application</em> section on the right side, give your app a name (helloWorld), and finally upload the w2p-file you saved to your computer earlier. Click install.</p>
-
-<p><img src="http://www.backwardsteps.com/uploads/2012-11-26_00141.png" alt="" /></p>
-
-<p>Finally, go to your homepage to view the app at   (replace user_name with your user name).</p>
-
-<p>You just deployed your first app - congrats!</p>
-
-<hr />
-
-<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/BXzqmHx6edY "></iframe></div>
-
-
-<br />
-
-
-<p><em>In the next post, I&#8217;ll show you how to create a much more advanced web app. Cheers!</em></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/3/">&larr; Older</a>
@@ -482,6 +516,10 @@ db.define_table('register',
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/12/30/django-basics/">Django Basics</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/12/12/excel-tips-how-to-cut-down-on-calculations-using-sumif-and-sumifs/">Excel Tips: How to Cut Down on Calculations Using SUMIF and SUMIFS</a>
       </li>
     
@@ -497,10 +535,6 @@ db.define_table('register',
         <a href="/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/">Crash Course in web2py (part 3 - form validation)</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/">Crash Course in web2py (part 2 - web forms)</a>
-      </li>
-    
   </ul>
 </section>
 <section>
@@ -508,7 +542,7 @@ db.define_table('register',
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (5)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>
-<li class='category'><a href='/blog/categories/python/'>python (8)</a></li>
+<li class='category'><a href='/blog/categories/python/'>python (9)</a></li>
 
   </ul>
 </section><section>
