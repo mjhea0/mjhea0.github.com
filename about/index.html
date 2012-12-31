@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Recursively Scraping Web Pages with Scrapy - Michael Herman</title>
+  <title>About Me - Michael Herman</title>
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="In the first tutorial, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data to a &hellip;">
+  <meta name="description" content="About Me Dec 30th, 2012 I like charts and graphs and programming and analytics and tech writing and spreadsheets. Right now I&#8217;m writing a book &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://mjhea0.github.com/blog/2012/11/08/recursively-scraping-web-pages-with-scrapy/">
+  <link rel="canonical" href="http://mjhea0.github.com/about/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -78,15 +78,36 @@
   <div id="main">
     <div id="content">
       <div>
-<article class="hentry" role="article">
+<article role="article">
   
   <header>
-    
-      <h1 class="entry-title">Recursively Scraping Web Pages With Scrapy</h1>
-    
-    
+    <h1 class="entry-title">About Me</h1>
+    <p class="meta">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-30T20:11:00-08:00" pubdate data-updated="true">Dec 30<span>th</span>, 2012</time></p>
+  </header>
+  
+  <p>I like charts and graphs and programming and analytics and tech writing and spreadsheets.</p>
+
+<p>Right now I&#8217;m writing a book on Python web development and putting the final touches on my startup, Starter Financial Model.</p>
+
+<p>I live in San Francisco.</p>
+
+  
+    <footer>
       <p class="meta">
         
+        
 
 
 
@@ -98,112 +119,13 @@
   
 
 
-<time datetime="2012-11-08T15:39:00-08:00" pubdate data-updated="true">Nov 8<span>th</span>, 2012</time>
+<time datetime="2012-12-30T20:11:00-08:00" pubdate data-updated="true">Dec 30<span>th</span>, 2012</time>
         
       </p>
-    
-  </header>
-
-
-<div class="entry-content"><p><em>In the first <a href="http://mherman.org/blog/2012/11/05/scraping-web-pages-with-scrapy/">tutorial</a>, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data to a CSV file. This tutorial continues from where we left off, adding to the existing code, in order to build a recursive crawler to scrape multiple pages. Make sure you read the first tutorial first.</em></p>
-
-<p><strong>CrawlSpider:</strong> Last time, we created a new Scrapy project, updated the Item Class, and then wrote the spider to pull jobs from a single page. This time, we just need to do some basic changes to add the ability to follow links and scrape more than one page. The first change is that this spider will inherit CrawlSpider and not BaseSpider.</p>
-
-<p><strong>Rules: </strong>We need to add in some Rules objects to define how the crawler follows the links. We will be using the following <a href="https://scrapy.readthedocs.org/en/latest/topics/spiders.html?highlight=crawlspider#crawling-rules">rules</a>:</p>
-
-<ul>
-<li><em>SgmlLinkExtractor: </em>defines how you want the spider to follow the links
-
-<ul>
-<li><em>allow:</em> defines the link href</li>
-<li><em>restrict_xpaths: </em>restricts the link to a certain Xpath</li>
-</ul>
-</li>
-<li><em>callback: </em>calls the parsing function after each page is scraped*</li>
-<li><em>follow: </em>instructs whether to continue following the links as long as they exist</li>
-</ul>
-
-
-<p>*Please Note: Make sure you rename the parsing function to something besides &#8220;parse&#8221; as the CrawlSpider uses the parse method to implement its logic.</p>
-
-<p><em><em>Release:</em> </em>Once updated, the final code looks like this:</p>
-
-<pre><code>from scrapy.contrib.spiders import CrawlSpider, Rule
-from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
-from scrapy.selector import HtmlXPathSelector
-from craigslist_sample.items import CraigslistSampleItem
-
-class MySpider(CrawlSpider):
-    name = "craigs"
-    allowed_domains = ["sfbay.craigslist.org"]
-    start_urls = ["http://sfbay.craigslist.org/npo/"]   
-
-    rules = (Rule (SgmlLinkExtractor(allow=("index\d00\.html", ),restrict_xpaths=('//p[@id="nextpage"]',))
-    , callback="parse_items", follow= True),
-    )
-
-    def parse_items(self, response):
-        hxs = HtmlXPathSelector(response)
-        titles = hxs.select("//p")
-        items = []
-        for titles in titles:
-            item = CraigslistSampleItem()
-            item ["title"] = titles.select("a/text()").extract()
-            item ["link"] = titles.select("a/@href").extract()
-            items.append(item)
-        return(items)
-</code></pre>
-
-<p>Now run the following command to release the spider and save the scraped data to a CSV file:</p>
-
-<pre><code>scrapy crawl craigs -o items.csv -t csv
-</code></pre>
-
-<p><em>In essence, this spider started crawling at http://sfbay.craigslist.org/npo/ and then followed the &#8220;next 100 postings&#8221; link at the bottom, scraping the next page, until there where no more links to crawl. Again, this can be used to create some powerful crawlers, so use with caution and set delays to throttle the crawling speed if necessary.</em></p>
-
-<p>You can find the source code on <a href="https://github.com/mjhea0/Scrapy-Samples">Github</a>.</p>
-
-<hr />
-
-<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/P-_TpZ54Vcw "></iframe></div>
-
-</div>
-
-
-  <footer>
-    <p class="meta">
       
+        <div class="sharing">
   
-
-<span class="byline author vcard">Posted by <span class="fn">Michael Herman</span></span>
-
-      
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-11-08T15:39:00-08:00" pubdate data-updated="true">Nov 8<span>th</span>, 2012</time>
-      
-
-<span class="categories">
-  
-    <a class='category' href='/blog/categories/python/'>python</a>
-  
-</span>
-
-
-    </p>
-    
-      <div class="sharing">
-  
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mjhea0.github.com/blog/2012/11/08/recursively-scraping-web-pages-with-scrapy/" data-via="" data-counturl="http://mjhea0.github.com/blog/2012/11/08/recursively-scraping-web-pages-with-scrapy/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mjhea0.github.com/about/index.html" data-via="" data-counturl="http://mjhea0.github.com/about/index.html" >Tweet</a>
   
   
   
@@ -211,16 +133,9 @@ class MySpider(CrawlSpider):
   
 </div>
 
-    
-    <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2012/11/05/scraping-web-pages-with-scrapy/" title="Previous Post: Scraping Web Pages with Scrapy">&laquo; Scraping Web Pages with Scrapy</a>
-      
-      
-        <a class="basic-alignment right" href="/blog/2012/11/09/51-new-excel-2013-functions/" title="Next Post: 51 New Excel 2013 Functions">51 New Excel 2013 Functions &raquo;</a>
-      
-    </p>
-  </footer>
+    </footer>
+  
 </article>
 
 </div>
