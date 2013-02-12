@@ -44,6 +44,15 @@ footer: true
 *   [Power View in Excel 2013](http://www.youtube.com/watch?v=3xhwOEGjhxw "Power View in Excel 2013")
 *   [Visualizing Data using MySQL and Excel 2013](http://www.youtube.com/watch?v=n7NTCAJtS80 "Visualizing Data using MySQL and Excel 2013")
 
+**Finance**
+
+*   [Financial Model Tutorial - (Part 1 of 4) - Overview ](http://www.youtube.com/watch?v=XF5vY7XxN6c "Financial Model Tutorial - (Part 1 of 4) - Overview")
+*   [Financial Model Tutorial - (Part 2 of 4) - Assumptions ](http://www.youtube.com/watch?v=2DmUcu0xP9Y "Excel 2013: Flash Fill")
+*   [Financial Model Tutorial - (Part 3 of 4) - Revenue and Cost Drivers](http://www.youtube.com/watch?v=vbsgbiJJ7QE "Financial Model Tutorial - (Part 3 of 4) - Revenue and Cost Drivers")
+*   [Financial Model Tutorial - (Part 4 of 4) - Analysis ](http://www.youtube.com/watch?v=3tmCthEvxjg "Financial Model Tutorial - (Part 4 of 4) - Analysis ")
+
+
+
 **GoodData**
 
 *   [Creating a GoodData Project](http://www.youtube.com/watch?v=zso3LJdvB68 "Creating a GoodData Project")
