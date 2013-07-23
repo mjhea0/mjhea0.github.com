@@ -5,7 +5,7 @@ date: 2012-12-30 09:48
 comments: true
 categories: python
 ---
-
+{% raw %}
 This brief tutorial shows the basics of installing and setting up a simple app in Django that is used to submit and retrieve information about books you've read:
 
 - Part 1 - Installing and Setting up Django
@@ -214,13 +214,13 @@ Next, we're going to work with **templates**, which will allow us to easily crea
 1. Now create a new file in your *temples\books* directory. Save it as index.html and add the following code-
 		
 		<h1>My Fab Book Collection</h1>
-		{ % if books_list %}
+		{% if books_list %}
     	<ul>
-	    { % for b in books_list %}
+	    {% for b in books_list %}
 	        <li>{{b.title}} | {{b.author}} | {{b.read}}</li>
-	    { % endfor %}
+	    {% endfor %}
 	    </ul> 
-		{ % endif %}
+		{% endif %}
 1. Open *views.py* again and make it looks like this-
 
 		from django.http import HttpResponse
@@ -239,6 +239,7 @@ I know I said that I'd show to make it so a non-administrator can add data to th
 In fact, the whole point to these tutorials is for you to get started with the Django tutorial. I bounced around a bit but I hope that you can now go through the tutorial a bit easier now that you have a starting off point.
 
 Thanks for watching. See you next time.
+{% endraw %}
 		
 
 

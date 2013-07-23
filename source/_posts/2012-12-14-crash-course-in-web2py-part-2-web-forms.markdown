@@ -5,7 +5,7 @@ date: 2012-12-01 21:27
 comments: true
 categories: python
 ---
-
+{% raw %}
 In the last [tutorial](http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/) I showed you the basics of web2py, and we even created a web app in less than ten minutes! In Part 2, I'll show you how to create a basic web form that stores the submitted data in a SQLite database.
 
 *Assumptions:*
@@ -56,9 +56,9 @@ And then add the following code to call the form-
     <h1>Web Form</h1>
     <br />
     <h2>Inputs:</h2>
-    { {=form}}
+    {{=form}}
     <h2>Submitted variables:</h2>
-    { {=BEAUTIFY(request.vars)}}
+    {{=BEAUTIFY(request.vars)}}
     </center>
     
 
@@ -89,3 +89,4 @@ Alright - Hold off on deploying the app for now, as we will continue to add feat
 You can find the code for db.py, display\_your\_form.html, and default.py [here](https://github.com/mjhea0/web2py/tree/master/form%20-%20part%201).
 
 In the next tutorial we'll be adding in form validation. Brace yourself.
+{% endraw %}

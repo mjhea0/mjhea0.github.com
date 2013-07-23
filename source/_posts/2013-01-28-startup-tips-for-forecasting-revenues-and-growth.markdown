@@ -20,7 +20,7 @@ To get started with forecasting and planning for your startup, here are some bas
 
 - **Step 1 – Total Available Market (TAM)**
 
-  The total available market refers to the amount of the identified consumer or business market that will be receptive to your offering. You may be looking at a large sector of a specific industry, or a sub-set of a market that your niche product can satisfy an unmet need. Get a picture of who your target market is.
+    The total available market refers to the amount of the identified consumer or business market that will be receptive to your offering. You may be looking at a large sector of a specific industry, or a sub-set of a market that your niche product can satisfy an unmet need. Get a picture of who your target market is.
 
 - **Step 2 – Served Available Market (SAM)**
 

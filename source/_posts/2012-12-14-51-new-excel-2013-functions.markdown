@@ -63,7 +63,7 @@ categories: excel
 
 **IFNA** returns a specific value that you set if an expression resolves to N/A. Otherwise, it returns the expression's value. For example, if you have a spreadsheet that has listings for different cities, you can use an IFNA function to return the expression, "Sorry, not found" if you search for a city that is not in the database using VLOOKUP.
 
-**XOR** tests whether any of the parameters you set are true. If any parameter is true, it returns a value of "true." Otherwise it returns a value of "false." For example, if you use XOR to test whether your sales are greater than $500, your profit is more than 20 percent of your sales and you have at least 20 new customers this month, you will get a response of "true" if any of those criteria are met.
+**XOR** returns TRUE if one of the conditions in is true, otherwise it will return FALSE. For example, if you use XOR to test whether your sales are greater than $500, your profit is more than 20 percent of your sales and you have at least 20 new customers this month, you will get a response of TRUE if only 1 of those criteria is met.
 
 ## **Lookup and Reference Functions**
 

@@ -34,20 +34,20 @@ You also need to use the HtmlXpathSelector for working with Xpaths. Visit the Sc
 
     from scrapy.spider import BaseSpider
     from scrapy.selector import HtmlXPathSelector
-	from craigslist_sample.items import CraigslistSampleItem
-     
+    from craigslist_sample.items import CraigslistSampleItem
+
     class MySpider(BaseSpider):
-    	name = "craig"
-    	allowed_domains = ["craigslist.org"]
-    	start_urls = ["http://sfbay.craigslist.org/npo/"]
-     
-    	def parse(self, response):
-    		hxs = HtmlXPathSelector(response)
-    		titles = hxs.select("//p")
-    		for titles in titles:
-    			title = titles.select("a/text()").extract()
-    			link = titles.select("a/@href").extract()
-    			print title, link
+        name = "craig"
+        allowed_domains = ["craigslist.org"]
+        start_urls = ["http://sfbay.craigslist.org/npo/"]
+
+        def parse(self, response):
+            hxs = HtmlXPathSelector(response)
+            titles = hxs.select("//span[@class='pl']")
+            for titles in titles:
+                title = titles.select("a/text()").extract()
+                link = titles.select("a/@href").extract()
+                print title, link
 
 Save this in the ~\craigslist_sample\craigslist\_sample\spiders directory as test.py.
 
@@ -74,7 +74,7 @@ Save this in the ~\craigslist_sample\craigslist\_sample\spiders directory as tes
      
     	def parse(self, response):
     		hxs = HtmlXPathSelector(response)
-    		titles = hxs.select("//p")
+    		titles = hxs.select("//span[@class='pl']")
     		items = []
     		for titles in titles:
     			item = CraigslistSampleItem()
