@@ -3,7 +3,7 @@ layout: post
 title: "Less is More"
 date: 2013-06-28 10:52
 comments: true
-categories: crowdfunding
+categories: startups
 ---
 
 *"The average attention span in 2012	was 8 seconds"*
