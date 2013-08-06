@@ -35,3 +35,5 @@ Besides my posts on mherman.org and [RealPython.com](http://www.realpython.com),
 - [Debugging SQL with the django-debug-toolbar](http://gun.io/blog/debugging-SQL)
 - [Deploying a Django App on Dokku](http://gun.io/blog/deploying-django-app-on-dokku)
 - [From MOOC (Massive Open Online Course) to Micro-Incubator](http://southernalpha.com/?p=6566)
+- [How to take on a large Django project](http://gun.io/blog/how-to-take-on-a-large-Django-project/) (#6 on HackerNews)
+- [Simle Goods + Zapier & MySQL](http://blog.simplegoods.co/post/57150825621/simple-goods-zapier-mysql)
