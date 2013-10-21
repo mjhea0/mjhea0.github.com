@@ -6,6 +6,9 @@ comments: true
 categories: ruby
 ---
 
+**Last Updated**: September 29, 2013 (bootstrap 3, jQuery, css)
+<br/>
+
 Know a little Ruby? Ready to start web development? Before jumping to Rails, get your hands dirty with Sinatra. It's the perfect learning tool. My recommendation: Start with a basic dynamic website, backed with SQLite. Create and manage your database tables with raw SQL. Practice deploying on Heroku. Practice.
 
 Once you feel good, add another step. Perhaps switch to DataMapper or ActiveRecord for managing your database with objects. Add a more complex database, such as  PostgreSQL.
@@ -38,6 +41,7 @@ Finally, get familiar with front-end. Start with Bootstrap. Play around with Jav
        # Gemfile
 
        source 'https://rubygems.org'
+       ruby "2.0.0"
 
        gem "sinatra" 
        gem "activerecord" 
@@ -75,6 +79,7 @@ Finally, get familiar with front-end. Start with Bootstrap. Play around with Jav
 
        configure :development do
          set :database, 'sqlite:///dev.db'
+         set :show_exceptions, true
        end
          
        configure :production do
@@ -260,16 +265,19 @@ Finally, get familiar with front-end. Start with Bootstrap. Play around with Jav
    
        <h2>Create Post</h2>
        <br/>
-       <form action="/posts" method="post">
-         <label for="post_title">Title:</label>
-         <input id="post_title" name="post[title]" type="text" value="<%= @post.title %>" size="77"/>
-         <br/>
-         <br/>
-         <label for="post_body">Body:</label>
-         <textarea id="post_body" name="post[body]" rows="10" cols="10"><%= @post.body %></textarea>
-         <br />
-         <input type="submit" value="Create!"/>
-       </form> 
+       <form action="/posts" method="post"role="form">
+         <div class="form-group">
+           <label for="post_title">Title:</label>
+           <br>
+           <input id="post_title" class="form-control" name="post[title]" type="text" value="<%= @post.title %>" style="width=90%"/>
+         </div>
+         <div class="form-group">
+           <label for="post_body">Body:</label>
+           <br>
+           <textarea id="post_body" name="post[body]" class="form-control" rows="10"><%= @post.body %></textarea>
+         </div>
+         <button type="submit" class="btn btn-success">Submit</button>
+       </form>
         
 7. We also need a route for handling the POST requests.
 
@@ -310,9 +318,9 @@ Finally, get familiar with front-end. Start with Bootstrap. Play around with Jav
        post "/posts" do
          @post = Post.new(params[:post])
          if @post.save
-           redirect "posts/#{@post.id}", :notice => 'Congrats! Love the new post.'
+           redirect "posts/#{@post.id}", :notice => 'Congrats! Love the new post. (This message will disapear in 4 seconds.)'
          else
-           redirect "posts/create", :error => 'Something went wrong. Try again.'
+           redirect "posts/create", :error => 'Something went wrong. Try again. (This message will disapear in 4 seconds.)'
          end
        end
         
@@ -333,38 +341,79 @@ The app is ugly. Let's add some quick bootstrap styling.
 
 1. Updated *layout.erb*:
 
-       <!DOCTYPE html>
-       <html>
-         <head>
-           <title><%= title %></title>
-           <link href="http://twitter.github.io/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
-           <link href="http://twitter.github.io/bootstrap/assets/css/bootstrap.min.css" rel="stylesheet">
-         </head>
-         <body style="padding-top: 50px;">
-           <div class="navbar navbar-fixed-top">
-             <div class="navbar-inner">
-               <div class="container">
-                   <a class="brand" href="/">
-                     Sinatra Sings
-                   </a>
-                   <ul class="nav pull-right">
-                     <li><a href="/">Home</a></li>
-                     <li><a href="/posts/create">New Post</a></li>
-                   </ul>
-               </div>
-             </div>
-           </div>
-           <div class="container">
-             <% if flash[:notice] %>
-               <p class="alert alert-success"><%= flash[:notice] %>
-             <% end %>
-             <% if flash[:error] %>
-               <p class="alert alert-error"><%= flash[:error] %>
-             <% end %> 
-             <%= yield %>
-           </div>
-         </body>
-       </html>
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta name="description" content="">
+          <meta name="author" content="">
+          <title><%= title %></title>
+          <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+          <style>
+            body {
+              padding-top: 75px;
+            }
+            .starter-template {
+              padding: 40px 15px;
+              text-align: center;
+            }
+            .container {
+              max-width:1000px;
+            }  
+          </style>
+        </head>
+
+        <body>
+
+          <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+              <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Sinatra Sings</a>
+              </div>
+              <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                  <li class="active"><a href="/">Home</a></li>
+                  <li><a href="/posts/create">New Post</a></li>
+                </ul>
+              </div><!--/.nav-collapse -->
+            </div>
+          </div>
+
+
+          <div class="container">
+
+            <% if flash[:notice] %>
+              <p class="alert alert-success"><%= flash[:notice] %>
+            <% end %>
+            <% if flash[:error] %>
+              <p class="alert alert-warning"><%= flash[:error] %>
+            <% end %> 
+            <%= yield %>
+
+          </div><!-- /.container -->
+
+
+          <!-- Bootstrap core JavaScript
+          ================================================== -->
+          <!-- Placed at the end of the document so the pages load faster -->
+          <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+          <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+          <script>
+          //** removes alerts after 4 seconds */
+          window.setTimeout(function() {
+              $(".alert").fadeTo(4500, 0).slideUp(500, function(){
+                  $(this).remove(); 
+              });
+          }, 4000);
+          </script>
+        </body>
+      </html>
 
 Looking good? Well, a little better.
 

@@ -18,7 +18,7 @@ I'm a Freelance Developer based in San Francisco. I’ve worked in various indus
 
 Email: michael@mherman.org
 
-Connect with me on [LinkedIn](http://www.linkedin.com/pub/michael-herman/3b/a94/4), [GitHub](https://github.com/mjhea0/), and [YouTube](http://www.youtube.com/hermanmu).
+Connect with me on [LinkedIn](http://www.linkedin.com/pub/michael-herman/3b/a94/4), [GitHub](https://github.com/mjhea0/), and [YouTube](http://www.youtube.com/hermanmu). Also, check out [this](https://gist.github.com/mjhea0/6763725) ever growing list of personal and professional projects. Cheers!
 
 **I am currently accepting new projects.**
 
