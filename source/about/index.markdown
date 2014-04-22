@@ -11,7 +11,7 @@ I'm a Freelance Developer based in San Francisco. I’ve worked in various indus
 1. [Real Python for the Web (KickStarter)](http://www.kickstarter.com/projects/1369857650/real-python-for-web-development-featuring-web2py)
 2. [Real Python](http://www.realpython.com)
 2. [Starter Financial Model](http://www.starterfinancialmodel.com/)
-3. [Inetvators](http://www.inetvators.com)
+3. [GoScrape](http://www.goscrape.com)
 
 
 ## Contact
@@ -21,6 +21,8 @@ Email: michael@mherman.org
 Connect with me on [LinkedIn](http://www.linkedin.com/pub/michael-herman/3b/a94/4), [GitHub](https://github.com/mjhea0/), and [YouTube](http://www.youtube.com/hermanmu). Also, check out [this](https://gist.github.com/mjhea0/6763725) ever growing list of personal and professional projects. Cheers!
 
 **I am currently accepting new projects.**
+
+[![pair-with-me](http://pairprogramwith.me/badge.png "Pair program with me!")](mailto:michael@mherman.org)
 
 
 ## Articles I've written
@@ -36,4 +38,4 @@ Besides my posts on mherman.org and [RealPython.com](http://www.realpython.com),
 - [Deploying a Django App on Dokku](http://gun.io/blog/deploying-django-app-on-dokku)
 - [From MOOC (Massive Open Online Course) to Micro-Incubator](http://southernalpha.com/?p=6566)
 - [How to take on a large Django project](http://gun.io/blog/how-to-take-on-a-large-Django-project/) (#6 on HackerNews)
-- [Simle Goods + Zapier & MySQL](http://blog.simplegoods.co/post/57150825621/simple-goods-zapier-mysql)
+- [Simple Goods + Zapier & MySQL](http://blog.simplegoods.co/post/57150825621/simple-goods-zapier-mysql)

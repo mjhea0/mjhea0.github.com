@@ -6,6 +6,7 @@ comments: true
 categories: python
 ---
 
+{% raw %}
 Well, in the last [tutorial](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/) I showed you  how to create a basic web form that stores the submitted data in a SQLite database. In this tutorial, we're going to add in data validation to your form.
 
 *Assumptions:*
@@ -19,8 +20,10 @@ Start the web2py server, go to the admin interface, and then edit the "form" app
 ## **Model**
 
 Right now, there is a requirement set in the db.py file for each field-
-   
-    requires=IS_NOT_EMPTY
+
+```python   
+requires=IS_NOT_EMPTY
+```
 
 In other words - all fields must be filled out or an error populates.
 
@@ -30,20 +33,22 @@ What do you want to display to the user?
 
 Open up display\_your\_form.html and change your code to match the following:
 
-	{ {extend 'layout.html'}}
-	<br /><br /><br />
-	<h1>Web Form</h1>
-	<br />
-	<p>Please enter your first and last names, and email address.<br />
-	Please note: All attempts must be error free before any info is accepted.</p>
-	<h2>Inputs:</h2>
-	{ {=form}}
-	<h2>Submitted Fields:</h2>
-	{ {=BEAUTIFY(request.vars)}}
-	<h2>Accepted Fields:</h2>
-	{ {=BEAUTIFY(form.vars)}}
-	<h2>Errors:</h2>
-	{ {=BEAUTIFY(form.errors)}}  
+```python
+{{extend 'layout.html'}}
+<br /><br /><br />
+<h1>Web Form</h1>
+<br />
+<p>Please enter your first and last names, and email address.<br />
+Please note: All attempts must be error free before any info is accepted.</p>
+<h2>Inputs:</h2>
+{{=form}}
+<h2>Submitted Fields:</h2>
+{{=BEAUTIFY(request.vars)}}
+<h2>Accepted Fields:</h2>
+{{=BEAUTIFY(form.vars)}}
+<h2>Errors:</h2>
+{{=BEAUTIFY(form.errors)}}
+```  
 
 By adding *{ {extend 'layout.html'}}*, you will be able to display the flash error messages, which we'll add in next.
 
@@ -51,15 +56,17 @@ By adding *{ {extend 'layout.html'}}*, you will be able to display the flash err
 
 Update deafult.py to match the following code-
 
-    def display_your_form():
-        form = SQLFORM(db.register)
-        if form.accepts(request,session):
-            response.flash = 'Thanks! The form has been submitted.'
-        elif form.errors:
-           response.flash = 'Please correct the error(s).'
-        else:
-           response.flash = 'Try again - no fields can be empty.'
-        return dict(form=form)
+```python
+def display_your_form():
+    form = SQLFORM(db.register)
+    if form.accepts(request,session):
+        response.flash = 'Thanks! The form has been submitted.'
+    elif form.errors:
+       response.flash = 'Please correct the error(s).'
+    else:
+       response.flash = 'Try again - no fields can be empty.'
+    return dict(form=form)
+```
 
 This adds an If Statement to display text based on whether the user submits your form with the required fields or not.
 
@@ -93,11 +100,13 @@ This is a problem. Let's add additional requirements to prevent this from happen
 
 Update the code in db.py to match the following-
 
-    db = DAL('sqlite://webform.sqlite')
-    db.define_table('register',
-        Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
-        Field('last_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
-        Field('email', requires=[IS_NOT_EMPTY(), IS_EMAIL()]))
+```python
+db = DAL('sqlite://webform.sqlite')
+db.define_table('register',
+    Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
+    Field('last_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
+    Field('email', requires=[IS_NOT_EMPTY(), IS_EMAIL()]))
+```
 
 *   *IS_ALPHANUMERIC()* requires that the field can only contain characters ranging from a-z, A-Z, or 0-9
 *   *IS_EMAIL* requires that the field value must look like an email address

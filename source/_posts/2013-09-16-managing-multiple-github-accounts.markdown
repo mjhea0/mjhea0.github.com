@@ -17,13 +17,13 @@ Let's assume your two Github accounts are named *githubPersonal* and *githubWork
 
 Create two SSH keys, saving each to a separate file:
 
-
-    $ cd ~/.ssh
-    $ ssh-keygen -t rsa -C "your_email@associated_with_githubPersonal.com"
-    # save it as id_rsa_personal when prompted
-    $ ssh-keygen -t rsa -C "your_email@associated_with_githubWork.com"
-    # save it as id_rsa_work when prompted
-
+```sh
+$ cd ~/.ssh
+$ ssh-keygen -t rsa -C "your_email@associated_with_githubPersonal.com"
+# save it as id_rsa_personal when prompted
+$ ssh-keygen -t rsa -C "your_email@associated_with_githubWork.com"
+# save it as id_rsa_work when prompted
+```
 
 The above commands setup the following files:
     
@@ -34,110 +34,114 @@ The above commands setup the following files:
 
 ## Add the keys to your Github accounts:
 
-1. Copy the key to your clipboard:
+#### Copy the key to your clipboard:
 
+```sh
+$ pbcopy < ~/.ssh/id_rsa_personal.pub
+```
     
-       $ pbcopy < ~/.ssh/id_rsa_personal.pub
-    
-    
-2. Add the key to your account:
-
-    - Go to your Account Settings
-    - Click "SSH Keys" then "Add SSH key"
-    - Paste your key into the "Key" field and add a relevant title
-    - Click "Add key" then enter your Github password to confirm
+#### Add the key to your account:
+- Go to your Account Settings
+- Click "SSH Keys" then "Add SSH key"
+- Paste your key into the "Key" field and add a relevant title
+- Click "Add key" then enter your Github password to confirm
 
 
-3. Repeat the process for your *githubWork* account.
+#### Repeat the process for your *githubWork* account.
 
 ## Create a configuration file to manage the separate keys
 
-1. Create a config file in ~/.ssh/
+#### Create a config file in ~/.ssh/
 
+```sh
+$ touch config
+```    
     
-       $ touch config
-    
-    
-2. Edit the file using the text editor of your choice. I used vim - `$ vim config`:
-    
-       # githubPersonal
-       Host personal
-           HostName github.com
-           User git
-           IdentityFile ~/.ssh/id_rsa_personal
- 
-       # githubWork
-       Host work
-           HostName github.com
-           User git
-           IdentityFile ~/.ssh/id_rsa_work
+#### Edit the file using the text editor of your choice. I used vim - `$ vim config`:
+
+```sh    
+# githubPersonal
+Host personal
+   HostName github.com
+   User git
+   IdentityFile ~/.ssh/id_rsa_personal
+
+# githubWork
+Host work
+   HostName github.com
+   User git
+   IdentityFile ~/.ssh/id_rsa_work
+```
     
 ## Update stored identities
 
-1. Clear currently stored identities:
+#### Clear currently stored identities:
     
+```sh    
+$ ssh-add -D
+```    
     
-       $ ssh-add -D
+#### Add new keys:
     
+```sh    
+$ ssh-add id_rsa_personal
+$ ssh-add id_rsa_work
+```
     
-2. Add new keys:
+#### Test to make sure new keys are stored:    
     
+```sh    
+$ ssh-add -l
+```   
     
-       $ ssh-add id_rsa_personal
-       $ ssh-add id_rsa_work
-    
-3. Test to make sure new keys are stored:    
-    
-    
-       $ ssh-add -l
-    
-    
-4. Test to make sure Github recognizes the keys:
+#### Test to make sure Github recognizes the keys:
 
-    
-       $ ssh -T personal
-       Hi githubPersonal! You've successfully authenticated, but GitHub does not provide shell access.
-       $ ssh -T work
-       Hi githubWork! You've successfully authenticated, but GitHub does not provide shell access.
-    
+```sh    
+$ ssh -T personal
+Hi githubPersonal! You've successfully authenticated, but GitHub does not provide shell access.
+$ ssh -T work
+Hi githubWork! You've successfully authenticated, but GitHub does not provide shell access.
+```    
 
     
 ## Test PUSH
 
-1. On Github, create a new repo in your personal account, *githubPersonal*, called *test-personal*.
+#### On Github, create a new repo in your personal account, *githubPersonal*, called *test-personal*.
 
-2. Back on your local machine, create a test directory:
+#### Back on your local machine, create a test directory:
 
-       $ cd ~/documents
-       $ mkdir test-personal
-       $ cd test-personal
+```sh
+$ cd ~/documents
+$ mkdir test-personal
+$ cd test-personal
+```
     
-2. Add a blank "readme.md" file and PUSH to Github:
+#### Add a blank "readme.md" file and PUSH to Github:
 
+```sh    
+$ touch readme.md
+$ git init
+$ git add .
+$ git commit -am "first commit"
+$ git remote add origin git@personal:githubPersonal/test-personal.git
+$ git push origin master
+```
     
-       $ touch readme.md
-       $ git init
-       $ git add .
-       $ git commit -am "first commit"
-       $ git remote add origin git@personal:githubPersonal/test-personal.git
-       $ git push origin master
+> Notice how we're using the custom account, `git@personal`, instead of `git@github.com`. 
     
-    
-    > Notice how we're using the custom account, `git@personal`, instead of `git@github.com`. 
-    
-3. Repeat the process for your *githubWork* account.
+#### Repeat the process for your *githubWork* account.
 
 ## Test PULL
 
-1. Add some text to the *readme.md* file in your personal account on Github.
+#### Add some text to the *readme.md* file in your personal account on Github.
 
-2. Now PULL and merge the changes by running the following command within the *test-personal* directory:
+#### Now PULL and merge the changes by running the following command within the *test-personal* directory:
 
-     
-       $ git pull origin master
+```sh
+$ git pull origin master
+```    
     
-    
-3. Again, repeat this for your *githubWork* account.
+#### Again, repeat this for your *githubWork* account.
 
 
 <br/>

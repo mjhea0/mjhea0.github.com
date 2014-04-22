@@ -12,17 +12,21 @@ categories: python
 
 **Create Project:** Once installed, open your terminal and create a Scrapy project by navigating to the directory you'd like to store your project in and then running the following command: 
 
-    scrapy startproject craigslist_sample
+```python
+scrapy startproject craigslist_sample
+```
 
 **Item Class:** Open the items.py within the ~craigslist\_sample\craigslist\_sample directory. Edit the items.py file to define the fields that you want contained with the Item. Since we want the post title and subsequent URL, the Item class looks like this:
 
-    # Define here the models for your scraped items
-     
-    from scrapy.item import Item, Field
-     
-    class CraigslistSampleItem(Item):
-    	title = Field()
-    	link = Field()
+```python
+# Define here the models for your scraped items
+ 
+from scrapy.item import Item, Field
+ 
+class CraigslistSampleItem(Item):
+	title = Field()
+	link = Field()
+```
 
 **The Spider:** The spider defines the initial URL (http://sfbay.craigslist.org/npo/), how to follow links/pagination (if necessary), and how to extract and parse the fields defined above. The spider must define these attributes:
 
@@ -32,60 +36,70 @@ categories: python
 
 You also need to use the HtmlXpathSelector for working with Xpaths. Visit the Scrapy [tutorial](http://doc.scrapy.org/en/0.16/) for more information. The following is the code for the basic spider:
 
-    from scrapy.spider import BaseSpider
-    from scrapy.selector import HtmlXPathSelector
-    from craigslist_sample.items import CraigslistSampleItem
+```python
+from scrapy.spider import BaseSpider
+from scrapy.selector import HtmlXPathSelector
+from craigslist_sample.items import CraigslistSampleItem
 
-    class MySpider(BaseSpider):
-        name = "craig"
-        allowed_domains = ["craigslist.org"]
-        start_urls = ["http://sfbay.craigslist.org/npo/"]
+class MySpider(BaseSpider):
+    name = "craig"
+    allowed_domains = ["craigslist.org"]
+    start_urls = ["http://sfbay.craigslist.org/npo/"]
 
-        def parse(self, response):
-            hxs = HtmlXPathSelector(response)
-            titles = hxs.select("//span[@class='pl']")
-            for titles in titles:
-                title = titles.select("a/text()").extract()
-                link = titles.select("a/@href").extract()
-                print title, link
+    def parse(self, response):
+        hxs = HtmlXPathSelector(response)
+        titles = hxs.select("//span[@class='pl']")
+        for titles in titles:
+            title = titles.select("a/text()").extract()
+            link = titles.select("a/@href").extract()
+            print title, link
+```
 
 Save this in the ~\craigslist_sample\craigslist\_sample\spiders directory as test.py.
 
 **Trial:** Now you are ready for a trial run of the scraper. So, while in the root directory of your Scrapy project, run the following command to output the scraped data to the screen:
 
-	scrapy crawl craig
+```sh
+scrapy crawl craig
+```
 
 **Dicts:** The Item objects defined above are simply custom dicts. Use the standard dict syntax to return the extracted data inside the Item objects:
 
-    item = CraigslistSampleItem()
-    item ["title"] = titles.select("a/text()").extract()
-    item ["link"] = titles.select("a/@href").extract()
+```python
+item = CraigslistSampleItem()
+item ["title"] = titles.select("a/text()").extract()
+item ["link"] = titles.select("a/@href").extract()
+```
 
 **Release:** Once complete, the final code looks like this:
 
-    from scrapy.spider import BaseSpider
-    from scrapy.selector import HtmlXPathSelector
-    from craigslist_sample.items import CraigslistSampleItem
-     
-    class MySpider(BaseSpider):
-    	name = "craig"
-    	allowed_domains = ["craigslist.org"]
-    	start_urls = ["http://sfbay.craigslist.org/npo/"]
-     
-    	def parse(self, response):
-    		hxs = HtmlXPathSelector(response)
-    		titles = hxs.select("//span[@class='pl']")
-    		items = []
-    		for titles in titles:
-    			item = CraigslistSampleItem()
-    			item ["title"] = titles.select("a/text()").extract()
-    			item ["link"] = titles.select("a/@href").extract()
-    			items.append(item)
-    		return items
+```python
+from scrapy.spider import BaseSpider
+from scrapy.selector import HtmlXPathSelector
+from craigslist_sample.items import CraigslistSampleItem
+ 
+class MySpider(BaseSpider):
+	name = "craig"
+	allowed_domains = ["craigslist.org"]
+	start_urls = ["http://sfbay.craigslist.org/npo/"]
+ 
+	def parse(self, response):
+		hxs = HtmlXPathSelector(response)
+		titles = hxs.select("//span[@class='pl']")
+		items = []
+		for titles in titles:
+			item = CraigslistSampleItem()
+			item ["title"] = titles.select("a/text()").extract()
+			item ["link"] = titles.select("a/@href").extract()
+			items.append(item)
+		return items
+```
 
 **Store the data: **The scraped data can now be [stored](http://doc.scrapy.org/en/0.16/topics/feed-exports.html#topics-feed-exports) in these formats- JSON, CSV, and XML (among others). Run the following command to save the data in CSV:
 
-    scrapy crawl craig -o items.csv -t csv
+```sh
+scrapy crawl craig -o items.csv -t csv
+```python
 
 You should now have a CSV file in your directory called items.csv full of data:
 

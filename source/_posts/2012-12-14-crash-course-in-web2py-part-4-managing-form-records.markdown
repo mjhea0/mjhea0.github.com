@@ -21,8 +21,10 @@ Let's begin ...
 
 Add the following code to *default.py* just before the SQLFORM function, then add the variable to the function itself:
 
-    update = db.register(request.args())
-        form = SQLFORM(db.register, update)
+```python
+update = db.register(request.args())
+    form = SQLFORM(db.register, update)
+```
 
 Essentially, *request.args()* pulls up a user record associated with a specific unique ID.
 
@@ -50,9 +52,11 @@ Moving on, for this process to work right, the user making the edits must know t
 
 The *grid* method is just wonderful. You have to see it to believe it. Quickly now, add the following function to *default.py*:
 
-    def all_records():
-          grid = SQLFORM.grid(db.register,user_signature=False)
-          return locals()
+```python
+def all_records():
+      grid = SQLFORM.grid(db.register,user_signature=False)
+      return locals()
+```
 
 Navigate to the following URL - [http://127.0.0.1:8000/form/default/all_records](http://127.0.0.1:8000/form/default/all_records)
 
@@ -66,13 +70,15 @@ Finally, let's add two more validators to the form. Go to your database.
 
 I want the user to validate his/her email address and I want it to be unique, so update db.py with the following code:
 
-    db = DAL('sqlite://webform.sqlite')
-    db.define_table('register',
-        Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
-        Field('last_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
-        Field('email', unique=True, requires=[IS_NOT_EMPTY(), IS_EMAIL()]),
-        Field('email_validate',requires=IS_EQUAL_TO(request.vars.email)))
-    db.register.email.requires=IS_NOT_IN_DB(db,'register.email')
+```python
+db = DAL('sqlite://webform.sqlite')
+db.define_table('register',
+    Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
+    Field('last_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
+    Field('email', unique=True, requires=[IS_NOT_EMPTY(), IS_EMAIL()]),
+    Field('email_validate',requires=IS_EQUAL_TO(request.vars.email)))
+db.register.email.requires=IS_NOT_IN_DB(db,'register.email')
+```
 
 Take note of lines 5, 6, and 7.
 

@@ -36,139 +36,191 @@ Developed in 1995 Django is one of, if not the most, popular Python web framewor
 
 ## **Part 1 - Installing Django** ##
 
-1. Open the command prompt with admin privileges and run the command- 
+### Open the command prompt with admin privileges and run the command- 
 
+```python
+pip install Django
+```
 
-		pip install Django
    -to install Django into your site-packages directory. 
-1. To setup, you need to create a new project. Within command prompt, navigate to the directory you wish to create the new project, then run the command - 
 
-		python C:\Python27\Lib\site-packages\django\bin\django-admin.py startproject testproject
+### To setup, you need to create a new project. Within command prompt, navigate to the directory you wish to create the new project, then run the command - 
+
+```sh
+python C:\Python27\Lib\site-packages\django\bin\django-admin.py startproject testproject
+```
    Your path to *django-admin.py* may be different, so make sure to tailor it if necessary. Also, *testproject* is the name of the created project. Feel free to name this whatever you like.
-1. Next you need to make sure everything was setup correctly. To do that, you can launch the Django server. First, navigate to your newly created directory (*testproject*, in my case), and then run the command- 
+### Next you need to make sure everything was setup correctly. To do that, you can launch the Django server. First, navigate to your newly created directory (*testproject*, in my case), and then run the command- 
 
-		python manage.py runserver
+```sh
+python manage.py runserver
+```
    Open up a new browser window and navigate to http://localhost:8000/. If setup correctly, you will see the Welcome to Django screen. 
-1. Let's setup the database. Open up *settings.py* in the *testproject* directory with a text editor. (I use Notepad++.) Append *sqlite3* to the end of the Engine key and then add the path to the name key. You can name the database whatever you’d like because if the database doesn’t exist, Django will create it for you in the next step. The results should look like something similar to this (depending upon your path)-
+### Let's setup the database. Open up *settings.py* in the *testproject* directory with a text editor. (I use Notepad++.) Append *sqlite3* to the end of the Engine key and then add the path to the name key. You can name the database whatever you’d like because if the database doesn’t exist, Django will create it for you in the next step. The results should look like something similar to this (depending upon your path)-
 
-        'ENGINE': 'django.db.backends.sqlite3', 	
-        'NAME': 'C:/Python27/django/testproject/test.db', 
+```python
+'ENGINE': 'django.db.backends.sqlite3', 	
+'NAME': 'C:/Python27/django/testproject/test.db', 
+```
+
    (Yes, use forward slashes.)
 
-1. Finally, you need to create and then sync the database by navigating to the directory where *manage.py* is located (should be the project's main directory) and then running the following command-
+### Finally, you need to create and then sync the database by navigating to the directory where *manage.py* is located (should be the project's main directory) and then running the following command-
 		
-		python manage.py syncdb
+```sh
+python manage.py syncdb
+```
+
    Create a superuser. I used *admin* for both my username and password.
 
 Alright, the setup is complete. You're now ready to start creating an app.
 
 ## **Part 2 - Creating the Database Model** ##
 
-1. Start by creating an app. Within command prompt, navigate to the *testproject* directory and then type the command-
+### Start by creating an app. Within command prompt, navigate to the *testproject* directory and then type the command-
 
-		python manage.py startapp books
+```sh
+python manage.py startapp books
+```
 
    CD into the directory. You should see a *models.py* file. This file is used to setup the entities and attributes for your database. 
-1. Go ahead and open *models.py* in Notepad++ and add in the following code:
+### Go ahead and open *models.py* in Notepad++ and add in the following code:
 
-		class Books(models.Model):
-			title = models.CharField(max_length=150)
-			author = models.CharField(max_length=100)
-			read = models.CharField(max_length=3)
+```python
+class Books(models.Model):
+	title = models.CharField(max_length=150)
+	author = models.CharField(max_length=100)
+	read = models.CharField(max_length=3)
+```
+
    This code should be relatively clear. This class defines the database fields- title, author, and read. The data in the read field will either be "yes" or "no" depending on whether you've read the book or not.
    
    Since there is only one table, we don't need to establish a foreign key. The primary key, a unique id, will be automatically generated for us by Django's magic. 
 
    Save the file.
-1. Now open up the *settings.py* file, scroll down to *Installed Apps* and add the app name, *books*, to the installed apps so that Django knows to include it. Your installed apps section should look like this-
+### Now open up the *settings.py* file, scroll down to *Installed Apps* and add the app name, *books*, to the installed apps so that Django knows to include it. Your installed apps section should look like this-
 
-		INSTALLED_APPS = (
-    		'django.contrib.auth',
-		    'django.contrib.contenttypes',
-		    'django.contrib.sessions',
-		    'django.contrib.sites',
-		    'django.contrib.messages',
-		    'django.contrib.staticfiles',
-			'books',
-		    # Uncomment the next line to enable the admin:
-		    # 'django.contrib.admin',
-		    # Uncomment the next line to enable admin documentation:
-		    # 'django.contrib.admindocs',
-		)
+```python
+INSTALLED_APPS = (
+	'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+	'books',
+    # Uncomment the next line to enable the admin:
+    # 'django.contrib.admin',
+    # Uncomment the next line to enable admin documentation:
+    # 'django.contrib.admindocs',
+)
+```
+
    Save the file.
-1. CD back to the main project directory and run the command-
+### CD back to the main project directory and run the command-
 
-		python manage.py sql books
+```sh
+python manage.py sql books
+```
+
    -to display the actual SQL statements for creating the table. Did you notice the primary key? 
 
    Your output should look like this-
 
-		BEGIN;
-		CREATE TABLE "books_books" (
-		    "id" integer NOT NULL PRIMARY KEY,
-		    "title" varchar(150) NOT NULL,
-		    "author" varchar(100) NOT NULL,
-		    "read" varchar(3) NOT NULL
-		)
-		;
-		COMMIT;
+```python
+BEGIN;
+CREATE TABLE "books_books" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "title" varchar(150) NOT NULL,
+    "author" varchar(100) NOT NULL,
+    "read" varchar(3) NOT NULL
+)
+;
+COMMIT;
+```
 
    You can also use the following command to check to see if there are any errors in your models- 
 		
-		python manage.py validate
-1. Finally, you need to run the following command to execute the SQL statements:
+```sh
+python manage.py validate
+```
 
-		python manage.py syncdb
+### Finally, you need to run the following command to execute the SQL statements:
+
+```sh
+python manage.py syncdb
+```
 
 Next, I'll show you how to access the Django API to add data to the database.
 
 ##**Part 3 - Django API vs Admin site**##
 
-1. First open up command prompt, navigate to your project directory, and then run the command-
+### First open up command prompt, navigate to your project directory, and then run the command-
 
-		python manage.py shell
+```sh
+python manage.py shell
+```
+
    This opens an interactive environment for us to use.
 
-1. Next go ahead and import your app with the following command-
+### Next go ahead and import your app with the following command-
 
-		from books.models import Books
-1. There's a number of different things you can do within this environment, but let's stick with adding data to our database. To add a row, run this command-
+```python
+from books.models import Books
+```
 
-		b = Books(title="To Kill a Mockingbird", author="Harper Lee", read="yes")
-		b.save()
-		b = Books(title="Brave New World", author="Aldous Huxley", read="yes")
-		b.save()
-		b = Books(title="War and Peace", author="Leo Tolstoy", read="no")
-		b.save()
-   Go ahead and add as many books as you'd like for practice. 
+### There's a number of different things you can do within this environment, but let's stick with adding data to our database. To add a row, run this command-
 
-	Once complete, you can view the data in your database in a number of ways. I like to just use SQLite, which can be downloaded [here](http://sourceforge.net/projects/sqlitebrowser/). So, go ahead and open the text.db file which is located within your project's main directory, switch to the *Browse Data* tab, and then under the Table dropdown choose *books_books*. You should see all the books you added.
+```python
+b = Books(title="To Kill a Mockingbird", author="Harper Lee", read="yes")
+b.save()
+b = Books(title="Brave New World", author="Aldous Huxley", read="yes")
+b.save()
+b = Books(title="War and Peace", author="Leo Tolstoy", read="no")
+b.save()
+```
 
-	You can exit the Django interactive environment using the `exit()` command.
+Go ahead and add as many books as you'd like for practice. 
+
+Once complete, you can view the data in your database in a number of ways. I like to just use SQLite, which can be downloaded [here](http://sourceforge.net/projects/sqlitebrowser/). So, go ahead and open the text.db file which is located within your project's main directory, switch to the *Browse Data* tab, and then under the Table dropdown choose *books_books*. You should see all the books you added.
+
+You can exit the Django interactive environment using the `exit()` command.
 
 Okay, let's look at an even easier means of adding data using **Django's admin site**.
 
-1. Open the *settings.py* file, scroll down to *Installed Apps* and uncomment the line *'django.contrib.admin',*. Then save the file. 
-1. Update the database by running the command-
+### Open the *settings.py* file, scroll down to *Installed Apps* and uncomment the line *'django.contrib.admin',*. Then save the file. 
+### Update the database by running the command-
 
-		python manage.py syncdb
-1. Next open the *urls.py* file within the *books* directory. You need to uncomment these three lines-
-		
-		from django.contrib import admin
-		admin.autodiscover()
-		url(r'^admin/', include(admin.site.urls)),
+```sh
+python manage.py syncdb
+```
+
+### Next open the *urls.py* file within the *books* directory. You need to uncomment these three lines-
+
+```python		
+from django.contrib import admin
+admin.autodiscover()
+url(r'^admin/', include(admin.site.urls)),
+```
+
    Save the file and exit.
-1. Now create a new file in your *books* directory called *admin.py* and add the following code to the file- 
+### Now create a new file in your *books* directory called *admin.py* and add the following code to the file- 
 
-		from books.models import Books
-		from django.contrib import admin
-		admin.site.register(Books)
-1. Next, open up your *models.py* file and add these two lines of code-
+```python
+from books.models import Books
+from django.contrib import admin
+admin.site.register(Books)
+```
 
-			def __unicode__(self):
-				return self.title + " / " + self.author + " / " + self.read
+### Next, open up your *models.py* file and add these two lines of code-
+
+```python
+def __unicode__(self):
+	return self.title + " / " + self.author + " / " + self.read
+```
+
    Essentially, *self* refers to the current object.
-1. Now start the development server - `python manage.py runserver`, point your browser to http://localhost:8000/admin, and enter your login credentials. You should see the *Books* app. And if you click the app, you should now see the data we added earlier. 
+### Now start the development server - `python manage.py runserver`, point your browser to http://localhost:8000/admin, and enter your login credentials. You should see the *Books* app. And if you click the app, you should now see the data we added earlier. 
  
    Go ahead and add a few more books in. Try deleting a row as well. See how much easier that is in the Admin console?
 
@@ -178,61 +230,78 @@ So we're done with the Admin console. Hit CTRL+BREAK to exit. I'm also done show
 
 Again, in this final tutorial I'll go over how to create the public interface.
 
-1. The first thing we need to do is setup the URL structure. Open up *urls.py* and then add this code to the *urlpatterns*-
+### The first thing we need to do is setup the URL structure. Open up *urls.py* and then add this code to the *urlpatterns*-
 
-		url(r'^books/$', 'books.views.index'),
+```python
+url(r'^books/$', 'books.views.index'),
+```
+
    This is essentially a tuple that points a user to a Django page based on the URL that user visits. In this case the regular expression dictates that when the user visits any page with the ending /books they will be see the books.views.index page. This is a bit complicated, so be sure to visit the Django [tutorial](https://docs.djangoproject.com/en/1.4/intro/tutorial03/) for more into.
-1. Now to ensure that this is setup correctly run the server and then point your browser to http://localhost:8000/books. 
+### Now to ensure that this is setup correctly run the server and then point your browser to http://localhost:8000/books. 
 
    As long as you get the error, *ViewDoesNotExist at /books*, then the url is setup correctly.
 
    We need to actually write the view now.
-1. Stop the server (CRTL+BREAK) and then within the *books* directory open *views.py* in Notepad++ and write the following code to test out your views-
+### Stop the server (CRTL+BREAK) and then within the *books* directory open *views.py* in Notepad++ and write the following code to test out your views-
 
-		from django.http import HttpResponse
-		def index(request):
-    		return HttpResponse("Hello. This is a test.")
+```python
+from django.http import HttpResponse
+def index(request):
+	return HttpResponse("Hello. This is a test.")
+```
+
    Save the file. Run the server. And refresh the page. You should no longer see an error. Instead, you should just see a page with the words *Hello. This is a test.* in the top corner.
-1. Okay, now let's display something a bit more meaningful - like a listing of all the books in the database. To do that, you need your *views.py* file to look like this-
+### Okay, now let's display something a bit more meaningful - like a listing of all the books in the database. To do that, you need your *views.py* file to look like this-
 
-		from django.http import HttpResponse
-		from books.models import Books
-		def index(request):
-		    books_list = Books.objects.all()
-		    return HttpResponse(books_list)
+```python
+from django.http import HttpResponse
+from books.models import Books
+def index(request):
+    books_list = Books.objects.all()
+    return HttpResponse(books_list)
+```
+
 -and then just hit refresh on your browser. (Remember: we didn't stop the server).
 
    You should see all of the books in one long line. It looks bad, but it works. 
 
 Next, we're going to work with **templates**, which will allow us to easily create a much more readable output.
 
-1. Start by making a new directory in the django directory, outside of the project, called *templates*. Within that directory, make a directory called *books*. 
-1. Next open up *settings.py*, scroll down to *TEMPLATE_DIRS* and add the template directory- 
+### Start by making a new directory in the django directory, outside of the project, called *templates*. Within that directory, make a directory called *books*. 
+### Next open up *settings.py*, scroll down to *TEMPLATE_DIRS* and add the template directory- 
 
-		"C:/Python27/django/templates"
+```python
+"C:/Python27/django/templates"
+```
    Yes, those are forward slashes.
-1. Now create a new file in your *temples\books* directory. Save it as index.html and add the following code-
-		
-		<h1>My Fab Book Collection</h1>
-		{% if books_list %}
-    	<ul>
-	    {% for b in books_list %}
-	        <li>{{b.title}} | {{b.author}} | {{b.read}}</li>
-	    {% endfor %}
-	    </ul> 
-		{% endif %}
-1. Open *views.py* again and make it looks like this-
+### Now create a new file in your *temples\books* directory. Save it as index.html and add the following code-
 
-		from django.http import HttpResponse
-		from books.models import Books
-		from django.template import Context, loader		
-		def index(request):
-			books_list = Books.objects.all()
-			t = loader.get_template('books/index.html')
-			c = Context({'books_list': books_list,})
-			return HttpResponse(t.render(c))
+```html		
+<h1>My Fab Book Collection</h1>
+{% if books_list %}
+<ul>
+{% for b in books_list %}
+    <li>{{b.title}} | {{b.author}} | {{b.read}}</li>
+{% endfor %}
+</ul> 
+{% endif %}
+```
+
+### Open *views.py* again and make it looks like this-
+
+```python
+from django.http import HttpResponse
+from books.models import Books
+from django.template import Context, loader		
+def index(request):
+	books_list = Books.objects.all()
+	t = loader.get_template('books/index.html')
+	c = Context({'books_list': books_list,})
+	return HttpResponse(t.render(c))
+```
+
    Basically, the loader is the path to the template we created, which then gets assigned to the Python object via the Context dictionary. 
-1. Save the file. Run the server. Refresh the http://localhost:8000/books page. There's the books. Looks a little better, too. 
+### Save the file. Run the server. Refresh the http://localhost:8000/books page. There's the books. Looks a little better, too. 
 
 I know I said that I'd show to make it so a non-administrator can add data to the database - but I just realized that this would be another lesson in itself. So, I'm going to stop here. Feel free to view the Django Tutorial to learn how to add that functionality to your application.
 

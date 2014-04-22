@@ -15,16 +15,22 @@ In this tutorial we'll be developing a simple application with [Espresso](https:
 
 Create a new project directory:
 
-    $ mkdir espresso
+```sh
+$ mkdir espresso
+```
 
 Install Espresso and Enginery:
 
-	$ gem install espresso-framework
-	$ gem install enginery
+```ruby
+$ gem install espresso-framework
+$ gem install enginery
+```
 
 Create a new application utilizing DataMapper:
 
-	$ enginery g orm:dm
+```sh
+$ enginery g orm:dm
+```
 
 Watch your terminal window. Enginery is generating a project structure, adding the required Gems ('data_mapper' and 'dm-sqlite-adapter') to the Gemfile, updating the Rakefile and configuration file, and finally running bundler to install the Gems.
 
@@ -32,10 +38,11 @@ Essentially, Enginery is similar to the Rails' Scaffolding functionality, allowi
 
 Next, generate your first model:
 
-	$ enginery g:m Tasks column:name column:description:text
+```sh
+$ enginery g:m Tasks column:name column:description:text
+```
 
 This generates a Tasks model with 3 columns in it:
-
 - **id:** primary key, generated automatically by DataMapper
 - **name:** string, which is the default data type
 - **description:**  text
@@ -44,19 +51,25 @@ Now we need to create a table for our Tasks model by migrating up the initializa
 
 For example:
 
-    base/migrations/tasks/1.2013-06-12_19-34-15.initializing-Tasks-model.rb
+```sh
+base/migrations/tasks/1.2013-06-12_19-34-15.initializing-Tasks-model.rb
+```
 
 This particular migration has a serial number of 1. 
 
 Let's finish the migration:
 
-	$ enginery m:up 1
+```sh
+$ enginery m:up 1
+```
 
 With a table now associated with the database, let's add some tasks!
 
 Fire up the server:
 
-	$ ruby app.rb
+```sh
+$ ruby app.rb
+```
 
 Then navigate to [http://localhost:5252/admin](http://localhost:5252/admin), click Tasks and add a few in. Get creative. 
 
@@ -68,11 +81,15 @@ Frontline is is a front-end manager for Enginery, which allows you to fully mana
 
 Install it:
 
-	$ gem install frontline
+```sh
+$ gem install frontline
+```
 
 Run it:
 
-	$ frontline
+```sh
+$ frontline
+```
     
 Rock it: [http://localhost:5000](http://localhost:5000)
 
@@ -82,57 +99,63 @@ Load your existing app using the project name, `espresso`, and the path, `/Users
 
 Let's update the base view. Click the "Maintenance" menu and select "layout.erb". Update the code:
 
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Espresso + Enginery + Frontline</title>
-        <link href="http://twitter.github.io/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
-        <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-      </head>
-      <body style="padding-top: 50px;">
-        <div class="navbar navbar-fixed-top">
-          <div class="navbar-inner">
-            <div class="container">
-              <a class="brand" href="#">Espresso + Enginery + Frontline</a>
-                <ul class="nav">
-                </ul>
-                <ul class="nav pull-right">
-                  <li><a href="/">Home</a></li>
-                </ul>
-            </div>
-          </div>
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Espresso + Enginery + Frontline</title>
+    <link href="http://twitter.github.io/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+  </head>
+  <body style="padding-top: 50px;">
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">Espresso + Enginery + Frontline</a>
+            <ul class="nav">
+            </ul>
+            <ul class="nav pull-right">
+              <li><a href="/">Home</a></li>
+            </ul>
         </div>
-      <div class="container">
-          <%= yield %>
       </div>
-      </body>
-    </html>
+    </div>
+  <div class="container">
+      <%= yield %>
+  </div>
+  </body>
+</html>
+```
 
 Now let's add some controllers, routes, and additional views. Enginery already generated the `Index` controller with an `index` route in it. Let's create a new route within the `Index` controller. Click "Controllers" => "Index" => "New Actions". For the action name, enter "list" and click the arrow to the right to process.
 
 Let's add some logic to the new route. Click "Index Action", and then "list". Add the following code to the *list.rb* file:
 
-    class Index
-      # action-specific setups
+```ruby
+class Index
+  # action-specific setups
 
-      def list
-  	    @tasks = Tasks.all
-        render
-      end
-      
-    end
+  def list
+    @tasks = Tasks.all
+    render
+  end
+  
+end
+```
 
 Then add the following code to *list.erb*:
-    
-    <br/>
-    <ul>
-    <% @tasks.each do |task| %>
-      <li>
-	    <h4><%= task.name %></h4>
-	    <p><%= task.description %></p>
-      </li>
-    <% end %>
-    </ul>
+
+```html    
+<br/>
+<ul>
+<% @tasks.each do |task| %>
+  <li>
+  <h4><%= task.name %></h4>
+  <p><%= task.description %></p>
+  </li>
+<% end %>
+</ul>
+```
 
 Then check out your live app at [http://localhost:5252/list](http://localhost:5252/list) 
 

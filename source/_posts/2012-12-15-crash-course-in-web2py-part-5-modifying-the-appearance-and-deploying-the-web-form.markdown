@@ -6,7 +6,7 @@ comments: true
 categories: python
 ---
 
-
+{% raw %}
 
 You made it. In this final tutorial I'll show you how to easily modify the form's appearance, and we'll deploy the app to PythonAnywhere.
 
@@ -34,32 +34,39 @@ Back on the admin page for the form, scroll to the bottom of the page, and uploa
 
 
 Next, I'm going to remove the *Web Form* title between the h1 tags, remove the line breaks, and clean up the instructions. I'm also going to remove the *Submitted*, *Accepted*, and, *Errors*  sections, as the user does not need to see all that information. So the final code looks like this:
-	
-	{ {extend 'plugin_layouts/layouts/KeepitSimple.html'}}
-	<p>Please enter your first name, last name, and email address - thanks!</p>
-	<h2>Inputs:</h2>
-	{ {=form}}
+
+```html	
+{{extend 'plugin_layouts/layouts/KeepitSimple.html'}}
+<p>Please enter your first name, last name, and email address - thanks!</p>
+<h2>Inputs:</h2>
+{{=form}}
+```
+
 Okay, now let's edit the *KeepitSimple html* file:
 
 First change the header div found in the middle of the page - "Welcome. Please register to access your services." (I also surrounded it in `<center>` tags)
 
 Add the following code to the header, just below the style.css -  
 
-	{ {response.files.append(URL(request.application,'static','css/bootstrap.min.css'))}}
+```html
+{{response.files.append(URL(request.application,'static','css/bootstrap.min.css'))}}
+```
 
 Then remove these lines of code-
-			
-	{ {try:}}{ {=auth.navbar(action=URL('default','user'))}}{{ except:pass}}
-	{ {=MENU(response.menu,_class='web2py-menu')}}
-	<div id="footer">&copy;2007 Keep it Simple &nbsp;
-	<span class="separator"
-	|
-	</span>
-	&nbsp; Design by
-	<a href="http://www.realitysoftware.ca" title="Website Design">
-	Reality Software
-	</a>
-	< /div>
+
+```html			
+{{try:}}{ {=auth.navbar(action=URL('default','user'))}}{{ except:pass}}
+{{=MENU(response.menu,_class='web2py-menu')}}
+<div id="footer">&copy;2007 Keep it Simple &nbsp;
+<span class="separator"
+|
+</span>
+&nbsp; Design by
+<a href="http://www.realitysoftware.ca" title="Website Design">
+Reality Software
+</a>
+</div>
+```
 
 ## **Update CSS**
 
@@ -93,19 +100,23 @@ I'll go over this quick since I covered this in [detail](http://mherman.org/blog
 
 Now just test it out to make sure it all works. Make sure all the errors/validators are working and then add a new record. One thing you do need to change is the default for generic view. You can read more about it [here](http://web2py.com/books/default/chapter/29/10#Generic-views). Open up db.py and scroll down to line 28. You need to remove the if statement, so the line will look just like this:
 
-	response.generic_patterns = ['*']
+```python
+response.generic_patterns = ['*']
+```
 
 Now, make sure you can access the *grid* page - [https://mjhea9.pythonanywhere.com/form/default/all_records](https://mjhea9.pythonanywhere.com/form/default/all_records) - and edit, update, and delete some records.
 
 One change that does need to be made is to add the requirement *IS_EMAIL()* to the email validation field to the db.py file; otherwise, you can submit email addresses that do not follow the conventional format. The final code looks like this:
 
-	db = DAL('sqlite://webform.sqlite')
-	db.define_table('register',
-    	Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
-    	Field('last_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
-    	Field('email', unique=True, requires=[IS_NOT_EMPTY(), IS_EMAIL()]),
-    	Field('email_validate',requires=[IS_EMAIL(), IS_EQUAL_TO(request.vars.email)]))	
-	db.register.email.requires=IS_NOT_IN_DB(db,'register.email')
+```python
+db = DAL('sqlite://webform.sqlite')
+db.define_table('register',
+	Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
+	Field('last_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
+	Field('email', unique=True, requires=[IS_NOT_EMPTY(), IS_EMAIL()]),
+	Field('email_validate',requires=[IS_EMAIL(), IS_EQUAL_TO(request.vars.email)]))	
+db.register.email.requires=IS_NOT_IN_DB(db,'register.email')
+```
 
 ## **Recap**
 
@@ -129,3 +140,5 @@ What's next? Think about what you can do with this info.
 Thanks for reading. Cheers.
 
 You can find the new code for db.py, display_your_form.html, and default.py, as well as all the files and the final packed app (.w2p) [here](https://github.com/mjhea0/web2py/tree/master/form%20-%20part%204).
+
+{% endraw %}

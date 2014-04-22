@@ -21,35 +21,39 @@ categories: python
 *Please Note: Make sure you rename the parsing function to something besides "parse" as the CrawlSpider uses the parse method to implement its logic.
 
 **Release:* *Once updated, the final code looks like this:
-	
-    from scrapy.contrib.spiders import CrawlSpider, Rule
-    from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
-    from scrapy.selector import HtmlXPathSelector
-    from craigslist_sample.items import CraigslistSampleItem
 
-    class MySpider(CrawlSpider):
-        name = "craigs"
-        allowed_domains = ["sfbay.craigslist.org"]
-        start_urls = ["http://sfbay.craigslist.org/npo/"]   
+```python	
+from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.selector import HtmlXPathSelector
+from craigslist_sample.items import CraigslistSampleItem
 
-        rules = (Rule (SgmlLinkExtractor(allow=("index\d00\.html", ),restrict_xpaths=('//p[@class="nextpage"]',))
-        , callback="parse_items", follow= True),
-        )
+class MySpider(CrawlSpider):
+    name = "craigs"
+    allowed_domains = ["sfbay.craigslist.org"]
+    start_urls = ["http://sfbay.craigslist.org/npo/"]   
 
-        def parse_items(self, response):
-            hxs = HtmlXPathSelector(response)
-            titles = hxs.select('//span[@class="pl"]')
-            items = []
-            for titles in titles:
-                item = CraigslistSampleItem()
-                item ["title"] = titles.select("a/text()").extract()
-                item ["link"] = titles.select("a/@href").extract()
-                items.append(item)
-            return(items)
+    rules = (Rule (SgmlLinkExtractor(allow=("index\d00\.html", ),restrict_xpaths=('//p[@class="nextpage"]',))
+    , callback="parse_items", follow= True),
+    )
+
+    def parse_items(self, response):
+        hxs = HtmlXPathSelector(response)
+        titles = hxs.select('//span[@class="pl"]')
+        items = []
+        for titles in titles:
+            item = CraigslistSampleItem()
+            item ["title"] = titles.select("a/text()").extract()
+            item ["link"] = titles.select("a/@href").extract()
+            items.append(item)
+        return(items)
+```
 
 Now run the following command to release the spider and save the scraped data to a CSV file:
 
-    scrapy crawl craigs -o items.csv -t csv
+```sh
+scrapy crawl craigs -o items.csv -t csv
+```
 
 *In essence, this spider started crawling at http://sfbay.craigslist.org/npo/ and then followed the "next 100 postings" link at the bottom, scraping the next page, until there where no more links to crawl. Again, this can be used to create some powerful crawlers, so use with caution and set delays to throttle the crawling speed if necessary.*
 
