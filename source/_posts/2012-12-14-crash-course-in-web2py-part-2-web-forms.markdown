@@ -10,8 +10,8 @@ In the last [tutorial](http://mherman.org/blog/2012/11/27/crash-course-in-web2py
 
 *Assumptions:*
 
-1.  You have web2py already installed
-2.  You know what a web form is
+1. You [installed](http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/) web2py
+2. You know what a web form is
 
 Anyway - let's get going ...
 
@@ -31,7 +31,7 @@ web2py essentially makes it easier for developers to design each part and create
 
 Okay - Go ahead and start the web2py server, go to the admin interface, and then create a new application. I named mine "form". Feel free to come up with something a bit more creative.
 
-## **Model**
+## Model*
 
 Open db.py in the Model's section and append the following code below, which defines the database schema. There are three required fields, plus a unique ID that is automatically created by web2py.
 
@@ -43,7 +43,7 @@ db.define_table('register',
     Field('email', requires=IS_NOT_EMPTY()))
 ```
 
-## **View**
+## View
 
 Create a new HTML file named default/display\_your\_form.html 
 
@@ -65,7 +65,7 @@ And then add the following code to call the form-
 ```
     
 
-## **Controller**
+## Controller
 
 Finally, comment out all the current code in the default.py file and add in this new function to define the form-
 
@@ -75,13 +75,13 @@ def display_your_form():
     return dict(form=form)
 ```
 
-## **Test**
+## Test
 
 Check out your amazing form at [http://127.0.0.1:8000/form/default/display\_your\_form.html](http://127.0.0.1:8000/form/default/display_your_form.html). Now, Go ahead and test the form to make sure it works. If done correctly, after you input the data and hit submit, the values are displayed.
 
 ![](http://www.backwardsteps.com/uploads/2012-11-30_2330.png)
 
-## **Recap**
+## Recap
 
 We used the MVC approach to make this form:
 
@@ -93,5 +93,5 @@ Alright - Hold off on deploying the app for now, as we will continue to add feat
 
 You can find the code for db.py, display\_your\_form.html, and default.py [here](https://github.com/mjhea0/web2py/tree/master/form%20-%20part%201).
 
-In the next tutorial we'll be adding in form validation. Brace yourself.
+In the [next](http://mherman.org/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/) tutorial we'll be adding in form validation. Brace yourself.
 {% endraw %}

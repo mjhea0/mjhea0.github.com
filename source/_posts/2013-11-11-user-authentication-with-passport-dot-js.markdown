@@ -9,6 +9,7 @@ categories: node
 **Change Log**
 
 1. *November 21st, 2013:* After a user registers, they are automatically logged in
+2. *May 15th, 2014:* Added info about salt and hashing passwords 
 
 <br>
 
@@ -144,14 +145,16 @@ var mongoose = require('mongoose'),
     passportLocalMongoose = require('passport-local-mongoose');
 
 var Account = new Schema({
-    nickname: String,
-    birthdate: Date
+    username: String,
+    password: String
 });
 
 Account.plugin(passportLocalMongoose);
 
 module.exports = mongoose.model('Account', Account);
 ```
+
+You may be wondering about password security, specifically salting/hashing the password. Fortunately, the [passport-local-mongoose](https://github.com/saintedlama/passport-local-mongoose) package automatically takes care of salting and hashing the password. More on this further down.
 
 ## Add routes
 
@@ -284,6 +287,30 @@ html
 Fire up the server and test! Register, then login. PUSH to git again.
 
 ![login](https://raw.github.com/mjhea0/passport-local/master/login.png)
+
+Remember how I said that we'd look at salting and hashing a password again? Well, let's check our Mongo database to ensure that it's working. 
+
+When I tested the user registration, I used "Michael" for both my username and password. 
+
+Let's see what this looks like in the database:
+
+```sh
+$ mongo
+MongoDB shell version: 2.4.6
+connecting to: test
+> use passport_local_mongoose
+switched to db passport_local_mongoose
+> db.accounts.find()
+{ "salt" : "2c0804ac9e1e7238eec9b110261ebaa78735252f17b795a1c8c65bb54e111838", "hash" : "801806d559e871ca3ae8ae12ede04035b17c3005f98ccc85368679c22de175d76d5d13dfb0fb076bd124c7d67961c50a5ec649638bc5baa1e3a29385000777624465287afac61cf57c10ee897baec378bdf31e087fd7e1b158e799e6e94316b7db0ebac5014034801d71e680dd5b9813b3f1b688018dd03daf1350dc9549bc6829ccc7e4fe00d4eca752c1bff8afab08d598f29e7bab475dd093d0e6d1694c2671172d1d23e8b0ddfdaaea1a940509d496fed6c0a2921b51aa351b7c73bf30ec66cfc0c3fb396646e92902d831d6f58f362aae9e609bdc2b20502eb73331b2e94fbb698359519dde3566538c4b471ffb45bf623d9de647199b0045e63a06c2205e02f0d500d13d3a1e2564690d7e82f4e26339c4be0c60f69057d93a6d20e12591b33104bba7c884c3f5379c52aed55a4f9b2a392d2c5ae6f9d8e2f3b1f233b99d4ebb41190aa4123c3e42baf9516cb9d586934f39e2dc742b8b0d731e00fad955951e40ecc933c1e27b432761c76a915aea4c3026003c472d78c184f9d0b45be59030740ccd9cf037a23c439bb60eccae5ae4de954779ddfdff17852d7fded26f886568d5c21250fde2ee679532bbb8c38c32aab29b3796455839ebeb9e913dc21a717c24e30caf4354c4be46de53a6c2254c5b11548654ba24411a422e669170084b6a31c23593ff627f165430933b60bde1019bbbaa148c275d7ed5dbe89d", "username" : "michael", "_id" : ObjectId("537554b8a1fbed4845000001"), "__v" : 0 }
+>
+```
+
+So, you can see that we have a document with five keys:
+
+- Username is as we expected. 
+- _id pertains to the unique id associated with that document. 
+- __v is the [version #](http://mongoosejs.com/docs/guide.html#versionKey) for that specific documents. 
+- Finally, instead of a password key we have both a salt and a hash key. For more on how these are generated, please refer to the [passport-local-mongoose](https://github.com/saintedlama/passport-local-mongoose#hash-algorithm) documentation.
 
 ## Unit tests
 

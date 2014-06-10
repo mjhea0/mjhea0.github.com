@@ -10,6 +10,8 @@ categories: ruby
 
 1. September 29, 2013: bootstrap 3, jQuery, css
 2. November 21, 2013: added the ability to edit posts, demonstarted how to escape HTML
+3. May 4, 2014: added a captcha to the new post form to help prevent spam (see blog post [here](http://mherman.org/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/))
+
 <br>
 
 Know a little Ruby? Ready to start web development? Before jumping to Rails, get your hands dirty with Sinatra. It's the perfect learning tool. My recommendation: Start with a basic dynamic website, backed with SQLite. Create and manage your database tables with raw SQL. Practice deploying on Heroku. Practice.
@@ -735,6 +737,10 @@ Links:
 - Git Repo: [https://github.com/mjhea0/sinatra-blog](https://github.com/mjhea0/sinatra-blog)
 
 *Sinatra has ended his set (crowd applauds as he exits the main stage).*
+
+## Add a captcha
+
+Help elimiante spam by adding a captcha to the new post form. View the blog post - [Adding a Captcha to Sinatra to Minimize Spam](http://mherman.org/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/).
 
 
 

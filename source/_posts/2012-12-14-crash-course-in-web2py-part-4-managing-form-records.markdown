@@ -9,9 +9,8 @@ categories: python
 Alright. In this tutorial I'll show you how to modify the controller so that the end user can update and delete records. At this point, I assume:
 
 1.  You have web2py already installed => [part 1](http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/)
-2.  You know what a web form is
-3.  You created the skeleton web form => [part 2](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/)
-4.  You added data validation (with the help of Han Solo) => [part 3](http://mherman.org/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/)
+1.  You created the skeleton web form => [part 2](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/)
+1.  You added data validation (with the help of Han Solo) => [part 3](http://mherman.org/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/)
 
 Let's begin ...
 
@@ -22,13 +21,13 @@ Let's begin ...
 Add the following code to *default.py* just before the SQLFORM function, then add the variable to the function itself:
 
 ```python
-update = db.register(request.args())
-    form = SQLFORM(db.register, update)
+update = db.register(request.args(0))
+form = SQLFORM(db.register, update)
 ```
 
 Essentially, *request.args()* pulls up a user record associated with a specific unique ID.
 
-## **Test**
+## Test
 
 Test this out by adding a new record to the database @ [http://127.0.0.1:8000/form/default/display\_your\_form.html](http://127.0.0.1:8000/form/default/display\_your\_form.html). Make note of the unique id in the *Accepted Fields* section.
 
@@ -48,14 +47,14 @@ So, now the user can only edit the last name and email fields.
 
 Moving on, for this process to work right, the user making the edits must know the unique id beforehand, which is unrealistic. web2py has a solution for that - *grid*.
 
-## **Controller**
+## Controller
 
 The *grid* method is just wonderful. You have to see it to believe it. Quickly now, add the following function to *default.py*:
 
 ```python
 def all_records():
-      grid = SQLFORM.grid(db.register,user_signature=False)
-      return locals()
+    grid = SQLFORM.grid(db.register,user_signature=False)
+    return locals()
 ```
 
 Navigate to the following URL - [http://127.0.0.1:8000/form/default/all_records](http://127.0.0.1:8000/form/default/all_records)
@@ -64,7 +63,7 @@ Wow.
 
 The end user can now perform the CRUD functions as well as search and sort all the records in the database - and it literally took twenty seconds to add this functionality. You can, of course, also require user authentication so only certain users can edit, while other users have read-only access.
 
-## **Model**
+## Model
 
 Finally, let's add two more validators to the form. Go to your database.
 
@@ -82,7 +81,7 @@ db.register.email.requires=IS_NOT_IN_DB(db,'register.email')
 
 Take note of lines 5, 6, and 7.
 
-## **Test**
+## Test
 
 Test this by first trying two different email addresses:
 
@@ -96,8 +95,8 @@ Perfect.
 
 Well, we could edit the actual errors that populate, but that's a bit more complicated. They'll suffice for now.
 
-## **Recap**
+## Recap
 
-Again, by adding just a few statements we added much functionality to our form, highlighting the power of such web frameworks like web2py. Well. that's it for now. In the next tutorial, I'll show you in brief how to modify the form's appearance via the CSS files. Oh - and we'll finally deploy the finished app!
+Again, by adding just a few statements we added much functionality to our form, highlighting the power of such web frameworks like web2py. Well. that's it for now. In the [next](http://mherman.org/blog/2012/12/10/crash-course-in-web2py-part-5-modifying-the-appearance-and-deploying-the-web-form/#.U5bvQJRdUZ0) tutorial, I'll show you in brief how to modify the form's appearance via the CSS files. Oh - and we'll finally deploy the finished app!
 
 You can find the new code for db.py, display\_your\_form.html, and default.py [here](https://github.com/mjhea0/web2py/tree/master/form%20-%20part%203).

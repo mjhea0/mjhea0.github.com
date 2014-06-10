@@ -41,8 +41,6 @@ Then change the default code for the index function to-
 
 ![](http://www.backwardsteps.com/uploads/2012-11-25_2046.png)
 
- 
-
 Hit CTRL-S on your keyboard to save the changes, then refresh [http://127.0.0.1:8000/helloWorld/default/index](http://127.0.0.1:8000/helloWorld/default/index) to see the changes made.
 
 ## Deploy the App
@@ -57,7 +55,7 @@ Enter an admin password, and then click Next. Once the app is setup, go to the a
 
 ![](http://www.backwardsteps.com/uploads/2012-11-26_00141.png)
 
-Finally, go to your homepage to view the app at   (replace user_name with your user name).
+Finally, go to your homepage to view the app at [https://user_name.pythonanywhere.com](https://your_user_name.pythonanywhere.com/admin) (replace user_name with your user name).
 
 You just deployed your first app - congrats!
 
@@ -65,4 +63,4 @@ You just deployed your first app - congrats!
 
 {% youtube BXzqmHx6edY %}
 <br />
-*In the next post, I'll show you how to create a much more advanced web app. Cheers!*
+*In the next [post](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/), I'll show you how to create a much more advanced web app. Cheers!*

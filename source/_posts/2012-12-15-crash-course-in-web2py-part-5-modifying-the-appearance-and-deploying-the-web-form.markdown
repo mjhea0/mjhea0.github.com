@@ -13,10 +13,9 @@ You made it. In this final tutorial I'll show you how to easily modify the form'
 *Assumptions:*
 
 1. You have web2py already installed => [part 1](http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/)
-1. You know what a web form is
-3. You created the skeleton web form => [part 2](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/)
-4. You added data validation (with the help of Han Solo) => [part 3](http://mherman.org/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/)
-5. You learned how to easily add CRUD functions to manage records => [part 4](http://mherman.org/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/)
+1. You created the skeleton web form => [part 2](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/)
+1. You added data validation (with the help of Han Solo) => [part 3](http://mherman.org/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/)
+1. You learned how to easily add CRUD functions to manage records => [part 4](http://mherman.org/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/)
 
 Let's get going ...
 
@@ -24,7 +23,7 @@ Launch the server. -> Go to the admin interface. -> Edit the "form" application.
 
 So, by default web2py utilizes the [Twitter Bootstrap](http://twitter.github.com/bootstrap/) front-end framework, which makes updating the layout and appearance easy.
 
-## **Download New Layout Plugin**
+## Download New Layout Plugin
 
 First, go to the web2py layout plugin [page](http://web2py.com/layouts) to find a layout that you like. In this example, I used [KeepitSimple](http://web2py.com/layouts/static/plugin_layouts/layouts/KeepitSimple/index.html). Once you find one, go ahead and download the .w2p file.
 
@@ -68,7 +67,7 @@ Reality Software
 </div>
 ```
 
-## **Update CSS**
+## Update CSS
 
 Your form should look much cleaner now. It's a bit bare, but you can liven it up with your own HTML. Now, let's add some changes to the CSS.
 
@@ -84,7 +83,7 @@ Oh - and if you want, you can edit the layout/appearance of the all_records page
 
 If all looks well, it's time to deploy!
 
-## **Deploy**
+## Deploy
 
 I'll go over this quick since I covered this in [detail](http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/) in the first tutorial.
 

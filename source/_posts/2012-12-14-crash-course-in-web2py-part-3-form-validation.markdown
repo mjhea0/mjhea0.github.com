@@ -11,13 +11,12 @@ Well, in the last [tutorial](http://mherman.org/blog/2012/12/01/crash-course-in-
 
 *Assumptions:*
 
-1.  You have web2py already installed
-2.  You know what a web form is
-3.  You created the skeleton web form in Part 2
+1.  You [installed](http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/) web2py
+1.  You created the skeleton web form from [Part 2](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/#.U5btEpRdUZ0)
 
 Start the web2py server, go to the admin interface, and then edit the "form" application (or whatever you decided to name it).
 
-## **Model**
+## Model
 
 Right now, there is a requirement set in the db.py file for each field-
 
@@ -27,7 +26,7 @@ requires=IS_NOT_EMPTY
 
 In other words - all fields must be filled out or an error populates.
 
-## **View**
+## View
 
 What do you want to display to the user?
 
@@ -52,7 +51,7 @@ Please note: All attempts must be error free before any info is accepted.</p>
 
 By adding *{ {extend 'layout.html'}}*, you will be able to display the flash error messages, which we'll add in next.
 
-## **Controller**
+## Controller
 
 Update deafult.py to match the following code-
 
@@ -70,7 +69,7 @@ def display_your_form():
 
 This adds an If Statement to display text based on whether the user submits your form with the required fields or not.
 
-## **Test**
+## Test
 
 1.  Go to [http://127.0.0.1:8000/form/default/display\_your\_form.html](http://127.0.0.1:8000/form/default/display_your_form.html).
 2.  Enter your first name, last name, and email.
@@ -96,7 +95,7 @@ What happens though if he gets confused and enters his first name correctly, but
 
 This is a problem. Let's add additional requirements to prevent this from happening.
 
-## **Model**
+## Model
 
 Update the code in db.py to match the following-
 
@@ -119,8 +118,8 @@ Good. Now he just needs to enter the correct value in the correct fields.
 
 Hey - at least he remembered his last name.
 
-## **Recap**
+## Recap
 
 By just tweaking the code a bit, we added basic validation to ensure that no fields are empty and to limit any data integrity issues. Again - Do not deploy the app on PythonAnywhere just yet. We still have more features to add, but we are well underway on having the best form on the Internet.
 
-You can find the new code for db.py, display\_your\_form.html, and default.py [here](https://github.com/mjhea0/web2py/tree/master/form%20-%20part%202).
+You can find the new code for db.py, display\_your\_form.html, and default.py [here](https://github.com/mjhea0/web2py/tree/master/form%20-%20part%202). When ready, move on to [Part 4](http://mherman.org/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/#.U5bvg5RdUZ0).
