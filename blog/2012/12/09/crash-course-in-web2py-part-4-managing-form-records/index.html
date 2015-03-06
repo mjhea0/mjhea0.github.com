@@ -1,0 +1,413 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Crash Course in web2py (part 4 - managing form records) - Michael Herman</title>
+  <meta name="author" content="Michael Herman">
+
+  
+  <meta name="description" content="Alright. In this tutorial I&#8217;ll show you how to modify the controller so that the end user can update and delete records. At this point, I &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://mjhea0.github.com/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/jquery.messagebar.min.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Michael Herman" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+    <script src="/javascripts/jquery.messagebar.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-37074204-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner">
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:mjhea0.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+  
+    
+      <h1 class="entry-title">Crash Course in Web2py (Part 4 - Managing Form Records)</h1>
+    
+  
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-09T22:32:00-07:00" pubdate data-updated="true">Dec 9<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Alright. In this tutorial I&#8217;ll show you how to modify the controller so that the end user can update and delete records. At this point, I assume:</p>
+
+<ol>
+<li>You have web2py already installed => <a href="http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/">part 1</a></li>
+<li>You created the skeleton web form => <a href="http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/">part 2</a></li>
+<li>You added data validation (with the help of Han Solo) => <a href="http://mherman.org/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/">part 3</a></li>
+</ol>
+
+
+<p>Let&#8217;s begin &#8230;</p>
+
+<p>(1) Launch the server. (2) Go to the admin interface. (3) Edit the &#8220;form&#8221; application.</p>
+
+<h2><strong>Controller</strong></h2>
+
+<p>Add the following code to <em>default.py</em> just before the SQLFORM function, then add the variable to the function itself:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">update</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</span><span class='line'><span class="n">form</span> <span class="o">=</span> <span class="n">SQLFORM</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">update</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Essentially, <em>request.args()</em> pulls up a user record associated with a specific unique ID.</p>
+
+<h2>Test</h2>
+
+<p>Test this out by adding a new record to the database @ <a href="http://127.0.0.1:8000/form/default/display_your_form.html">http://127.0.0.1:8000/form/default/display_your_form.html</a>. Make note of the unique id in the <em>Accepted Fields</em> section.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-08_2055.png" alt="" /></p>
+
+<p>Now append that unique id to the end of the base URL - e.g., <a href="http://127.0.0.1:8000/form/default/display_your_form/21">http://127.0.0.1:8000/form/default/display_your_form/21</a> - and the record should appear on a new page, which the user can update.</p>
+
+<hr />
+
+<p>Please note: you can add <em>writable=False</em> or <em>readable=False</em> to the fields in the database to prevent a user from either editing or viewing a particular field. In the example below, I added <em>writable=False</em> to the <em>first_name</em> field.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-08_2111.png" alt="" /></p>
+
+<p>So, now the user can only edit the last name and email fields.</p>
+
+<hr />
+
+<p>Moving on, for this process to work right, the user making the edits must know the unique id beforehand, which is unrealistic. web2py has a solution for that - <em>grid</em>.</p>
+
+<h2>Controller</h2>
+
+<p>The <em>grid</em> method is just wonderful. You have to see it to believe it. Quickly now, add the following function to <em>default.py</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">all_records</span><span class="p">():</span>
+</span><span class='line'>    <span class="n">grid</span> <span class="o">=</span> <span class="n">SQLFORM</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">register</span><span class="p">,</span><span class="n">user_signature</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">locals</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Navigate to the following URL - <a href="http://127.0.0.1:8000/form/default/all_records">http://127.0.0.1:8000/form/default/all_records</a></p>
+
+<p>Wow.</p>
+
+<p>The end user can now perform the CRUD functions as well as search and sort all the records in the database - and it literally took twenty seconds to add this functionality. You can, of course, also require user authentication so only certain users can edit, while other users have read-only access.</p>
+
+<h2>Model</h2>
+
+<p>Finally, let&#8217;s add two more validators to the form. Go to your database.</p>
+
+<p>I want the user to validate his/her email address and I want it to be unique, so update db.py with the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">db</span> <span class="o">=</span> <span class="n">DAL</span><span class="p">(</span><span class="s">&#39;sqlite://webform.sqlite&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">db</span><span class="o">.</span><span class="n">define_table</span><span class="p">(</span><span class="s">&#39;register&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;first_name&#39;</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="p">[</span><span class="n">IS_NOT_EMPTY</span><span class="p">(),</span> <span class="n">IS_ALPHANUMERIC</span><span class="p">()]),</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;last_name&#39;</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="p">[</span><span class="n">IS_NOT_EMPTY</span><span class="p">(),</span> <span class="n">IS_ALPHANUMERIC</span><span class="p">()]),</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="p">[</span><span class="n">IS_NOT_EMPTY</span><span class="p">(),</span> <span class="n">IS_EMAIL</span><span class="p">()]),</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;email_validate&#39;</span><span class="p">,</span><span class="n">requires</span><span class="o">=</span><span class="n">IS_EQUAL_TO</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">vars</span><span class="o">.</span><span class="n">email</span><span class="p">)))</span>
+</span><span class='line'><span class="n">db</span><span class="o">.</span><span class="n">register</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">requires</span><span class="o">=</span><span class="n">IS_NOT_IN_DB</span><span class="p">(</span><span class="n">db</span><span class="p">,</span><span class="s">&#39;register.email&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Take note of lines 5, 6, and 7.</p>
+
+<h2>Test</h2>
+
+<p>Test this by first trying two different email addresses:</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-08_2238.png" alt="" /></p>
+
+<p>Then test it again with an email you know is already in the database.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-08_2240.png" alt="" /></p>
+
+<p>Perfect.</p>
+
+<p>Well, we could edit the actual errors that populate, but that&#8217;s a bit more complicated. They&#8217;ll suffice for now.</p>
+
+<h2>Recap</h2>
+
+<p>Again, by adding just a few statements we added much functionality to our form, highlighting the power of such web frameworks like web2py. Well. that&#8217;s it for now. In the <a href="http://mherman.org/blog/2012/12/10/crash-course-in-web2py-part-5-modifying-the-appearance-and-deploying-the-web-form/#.U5bvQJRdUZ0">next</a> tutorial, I&#8217;ll show you in brief how to modify the form&#8217;s appearance via the CSS files. Oh - and we&#8217;ll finally deploy the finished app!</p>
+
+<p>You can find the new code for db.py, display_your_form.html, and default.py <a href="https://github.com/mjhea0/web2py/tree/master/form%20-%20part%203">here</a>.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Michael Herman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-09T22:32:00-07:00" pubdate data-updated="true">Dec 9<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/python/'>python</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+<!--   
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mjhea0.github.com/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/" data-via="" data-counturl="http://mjhea0.github.com/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+   -->
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+  <a class="addthis_button_preferred_1"></a>
+  <a class="addthis_button_preferred_2"></a>
+  <a class="addthis_button_preferred_3"></a>
+  <a class="addthis_button_preferred_4"></a>
+  <a class="addthis_button_compact"></a>
+  <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/" title="Previous Post: Crash Course in web2py (part 3 - form validation)">&laquo; Crash Course in web2py (part 3 - form validation)</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/12/10/crash-course-in-web2py-part-5-modifying-the-appearance-and-deploying-the-web-form/" title="Next Post: Crash Course in web2py (part 5 - modifying the appearance and deploying the web form)">Crash Course in web2py (part 5 - modifying the appearance and deploying the web form) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/02/12/postgresql-and-nodejs/">PostgreSQL and NodeJS</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/02/05/sublime-text-for-web-developers/">Sublime Text for Web Developers</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/27/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/08/15/kickstarting-angular-with-gulp-and-browserify-part-2/">Kickstarting Angular with Gulp and Browserify, Part 2 - Browserify</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  <h1>Categories</h1>
+  <ul id="categories">
+    <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (3)</a></li>
+<li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
+<li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>
+<li class='category'><a href='/blog/categories/finance/'>finance (2)</a></li>
+<li class='category'><a href='/blog/categories/frontend/'>frontend (1)</a></li>
+<li class='category'><a href='/blog/categories/git/'>git (1)</a></li>
+<li class='category'><a href='/blog/categories/github/'>github (1)</a></li>
+<li class='category'><a href='/blog/categories/meteor/'>meteor (1)</a></li>
+<li class='category'><a href='/blog/categories/news/'>news (2)</a></li>
+<li class='category'><a href='/blog/categories/node/'>node (12)</a></li>
+<li class='category'><a href='/blog/categories/python/'>python (11)</a></li>
+<li class='category'><a href='/blog/categories/ruby/'>ruby (3)</a></li>
+<li class='category'><a href='/blog/categories/startups/'>startups (3)</a></li>
+<li class='category'><a href='/blog/categories/sublime/'>sublime (2)</a></li>
+
+  </ul>
+</section><section>
+  <h1>About Me</h1>
+  <p>A little something about me.</p>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - Michael Herman <br/>
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>, customized with <a href="https://github.com/mjhea0/whiterspace">whiterspace</a>.</span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'michaelherman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://mjhea0.github.com/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/';
+        var disqus_url = 'http://mjhea0.github.com/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  <script type="text/javascript" src="//s3.amazonaws.com/scripts.hellobar.com/4bda7d5a1c9bd6b6b8382efaf71e4fccbcf180ce.js"></script>
+</body>
+</html>
