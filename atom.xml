@@ -4,7 +4,7 @@
   <title><![CDATA[Michael Herman]]></title>
   <link href="http://mjhea0.github.com/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-03-06T08:03:20-07:00</updated>
+  <updated>2015-03-06T10:53:22-07:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,398 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    
+    <title type="html"><![CDATA[Node with Docker - continuous integration and delivery]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/"/>
+    
+    <updated>2015-03-06T08:05:00-07:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery</id>
+    
+    <content type="html"><![CDATA[<p>Welcome.</p>
+
+<p><strong>This is a quick start guide for spinning up Docker containers that run NodeJS and Redis. We’ll look at a basic development workflow to manage the local development of an app, on Mac OS X, as well as continuous integration and delivery, step by step.</strong></p>
+
+<div class="center-text">
+  <img class="no-border" src="https://raw.githubusercontent.com/mjhea0/node-docker-workflow/master/_presentation/images/logo.png" style="max-width: 100%;" alt="logo">
+</div>
+
+
+
+
+<br>
+
+
+<blockquote><p>This tutorial is ported from <a href="https://realpython.com/blog/python/docker-in-action-fitter-happier-more-productive/">Docker in Action - Fitter, Happier, More Productive</a>.</p></blockquote>
+
+<p>We&#8217;ll be using the following tools, technologies, and services in this post:</p>
+
+<ol>
+<li><a href="http://nodejs.org/">NodeJS</a> v0.12.0</li>
+<li><a href="http://expressjs.com/">Express</a> v3.4.8</li>
+<li><a href="http://redis.io/">Redis</a> v2.8.19</li>
+<li><a href="https://www.docker.com/">Docker</a> v1.5.0</li>
+<li><a href="http://boot2docker.io/">boot2docker</a> v1.5.0</li>
+<li><a href="https://docs.docker.com/compose/">Docker Compose</a> v1.1.0</li>
+<li><a href="https://hub.docker.com/">Docker Hub</a></li>
+<li><a href="https://circleci.com/">CircleCI</a></li>
+<li><a href="https://www.digitalocean.com/">Digital Ocean</a></li>
+<li><a href="https://www.tutum.co/">Tutum</a></li>
+</ol>
+
+
+<blockquote><p>There&#8217;s slides too! Check them out <a href="http://realpython.github.io/fitter-happier-docker/node.html#/">here</a>, if interested.</p></blockquote>
+
+<h2>Docker?</h2>
+
+<p>Be sure you understand the Docker basics before diving into this tutorial. Check out the official <a href="https://www.docker.com/whatisdocker/">&#8220;What is Docker?&#8221;</a> guide for an excellent intro.</p>
+
+<p>In short, with Docker, you can truly mimic your production environment on your local machine. No more having to debug environment specific bugs or worrying that your app will perform differently in production.</p>
+
+<ol>
+<li>Version control for infrastructure</li>
+<li>Easily distribute/recreate your entire development environment</li>
+<li>Build once, run anywhere – aka The Holy Grail!</li>
+</ol>
+
+
+<h3>Docker-specific terms</h3>
+
+<ul>
+<li>A <em>Dockerfile is a file that contains a set of instructions used to create an </em>image*.</li>
+<li>An <em>image</em> is used to build and save snapshots (the state) of an environment.</li>
+<li>A <em>container</em> is an instantiated, live <em>image</em> that runs a collection of processes.</li>
+</ul>
+
+
+<blockquote><p>Be sure to check out the Docker <a href="https://docs.docker.com/">documentation</a> for more info on <a href="https://docs.docker.com/reference/builder/">Dockerfiles</a>, <a href="https://docs.docker.com/terms/image/">images</a>, and <a href="https://docs.docker.com/terms/container/">containers</a>.</p></blockquote>
+
+<h2>Local Setup</h2>
+
+<p>Let&#8217;s get your local development environment set up!</p>
+
+<h3>Get Docker</h3>
+
+<p>Follow the download instructions from the guide <a href="https://docs.docker.com/installation/mac/">Installing Docker on Mac OS X</a> to install both Docker and the official boot2docker package. <a href="http://boot2docker.io/">boot2docker</a> is a <em>lightweight</em> Linux distribution designed specifically to run Docker for Windows and Mac OS X users. In essence, it starts a small VM that’s configured to run Docker containers.</p>
+
+<p>Once installed, run the following commands in your project directory to start boot2docker:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>boot2docker init
+</span><span class='line'><span class="nv">$ </span>boot2docker up
+</span><span class='line'><span class="nv">$ </span><span class="k">$(</span>boot2docker shellinit<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Get the Project</h3>
+
+<p>Grab the base code from the <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/base">repo</a>, and add it to your project directory:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>├── app
+</span><span class='line'>│   ├── Dockerfile
+</span><span class='line'>│   ├── index.js
+</span><span class='line'>│   ├── package.json
+</span><span class='line'>│   └── <span class="nb">test</span>
+</span><span class='line'>│       └── test.js
+</span><span class='line'>└── redis
+</span><span class='line'>    └── Dockerfile
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Compose Up!</h3>
+
+<p><a href="https://github.com/docker/compose">Docker Compose</a> (Previously known as fig) is an orchestration framework that handles the building and running of multiple services, making it easy to link multiple services together running in different containers. Follow the installation instructions <a href="http://docs.docker.com/compose/install/#install-compose">here</a>, and then test it out to make sure all is well:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose --version
+</span><span class='line'>docker-compose 1.1.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now we just need to define the services - web (NodeJS) and persistence (Redis) in a configuration file called  <em>docker-compose.yml</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>web:
+</span><span class='line'>  build: ./app
+</span><span class='line'>  volumes:
+</span><span class='line'>    - <span class="s2">&quot;app:/src/app&quot;</span>
+</span><span class='line'>  ports:
+</span><span class='line'>    - <span class="s2">&quot;80:3000&quot;</span>
+</span><span class='line'>  links:
+</span><span class='line'>   - redis
+</span><span class='line'>redis:
+</span><span class='line'>    build: ./redis
+</span><span class='line'>    ports:
+</span><span class='line'>        - <span class="s2">&quot;6379:6379&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we add the services that make up our basic stack:</p>
+
+<ol>
+<li><strong>web</strong>: First, we build the image based on the instructions in the <em>Dockerfile</em> - where we setup our Node environment, create a volume, install the required dependencies, and fire up the app running on port 3000. Then we forward that port in the container to port 80 on the host environment - e.g., the boot2docker VM.</li>
+<li><strong>redis</strong>: Next, the Redis service is again built from the instructions in the <em>Dockerfile</em>. Port 6379 is exposed and forwarded.</li>
+</ol>
+
+
+<h3>Profit</h3>
+
+<p>Run <code>docker-compose up</code> to build new images for the NodeJS/Express app and Redis services and then run both processes in new containers. Open your browser and navigate to the IP address associated the boot2docker VM (<code>boot2docker ip</code>). You should see the text, &#8220;You have viewed this page 1 times!&#8221; in your browser. Refresh. The page counter should increment.</p>
+
+<p>Once done, kill the processes (Ctrl-C). Commit your changes locally, and then push to Github.</p>
+
+<h3>Next Steps</h3>
+
+<p>So, what did we accomplish?</p>
+
+<p>We set up our local environment, detailing the basic process of building an <em>image</em> from a <em>Dockerfile</em> and then creating an instance of the image called a <em>container</em>. We then tied everything together with Docker Compose to build and connect different containers for both the NodeJS/Express app and Redis process.</p>
+
+<p>Need the updated code? Grab it from the <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/compose">repo</a>.</p>
+
+<p>Next, let’s talk about Continuous Integration&#8230;</p>
+
+<h2>Continuous Integration</h2>
+
+<p>We&#8217;ll start with Docker Hub.</p>
+
+<h3>Docker Hub</h3>
+
+<p><a href="https://hub.docker.com/">Docker Hub</a> &#8220;manages the lifecycle of distributed apps with cloud services for building and sharing containers and automating workflows&#8221;. It&#8217;s the Github for Docker images.</p>
+
+<ol>
+<li><a href="https://hub.docker.com/account/signup/">Signup</a> using your Github credentials.</li>
+<li><a href="http://docs.docker.com/docker-hub/builds/#about-automated-builds">Set up</a> a new automated build. And add your Github repo that you created and pushed to earlier. Just accept all the default options. Once added, Docker Hub will trigger an initial build.</li>
+</ol>
+
+
+<p>Each time you push to Github, Docker Hub will generate a new build from scratch.</p>
+
+<p>Docker Hub acts much like a continuous integration server since it ensures you do not cause a regression that completely breaks the build process when the code base is updated. That said, Docker Hub should be the last test before deployment to either staging or production so let&#8217;s use a <em>true</em> continuous integration server to fully test our code before it hits Docker Hub.</p>
+
+<h3>CircleCI</h3>
+
+<p><a href="https://circleci.com/">CircleCI</a> is a CI platform that supports Docker.</p>
+
+<p>Given a Dockerfile, CircleCI builds an image, starts a new container (or containers), and then runs tests inside that container.</p>
+
+<ol>
+<li><a href="https://circleci.com/">Sign up</a> with your Github account.</li>
+<li>Create a new project using the Github repo you created.</li>
+</ol>
+
+
+<p>Next we need to add a configuration file, called <em>circle.yml</em>, to the root folder of the project so that CircleCI can properly create the build.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>machine:
+</span><span class='line'>  services:
+</span><span class='line'>    - docker
+</span><span class='line'>
+</span><span class='line'>dependencies:
+</span><span class='line'>  override:
+</span><span class='line'>    - curl -L https://github.com/docker/compose/releases/download/1.1.0/docker-compose-<span class="sb">`</span>uname -s<span class="sb">`</span>-<span class="sb">`</span>uname -m<span class="sb">`</span> &gt; /usr/local/bin/docker-compose chmod +x /usr/local/bin/docker-compose
+</span><span class='line'>
+</span><span class='line'><span class="nb">test</span>:
+</span><span class='line'>  override:
+</span><span class='line'>    - docker-compose run -d --no-deps web
+</span><span class='line'>    - <span class="nb">cd </span>app; mocha
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, we install Docker Compose, then we create a new image, and run the container along with our unit tests.</p>
+
+<blockquote><p>Notice how we’re using the command <code>docker-compose run -d --no-deps web</code>, to run the web process, instead of <code>docker-compose up</code>. This is because CircleCI already has Redis <a href="https://circleci.com/docs/environment#databases">running</a> and available to us for our tests. So, we just need to run the web process.</p></blockquote>
+
+<p>Before we test this out, we need to change some settings on Docker Hub.</p>
+
+<h3>Docker Hub (redux)</h3>
+
+<p>Right now, each push to Github will create a new build. That&#8217;s not what we want. Instead, we want CircleCI to run tests against the master branch then <em>after</em> they pass(and only after they pass), a new build should trigger on Docker Hub.</p>
+
+<p>Open your repository on Docker Hub, and make the following updates:</p>
+
+<ol>
+<li>Under <em>Settings</em> click <em>Automated Build</em>.</li>
+<li>Uncheck the Active box: “When active we will build when new pushes occur”. Save the changes.</li>
+<li>Then once again under <em>Settings</em> click <em>Build Triggers</em>.</li>
+<li>Change the status to on.</li>
+<li>Copy the example curl command – i.e., <code>$ curl --data "build=true" -X POST https://registry.hub.docker.com/u/mjhea0/node-docker-workflow/trigger/84957124-2b85-410d-b602-b48193853b66/</code>.</li>
+</ol>
+
+
+<h3>CircleCI (redux)</h3>
+
+<p>Back on CircleCI, let&#8217;s add that curl command as an environment variable:</p>
+
+<ol>
+<li>Within the <em>Project Settings</em>, select <em>Environment variables</em>.</li>
+<li>Add a new variable with the name &#8220;DEPLOY&#8221; and paste the curl command as the value.</li>
+</ol>
+
+
+<p>Then add the following code to the bottom of the <em>circle.yml</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">deployment</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">hub</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">branch</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">master</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">commands</span><span class="p-Indicator">:</span>
+</span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">$DEPLOY</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This simple fires the <code>$DEPLOY</code> variable after our tests pass on the master branch.</p>
+
+<p>Now, let&#8217;s test!</p>
+
+<h3>Profit!</h3>
+
+<p>Follow these steps&#8230;</p>
+
+<ol>
+<li>Create a new branch</li>
+<li>Make changes locally</li>
+<li>Issue a pull request</li>
+<li>Manually merge once the tests pass</li>
+<li>Once the second round passes, a new build is triggered on Docker Hub</li>
+</ol>
+
+
+<p>What&#8217;s left? Deployment! Grab the updated <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/circle">code</a>, if necessary.</p>
+
+<h2>Deployment</h2>
+
+<p>Let&#8217;s get our app running on <a href="https://www.digitalocean.com/">Digital Ocean</a>.</p>
+
+<p>After you&#8217;ve signed up, create a new Droplet, choose “Applications” and then select the Docker Application.</p>
+
+<p>Once setup, SSH into the server as the ‘root’ user:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh root@&lt;some_ip_address&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you just need to clone the repo, install Docker compose, and then you can run your app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git clone https://github.com/mjhea0/node-docker-workflow.git
+</span><span class='line'><span class="nv">$ </span>curl -L https://github.com/docker/compose/releases/download/1.1.0/docker-compose-<span class="sb">`</span>uname -s<span class="sb">`</span>-<span class="sb">`</span>uname -m<span class="sb">`</span> &gt; /usr/local/bin/docker-compose
+</span><span class='line'><span class="nv">$ </span>chmod +x /usr/local/bin/docker-compose
+</span><span class='line'><span class="nv">$ </span>docker-compose up -d
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Sanity check. Navigate to your Droplet’s IP address in the browser. You should see your app.</p>
+
+<p>Nice!</p>
+
+<p>But what about continuous delivery? Instead of having to SSH into the server and clone the new code, the process should be part of our workflow so that once a new build is generated on Docker Hub, the code is updated on Digital Ocean automatically.</p>
+
+<p>Enter <a href="https://www.tutum.co/">Tutum</a>.</p>
+
+<h2>Continuous Delivery</h2>
+
+<p><a href="https://www.tutum.co/">Tutum</a> manages the orchestration and deployment of Docker images and containers. Setup is simple. After you&#8217;ve signed up (with Github), you need to add a <a href="https://support.tutum.co/support/solutions/articles/5000523221-your-first-node">Node</a>, which is just a Linux host. We&#8217;ll use Digital Ocean.</p>
+
+<p>Start by linking your Digital Ocean account within the &#8220;Account Info&#8221; area.</p>
+
+<p>Now you can add a new Node. The process is straightforward, but if you need help, please refer to the <a href="https://support.tutum.co/support/solutions/articles/5000523221-your-first-node">official documentation</a>. Just add a name, select a region, and then you&#8217;re good to go.</p>
+
+<p>With a Node setup, we can now add a <a href="https://support.tutum.co/support/solutions/articles/5000569899-stacks">Stack</a> of services - <em>web</em> and <em>Redis</em>, in our case - that make up our tech stack. Next, create a new file called <em>tutum.yml</em>, and add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">web</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">image</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mjhea0/node-docker-workflow</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">autorestart</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">always</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">ports</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="s">&quot;80:3000&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">links</span><span class="p-Indicator">:</span>
+</span><span class='line'>   <span class="p-Indicator">-</span> <span class="s">&quot;redis:redis&quot;</span>
+</span><span class='line'><span class="l-Scalar-Plain">redis</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">image</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">redis</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">autorestart</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">always</span>
+</span><span class='line'>    <span class="l-Scalar-Plain">ports</span><span class="p-Indicator">:</span>
+</span><span class='line'>        <span class="p-Indicator">-</span> <span class="s">&quot;6379:6379&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, we are pulling the images from Docker Hub and building them just like we did with Docker Compose. Notice the difference here, between this file and the <em>docker-compose.yml</em> file. Here, we are not creating images, we&#8217;re pulling them in from Docker Hub. It&#8217;s essentially the same thing since the most updated build is on Docker Hub.</p>
+
+<p>Now just create a new Stack, adding a name and uploading the <em>tutum.yml</em> file, and click &#8220;Create and deploy&#8221; to pull in the new images on the Node and then build and run the containers.</p>
+
+<p>Once done, you can view your live app!</p>
+
+<blockquote><p>Note: You lose the &#8220;magic&#8221; of Tutum when running things in a single host, as we&#8217;re currently doing. In a real world scenario you&#8217;d want to deploy multiple web containers, load balance across them and have them live on different hosts, sharing a single REDIS cache. We may look at this in a future post, focusing solely on delivery.</p></blockquote>
+
+<p>Before we call it quits, we need to sync Docker Hub with Tutum so that when a new build is created on Docker Hub, the services are rebuilt and redeployed on Tutum - automatically!</p>
+
+<p>Tutum makes this simple.</p>
+
+<p>Under the <em>Services</em> tab, click the <em>web</em> service, and, finally, click the <em>Webhooks tab</em>. To create a new hook, simply add a name and then click <em>Add</em>. Copy the URL, and then navigate back to Docker Hub. Once there, click the <em>Webhook</em> link and add a new hook, pasting in the URL.</p>
+
+<p>Now after a build is created on Docker Hub, a POST request is sent to that URL, which, in turn, triggers a redeploy on Tutum. Boom!</p>
+
+<h2>Conclusion</h2>
+
+<p>As always comment below if you have questions. If you manage a different workflow for continuous integration and delivery, please post the details below. Grab the final code from the <a href="https://github.com/mjhea0/node-docker-workflow">repo</a>.</p>
+
+<p>See you next time!</p>
+]]></content>
+    
+  </entry>
   
   <entry>
     
@@ -13270,402 +13662,6 @@ Template.hello.events({
 <p>Simple, right? Grab the final code <a href="https://github.com/mjhea0/passport-examples">here</a>.</p>
 
 <p><img src="https://raw.github.com/mjhea0/passport-examples/master/public/img/final.png" alt="fb" /></p>
-]]></content>
-    
-  </entry>
-  
-  <entry>
-    
-    <title type="html"><![CDATA[Handling AJAX Calls With Node.js and Express (part 2)]]></title>
-    <link href="http://mjhea0.github.com/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/"/>
-    
-    <updated>2013-11-01T07:01:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2</id>
-    
-    <content type="html"><![CDATA[<p>Here is an index of all the articles in the series that have been published to date:</p>
-
-<ul>
-<li>Part 1: <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">Scraping Craigslist</a></li>
-<li>Part 2: <a href="http://mherman.org/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Adding Handlebars</a> <strong>&lt;&lt; CURRENT</strong></li>
-<li>Part 3: <a href="http://mherman.org/blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/">User Authentication with Passport and MongoDB</a></li>
-<li>Part 4: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Refactoring, Adding styles</a></li>
-<li>Part 5: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5">Saving Jobs</a></li>
-</ul>
-
-
-<p>Last <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">time</a> we looked at how to scrape Craigslist using AJAX, Node, and Express. In this post we&#8217;ll look at adding <a href="http://handlebarsjs.com/">Handlebars</a> into the mix.</p>
-
-<p>We&#8217;ll start with the server-side. Essentially, we need to modify the returned JSON results, creating a data structure appropriate for Handlebars. From there, we&#8217;ll send the newly created data structure back to the client-side, pass it into a  Handlebars template, and finally loop through the structure to ouput each individual result.</p>
-
-<h2>app.js (server-side)</h2>
-
-<p>Our second route, <code>/searching</code>, currently looks like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// second route</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// input value from search</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">//console.log(val);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// url used to search yql</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">&quot;http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search&quot;</span> <span class="o">+</span>
-</span><span class='line'>  <span class="s2">&quot;%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22&quot;</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">&quot;%22&amp;format=&quot;</span> <span class="o">+</span>
-</span><span class='line'>  <span class="s2">&quot;json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&quot;</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// console.log(url);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
-</span><span class='line'>  <span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-</span><span class='line'>      <span class="c1">// logic used to compare search results with the input from user</span>
-</span><span class='line'>      <span class="c1">// console.log(!body.query.results.RDF.item[&#39;about&#39;])</span>
-</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="s1">&#39;about&#39;</span><span class="p">]</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">craig</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;about&#39;</span><span class="p">]</span>
-</span><span class='line'>        <span class="nx">craig</span> <span class="o">=</span> <span class="s1">&#39;&lt;a href =&quot;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&quot;&gt;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&lt;/a&gt;&#39;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="c1">// pass back the results to client side</span>
-</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">craig</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// testing the route</span>
-</span><span class='line'>  <span class="c1">// res.send(&quot;WHEEE&quot;);</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Right now we&#8217;re just sending back a single link to a single result from the returned JSON:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;about&#39;</span><span class="p">]</span>
-</span><span class='line'><span class="nx">craig</span> <span class="o">=</span> <span class="s1">&#39;&lt;a href =&quot;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&quot;&gt;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&lt;/a&gt;&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Let&#8217;s expand this out so that it returns the title, url, and description. It&#8217;s also much easier to loop through an array than an object in Handlebars, so let&#8217;s return an array of objects -</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">[{</span><span class="nx">title</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">title</span><span class="o">&gt;</span><span class="p">,</span> <span class="nx">link</span><span class="o">:&lt;</span><span class="nx">link</span><span class="o">&gt;</span><span class="p">,</span> <span class="nx">description</span><span class="o">:&lt;</span><span class="nx">description</span><span class="o">&gt;</span><span class="p">},</span> <span class="p">.</span> <span class="p">.</span> <span class="p">.]</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>How do we do that?</strong> Based on the returned JSON data we know that the data needed is found in the <code>items</code> key. Add the following <code>console.log</code> to the <code>else</code> block:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Fire up your server. Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a>. Run a search on &#8220;Ruby&#8221;. Then check the output in the terminal. You should see something similar to this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span> <span class="nx">about</span><span class="o">:</span> <span class="s1">&#39;http://sfbay.craigslist.org/pen/sad/4151410088.html&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">title</span><span class="o">:</span>
-</span><span class='line'>   <span class="p">[</span> <span class="s1">&#39;Sr. System Administrator (mountain view)&#39;</span><span class="p">,</span>
-</span><span class='line'>     <span class="s1">&#39;Sr. System Administrator (mountain view)&#39;</span> <span class="p">],</span>
-</span><span class='line'>  <span class="nx">link</span><span class="o">:</span> <span class="s1">&#39;http://sfbay.craigslist.org/pen/sad/4151410088.html&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">description</span><span class="o">:</span> <span class="s1">&#39;Sr. System Administrator - Couchbase \nWe are looking to add a smart, energetic, and fast learning System Administrator/Operations Engineer who will develop, manage and support Couchbase\&#39;s growing infrastructure including building and maintaining virt [...]&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">date</span><span class="o">:</span> <span class="s1">&#39;2013-10-25T12:15:03-07:00&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">language</span><span class="o">:</span> <span class="s1">&#39;en-us&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">rights</span><span class="o">:</span> <span class="s1">&#39;&amp;copy; 2013 craigslist&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">source</span><span class="o">:</span> <span class="s1">&#39;http://sfbay.craigslist.org/pen/sad/4151410088.html&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">issued</span><span class="o">:</span> <span class="s1">&#39;2013-10-25T12:15:03-07:00&#39;</span> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Thus, each object will look like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">.</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="s2">&quot;link&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p><code>title</code> is an array with two values, where each value contains the exact same result. You can double check this by looking at other returned items.</p></blockquote>
-
-<p>Next, update the loop with the following code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span>
-</span><span class='line'>  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">resultsArray</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
-</span><span class='line'>      <span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;about&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
-</span><span class='line'>    <span class="p">)</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>To test out this code, <code>console.log</code> the array outside of the loop. Run another search for &#8220;ruby&#8221;. You should see something similar to this:</p>
-
-<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/part2-results.png" alt="image" /></p>
-
-<p>Which is the exact data structure that we need. Make sure that your <code>request</code> method looks like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">resultsArray</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>  <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// logic used to compare search results with the input from user</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">results</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">resultsArray</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
-</span><span class='line'>      <span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;about&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
-</span><span class='line'>    <span class="p">);</span>
-</span><span class='line'>  <span class="p">};</span>
-</span><span class='line'>  <span class="p">};</span>
-</span><span class='line'>  <span class="c1">// pass back the results to client side</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">resultsArray</span><span class="p">);</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So, if no results are found from the search, we&#8217;re sending <code>results</code> back to the client side, otherwise we&#8217;re sending <code>resultsArray</code>.</p>
-
-<p>Finally, let&#8217;s refactor the code to seperate out concerns:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// second route</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="c1">// input value from search</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// url used to search yql</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">&quot;http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search&quot;</span> <span class="o">+</span>
-</span><span class='line'><span class="s2">&quot;%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22&quot;</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">&quot;%22&amp;format=&quot;</span> <span class="o">+</span>
-</span><span class='line'><span class="s2">&quot;json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&quot;</span><span class="p">;</span>
-</span><span class='line'>      
-</span><span class='line'>  <span class="nx">requests</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">function</span> <span class="nx">requests</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
-</span><span class='line'>  <span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">resultsArray</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>  <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// console.log(body.query.results.RDF.item)</span>
-</span><span class='line'>  <span class="c1">// logic used to compare search results with the input from user</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">results</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="nx">callback</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">resultsArray</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
-</span><span class='line'>        <span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;about&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
-</span><span class='line'>      <span class="p">);</span>
-</span><span class='line'>    <span class="p">};</span>
-</span><span class='line'>  <span class="p">};</span>
-</span><span class='line'>    <span class="c1">// pass back the results to client side</span>
-</span><span class='line'>    <span class="nx">callback</span><span class="p">(</span><span class="nx">resultsArray</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>main.js (client-side)</h2>
-
-<p>Back on the client side, add the following <code>if</code> statement:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="k">instanceof</span> <span class="nb">Array</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">$results</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">dataTemplate</span><span class="p">({</span><span class="nx">resultsArray</span><span class="o">:</span><span class="nx">data</span><span class="p">}));</span>
-</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">$results</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">};</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This tests whether the returned data is an array. If so, <code>data</code> is passed to Handledbars, and, if not, <code>data</code> is added to <code>index.html</code>, indicating that no results are found. Test this out. Try searching for a something you know won&#8217;t return any results:</p>
-
-<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/no_results.png" alt="image" /></p>
-
-<h2>Handlebars</h2>
-
-<p>Finally, when results are returned, we want to pass <code>data</code>, which is the <code>resultsArray</code> to Handlebars, a client side templating engine. Such engines are extremly powerful as they provide a connection between the UI and underlying business logic. Put simply, this allows us to bind the <code>resultsArray</code> to the UI. This is called <em>data binding</em>. When the underlying data changes, such changes will reflect on the UI.</p>
-
-<p>First, update the <code>index.jade</code> file to include the Handlebars template, <code>template.html</code>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">extends</span> <span class="nx">layout</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">block</span> <span class="nx">content</span>
-</span><span class='line'>  <span class="nx">h1</span> <span class="nx">search</span> <span class="nx">sf</span> <span class="nx">jobs</span>
-</span><span class='line'>  <span class="nx">input</span><span class="err">#</span><span class="nx">search</span><span class="p">(</span><span class="nx">type</span><span class="o">=</span><span class="s2">&quot;search&quot;</span><span class="p">,</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Search Craig&#39;s Jobs&quot;</span><span class="p">)</span>
-</span><span class='line'>  <span class="nx">ul</span><span class="err">#</span><span class="nx">results</span>
-</span><span class='line'>  <span class="nx">include</span> <span class="nx">template</span><span class="p">.</span><span class="nx">html</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">script</span><span class="p">(</span><span class="nx">src</span><span class="o">=</span><span class="s2">&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;</span><span class="p">)</span>
-</span><span class='line'>  <span class="nx">script</span><span class="p">(</span><span class="nx">src</span><span class="o">=</span><span class="s2">&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;</span><span class="p">)</span>
-</span><span class='line'>  <span class="nx">script</span><span class="p">(</span><span class="nx">src</span><span class="o">=</span><span class="s2">&quot;/javascripts/main.js&quot;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Next, add <code>template.html</code> to the &#8220;views&#8221; folder, and then add the following code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="o">&lt;</span><span class="nx">script</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;search-results&quot;</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text/x-handlebars-template&quot;</span><span class="o">&gt;</span>
-</span><span class='line'>  <span class="p">{{</span><span class="err">#</span><span class="nx">each</span> <span class="nx">resultsArray</span><span class="p">}}</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{{</span><span class="nx">about</span><span class="p">}}</span><span class="o">&gt;</span><span class="p">{{</span><span class="nx">title</span><span class="p">}}</span><span class="o">&lt;</span><span class="err">/a&gt;&lt;br&gt;{{desc}}&gt;&lt;/li&gt;</span>
-</span><span class='line'>  <span class="p">{{</span><span class="err">/each}}</span>
-</span><span class='line'>  <span class="o">&lt;</span><span class="nx">br</span><span class="o">&gt;</span>
-</span><span class='line'>  <span class="o">&lt;</span><span class="err">/ul&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="err">/script&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>As you probably guessed, the <code>each</code> helper iterates through the list, adding a new list item - which includes the title, link, and description - to the dom.</p>
-
-<p>Test this out one last time. Search for &#8220;ruby&#8221;:</p>
-
-<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/ruby-search-results.png" alt="image" /></p>
-
-<p>Looks pretty good.</p>
-
-<h2>Conclusion</h2>
-
-<p>Alright, so next time we&#8217;ll add user login and authentication. You can grab the code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>.</p>
 ]]></content>
     
   </entry>

@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="Welcome. Using Node, Express, and Mongoose, let&#8217;s create an interactive form. Before you start, make sure you have Node installed for your &hellip;">
+  <meta name="description" content="This post demonstrate how to add user authentication to Node/Express with Passport.js. If you&#8217;re interested in social authentication via &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,918 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication With Passport and Express 4</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-01-31T07:07:00-07:00" pubdate data-updated="true">Jan 31<span>st</span>, 2015</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This post demonstrate how to add user authentication to Node/Express with Passport.js.</p>
+
+<blockquote><p>If you&#8217;re interested in social authentication via Passport, please check out <a href="http://mherman.org/blog/2013/11/10/social-authentication-with-passport-dot-js/">this</a> blog post. Looking for an Express 3 authentication tutorial? Check out this <a href="http://mherman.org/blog/2013/11/11/user-authentication-with-passport-dot-js/">post</a>.</p></blockquote>
+
+<p>Before you start, make sure you have <a href="http://nodejs.org/download/">Node</a> installed for your specific operating system. This tutorial also uses the following tools/technologies:</p>
+
+<ul>
+<li><a href="https://www.npmjs.com/package/express">Express</a> v4.11.1</li>
+<li><a href="https://www.npmjs.com/package/mongoose">Mongoose</a> v3.8.22</li>
+<li><a href="https://www.npmjs.com/package/passport">Passport</a> v0.2.1</li>
+<li><a href="https://www.npmjs.com/package/passport-local">Passport-local</a>: v1.0.0</li>
+<li><a href="https://www.npmjs.com/package/passport-local-mongoose">Passport-local-mongoose</a>: v1.0.0</li>
+</ul>
+
+
+<h2>Contents</h2>
+
+<ol>
+<li>Project Setup</li>
+<li>Edit app.js</li>
+<li>Mongoose</li>
+<li>Add Routes</li>
+<li>Test</li>
+<li>Views</li>
+<li>Test Redux</li>
+<li>Unit Tests</li>
+<li>Error Handling</li>
+<li>Conclusion</li>
+</ol>
+
+
+<h2>Project Setup</h2>
+
+<p>Start by installing the Express generator, which we&#8217;ll use to generate a basic project boilerplate:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install -g express-generator@4
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>The <code>-g</code> flag means that we&#8217;re installing this globally, on our entire system.</p></blockquote>
+
+<p>Navigate to a convenient directory, like your &#8220;Desktop&#8221; or &#8220;Documents&#8221;, then create your app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>express passport-local-express4
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Check out the project structure:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>├── app.js
+</span><span class='line'>├── bin
+</span><span class='line'>│   └── www
+</span><span class='line'>├── package.json
+</span><span class='line'>├── public
+</span><span class='line'>│   ├── images
+</span><span class='line'>│   ├── javascripts
+</span><span class='line'>│   └── stylesheets
+</span><span class='line'>│       └── style.css
+</span><span class='line'>├── routes
+</span><span class='line'>│   ├── index.js
+</span><span class='line'>│   └── users.js
+</span><span class='line'>└── views
+</span><span class='line'>    ├── error.jade
+</span><span class='line'>    ├── index.jade
+</span><span class='line'>    └── layout.jade
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This took care of the heavy lifting, adding common files and functions associated with all apps.</p>
+
+<h3>Install/Update Dependencies</h3>
+
+<p>Update the <em>package.json</em> file to reference the correct dependencies:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;passport-local-express4&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.0.0&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;private&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;scripts&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="s2">&quot;node ./bin/www&quot;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="nt">&quot;repository&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;git&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;git@github.com:mjhea0/passport-local-express4.git&quot;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="nt">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;Michael Herman &lt;michael@mherman.org&gt;&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;license&quot;</span><span class="p">:</span> <span class="s2">&quot;MIT&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;dependencies&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nt">&quot;body-parser&quot;</span><span class="p">:</span> <span class="s2">&quot;^1.10.2&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;chai&quot;</span><span class="p">:</span> <span class="s2">&quot;~1.8.1&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;cookie-parser&quot;</span><span class="p">:</span> <span class="s2">&quot;^1.3.3&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;express&quot;</span><span class="p">:</span> <span class="s2">&quot;^4.11.1&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;express-session&quot;</span><span class="p">:</span> <span class="s2">&quot;^1.10.1&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;jade&quot;</span><span class="p">:</span> <span class="s2">&quot;^1.9.1&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;mocha&quot;</span><span class="p">:</span> <span class="s2">&quot;~1.14.0&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;mongoose&quot;</span><span class="p">:</span> <span class="s2">&quot;^3.8.22&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;morgan&quot;</span><span class="p">:</span> <span class="s2">&quot;^1.5.1&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;passport&quot;</span><span class="p">:</span> <span class="s2">&quot;^0.2.1&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;passport-local&quot;</span><span class="p">:</span> <span class="s2">&quot;^1.0.0&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;passport-local-mongoose&quot;</span><span class="p">:</span> <span class="s2">&quot;^1.0.0&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;should&quot;</span><span class="p">:</span> <span class="s2">&quot;~2.1.0&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;serve-favicon&quot;</span><span class="p">:</span> <span class="s2">&quot;^2.2.0&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nt">&quot;debug&quot;</span><span class="p">:</span> <span class="s2">&quot;^2.1.1&quot;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now install the dependencies:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd </span>express-local-express4
+</span><span class='line'><span class="nv">$ </span>npm install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Sanity Check</h3>
+
+<p>Let&#8217;s test our setup by running the app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node ./bin/www
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser and you should see the &#8220;Welcome to Express&#8221; text staring back.</p>
+
+<h3>Setup MongoDB</h3>
+
+<p>Install:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install -g mongodb
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then, in a new terminal window, start the MongoDB daemon:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>sudo mongod
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Edit <em>app.js</em></h2>
+
+<h3>Update the Requirements</h3>
+
+<p>Add the following requirements:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">LocalStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-local&#39;</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Update <em>app.js</em></h3>
+
+<p>Update all of <em>app.js</em> with the following code (check the comments for a brief explanation):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// dependencies</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">favicon</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;serve-favicon&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">logger</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;morgan&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">cookieParser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cookie-parser&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">bodyParser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;body-parser&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">LocalStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-local&#39;</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">routes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/index&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/users&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// view engine setup</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;views&#39;</span><span class="p">,</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;views&#39;</span><span class="p">));</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;view engine&#39;</span><span class="p">,</span> <span class="s1">&#39;jade&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// uncomment after placing your favicon in /public</span>
+</span><span class='line'><span class="c1">//app.use(favicon(__dirname + &#39;/public/favicon.ico&#39;));</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;dev&#39;</span><span class="p">));</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">({</span> <span class="nx">extended</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}));</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">cookieParser</span><span class="p">());</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-session&#39;</span><span class="p">)({</span>
+</span><span class='line'>    <span class="nx">secret</span><span class="o">:</span> <span class="s1">&#39;keyboard cat&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">resave</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">saveUninitialized</span><span class="o">:</span> <span class="kc">false</span>
+</span><span class='line'><span class="p">}));</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">passport</span><span class="p">.</span><span class="nx">initialize</span><span class="p">());</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">passport</span><span class="p">.</span><span class="nx">session</span><span class="p">());</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="kr">static</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;public&#39;</span><span class="p">)));</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// passport config</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Account</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./models/account&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">LocalStrategy</span><span class="p">(</span><span class="nx">Account</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">()));</span>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">serializeUser</span><span class="p">(</span><span class="nx">Account</span><span class="p">.</span><span class="nx">serializeUser</span><span class="p">());</span>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">deserializeUser</span><span class="p">(</span><span class="nx">Account</span><span class="p">.</span><span class="nx">deserializeUser</span><span class="p">());</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// mongoose</span>
+</span><span class='line'><span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s1">&#39;mongodb://localhost/passport_local_mongoose_express4&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// catch 404 and forward to error handler</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Not Found&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">err</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span>
+</span><span class='line'>    <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// error handlers</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// development error handler</span>
+</span><span class='line'><span class="c1">// will print stacktrace</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;env&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;development&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">status</span> <span class="o">||</span> <span class="mi">500</span><span class="p">);</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">message</span><span class="o">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span>
+</span><span class='line'>            <span class="nx">error</span><span class="o">:</span> <span class="nx">err</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// production error handler</span>
+</span><span class='line'><span class="c1">// no stacktraces leaked to user</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">status</span> <span class="o">||</span> <span class="mi">500</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">message</span><span class="o">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">error</span><span class="o">:</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">app</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Mongoose</h2>
+
+<p>Let&#8217;s get the Mongoose up and running. Add a new file called <em>account.js</em> to a new directory called &#8220;models&#8221; with the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Schema</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">;</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">passportLocalMongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-local-mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Account</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Schema</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">username</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">password</span><span class="o">:</span> <span class="nb">String</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">Account</span><span class="p">.</span><span class="nx">plugin</span><span class="p">(</span><span class="nx">passportLocalMongoose</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Account&#39;</span><span class="p">,</span> <span class="nx">accounts</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You may be wondering about password security, specifically salting/hashing the password. Fortunately, the <a href="https://github.com/saintedlama/passport-local-mongoose">passport-local-mongoose</a> package automatically takes care of salting and hashing the password for us. More on this further down.</p>
+
+<h3>Sanity Check</h3>
+
+<p>Again, test the app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node ./bin/www
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Make sure you stil see the same &#8220;Welcome to Express&#8221; text.</p>
+
+<h2>Add Routes</h2>
+
+<p>Within the &#8220;routes&#8221; folder, add the following code to the <em>index.js</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Account</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models/account&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">user</span> <span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">user</span> <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/register&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;register&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/register&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">Account</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="k">new</span> <span class="nx">Account</span><span class="p">({</span> <span class="nx">username</span> <span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span> <span class="p">}),</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">account</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;register&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">account</span> <span class="o">:</span> <span class="nx">account</span> <span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">)(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">user</span> <span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">user</span> <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">),</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">req</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/ping&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">status</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;pong!&quot;</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Test</h2>
+
+<p>Fire up the server. Navigate to <a href="http://localhost:3000/ping">http://localhost:3000/ping</a>. Make sure you do not get any errors and that you see the word &#8220;pong!&#8221;.</p>
+
+<h2>Views</h2>
+
+<h3><em>layout.jade</em></h3>
+
+<p>Update:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">doctype</span> <span class="nx">html</span>
+</span><span class='line'><span class="nx">html</span>
+</span><span class='line'>  <span class="nx">head</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">=</span> <span class="nx">title</span>
+</span><span class='line'>    <span class="nx">meta</span><span class="p">(</span><span class="nx">name</span><span class="o">=</span><span class="s1">&#39;viewport&#39;</span><span class="p">,</span> <span class="nx">content</span><span class="o">=</span><span class="s1">&#39;width=device-width, initial-scale=1.0&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">link</span><span class="p">(</span><span class="nx">href</span><span class="o">=</span><span class="s1">&#39;http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css&#39;</span><span class="p">,</span> <span class="nx">rel</span><span class="o">=</span><span class="s1">&#39;stylesheet&#39;</span><span class="p">,</span> <span class="nx">media</span><span class="o">=</span><span class="s1">&#39;screen&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">link</span><span class="p">(</span><span class="nx">rel</span><span class="o">=</span><span class="s1">&#39;stylesheet&#39;</span><span class="p">,</span> <span class="nx">href</span><span class="o">=</span><span class="s1">&#39;/stylesheets/style.css&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">body</span>
+</span><span class='line'>    <span class="nx">block</span> <span class="nx">content</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">script</span><span class="p">(</span><span class="nx">src</span><span class="o">=</span><span class="s1">&#39;http://code.jquery.com/jquery.js&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">script</span><span class="p">(</span><span class="nx">src</span><span class="o">=</span><span class="s1">&#39;http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>index.jade</h3>
+
+<p>Update:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='jade'><span class='line'><span class="nt">extends</span> layout
+</span><span class='line'>
+</span><span class='line'><span class="nt">block</span> content
+</span><span class='line'>  <span class="nt">if</span> (!user)
+</span><span class='line'>    <span class="nt">a</span>(<span class="na">href=</span><span class="s">&quot;/login&quot;</span>) Login
+</span><span class='line'>    <span class="nt">br</span>
+</span><span class='line'>    <span class="nt">a</span>(<span class="na">href=</span><span class="s">&quot;/register&quot;</span>) Register
+</span><span class='line'>  <span class="nt">if</span> (user)
+</span><span class='line'>    <span class="nt">p</span> You are currently logged in as <span class="si">#{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span>
+</span><span class='line'>    <span class="nt">a</span>(<span class="na">href=</span><span class="s">&quot;/logout&quot;</span>) Logout
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>login.jade</h3>
+
+<p>Add a new file called <em>login.jade</em> to the views:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='jade'><span class='line'><span class="nt">extends</span> layout
+</span><span class='line'>
+</span><span class='line'><span class="nt">block</span> content
+</span><span class='line'>  <span class="nc">.container</span>
+</span><span class='line'>    <span class="nt">h1</span> Login Page
+</span><span class='line'>    <span class="nt">p</span><span class="nc">.lead</span> Say something worthwhile here.
+</span><span class='line'>    <span class="nt">br</span>
+</span><span class='line'>    <span class="nt">form</span>(<span class="na">role=</span><span class="s">&#39;form&#39;</span><span class="err">,</span> <span class="na">action=</span><span class="s">&quot;/login&quot;</span><span class="err">,</span><span class="na">method=</span><span class="s">&quot;post&quot;</span><span class="err">,</span> <span class="na">style=</span><span class="s">&#39;max-width: 300px;&#39;</span>)
+</span><span class='line'>      <span class="nc">.form-group</span>
+</span><span class='line'>          <span class="nt">input</span><span class="nc">.form-control</span>(<span class="na">type=</span><span class="s">&#39;text&#39;</span><span class="err">,</span> <span class="na">name=</span><span class="s">&quot;username&quot;</span><span class="err">,</span> <span class="na">placeholder=</span><span class="s">&#39;Enter Username&#39;</span>)
+</span><span class='line'>      <span class="nc">.form-group</span>
+</span><span class='line'>        <span class="nt">input</span><span class="nc">.form-control</span>(<span class="na">type=</span><span class="s">&#39;password&#39;</span><span class="err">,</span> <span class="na">name=</span><span class="s">&quot;password&quot;</span><span class="err">,</span> <span class="na">placeholder=</span><span class="s">&#39;Password&#39;</span>)
+</span><span class='line'>      <span class="nt">button</span><span class="nc">.btn.btn-default</span>(<span class="na">type=</span><span class="s">&#39;submit&#39;</span>) Submit
+</span><span class='line'>      <span class="err">&amp;</span><span class="nt">nbsp</span>;
+</span><span class='line'>      <span class="nt">a</span>(<span class="na">href=</span><span class="s">&#39;/&#39;</span>)
+</span><span class='line'>        <span class="nt">button</span><span class="nc">.btn.btn-primary</span>(<span class="na">type=</span><span class="s">&quot;button&quot;</span>) Cancel
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>register.jade</h3>
+
+<p>Add another file called <em>register.jade</em> to the views:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">extends</span> <span class="nx">layout</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">block</span> <span class="nx">content</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">container</span>
+</span><span class='line'>    <span class="nx">h1</span> <span class="nx">Register</span> <span class="nx">Page</span>
+</span><span class='line'>    <span class="nx">p</span><span class="p">.</span><span class="nx">lead</span> <span class="nx">Say</span> <span class="nx">something</span> <span class="nx">worthwhile</span> <span class="nx">here</span><span class="p">.</span>
+</span><span class='line'>    <span class="nx">br</span>
+</span><span class='line'>    <span class="nx">form</span><span class="p">(</span><span class="nx">role</span><span class="o">=</span><span class="s1">&#39;form&#39;</span><span class="p">,</span> <span class="nx">action</span><span class="o">=</span><span class="s2">&quot;/register&quot;</span><span class="p">,</span><span class="nx">method</span><span class="o">=</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="nx">style</span><span class="o">=</span><span class="s1">&#39;max-width: 300px;&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">form</span><span class="o">-</span><span class="nx">group</span>
+</span><span class='line'>          <span class="nx">input</span><span class="p">.</span><span class="nx">form</span><span class="o">-</span><span class="nx">control</span><span class="p">(</span><span class="nx">type</span><span class="o">=</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s1">&#39;Enter Username&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">form</span><span class="o">-</span><span class="nx">group</span>
+</span><span class='line'>        <span class="nx">input</span><span class="p">.</span><span class="nx">form</span><span class="o">-</span><span class="nx">control</span><span class="p">(</span><span class="nx">type</span><span class="o">=</span><span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s1">&#39;Password&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">button</span><span class="p">.</span><span class="nx">btn</span><span class="p">.</span><span class="nx">btn</span><span class="o">-</span><span class="k">default</span><span class="p">(</span><span class="nx">type</span><span class="o">=</span><span class="s1">&#39;submit&#39;</span><span class="p">)</span> <span class="nx">Submit</span>
+</span><span class='line'>      <span class="o">&amp;</span><span class="nx">nbsp</span><span class="p">;</span>
+</span><span class='line'>      <span class="nx">a</span><span class="p">(</span><span class="nx">href</span><span class="o">=</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">button</span><span class="p">.</span><span class="nx">btn</span><span class="p">.</span><span class="nx">btn</span><span class="o">-</span><span class="nx">primary</span><span class="p">(</span><span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span><span class="p">)</span> <span class="nx">Cancel</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Test redux</h2>
+
+<p>Fire up the server and test! Register, and then login.</p>
+
+<p>Remember how I said that we&#8217;d look at salting and hashing a password again? Well, let&#8217;s check our Mongo database to ensure that it&#8217;s working.</p>
+
+<p>When I tested the user registration, I used &#8220;michael&#8221; for both my username and password.</p>
+
+<p>Let&#8217;s see what this looks like in the database:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mongo
+</span><span class='line'>MongoDB shell version: 2.4.6
+</span><span class='line'>connecting to: <span class="nb">test</span>
+</span><span class='line'>&gt; use passport_local_mongoose_express4
+</span><span class='line'>switched to db passport_local_mongoose_express4
+</span><span class='line'>&gt; db.accounts.find<span class="o">()</span>
+</span><span class='line'><span class="o">{</span> <span class="s2">&quot;salt&quot;</span> : <span class="s2">&quot;9ffd63f2bcce58bf79691cacfaae678f690dd73ef778445bf79f97c41934189b&quot;</span>, <span class="s2">&quot;hash&quot;</span> : <span class="s2">&quot;17eabe62d459acdb4f3d8eaab7369a1e989c6150e231d1e87a7cf1c31dfc7eafc0616732a6db8f08c413dcbec06c95d512cef55503a1fe9a7ed5dc15ecf5cf67c114af5a659c79bb47039082a3af933e1c32dd2519b8be11596a775e1d262fd53437927e0fd948b76e738f342904a598e6c533445351c9b3d629aa118adfbe0646a80539e816c06248e353b1787dbd8c646a2ed018bbf5e58fb6a6cc1f32c6ea61b3e52230cfdf75a9f4b7ba20b3d3ae3b86f5816f5df9c48f9d1bb4a9c42e30bf646c3810d050847c1905e5a95f53c81078090e42ba58799187a61b047376def48fb640a4f48eca4c7f35610eafc2c770e61172b11c7e98c36281983de56414fa95e0708c9a6458a903baaf3818a3e4675b39418b358f51f45aca792e606f692e0a7d3667d111d00d0f521257d3486cbcff250dc7d9859ab80f9d56a3d272fb0ebb2e7dd969c0749361153c6bde62ad50b3d47233424034b959c78225db000cc1416aa0d555016f1b666d2da709e69c5030ee39753597a1d06ec0a4e001e22bff37947c1b993794d21667dc6c65e4116dd5ca216a161aa9026063e0b12e1165ffa5c827a6803df6765766cc55bcca122cd4d9f572353a988f90200ffc4a610d9eca83df01d6f30af78f9ec476fc974bc1d3a5fd2759a56486795bd7d993462a8d2f9b9c42d3197cd7b9855f17eaac4073a4d843d56b5c9a75b86cc1bb8b27ec&quot;</span>, <span class="s2">&quot;username&quot;</span> : <span class="s2">&quot;michael&quot;</span>, <span class="s2">&quot;_id&quot;</span> : ObjectId<span class="o">(</span><span class="s2">&quot;54c7bbbfaf54064909921a36&quot;</span><span class="o">)</span>, <span class="s2">&quot;__v&quot;</span> : 0 <span class="o">}</span>
+</span><span class='line'>&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, you can see that we have a document with five keys:</p>
+
+<ul>
+<li><code>username</code> is as we expected - &#8220;michael&#8221;</li>
+<li><code>_id</code> pertains to the unique id associated with that document.</li>
+<li><code>__v</code> is the <a href="http://mongoosejs.com/docs/guide.html#versionKey">version #</a> for that specific documents.</li>
+<li>Finally, instead of a password key we have both a salt and a hash key. For more on how these are generated, please refer to the <a href="https://github.com/saintedlama/passport-local-mongoose#hash-algorithm">passport-local-mongoose</a> documentation.</li>
+</ul>
+
+
+<h2>Unit tests</h2>
+
+<p>First, update the <code>scripts</code> object in <em>package.json</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="s2">&quot;scripts&quot;</span><span class="err">:</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="s2">&quot;node ./bin/www&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;make test&quot;</span>
+</span><span class='line'> <span class="p">}</span><span class="err">,</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now add a Makefile to the root and include the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="err">test:</span>
+</span><span class='line'>    <span class="err">@./node_modules/.bin/mocha</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">.PHONY:</span> <span class="err">test</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Take note of the spacing on the second line. This <strong>must</strong> be a tab or you will see an error.</p></blockquote>
+
+<p>Run <code>make test</code> from the command line. If all is well, you should see - <code>0 passing (1ms)</code>. Now we just need to add some tests&#8230;</p>
+
+<h3>Add tests</h3>
+
+<p>Create a new folder called &#8220;tests&#8221;, and then adde a new file called *test.user.js&#8221;:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;should&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Account</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;../models/account.js&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">db</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;Account&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">before</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">db</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s1">&#39;mongodb://localhost/test&#39;</span><span class="p">);</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">after</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">mongoose</span><span class="p">.</span><span class="nx">connection</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+</span><span class='line'>        <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">account</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Account</span><span class="p">({</span>
+</span><span class='line'>            <span class="nx">username</span><span class="o">:</span> <span class="s1">&#39;12345&#39;</span><span class="p">,</span>
+</span><span class='line'>            <span class="nx">password</span><span class="o">:</span> <span class="s1">&#39;testy&#39;</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">account</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;error&#39;</span> <span class="o">+</span> <span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+</span><span class='line'>            <span class="k">else</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;no error&#39;</span><span class="p">);</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;find a user by username&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">Account</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span> <span class="nx">username</span><span class="o">:</span> <span class="s1">&#39;12345&#39;</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">account</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">account</span><span class="p">.</span><span class="nx">username</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">&#39;12345&#39;</span><span class="p">);</span>
+</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;   username: &quot;</span><span class="p">,</span> <span class="nx">account</span><span class="p">.</span><span class="nx">username</span><span class="p">);</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">afterEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">Account</span><span class="p">.</span><span class="nx">remove</span><span class="p">({},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>     <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>No run <code>make tests</code>. You should see that it passed - <code>1 passing (43ms)</code>.</p>
+
+<h2>Error handling</h2>
+
+<p>Right now we have some poorly handled errors that are confusing to the end user. For example, try to register a name that already exists, or login with a username that doesn&#8217;t exist. This can and <em>should</em> be handled better.</p>
+
+<h3>Registration</h3>
+
+<p>First, update the <code>/register</code> route so an error is thrown, which gets sent to Jade template, if a user tries to register a username that already exists:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/register&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">Account</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="k">new</span> <span class="nx">Account</span><span class="p">({</span> <span class="nx">username</span> <span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span> <span class="p">}),</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">account</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s2">&quot;register&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">info</span><span class="o">:</span> <span class="s2">&quot;Sorry. That username already exists. Try again.&quot;</span><span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">)(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then add the following code to the bottom of the &#8220;register.jade&#8221; template:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='jade'><span class='line'><span class="nt">br</span>
+</span><span class='line'><span class="nt">h4</span><span class="p">=</span> <span class="n">info</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Test this out.</p>
+
+<p>Next, if you try to login with a username and password combo that does not exist, the user is redirected to a page with just the word &#8220;Unauthorized&#8221; on it. This is confusing and unhelpful. See if you can fix this on your own. Cheers!</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#8217;s it. Grab the code from the <a href="need%20to%20add%20link">repository</a>. Cheers!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1161,561 +2073,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2014/08/14/kickstarting-angular-with-gulp/">Kickstarting Angular With Gulp and Browserify, Part 1 - Gulp and Bower</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-08-14T08:17:00-06:00" pubdate data-updated="true">Aug 14<span>th</span>, 2014</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Let&#8217;s develop an Angular boilerplate. Why? Despite the plethora of Angular seeds/generators/templates/boilerplates/starters/etc. on Github, none of them will ever do <em>exactly</em> what you want unless you build your own, piece by piece. By designing your own, you will better understand each component as well as how each fits into the greater project. Stop fighting against a boilerplate that just doesn&#8217;t fit your needs and start from scratch. Keep it simple, as you learn the process.</p>
-
-<p><strong>In this first part, we&#8217;ll start with Angular and Gulp, getting a working project setup. Next <a href="http://mherman.org/blog/2014/08/15/kickstarting-angular-with-gulp-and-browserify-part-2/#.U-4co4BdUZ0">time</a> we&#8217;ll add Browserify into the mix.</strong></p>
-
-<blockquote><p>This tutorial assumes you have Node.js installed and have working knowledge of NPM and Angular. Just want the code? Get it <a href="https://github.com/mjhea0/angular-gulp-browserify-seed">here</a>.</p></blockquote>
-
-<h2>Project Setup</h2>
-
-<h3>Install Dependencies</h3>
-
-<h4>Setup a project folder and create a <em>package.json</em> file:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mkdir project_name <span class="o">&amp;&amp;</span> <span class="nb">cd </span>project_name
-</span><span class='line'><span class="nv">$ </span>npm init
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The <code>npm init</code> command helps you create your project&#8217;s base configuration through an interactive prompt. Be sure to update the &#8216;entry point&#8217; to &#8216;gulpfile.js&#8217;. You can just accept the defaults on the remaining prompts.</p>
-
-<p>Do the same for Bower:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>bower init
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Accept all the defaults. After the file is created update the <code>ignore</code> list:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s2">&quot;ignore&quot;</span><span class="o">:</span> <span class="p">[</span>
-</span><span class='line'>  <span class="s2">&quot;**/.*&quot;</span><span class="p">,</span>
-</span><span class='line'>  <span class="s2">&quot;node_modules&quot;</span><span class="p">,</span>
-</span><span class='line'>  <span class="s2">&quot;app/bower_components&quot;</span><span class="p">,</span>
-</span><span class='line'>  <span class="s2">&quot;test&quot;</span><span class="p">,</span>
-</span><span class='line'>  <span class="s2">&quot;tests&quot;</span>
-</span><span class='line'><span class="p">],</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>Install global dependencies:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install -g gulp bower
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>Bower install directory</h4>
-
-<p>You can specify where you want the dependencies (commonly known as bower components) installed to by adding a <em>.bowerrc</em> file and adding the following code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="s2">&quot;directory&quot;</span><span class="o">:</span> <span class="s2">&quot;/app/bower_components&quot;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>Install local dependencies:</h4>
-
-<p><em>NPM</em></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install gulp bower gulp-clean gulp-jshint gulp-uglify gulp-minify-css gulp-connect --save
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><em>Bower</em></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$bower</span> install angular angular-animate angular-route jquery animate.css bootstrap fontawesome --save
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>The <code>--save</code> flag adds the dependencies to the <em>package.json</em> and <em>bower.json</em> files, respectively.</p></blockquote>
-
-<p>We&#8217;ll address each of these dependencies shortly. For now, be sure you understand the project&#8217;s core dependencies:</p>
-
-<ul>
-<li><strong><a href="http://gulpjs.com/">Gulp</a></strong> is a Javascript task runner, used to automate repetitive tasks (i.e., minifying, linting, testing, building, compiling) to simplify the build process.</li>
-<li><strong><a href="http://bower.io/">Bower</a></strong> manages front-end dependencies.</li>
-</ul>
-
-
-<h3>Folder Structure</h3>
-
-<p>Let&#8217;s setup a base folder structure:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>.
-</span><span class='line'>├── app
-</span><span class='line'>│   ├── bower_components
-</span><span class='line'>│   ├── css
-</span><span class='line'>│   │    └── main.css
-</span><span class='line'>│   ├── img
-</span><span class='line'>│   ├── index.html
-</span><span class='line'>│   ├── partials
-</span><span class='line'>│   │    ├── partial1.html
-</span><span class='line'>│   │    └── partial2.html
-</span><span class='line'>│   └── js
-</span><span class='line'>│   │    └── main.js
-</span><span class='line'>├── .bowerrc
-</span><span class='line'>├── .gitignore
-</span><span class='line'>├── bower.json
-</span><span class='line'>├── gulpfile.js
-</span><span class='line'>├── node_modules
-</span><span class='line'>└── package.json
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Add the files and folders not already included. This structure is based on the popular <a href="https://github.com/angular/angular-seed">Angular Seed</a> boilerplate, developed by the Angular team.</p>
-
-<h3>Gulp</h3>
-
-<p>To start, we just need the following code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// gulp</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// plugins</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">connect</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-connect&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">connect</span><span class="p">.</span><span class="nx">server</span><span class="p">({</span>
-</span><span class='line'>    <span class="nx">root</span><span class="o">:</span> <span class="s1">&#39;app/&#39;</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">port</span><span class="o">:</span> <span class="mi">8888</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This allows us to serve our future Angular app on a development server running on port 8888.</p>
-
-<h3>Test</h3>
-
-<p>Let&#8217;s test it out. Add the word &#8216;hi&#8217; to the <em>index.html</em> file, then run the following command:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>gulp connect
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Navigate to <a href="http://localhost:8888/">http://localhost:8888/</a> and you should see &#8216;hi&#8217; staring back at you. Let&#8217;s build a quick sample app. Keep the server running&#8230;</p>
-
-<h2>Develop a Sample App</h2>
-
-<h3><em>index.html</em></h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span><span class='line'><span class="nt">&lt;html</span> <span class="na">ng-app=</span><span class="s">&quot;SampleApp&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;head</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span> <span class="na">content=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;author&quot;</span> <span class="na">content=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;title&gt;</span>Angular-Gulp-Browserify-Starter<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'>    <span class="c">&lt;!-- styles --&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;bower_components/bootstrap/dist/css/bootstrap.css&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;bower_components/fontawesome/css/font-awesome.css&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;bower_components/animate.css/animate.css&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;css/main.css&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;body&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;h1&gt;</span>Angular-Gulp-Browserify-Starter<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'>      <span class="c">&lt;!-- views --&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">ng-view</span><span class="nt">&gt;&lt;/div&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>    <span class="c">&lt;!-- scripts --&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;bower_components/jquery/dist/jquery.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;bower_components/angular/angular.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;bower_components/angular-route/angular-route.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;bower_components/angular-animate/angular-animate.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;bower_components/bootstrap/dist/js/bootstrap.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/main.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This should look familiar. The <code>ng-app</code> directive initiates an Angular app while <code>ng-view</code> sets the stage for routing.</p>
-
-<h3><em>main.js</em></h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;SampleApp&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ngRoute&#39;</span><span class="p">,</span> <span class="s1">&#39;ngAnimate&#39;</span><span class="p">])</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="p">.</span><span class="nx">config</span><span class="p">([</span>
-</span><span class='line'>    <span class="s1">&#39;$locationProvider&#39;</span><span class="p">,</span>
-</span><span class='line'>    <span class="s1">&#39;$routeProvider&#39;</span><span class="p">,</span>
-</span><span class='line'>    <span class="kd">function</span><span class="p">(</span><span class="nx">$locationProvider</span><span class="p">,</span> <span class="nx">$routeProvider</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">$locationProvider</span><span class="p">.</span><span class="nx">hashPrefix</span><span class="p">(</span><span class="s1">&#39;!&#39;</span><span class="p">);</span>
-</span><span class='line'>      <span class="c1">// routes</span>
-</span><span class='line'>      <span class="nx">$routeProvider</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">templateUrl</span><span class="o">:</span> <span class="s2">&quot;./partials/partial1.html&quot;</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">controller</span><span class="o">:</span> <span class="s2">&quot;MainController&quot;</span>
-</span><span class='line'>        <span class="p">})</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">otherwise</span><span class="p">({</span>
-</span><span class='line'>           <span class="nx">redirectTo</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">]);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">//Load controller</span>
-</span><span class='line'>  <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;SampleApp&#39;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;MainController&#39;</span><span class="p">,</span> <span class="p">[</span>
-</span><span class='line'>    <span class="s1">&#39;$scope&#39;</span><span class="p">,</span>
-</span><span class='line'>    <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">$scope</span><span class="p">.</span><span class="nx">test</span> <span class="o">=</span> <span class="s2">&quot;Testing...&quot;</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">]);</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}());</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Again, this should be relatively straightforward. We setup the basic Angular code to establish a route handler along with a controller that passes the variable <code>test</code> to the template.</p>
-
-<h3><em>partial1.html</em></h3>
-
-<p>Now let&#8217;s add the partial template:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;p&gt;</span>{{ test }}<span class="nt">&lt;/p&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Test</h3>
-
-<p>Back in your browser, refresh the page. You should see the text:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>Angular-Gulp-Browserify-Starter
-</span><span class='line'>
-</span><span class='line'>Testing...
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Create the Build</h2>
-
-<p>Now that our app is working locally, let&#8217;s modify our <em>gulpfile.js</em> to generate a deployable build. Kill the server.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// gulp</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// plugins</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">connect</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-connect&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">jshint</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-jshint&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">uglify</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-uglify&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">minifyCSS</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-minify-css&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">clean</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-clean&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// tasks</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;lint&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">([</span><span class="s1">&#39;./app/**/*.js&#39;</span><span class="p">,</span> <span class="s1">&#39;!./app/bower_components/**&#39;</span><span class="p">])</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">jshint</span><span class="p">())</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">jshint</span><span class="p">.</span><span class="nx">reporter</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">))</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">jshint</span><span class="p">.</span><span class="nx">reporter</span><span class="p">(</span><span class="s1">&#39;fail&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;clean&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">&#39;./dist/*&#39;</span><span class="p">)</span>
-</span><span class='line'>      <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">clean</span><span class="p">({</span><span class="nx">force</span><span class="o">:</span> <span class="kc">true</span><span class="p">}));</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;minify-css&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">opts</span> <span class="o">=</span> <span class="p">{</span><span class="nx">comments</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span><span class="nx">spare</span><span class="o">:</span><span class="kc">true</span><span class="p">};</span>
-</span><span class='line'>  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">([</span><span class="s1">&#39;./app/**/*.css&#39;</span><span class="p">,</span> <span class="s1">&#39;!./app/bower_components/**&#39;</span><span class="p">])</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">minifyCSS</span><span class="p">(</span><span class="nx">opts</span><span class="p">))</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">&#39;./dist/&#39;</span><span class="p">))</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;minify-js&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">([</span><span class="s1">&#39;./app/**/*.js&#39;</span><span class="p">,</span> <span class="s1">&#39;!./app/bower_components/**&#39;</span><span class="p">])</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">uglify</span><span class="p">({</span>
-</span><span class='line'>      <span class="c1">// inSourceMap:</span>
-</span><span class='line'>      <span class="c1">// outSourceMap: &quot;app.js.map&quot;</span>
-</span><span class='line'>    <span class="p">}))</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">&#39;./dist/&#39;</span><span class="p">))</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;copy-bower-components&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">&#39;./app/bower_components/**&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">&#39;dist/bower_components&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;copy-html-files&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">&#39;./app/**/*.html&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">&#39;dist/&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">connect</span><span class="p">.</span><span class="nx">server</span><span class="p">({</span>
-</span><span class='line'>    <span class="nx">root</span><span class="o">:</span> <span class="s1">&#39;app/&#39;</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">port</span><span class="o">:</span> <span class="mi">8888</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;connectDist&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">connect</span><span class="p">.</span><span class="nx">server</span><span class="p">({</span>
-</span><span class='line'>    <span class="nx">root</span><span class="o">:</span> <span class="s1">&#39;dist/&#39;</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">port</span><span class="o">:</span> <span class="mi">9999</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// default task</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="p">[</span><span class="s1">&#39;lint&#39;</span><span class="p">,</span> <span class="s1">&#39;connect&#39;</span><span class="p">]</span>
-</span><span class='line'><span class="p">);</span>
-</span><span class='line'><span class="c1">// build task</span>
-</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;build&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="p">[</span><span class="s1">&#39;lint&#39;</span><span class="p">,</span> <span class="s1">&#39;minify-css&#39;</span><span class="p">,</span> <span class="s1">&#39;minify-js&#39;</span><span class="p">,</span> <span class="s1">&#39;copy-html-files&#39;</span><span class="p">,</span> <span class="s1">&#39;copy-bower-components&#39;</span><span class="p">,</span> <span class="s1">&#39;connectDist&#39;</span><span class="p">]</span>
-</span><span class='line'><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>What&#8217;s happening here?</strong></p>
-
-<ol>
-<li><a href="https://github.com/spenceralger/gulp-jshint">gulp-jshint</a> checks for code quality in the JS files. If there are any issues the build fails and all errors output to the console.</li>
-<li><a href="https://github.com/peter-vilja/gulp-clean">gulp-clean</a> removes the entire build folder so that we start fresh every time we generate a new build.</li>
-<li><a href="https://github.com/terinjokes/gulp-uglify">gulp-uglify</a> and <a href="https://github.com/jonathanepollack/gulp-minify-css">gulp-minify-css</a> minify JS and CSS, respectively.</li>
-</ol>
-
-
-<h3>Build commands</h3>
-
-<p><strong>Default</strong></p>
-
-<p>The default task, <code>gulp</code>, is a compound task that runs both the <code>lint</code> and <code>connect</code> tasks. Again, this just serves the files in the &#8220;app&#8221; folder on <a href="http://localhost:8888/">http://localhost:8888/</a>.</p>
-
-<p><strong>Build</strong></p>
-
-<p>The build task creates a new directory called &#8220;dist&#8221;, runs the linter, minifies the CSS and JS files, and copies all the HTML files and Bower Components. You can then see what the final build looks like on <a href="http://localhost:9999/">http://localhost:9999/</a> before deployment. You should also run the <code>clean</code> task before you generate a build.</p>
-
-<p>Test this out:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>gulp clean build
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Conclusion</h2>
-
-<p>Well, hopefully you now have a better understanding of how Gulp can greatly simply the build process, handling a number of repetitive tasks. Next time we&#8217;ll clean up some of the mess that the Bower components leave behind by adding Browserify into the mix and detail a nice workflow that you can use for all your Angular projects.</p>
-
-<p>Leave questions and comments below. Cheers!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/3/">&larr; Older</a>
@@ -1733,6 +2090,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/02/12/postgresql-and-nodejs/">PostgreSQL and NodeJS</a>
       </li>
     
@@ -1746,10 +2107,6 @@
     
       <li class="post">
         <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/15/kickstarting-angular-with-gulp-and-browserify-part-2/">Kickstarting Angular with Gulp and Browserify, Part 2 - Browserify</a>
       </li>
     
   </ul>
@@ -1771,7 +2128,7 @@
 <li class='category'><a href='/blog/categories/python/'>python (11)</a></li>
 <li class='category'><a href='/blog/categories/ruby/'>ruby (3)</a></li>
 <li class='category'><a href='/blog/categories/startups/'>startups (3)</a></li>
-<li class='category'><a href='/blog/categories/sublime/'>sublime (2)</a></li>
+<li class='category'><a href='/blog/categories/sublime/'>sublime (3)</a></li>
 
   </ul>
 </section><section>

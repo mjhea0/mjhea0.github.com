@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="In the last tutorial I showed you the basics of web2py, and we even created a web app in less than ten minutes! In Part 2, I&#8217;ll show you how to &hellip;">
+  <meta name="description" content="Well, in the last tutorial I showed you how to create a basic web form that stores the submitted data in a SQLite database. In this tutorial, we&# &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,199 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/">Crash Course in Web2py (Part 3 - Form Validation)</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-06T21:52:00-07:00" pubdate data-updated="true">Dec 6<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Well, in the last <a href="http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/">tutorial</a> I showed you  how to create a basic web form that stores the submitted data in a SQLite database. In this tutorial, we&#8217;re going to add in data validation to your form.</p>
+
+<p><em>Assumptions:</em></p>
+
+<ol>
+<li>You <a href="http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/">installed</a> web2py</li>
+<li>You created the skeleton web form from <a href="http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/#.U5btEpRdUZ0">Part 2</a></li>
+</ol>
+
+
+<p>Start the web2py server, go to the admin interface, and then edit the &#8220;form&#8221; application (or whatever you decided to name it).</p>
+
+<h2>Model</h2>
+
+<p>Right now, there is a requirement set in the db.py file for each field-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">requires</span><span class="o">=</span><span class="n">IS_NOT_EMPTY</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In other words - all fields must be filled out or an error populates.</p>
+
+<h2>View</h2>
+
+<p>What do you want to display to the user?</p>
+
+<p>Open up display_your_form.html and change your code to match the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{{</span><span class="n">extend</span> <span class="s">&#39;layout.html&#39;</span><span class="p">}}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">br</span> <span class="o">/&gt;&lt;</span><span class="n">br</span> <span class="o">/&gt;&lt;</span><span class="n">br</span> <span class="o">/&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">Web</span> <span class="n">Form</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">br</span> <span class="o">/&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">Please</span> <span class="n">enter</span> <span class="n">your</span> <span class="n">first</span> <span class="ow">and</span> <span class="n">last</span> <span class="n">names</span><span class="p">,</span> <span class="ow">and</span> <span class="n">email</span> <span class="n">address</span><span class="o">.&lt;</span><span class="n">br</span> <span class="o">/&gt;</span>
+</span><span class='line'><span class="n">Please</span> <span class="n">note</span><span class="p">:</span> <span class="n">All</span> <span class="n">attempts</span> <span class="n">must</span> <span class="n">be</span> <span class="n">error</span> <span class="n">free</span> <span class="n">before</span> <span class="nb">any</span> <span class="n">info</span> <span class="ow">is</span> <span class="n">accepted</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h2</span><span class="o">&gt;</span><span class="n">Inputs</span><span class="p">:</span><span class="o">&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
+</span><span class='line'><span class="p">{{</span><span class="o">=</span><span class="n">form</span><span class="p">}}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h2</span><span class="o">&gt;</span><span class="n">Submitted</span> <span class="n">Fields</span><span class="p">:</span><span class="o">&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
+</span><span class='line'><span class="p">{{</span><span class="o">=</span><span class="n">BEAUTIFY</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">vars</span><span class="p">)}}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h2</span><span class="o">&gt;</span><span class="n">Accepted</span> <span class="n">Fields</span><span class="p">:</span><span class="o">&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
+</span><span class='line'><span class="p">{{</span><span class="o">=</span><span class="n">BEAUTIFY</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">vars</span><span class="p">)}}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h2</span><span class="o">&gt;</span><span class="n">Errors</span><span class="p">:</span><span class="o">&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
+</span><span class='line'><span class="p">{{</span><span class="o">=</span><span class="n">BEAUTIFY</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">errors</span><span class="p">)}}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>By adding <em>{ {extend &#8216;layout.html&#8217;}}</em>, you will be able to display the flash error messages, which we&#8217;ll add in next.</p>
+
+<h2>Controller</h2>
+
+<p>Update deafult.py to match the following code-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">display_your_form</span><span class="p">():</span>
+</span><span class='line'>    <span class="n">form</span> <span class="o">=</span> <span class="n">SQLFORM</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">register</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">accepts</span><span class="p">(</span><span class="n">request</span><span class="p">,</span><span class="n">session</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">response</span><span class="o">.</span><span class="n">flash</span> <span class="o">=</span> <span class="s">&#39;Thanks! The form has been submitted.&#39;</span>
+</span><span class='line'>    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
+</span><span class='line'>       <span class="n">response</span><span class="o">.</span><span class="n">flash</span> <span class="o">=</span> <span class="s">&#39;Please correct the error(s).&#39;</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>       <span class="n">response</span><span class="o">.</span><span class="n">flash</span> <span class="o">=</span> <span class="s">&#39;Try again - no fields can be empty.&#39;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This adds an If Statement to display text based on whether the user submits your form with the required fields or not.</p>
+
+<h2>Test</h2>
+
+<ol>
+<li>Go to <a href="http://127.0.0.1:8000/form/default/display_your_form.html">http://127.0.0.1:8000/form/default/display_your_form.html</a>.</li>
+<li>Enter your first name, last name, and email.</li>
+<li>Your output should look similar to this-</li>
+</ol>
+
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-05_0954.png" alt="" /></p>
+
+<p>As long as no fields are blank, you won&#8217;t see any errors - and the data will be added to the database. Notice how you can now see the unique identifier. The message &#8220;Thanks! The form has been submitted.&#8221; is visible in the top right corner, as well.</p>
+
+<p>How does this work?</p>
+
+<p>Well, when a field is submitted, it&#8217;s filtered through the <em>accepts</em> method from the Controller, according to the requirements specified in the database schema (<em>IS_NOT_EMPTY)</em>. If the field meets the requirement (accepts returns <em>True)</em>, it&#8217;s passed to <em>form.vars</em>; if not (accepts returns <em>False)</em>, an error populates, which is then stored in <em>form.errors</em>.</p>
+
+<p>Got it?</p>
+
+<p>See what happens when you enter an error.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-05_1001.png" alt="" /></p>
+
+<p>So when Han forgets his last name and just decides to leave it blank, the field values that meet the requirement are still passed. But they are not added to the database, since there is an error. And you should see an error message in the top right corner. As soon as he remembers, he can go back and correct. Poor Han.</p>
+
+<p>What happens though if he gets confused and enters his first name correctly, but enters his last name in the email field and his email in the last name field? Try it. You should not see an error.</p>
+
+<p>This is a problem. Let&#8217;s add additional requirements to prevent this from happening.</p>
+
+<h2>Model</h2>
+
+<p>Update the code in db.py to match the following-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">db</span> <span class="o">=</span> <span class="n">DAL</span><span class="p">(</span><span class="s">&#39;sqlite://webform.sqlite&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">db</span><span class="o">.</span><span class="n">define_table</span><span class="p">(</span><span class="s">&#39;register&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;first_name&#39;</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="p">[</span><span class="n">IS_NOT_EMPTY</span><span class="p">(),</span> <span class="n">IS_ALPHANUMERIC</span><span class="p">()]),</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;last_name&#39;</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="p">[</span><span class="n">IS_NOT_EMPTY</span><span class="p">(),</span> <span class="n">IS_ALPHANUMERIC</span><span class="p">()]),</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="p">[</span><span class="n">IS_NOT_EMPTY</span><span class="p">(),</span> <span class="n">IS_EMAIL</span><span class="p">()]))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><em>IS_ALPHANUMERIC()</em> requires that the field can only contain characters ranging from a-z, A-Z, or 0-9</li>
+<li><em>IS_EMAIL</em> requires that the field value must look like an email address</li>
+</ul>
+
+
+<p>Now watch happens when you switch the last name and email address.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-12-05_1007.png" alt="" /></p>
+
+<p>Good. Now he just needs to enter the correct value in the correct fields.</p>
+
+<p>Hey - at least he remembered his last name.</p>
+
+<h2>Recap</h2>
+
+<p>By just tweaking the code a bit, we added basic validation to ensure that no fields are empty and to limit any data integrity issues. Again - Do not deploy the app on PythonAnywhere just yet. We still have more features to add, but we are well underway on having the best form on the Internet.</p>
+
+<p>You can find the new code for db.py, display_your_form.html, and default.py <a href="https://github.com/mjhea0/web2py/tree/master/form%20-%20part%202">here</a>. When ready, move on to <a href="http://mherman.org/blog/2012/12/09/crash-course-in-web2py-part-4-managing-form-records/#.U5bvg5RdUZ0">Part 4</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -324,62 +517,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2012/11/18/integration-of-content-creation-leads-google-towards-the-slippery-slope-of-monopolies/">Integration of Content Creation Leads Google Towards the Slippery Slope of Monopolies</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-11-18T19:19:00-07:00" pubdate data-updated="true">Nov 18<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>How are monopolies created? It seems weird that monopolies can still exist, but they are alive and well despite laws and regulations . With tech companies, it becomes surprisingly easy as they develop or acquire exclusive start-ups, technologies and patents. However, this normally means just temporary dominance in a certain industry until competitors catch up. A true monopoly like those of the 19th and 20th centuries arise when one company dominates every aspect of an industry. The company can then game the market forcing customers to buy their services at that the price and conditions they set. The company benefits from coordinating its services and forces out competitors that specialize or have fewer resources. In short, the company becomes the only game in town. Google faces this daunting boundary as it starts to acquire content producing companies and websites. Is it right for a search engine to also provide content when people rely on it to find content from the top providers?</p>
-
-<h2>Google and Content Creation Not New</h2>
-
-<p>While recent acquisitions raise the ire of consumer advocates, Google was on this path for a while. The biggest acquisition would be the purchase of the popular video website YouTube. YouTube is a veritable geyser of content creation by both professional companies and private users. Google for the time being, doesn&#8217;t really cross lines because YouTube is more of a platform for creative content than a direct source. However, certain practices on its search engine for YouTube point to possible conflicts of interest that signal a monopoly forming. For example, video results for the search engine put YouTube results before those of other media websites like Daily Motion or Veoh. This is a major problem for market competition when looking at how YouTube benefits from its integration with Google&#8217;s multi-billion dollar infrastructure. Is it fair for its competitors for YouTube to have such an advantage?</p>
-
-<h2>From Content Finder To Content Producer</h2>
-
-<p>The line gets more blurry as Google looks to provide its own native content for YouTube and other websites. Google recently purchased Next New Networks, a web TV production company. The company has a reputation for creating original content for online viewing producing several popular web shows and shorts. With the backing of a major company like Google and the wide reach of the YouTube platform, the company could soon compete with traditional media outlets like ABC and NBC Universal. The problem lies in how this conflicts with Google&#8217;s role as a search engine. Google could game search results to put its shows over other companies&#8217; products instead of relying on actual user response and interest. The worst part is that users could only detect something wrong after a significant period of time.</p>
-
-<h2>Why Acquiring Content Providers Leads To Monopoly Of Search Results</h2>
-
-<p>YouTube is a general platform. Even if Google provides content, the majority comes from other sources, even competitors like Microsoft and Apple. Google&#8217;s recent acquisition of Zagat and Frommer&#8217;s shows what happens when the company directly provides content for the search engines. Zagat and Frommer&#8217;s are sites that provide online travel guides and information. Its competitors are websites like Lonely Planet. As a subsidiary of Google, there are several ways the company can benefit on Google&#8217;s search engine. First, the site can get free sponsored adds and searches when users make relevant searches. This is the same as automatically getting to the top of the Google pages. This is unfair to competitors who have to climb the rankings the hard way through building up a following through good content and costly marketing. In essence Google could use its unfair advantage to dominate or acquire competitors in the online travel guide business. Google becomes more and more like the famous political cartoon of Standard Oil. It is an octopus with its tentacles in various web related sectors and industries using its collective advantages to push out legitimate competitors.</p>
-
-<p>The issue is serious, and an interesting indicator of growing awareness about it was its use as a plot point in an episode of the popular Law Procedural/ Drama, The Good Wife. In a recent episode, two college students create a revolutionary voice software that a major search engine sabotages by altering the search results. The reason was they refused to sell their idea and the company buys their competitor and promotes them instead. The show raised the problem of providing direct legal evidence of the crime especially when the plaintiffs were bought out with jobs. Hopefully Google hasn&#8217;t reached that point yet, but the temptation to follow such actions eventually become irresistible.</p>
-
-<h2>Customers May Act As Check</h2>
-
-<p>Google is unique because its revenue <a href="http://venturebeat.com/2012/01/29/google-advertising/">comes</a> indirectly from advertising and depends on the users of its search engine and other products who see its ads. Its services are popular because customers rely on the impartiality of its algorithm to provide the most relevant content. If customers see Google tilting the board in their own favor, it could drive users to alternative search engines such as DuckDuckGo  and Bing. To avoid such scenarios Google has to follow the rules it now uses with YouTube allowing many content providers to use its new content services as a platform. This way it can maintain the separation it needs as a search engine. If not, regulators will step in and limit their actions in more detrimental ways.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/16/">&larr; Older</a>
@@ -397,6 +534,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/02/12/postgresql-and-nodejs/">PostgreSQL and NodeJS</a>
       </li>
     
@@ -410,10 +551,6 @@
     
       <li class="post">
         <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/15/kickstarting-angular-with-gulp-and-browserify-part-2/">Kickstarting Angular with Gulp and Browserify, Part 2 - Browserify</a>
       </li>
     
   </ul>
@@ -435,7 +572,7 @@
 <li class='category'><a href='/blog/categories/python/'>python (11)</a></li>
 <li class='category'><a href='/blog/categories/ruby/'>ruby (3)</a></li>
 <li class='category'><a href='/blog/categories/startups/'>startups (3)</a></li>
-<li class='category'><a href='/blog/categories/sublime/'>sublime (2)</a></li>
+<li class='category'><a href='/blog/categories/sublime/'>sublime (3)</a></li>
 
   </ul>
 </section><section>

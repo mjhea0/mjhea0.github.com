@@ -86,6 +86,631 @@ Part 4: &hellip;">
   <header>
   
     
+      <h1 class="entry-title"><a href="/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5/">Handling AJAX Calls With Node.js and Express (Part 5)</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-15T20:34:00-06:00" pubdate data-updated="true">Apr 15<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Articles in the series:</p>
+
+<ul>
+<li>Part 1: <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">Scraping Craigslist</a></li>
+<li>Part 2: <a href="http://mherman.org/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Adding Handlebars</a></li>
+<li>Part 3: <a href="http://mherman.org/blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/">User Authentication with Passport and MongoDB</a></li>
+<li>Part 4: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Refactoring, Adding styles</a></li>
+<li>Part 5: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5">Saving Jobs</a> <strong>&lt;&lt; CURRENT</strong></li>
+</ul>
+
+
+<p>Last <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">time</a> we refactored our code to make it more modular as well as added some styles. This time we&#8217;ll add our next feature: <em>The ability to save jobs so that users can apply to them later.</em></p>
+
+<h2>User Workflow</h2>
+
+<p>From an end user&#8217;s perspective, after logging in and then searching for jobs, one can simply click a button next to each job to save the job to a new Mongo collection. That job is then removed from the list of jobs retrieved from the search. Let&#8217;s start with that.</p>
+
+<h3>What do we need to do?</h3>
+
+<ol>
+<li>Add a &#8220;save&#8221; button next to each job.</li>
+<li>Develop the necessary code to &#8220;grab&#8221; the job when the button is clicked, sending it to the server side.</li>
+<li>Create a new collection in the database.</li>
+<li>Insert the data in the newly created Mongo collection.</li>
+<li>Use jQuery to remove the job from the DOM and alert the user that job has been added.</li>
+</ol>
+
+
+<p>Let&#8217;s get started.</p>
+
+<h2>Add a save button</h2>
+
+<p>Start by adding the &#8220;save&#8221; button to the Handlebars template:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">id=</span><span class="s">&quot;search-results&quot;</span> <span class="na">type=</span><span class="s">&quot;text/x-handlebars-template&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="p">{{</span><span class="err">#</span><span class="nx">each</span> <span class="nx">resultsArray</span><span class="p">}}</span>
+</span><span class='line'>      <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span>
+</span><span class='line'>        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;btn btn-primary btn-xs save-btn&quot;</span><span class="o">&gt;</span><span class="nx">Save</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+</span><span class='line'>        <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{{</span><span class="nx">about</span><span class="p">}}</span><span class="o">&gt;</span><span class="p">{{</span><span class="nx">title</span><span class="p">}}</span><span class="o">&lt;</span><span class="err">/a&gt;&lt;br&gt;{{desc}}&gt;</span>
+</span><span class='line'>      <span class="o">&lt;</span><span class="err">/li&gt;</span>
+</span><span class='line'>    <span class="p">{{</span><span class="err">/each}}</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="nx">br</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+</span><span class='line'><span class="nt">&lt;/script&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Moving right along &#8230;</p>
+
+<h2>Client Side Javascript</h2>
+
+<p>Next, let&#8217;s add an event handler to <em>main.js</em> that captures the button when clicked:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.save-btn&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;whee!&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Your file should now look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">source</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#search-results&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">();</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">dataTemplate</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="nx">source</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">$results</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#results&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#search&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;keyup&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span> <span class="o">===</span> <span class="mi">13</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">parameters</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">search</span><span class="o">:</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="p">};</span>
+</span><span class='line'>      <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="k">instanceof</span> <span class="nb">Array</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">$results</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">dataTemplate</span><span class="p">({</span><span class="nx">resultsArray</span><span class="o">:</span><span class="nx">data</span><span class="p">}));</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">$results</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">};</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.save-btn&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;whee!&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Do a quick sanity check. Fire up the server. Login. Search for some jobs. You should see the &#8220;save&#8221; button next to each job. Open up your Javascript console so you can see the console log when it fires. Now try to click a button.</p>
+
+<p>Nothing. Right? What&#8217;s going on? We have the right selector. The event is a click. It should be working.</p>
+
+<p>The problem is fairly simple: On the initial loading of the DOM, those selectors - <code>.save-btn</code> - are not present. In fact, they only become present after we append all the jobs to the DOM. Since the selectors are not present to begin with though, our event handler in its current state won&#8217;t find them. Fortunately, this is an easy fix.</p>
+
+<p>We can simply attach a listener to a parent element, then once the event is fired, it will search for the child selector, <code>.save-btn</code>. It will obviously only find that selector once it exists in the DOM.</p>
+
+<p>This is called event delegation. If interested, check <a href="https://learn.jquery.com/events/event-delegation/">this</a> article out for more info.</p>
+
+<p>Update the code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#results&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="s1">&#39;.save-btn&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;whee!&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, the listener is set to the <code>#results</code> selector, which when fired (by the button click), searches the DOM for the child selector, <code>.save-btn</code>. Test it out. It should work.</p>
+
+<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/delegated-events.png" alt="delegated-events" /></p>
+
+<p>Next, instead of just outputting the text &#8220;whee!&#8221;, we need to grab the job title and URL by replacing the current console log with:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">jobTitle</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">next</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">()</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">jobURL</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">next</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">jobTitle</span><span class="p">,</span> <span class="nx">jobURL</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Notice the <code>this</code> keyword? It&#8217;s extremely powerful yet it can be difficult to use. In this case, it refers to the DOM element that the event handler is triggered on.</p>
+
+<p>Don&#8217;t believe me? Test it out: update the <code>console.log()</code> to <code>console.log($(this))</code>. Test it out.</p>
+
+<p>To learn more about <code>this</code>, check out the jQuery <a href="https://learn.jquery.com/javascript-101/this-keyword/">docs</a> and Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this">docs</a>.</p>
+
+<p>Now what happens when you click the save button?</p>
+
+<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/this-keyword.png" alt="this-keyword" /></p>
+
+<p>Finally, we need to pass the data to the server.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">parameters</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">jobTitle</span><span class="p">,</span> <span class="nx">url</span><span class="o">:</span> <span class="nx">jobURL</span> <span class="p">};</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">parameters</span><span class="p">)</span>
+</span><span class='line'><span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span> <span class="s1">&#39;/save&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;whee!&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You should remember how to do this, and understand what&#8217;s happening here. If not, review <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/#.U1AdiuZdWYU">Part 1</a> of this series.</p>
+
+<h2>Server Side Javascript</h2>
+
+<p>On the server side, we need to setup a <code>/save</code> route. Again, if you have questions on this, check out <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/#.U1AdiuZdWYU">Part 1</a>.</p>
+
+<p>Update <code>app.js</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/save&#39;</span><span class="p">,</span> <span class="nx">ensureAuthenticated</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">save</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now update the routes file, <code>index.js</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">title</span><span class="p">,</span> <span class="nx">url</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Test this out. You should see:</p>
+
+<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/back-end.png" alt="backend" /></p>
+
+<h2>Update Mongo</h2>
+
+<p>Now that we have the data in our possession, let&#8217;s add it to the database.</p>
+
+<h3>Add a new schema</h3>
+
+<p>Create a new file in the &#8220;models&#8221; directory called <em>job.js</em>, then add the following code to the file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// create a job model</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">userSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">title</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">url</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Job&#39;</span><span class="p">,</span> <span class="nx">jobSchema</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Insert Data</h3>
+
+<p>With the schema set up, we can now add our data to the Mongo collection. Within your routes, add the following code to the <code>/save</code> route:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">title</span><span class="p">,</span> <span class="nx">url</span><span class="p">);</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">newJob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">job</span><span class="p">();</span>
+</span><span class='line'>  <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">newJob</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newJob</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">newJob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>      <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, we are simply creating a new record assigned to the variable <code>newJob</code>, then adding the appropriate data, and finally saving the job to our job collection within Mongo.</p>
+
+<p>Make sure to require the config and Mongoose schema files:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">job</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models/job&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Test it out!</p>
+
+<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/save_job_to_mongo.png" alt="save_job_to_mongo" /></p>
+
+<p>Now check out the results in Mongo:</p>
+
+<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/saved_job_mongo.png" alt="saved_job_mongo" /></p>
+
+<p>Before moving on, let&#8217;s add a line of code to search the Mongo collection to see if a job exists, then within a conditional we can setup logic for only adding a job if it doesn&#8217;t already exist in the collection:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">title</span><span class="p">,</span> <span class="nx">url</span><span class="p">);</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">newJob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">job</span><span class="p">();</span>
+</span><span class='line'>  <span class="nx">job</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="s1">&#39;title&#39;</span><span class="o">:</span> <span class="nx">title</span><span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Job already in database.&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">;</span>
+</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newJob</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>          <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, we search the database for the job - <code>job.findOne({'title': title}</code> - then if it&#8217;s found we output a message to the console - <code>console.log('Job already in database.');</code>. And if it&#8217;s not found, we obviously add the data to the database. We should alert the user if a job is already in the database in a more direct way than just a message to the console. After all, how many users browse the Internet with their console open? We&#8217;ll address that in a bit. Right now, let&#8217;s finish with Mongo first.</p>
+
+<h3>One to Many Relationship</h3>
+
+<p>We need set up a one to many relationship (one user, many jobs) using <a href="http://docs.mongodb.org/manual/tutorial/model-referenced-one-to-many-relationships-between-documents/">document references</a> within Mongo to associate a job to a user. This takes literally two lines of code.</p>
+
+<p>Update the jobs schema:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models/user&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">jobSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">title</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">url</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">user</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">.</span><span class="nx">Types</span><span class="p">.</span><span class="nx">ObjectId</span><span class="p">,</span> <span class="nx">ref</span><span class="o">:</span> <span class="nx">user</span><span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then updated <em>index.js</em> so that when you add a job it includes the currently logged in user:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">;</span>
+</span><span class='line'><span class="nx">newJob</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
+</span><span class='line'><span class="nx">newJob</span><span class="p">.</span><span class="nx">user</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">_id</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newJob</span><span class="p">);</span>
+</span><span class='line'><span class="nx">newJob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>    <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Test this out, then check out the object in Mongo:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span> <span class="s2">&quot;user&quot;</span> <span class="o">:</span> <span class="nx">ObjectId</span><span class="p">(</span><span class="s2">&quot;534cb94fd4b72d7618000001&quot;</span><span class="p">),</span> <span class="s2">&quot;url&quot;</span> <span class="o">:</span> <span class="s2">&quot;http://sfbay.craigslist.org/sfc/eng/4423216760.html&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span> <span class="o">:</span> <span class="s2">&quot;Principal Web Engineer&quot;</span><span class="p">,</span> <span class="s2">&quot;_id&quot;</span> <span class="o">:</span> <span class="nx">ObjectId</span><span class="p">(</span><span class="s2">&quot;5351f3a1cc6813119e000001&quot;</span><span class="p">),</span> <span class="s2">&quot;__v&quot;</span> <span class="o">:</span> <span class="mi">0</span> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The object now includes the user id.</p>
+
+<h2>Client Side Javascript Redux</h2>
+
+<p>Okay. Back on the client side, we need to do three things before we&#8217;re finally done:</p>
+
+<ol>
+<li>Remove the job the user saved</li>
+<li>Display messages from the server side, indicating whether the job was added to the database or not</li>
+<li>Display all saved jobs to the user</li>
+</ol>
+
+
+<h3>Remove job from the DOM</h3>
+
+<p>Add the following line of code to <em>main.js</em> right before we send the data to the server side:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">parent</span><span class="p">().</span><span class="nx">remove</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Updated code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#results&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="s1">&#39;.save-btn&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">jobTitle</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">next</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">()</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">jobURL</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">next</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">parameters</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">jobTitle</span><span class="p">,</span> <span class="nx">url</span><span class="o">:</span> <span class="nx">jobURL</span> <span class="p">};</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">parameters</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">parent</span><span class="p">().</span><span class="nx">remove</span><span class="p">()</span>
+</span><span class='line'>  <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span> <span class="s1">&#39;/save&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="nx">data</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Display Messages</h3>
+
+<p>First, within <em>index.js</em> update the following two lines of code.</p>
+
+<p>From:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Job already in database.&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;Job already in database.&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Updated function:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">title</span><span class="p">,</span> <span class="nx">url</span><span class="p">);</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">newJob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">job</span><span class="p">();</span>
+</span><span class='line'>  <span class="nx">job</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="s1">&#39;title&#39;</span><span class="o">:</span> <span class="nx">title</span><span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;Job already in database.&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">;</span>
+</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newJob</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>          <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>res.send()</code> method is used to send a response back to the client side. You can read more <a href="http://expressjs.com/4x/api.html#res.send">here</a>. Now, we need to capture that reponse and append the actual message to the DOM.</p>
+
+<p>First, add a new element, <code>p#alert</code>, to <em>search.jade</em> where you want the message to go:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>extends layout
+</span><span class='line'>
+</span><span class='line'>block content
+</span><span class='line'>    h1 Search SF Jobs
+</span><span class='line'>    .lead Welcome, #{user}
+</span><span class='line'>    form(METHOD=&quot;LINK&quot;, ACTION=&quot;logout&quot;)
+</span><span class='line'>        input(type=&quot;submit&quot;, value=&quot;Logout&quot;, class=&#39;btn btn-sm btn-primary&#39;)
+</span><span class='line'>    br
+</span><span class='line'>    br
+</span><span class='line'>    p#alert
+</span><span class='line'>    input#search(type=&quot;search&quot;, placeholder=&quot;search...&quot;)
+</span><span class='line'>    br
+</span><span class='line'>    br
+</span><span class='line'>    ul#results
+</span><span class='line'>    include template.html
+</span><span class='line'>
+</span><span class='line'>    script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;)
+</span><span class='line'>    script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;)
+</span><span class='line'>    script(src=&quot;/javascripts/main.js&quot;)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next update <em>main.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span> <span class="s1">&#39;/save&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#alert&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>$('#alert').html(data)</code> adds the message to the DOM between the <code>&lt;p&gt;</code> tags that have the id &#8220;results&#8221;.</p>
+
+<p>Check it out live.</p>
+
+<h3>Display saved jobs</h3>
+
+<p>This is actually a fairly large task, so we&#8217;ll tackle this in the next part, along with re-organizing the entire search page and adding some more styles.</p>
+
+<p>You can grab the code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>.</p>
+
+<p>See you next time!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+  
+    
       <h1 class="entry-title"><a href="/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Handling AJAX Calls With Node.js and Express (Part 4)</a></h1>
       
       
@@ -1742,844 +2367,6 @@ A binding consists of two items, the binding name and value, separated by a colo
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2014/02/19/node-twitter-sentiment/">Node Twitter Sentiment</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-02-19T10:33:00-07:00" pubdate data-updated="true">Feb 19<span>th</span>, 2014</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>In this tutorial we&#8217;ll be building an app to pull in real-time Tweets using a Twitter client library for Node called <a href="https://github.com/ttezel/twit">Twit</a> along with <a href="http://nodejs.org/">NodeJS</a>, <a href="http://expressjs.com/">Express</a>, and <a href="https://www.npmjs.org/package/Sentimental">Sentimental</a> (for sentiment analysis).</p>
-
-<p>This is for the <strong><a href="http://www.meetup.com/Node-js-Denver-Boulder/">Node-js-Denver-Boulder Meetup</a></strong> &lt;3 Cheers!</p>
-
-<p><strong>You can grab the example code <a href="https://github.com/mjhea0/node-twitter-sentiment">here</a>.</strong></p>
-
-<blockquote><p><strong>Requirements</strong>: This tutorial starts where this intro <a href="https://github.com/mjhea0/node-getting-started">tutorial</a>, Getting Started with Node, ends. If you&#8217;ve never set up a Node/Express application before, please start with the intro tutorial. Thanks.</p></blockquote>
-
-<p><img src="https://raw.github.com/mjhea0/node-twitter-sentiment/master/twit-decision.png" alt="twit-decision" /></p>
-
-<h2>Project Setup</h2>
-
-<p>As you know, Node uses Javascript for both the client and server side. Because of this, the project structure is even more important to not only separate out different concerns (client vs server) but also for your own understanding - e.g., so you can distinguish between client and server side code.</p>
-
-<p>Let&#8217;s get to it.</p>
-
-<h3>1. Setup basic project structure with Express</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>express twit-decision
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>2. Install dependencies for Node, Express, and Jade:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd </span>twit-decision <span class="o">&amp;&amp;</span> npm install
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>3. Your project structure should now look like this:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>.
-</span><span class='line'>├── app.js
-</span><span class='line'>├── package.json
-</span><span class='line'>├── public
-</span><span class='line'>│   ├── images
-</span><span class='line'>│   ├── javascripts
-</span><span class='line'>│   └── stylesheets
-</span><span class='line'>│       └── style.css
-</span><span class='line'>├── routes
-</span><span class='line'>│   ├── index.js
-</span><span class='line'>│   └── user.js
-</span><span class='line'>└── views
-</span><span class='line'>    ├── index.jade
-</span><span class='line'>    └── layout.jade
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>What&#8217;s going on?</h4>
-
-<ul>
-<li>Server side code includes <em>app.js</em> (app configurations, middleware, and routing), the &#8220;routes&#8221; folder (controller/business logic), and the <em>views</em> folder (views, templates, partials)</li>
-<li>Meanwhile, client side code includes the &#8220;public&#8221; folder (images, Javascript files, and stylesheets)</li>
-</ul>
-
-
-<h3>4. Run the server</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node app
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You should see the &#8220;Welcome to Express&#8221; Text.</p>
-
-<h2>Server Side Code</h2>
-
-<p>We&#8217;ll start with the server side. Our server code will be responsible for serving up our main <code>index</code> page, which will display two input boxes where the end user can enter data for comparison. When the data is passed to the server, via jQuery and AJAX on the client end, the server connects to Twitter, pulls the live tweets, and processes sentiment. Finally, the server sends the results back to the client.</p>
-
-<h3>1. Install dependences</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install twit --save
-</span><span class='line'><span class="nv">$ </span>npm install Sentimental --save
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>2. Updated <em>app.js</em> code</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// module dependencies</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">routes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// create express app  </span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// all environments</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">3000</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;views&#39;</span><span class="p">,</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;views&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;view engine&#39;</span><span class="p">,</span> <span class="s1">&#39;jade&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">favicon</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;dev&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">methodOverride</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">router</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="kr">static</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;public&#39;</span><span class="p">)));</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// development only</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="s1">&#39;development&#39;</span> <span class="o">==</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;env&#39;</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">errorHandler</span><span class="p">());</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// routes</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">index</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/ping&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">ping</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// create server</span>
-</span><span class='line'><span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">),</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Express server listening on port &#39;</span> <span class="o">+</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You&#8217;ve seen the majority of this code already, from the original <a href="https://github.com/mjhea0/node-getting-started">tutorial</a>, so I won&#8217;t go into too much detail. Plus, it&#8217;s heavily commented and, right now, it resembles a pretty standard Node/Express app.</p>
-
-<p>Let&#8217;s setup our routes next.</p>
-
-<h3>3. Routes</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s2">&quot;Twit-Decision&quot;</span><span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">ping</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;pong!&quot;</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Again, pretty straightforward here. We are serving up one page, <em>index</em>, while the second render parameter passes the title to the view. We also added a test route, called <em>ping</em>, which will just display ping on the page.</p>
-
-<p>Test it out. Navigate to <a href="http://localhost:3000/ping">http://localhost:3000/ping</a>. You should see &#8220;pong!&#8221; in the top left corner.</p>
-
-<h3>4. Views</h3>
-
-<p>Update <em>index.jade</em></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>doctype html
-</span><span class='line'>html
-</span><span class='line'>  head
-</span><span class='line'>    title= title
-</span><span class='line'>    meta(charset=&#39;utf-8&#39;)
-</span><span class='line'>    meta(name=&#39;viewport&#39;, content=&#39;width=device-width, initial-scale=1.0&#39;)
-</span><span class='line'>    meta(name=&#39;description&#39;, content=&#39;&#39;)
-</span><span class='line'>    meta(name=&#39;author&#39;, content=&#39;Michael Herman&#39;)
-</span><span class='line'>    link(href=&#39;http://netdna.bootstrapcdn.com/bootswatch/3.1.0/yeti/bootstrap.min.css&#39;, rel=&#39;stylesheet&#39;, media=&#39;screen&#39;)
-</span><span class='line'>    link(href=&#39;/stylesheets/main.css&#39;, rel=&#39;stylesheet&#39;, media=&#39;screen&#39;)
-</span><span class='line'>  body
-</span><span class='line'>    .container
-</span><span class='line'>      .jumbotron
-</span><span class='line'>        h1 Need to make a decision?
-</span><span class='line'>        p.lead Use Twitter sentiment analysis.
-</span><span class='line'>        br
-</span><span class='line'>        br
-</span><span class='line'>        .form-container
-</span><span class='line'>          form(action=&#39;&#39;, method=&#39;post&#39;)
-</span><span class='line'>            input#choice1.choice(type=&#39;text&#39;, data-choice=&#39;1&#39;, placeholder=&#39;Choice #1...&#39;, name=&#39;choice1&#39;)
-</span><span class='line'>            input#choice2.choice(type=&#39;text&#39;, data-choice=&#39;2&#39;, placeholder=&#39;Choice #2...&#39;, name=&#39;choice2&#39;)
-</span><span class='line'>            input#decision.btn.btn-success.btn-lg(type=&#39;submit&#39;, value=&#39;Decide!&#39;)
-</span><span class='line'>        br
-</span><span class='line'>        br
-</span><span class='line'>        .decision-container
-</span><span class='line'>          p#status
-</span><span class='line'>          p#decision-text
-</span><span class='line'>          p#score
-</span><span class='line'>          input#again.btn.btn-success.btn-lg(value=&#39;Again?&#39;)
-</span><span class='line'>    script(src=&#39;http://code.jquery.com/jquery-1.11.0.min.js&#39;)
-</span><span class='line'>    script(src=&#39;http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js&#39;)
-</span><span class='line'>    script(src=&#39;javascripts/main.js&#39;)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This is our only template that we need. It&#8217;s the <em>index</em> page, used for markup, and coded using the <a href="http://jade-lang.com/">Jade Template Language</a>. If this is confusing, I suggest converting this code to HTML and comparing the differences.We have the typical meta tags a links to CSS sheets in the <code>&lt;head&gt;</code>. The <code>&lt;body&gt;</code> includes a form as well as a number of selectors for appending the results of the sentiment analysis. Most of the styling is done in Bootstrap.</p>
-
-<p>Let&#8217;s quickly jump to the client side.</p>
-
-<h2>Client Side</h2>
-
-<h3>1. Styles</h3>
-
-<p>Add these custom styles to the <em>main.css</em> style within the &#8220;stylesheets&#8221; folder:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class='css'><span class='line'><span class="nc">.container</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">max-width</span><span class="o">:</span> <span class="m">1000px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">padding-top</span><span class="o">:</span> <span class="m">50px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">text-align</span><span class="o">:</span> <span class="k">center</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nc">.choice</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">width</span><span class="o">:</span><span class="m">100</span><span class="o">%</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">height</span><span class="o">:</span><span class="m">50px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">font-size</span><span class="o">:</span><span class="m">25px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">padding</span><span class="o">:</span><span class="m">10px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nf">#decision-text</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">font-weight</span><span class="o">:</span><span class="k">bold</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">font-size</span><span class="o">:</span><span class="m">60px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nf">#decision</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">margin-top</span><span class="o">:</span><span class="m">10px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nf">#status</span><span class="o">,</span> <span class="nf">#score</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">font-size</span><span class="o">:</span><span class="m">25px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nc">.form-container</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">margin</span><span class="o">:</span> <span class="k">auto</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">max-width</span><span class="o">:</span> <span class="m">500px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nc">.decision-container</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">margin</span><span class="o">:</span> <span class="k">auto</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">max-width</span><span class="o">:</span> <span class="m">500px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>If you&#8217;re curious, see how these CSS styles (values and properties) align up to the selectors in the jade template.</p>
-
-<h3>2. Client Side Javascript</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// highest # of choices (inputs) allowed</span>
-</span><span class='line'>  <span class="nb">window</span><span class="p">.</span><span class="nx">highestChoice</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// hide again button on page load</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">goDecide</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// prevent default browser behavior upon submit</span>
-</span><span class='line'>    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
-</span><span class='line'>    <span class="c1">// erase old values</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// hide decision text</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
-</span><span class='line'>    <span class="c1">// display processing text, update color to black in case of an error</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;black&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;Processing ...&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// create variable to see if any of the inputs are input</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">anyEmpty</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-</span><span class='line'>    <span class="c1">// array to hold inputs</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>    <span class="c1">// grab values, add to choices array</span>
-</span><span class='line'>    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">highestChoice</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="kd">var</span> <span class="nx">choiceValue</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice&quot;</span><span class="o">+</span><span class="nx">i</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">choiceValue</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">anyEmpty</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">choices</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">choiceValue</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">choiceValue</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="c1">// Handling *some* errors</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">anyEmpty</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice1&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="o">!=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice2&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// send values to server side for processing, wait for callback, getting AJAXy</span>
-</span><span class='line'>        <span class="nx">$</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/search&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">choices</span><span class="p">)},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">data</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>          <span class="c1">// append data to the DOM</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.form-container&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;and the winner is ...&quot;</span><span class="p">);</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;choice&#39;</span><span class="p">]);</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;... with a score of &#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">fadeIn</span><span class="p">();</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">fadeIn</span><span class="p">();</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// error code</span>
-</span><span class='line'>        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;Both choices are the same. Try again.&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="c1">// error code</span>
-</span><span class='line'>      <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;You must enter a value for both choices.&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// ----- MAIN ----- //</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// on click, run the goDecide function</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="nx">goDecide</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// on click new form is shown</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.form-container&quot;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
-</span><span class='line'>    <span class="c1">// erase old values</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice1&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice2&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// hide decision text</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now comes the fun part! Add a <em>main.js</em> file to your &#8220;javascripts&#8221; folder.</p>
-
-<p>Yes, there&#8217;s a lot going on here. Fortunately, it&#8217;s well documented.</p>
-
-<p>Start with the <code>// ----- MAIN ----- //</code> code. This essentially controls everything else. Nothing happens until the decision button is clicked. Once that happens the <code>goDecide()</code> function fires. This is where things get, well, interested.</p>
-
-<p>Go through it line by line, reading the comment, then code. Make sure you understand what each statement is doing.</p>
-
-<p>Notice how the magic starts happening when the data is grabbed from the inputs, added to an array, and then sent to the server side via AJAX. Notice the <code>/search</code> endpoint. We pass the stringified <code>choice</code> array to that endpoint, which needs to be setup on the server side, then what for the data to comeback before appending it to the DOM.</p>
-
-<p>Check out the rest of the code on your own. Follow the comments for assistance.</p>
-
-<h2>Back to the Server Side</h2>
-
-<p>So, we need to set up a new route, &#8216;/search&#8217;, on the server side to handle the data sent from the client side.</p>
-
-<h3>1. <em>app.js</em></h3>
-
-<p>First, add the route to <em>app.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/search&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">search</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>2. Update routes:</h3>
-
-<p>Then add the following code to <em>index.js</em> in the &#8220;routes&#8221; folder:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">search</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">// grab the request from the client</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">choices</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// grab the current date</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">today</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
-</span><span class='line'>  <span class="c1">// establish the twitter config (grab your keys at dev.twitter.com)</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">twitter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">twit</span><span class="p">({</span>
-</span><span class='line'>    <span class="nx">consumer_key</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_key</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">consumer_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_secret</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">access_token</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">access_token_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token_secret</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="c1">// set highest score</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">highestScore</span> <span class="o">=</span> <span class="o">-</span><span class="kc">Infinity</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// set highest choice</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">highestChoice</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// create new array</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">array</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>  <span class="c1">// set score</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;----------&quot;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// iterate through the choices array from the request</span>
-</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// add choice to new array</span>
-</span><span class='line'>    <span class="nx">array</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>    <span class="c1">// grad 20 tweets from today</span>
-</span><span class='line'>    <span class="nx">twitter</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;search/tweets&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">q</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="o">+</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; since:&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getFullYear</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span>
-</span><span class='line'>      <span class="p">(</span><span class="nx">today</span><span class="p">.</span><span class="nx">getMonth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getDate</span><span class="p">(),</span> <span class="nx">count</span><span class="o">:</span><span class="mi">20</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// perform sentiment analysis</span>
-</span><span class='line'>        <span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;score:&quot;</span><span class="p">,</span> <span class="nx">score</span><span class="p">)</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;choice:&quot;</span><span class="p">,</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>        <span class="c1">//  determine winner</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="nx">highestScore</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">highestScore</span> <span class="o">=</span> <span class="nx">score</span><span class="p">;</span>
-</span><span class='line'>          <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;winner:&quot;</span><span class="p">,</span><span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">})(</span><span class="nx">i</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="c1">// send response back to the server side; why the need for the timeout?</span>
-</span><span class='line'>  <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="o">:</span> <span class="nx">highestScore</span><span class="p">,</span> <span class="s1">&#39;choice&#39;</span><span class="o">:</span> <span class="nx">highestChoice</span><span class="p">}))</span> <span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>  
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Again, I&#8217;ve commented this heavily. So go through, line by line, and see what&#8217;s happening.</p>
-
-<p>Points of note:</p>
-
-<ol>
-<li>Add your Twitter config keys to a new file called <em>config.js</em>. More on this in the next section.</li>
-<li>Why are we using a timeout? Try removing it. What happens? Why is this a bad practice?</li>
-</ol>
-
-
-<h3>3. Config</h3>
-
-<p>Open the <em>config_example.js</em> file. Save the file as <em>config.js</em>, then add your own <a href="http://dev.twitter.com">Twitter</a> keys. Add this as a dependency along with Twit and Sentimental to your <em>index.js</em> file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">twit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;twit&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sentimental</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;Sentimental&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./config&quot;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>4. Twitter</h3>
-
-<p>Remember this line from your routes file, <em>index.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Well, we pass the pulled tweets as arguments into the <code>performAnalysis()</code> function.
-performAnalysis
-Let&#8217;s add that function:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">tweetSet</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">//set a results variable</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// iterate through the tweets, pulling the text, retweet count, and favorite count</span>
-</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">tweetSet</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">tweet</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="nx">retweets</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;retweet_count&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="nx">favorites</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;favorite_count&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="c1">// remove the hastag from the tweet text</span>
-</span><span class='line'>    <span class="nx">tweet</span> <span class="o">=</span> <span class="nx">tweet</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// perform sentiment on the text</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">sentimental</span><span class="p">.</span><span class="nx">analyze</span><span class="p">(</span><span class="nx">tweet</span><span class="p">)[</span><span class="s1">&#39;score&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="c1">// calculate score</span>
-</span><span class='line'>    <span class="nx">results</span> <span class="o">+=</span> <span class="nx">score</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">retweets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">retweets</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">favorites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">favorites</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">retweets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">-=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">retweets</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">favorites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">-=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">favorites</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">results</span> <span class="o">+=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="c1">// return score</span>
-</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="nx">results</span> <span class="o">/</span> <span class="nx">tweetSet</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">results</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>After the tweets are passed in, the text is parsed and sentiment is analyzed. Finally a score is calculated and returned.</p>
-
-<p>Boom. That&#8217;s it!</p>
-
-<p>Your project structure should now look like:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>.
-</span><span class='line'>├── app.js
-</span><span class='line'>├── config.js
-</span><span class='line'>├── package.json
-</span><span class='line'>├── public
-</span><span class='line'>│   ├── images
-</span><span class='line'>│   ├── javascripts
-</span><span class='line'>│   │   └── main.js
-</span><span class='line'>│   └── stylesheets
-</span><span class='line'>│       └── main.css
-</span><span class='line'>├── routes
-</span><span class='line'>│   └── index.js
-</span><span class='line'>└── views
-</span><span class='line'>    └── index.jade
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Test time!</p>
-
-<h2>Conclusion</h2>
-
-<p>Test this out a few times. Make sure it all works. Perhaps go through it iteratively, following along with the code for further understanding.</p>
-
-<p>Think about what you could add to make this app more fun/unique?</p>
-
-<ol>
-<li>Perhaps add a persistence layer, such as MongoDB, to retain the history of your searches to see sentiment over time.</li>
-<li>Ability to display actual tweets.</li>
-</ol>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/5/">&larr; Older</a>
@@ -2597,6 +2384,10 @@ Let&#8217;s add that function:</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/02/12/postgresql-and-nodejs/">PostgreSQL and NodeJS</a>
       </li>
     
@@ -2610,10 +2401,6 @@ Let&#8217;s add that function:</p>
     
       <li class="post">
         <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/15/kickstarting-angular-with-gulp-and-browserify-part-2/">Kickstarting Angular with Gulp and Browserify, Part 2 - Browserify</a>
       </li>
     
   </ul>
@@ -2635,7 +2422,7 @@ Let&#8217;s add that function:</p>
 <li class='category'><a href='/blog/categories/python/'>python (11)</a></li>
 <li class='category'><a href='/blog/categories/ruby/'>ruby (3)</a></li>
 <li class='category'><a href='/blog/categories/startups/'>startups (3)</a></li>
-<li class='category'><a href='/blog/categories/sublime/'>sublime (2)</a></li>
+<li class='category'><a href='/blog/categories/sublime/'>sublime (3)</a></li>
 
   </ul>
 </section><section>

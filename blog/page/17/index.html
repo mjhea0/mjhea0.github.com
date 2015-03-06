@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="This is a simple tutorial on how to write a crawler using Scrapy (BaseSpider) to scrape and parse Craigslist Nonprofit jobs in San Francisco and &hellip;">
+  <meta name="description" content="In the first tutorial, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data to a &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,132 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2012/11/08/recursively-scraping-web-pages-with-scrapy/">Recursively Scraping Web Pages With Scrapy</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-08T15:39:00-07:00" pubdate data-updated="true">Nov 8<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><em>In the first <a href="http://mherman.org/blog/2012/11/05/scraping-web-pages-with-scrapy/">tutorial</a>, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data to a CSV file. This tutorial continues from where we left off, adding to the existing code, in order to build a recursive crawler to scrape multiple pages. Make sure you read the first tutorial first.</em></p>
+
+<p><strong>CrawlSpider:</strong> Last time, we created a new Scrapy project, updated the Item Class, and then wrote the spider to pull jobs from a single page. This time, we just need to do some basic changes to add the ability to follow links and scrape more than one page. The first change is that this spider will inherit CrawlSpider and not BaseSpider.</p>
+
+<p><strong>Rules: </strong>We need to add in some Rules objects to define how the crawler follows the links. We will be using the following <a href="https://scrapy.readthedocs.org/en/latest/topics/spiders.html?highlight=crawlspider#crawling-rules">rules</a>:</p>
+
+<ul>
+<li><em>SgmlLinkExtractor: </em>defines how you want the spider to follow the links
+
+<ul>
+<li><em>allow:</em> defines the link href</li>
+<li><em>restrict_xpaths: </em>restricts the link to a certain Xpath</li>
+</ul>
+</li>
+<li><em>callback: </em>calls the parsing function after each page is scraped*</li>
+<li><em>follow: </em>instructs whether to continue following the links as long as they exist</li>
+</ul>
+
+
+<p>*Please Note: Make sure you rename the parsing function to something besides &#8220;parse&#8221; as the CrawlSpider uses the parse method to implement its logic.</p>
+
+<p><em><em>Release:</em> </em>Once updated, the final code looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">scrapy.contrib.spiders</span> <span class="kn">import</span> <span class="n">CrawlSpider</span><span class="p">,</span> <span class="n">Rule</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">scrapy.contrib.linkextractors.sgml</span> <span class="kn">import</span> <span class="n">SgmlLinkExtractor</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">scrapy.selector</span> <span class="kn">import</span> <span class="n">HtmlXPathSelector</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">craigslist_sample.items</span> <span class="kn">import</span> <span class="n">CraigslistSampleItem</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">MySpider</span><span class="p">(</span><span class="n">CrawlSpider</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;craigs&quot;</span>
+</span><span class='line'>    <span class="n">allowed_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;sfbay.craigslist.org&quot;</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;http://sfbay.craigslist.org/npo/&quot;</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">rules</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rule</span> <span class="p">(</span><span class="n">SgmlLinkExtractor</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="p">(</span><span class="s">&quot;index\d00\.html&quot;</span><span class="p">,</span> <span class="p">),</span><span class="n">restrict_xpaths</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;//p[@class=&quot;nextpage&quot;]&#39;</span><span class="p">,))</span>
+</span><span class='line'>    <span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="s">&quot;parse_items&quot;</span><span class="p">,</span> <span class="n">follow</span><span class="o">=</span> <span class="bp">True</span><span class="p">),</span>
+</span><span class='line'>    <span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">parse_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">hxs</span> <span class="o">=</span> <span class="n">HtmlXPathSelector</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">titles</span> <span class="o">=</span> <span class="n">hxs</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&#39;//span[@class=&quot;pl&quot;]&#39;</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">titles</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">item</span> <span class="o">=</span> <span class="n">CraigslistSampleItem</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">item</span> <span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/text()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">item</span> <span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/@href&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">return</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now run the following command to release the spider and save the scraped data to a CSV file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>scrapy crawl craigs -o items.csv -t csv
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><em>In essence, this spider started crawling at http://sfbay.craigslist.org/npo/ and then followed the &#8220;next 100 postings&#8221; link at the bottom, scraping the next page, until there where no more links to crawl. Again, this can be used to create some powerful crawlers, so use with caution and set delays to throttle the crawling speed if necessary.</em></p>
+
+<p>You can find the source code on <a href="https://github.com/mjhea0/Scrapy-Samples">Github</a>.</p>
+
+<hr />
+
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/P-_TpZ54Vcw "></iframe></div>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -327,68 +453,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2012/10/06/differentiating-between-bounce-rates/">Differentiating Between Bounce Rates</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-10-06T14:09:00-06:00" pubdate data-updated="true">Oct 6<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Understanding your site&#8217;s bounce rate is essential to your online presence success.</p>
-
-<p>A low bounce rate signifies ineffectiveness and lost revenue. A high bounce rate signifies your visitors are meeting your objectives and taking action.</p>
-
-<p>Bounce rate is defined as percentage of visitors who come onto your site and leave your page, or site, after not clicking anywhere else on your site. It is a metric tool that measures the quality of your web pages.</p>
-
-<p>You must understand that bounce rate and exit rate are not the same. Bounce rate is the percentage of people who visit any page of your site without going further. They click off within seconds, or even a split second. Exit rate, on the other hand, is when people leave your site after staying for more than a few seconds. Every visitor needs to exit your website, not every one needs to bounce off.</p>
-
-<p>Before you can differentiate between different types of bounce rates, you must analyze different traffic sources. You need to determine where your traffic comes from and what their bounce rates are. If your incoming traffic sources have poor bounce rates, it will reflect poorly on your rate. The largest amount of converting traffic sources include search engine traffics, email marketing campaigns and affiliate campaigns.</p>
-
-<p><strong>When analyzing your incoming traffic, forget about unqualified sources such as social media sites, unknown referrer sites and random directory sites.</strong></p>
-
-<p>Google Analytics is a wonderful tool for analyzing bounce rates. Combining the data obtained from Google Analytics with the spreadsheet capabilities of Excel 2013 will highlight which pages have increased bounce rates.</p>
-
-<p><strong>Increased bounce rates occur for a variety of reasons including outdated and stale web content, ineffective ad-words and your competition changing tactics. Tactics include enhancing a marketing campaign, implementing effective ad-words, updating web content and reducing prices.</strong></p>
-
-<p>The effectiveness of your keywords, and phrases, will affect your bounce rate. Effective keywords, which provide visitors with information they are looking for, will result in lower bounce rates. On the other hand, if your website uses ineffective keywords, your visitor will leave as soon as they realize your site is not appropriate. Nothing is more frustrating in the Internet world than typing in a keyword or keyword phrase and being taken to a website that has nothing to do with what is being searched for.</p>
-
-<p><strong>Analyze the keywords on every page of your website with a website analyzer tool like Google Analytics. Make adjustments as needed.</strong></p>
-
-<p>Does your landing page contain action-oriented language that stimulates interest? Is the information specific and user-friendly? Is content organized optimally? Then, your bounce rate will be lower since visitors want to stay on your page. They will also be more inclined to view other pages on your site.</p>
-
-<p>On the other hand, if your landing page is generalized and/or leads your visitor on a clicking search, your bounce rate will be high. Your landing page will not meet your visitor&#8217;s expectations and they will quickly leave.</p>
-
-<p><strong>Bounce rates directly impacts your ROI and revenues. They can point out which information/pages need revisions, increase your conversion rate, highlight where you are wasting your money and help you focus in on your objectives. Are you using them to your advantage?</strong></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/18/">&larr; Older</a>
@@ -406,6 +470,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/02/12/postgresql-and-nodejs/">PostgreSQL and NodeJS</a>
       </li>
     
@@ -419,10 +487,6 @@
     
       <li class="post">
         <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/15/kickstarting-angular-with-gulp-and-browserify-part-2/">Kickstarting Angular with Gulp and Browserify, Part 2 - Browserify</a>
       </li>
     
   </ul>
@@ -444,7 +508,7 @@
 <li class='category'><a href='/blog/categories/python/'>python (11)</a></li>
 <li class='category'><a href='/blog/categories/ruby/'>ruby (3)</a></li>
 <li class='category'><a href='/blog/categories/startups/'>startups (3)</a></li>
-<li class='category'><a href='/blog/categories/sublime/'>sublime (2)</a></li>
+<li class='category'><a href='/blog/categories/sublime/'>sublime (3)</a></li>
 
   </ul>
 </section><section>
