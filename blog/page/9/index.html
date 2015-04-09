@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="You may have a great idea for a product but no money to actually produce it. You could attempt to raise funding from investors, but then you&#8217;ll &hellip;">
+  <meta name="description" content="Let&#8217;s look at how to manage multiple Github accounts from one computer. In essence, it&#8217;s simply a matter of balancing both your git and &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,234 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2013/09/16/managing-multiple-github-accounts/">Managing Multiple Github Accounts</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-16T07:43:00-06:00" pubdate data-updated="true">Sep 16<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Let&#8217;s look at how to manage multiple Github accounts from one computer. In essence, it&#8217;s simply a matter of balancing both your git and ssh configurations - which actually is not as bad as it might seem.</p>
+
+<blockquote><p>Note: This tutorial is meant for Unix users.</p></blockquote>
+
+<h2>Set up SSH Keys</h2>
+
+<p>Let&#8217;s assume your two Github accounts are named <em>githubPersonal</em> and <em>githubWork</em>, respectively.</p>
+
+<p>Create two SSH keys, saving each to a separate file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd</span> ~/.ssh
+</span><span class='line'><span class="nv">$ </span>ssh-keygen -t rsa -C <span class="s2">&quot;your_email@associated_with_githubPersonal.com&quot;</span>
+</span><span class='line'><span class="c"># save it as id_rsa_personal when prompted</span>
+</span><span class='line'><span class="nv">$ </span>ssh-keygen -t rsa -C <span class="s2">&quot;your_email@associated_with_githubWork.com&quot;</span>
+</span><span class='line'><span class="c"># save it as id_rsa_work when prompted</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The above commands setup the following files:</p>
+
+<ul>
+<li><em>id_rsa_personal</em></li>
+<li><em>id_rsa_personal.pub</em></li>
+<li><em>id_rsa_work</em></li>
+<li><em>id_rsa_work.pub</em></li>
+</ul>
+
+
+<h2>Add the keys to your Github accounts:</h2>
+
+<h4>Copy the key to your clipboard:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>pbcopy &lt; ~/.ssh/id_rsa_personal.pub
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Add the key to your account:</h4>
+
+<ul>
+<li>Go to your Account Settings</li>
+<li>Click &#8220;SSH Keys&#8221; then &#8220;Add SSH key&#8221;</li>
+<li>Paste your key into the &#8220;Key&#8221; field and add a relevant title</li>
+<li>Click &#8220;Add key&#8221; then enter your Github password to confirm</li>
+</ul>
+
+
+<h4>Repeat the process for your <em>githubWork</em> account.</h4>
+
+<h2>Create a configuration file to manage the separate keys</h2>
+
+<h4>Create a config file in ~/.ssh/</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>touch config
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h4>Edit the file using the text editor of your choice. I used vim - <code>$ vim config</code>:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c"># githubPersonal</span>
+</span><span class='line'>Host personal
+</span><span class='line'>   HostName github.com
+</span><span class='line'>   User git
+</span><span class='line'>   IdentityFile ~/.ssh/id_rsa_personal
+</span><span class='line'>
+</span><span class='line'><span class="c"># githubWork</span>
+</span><span class='line'>Host work
+</span><span class='line'>   HostName github.com
+</span><span class='line'>   User git
+</span><span class='line'>   IdentityFile ~/.ssh/id_rsa_work
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Update stored identities</h2>
+
+<h4>Clear currently stored identities:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh-add -D
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h4>Add new keys:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh-add id_rsa_personal
+</span><span class='line'><span class="nv">$ </span>ssh-add id_rsa_work
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Test to make sure new keys are stored:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh-add -l
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h4>Test to make sure Github recognizes the keys:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh -T personal
+</span><span class='line'>Hi githubPersonal! You<span class="s1">&#39;ve successfully authenticated, but GitHub does not provide shell access.</span>
+</span><span class='line'><span class="s1">$ ssh -T work</span>
+</span><span class='line'><span class="s1">Hi githubWork! You&#39;</span>ve successfully authenticated, but GitHub does not provide shell access.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h2>Test PUSH</h2>
+
+<h4>On Github, create a new repo in your personal account, <em>githubPersonal</em>, called <em>test-personal</em>.</h4>
+
+<h4>Back on your local machine, create a test directory:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd</span> ~/documents
+</span><span class='line'><span class="nv">$ </span>mkdir <span class="nb">test</span>-personal
+</span><span class='line'><span class="nv">$ </span><span class="nb">cd test</span>-personal
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Add a blank &#8220;readme.md&#8221; file and PUSH to Github:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>touch readme.md
+</span><span class='line'><span class="nv">$ </span>git init
+</span><span class='line'><span class="nv">$ </span>git add .
+</span><span class='line'><span class="nv">$ </span>git commit -am <span class="s2">&quot;first commit&quot;</span>
+</span><span class='line'><span class="nv">$ </span>git remote add origin git@personal:githubPersonal/test-personal.git
+</span><span class='line'><span class="nv">$ </span>git push origin master
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Notice how we&#8217;re using the custom account, <code>git@personal</code>, instead of <code>git@github.com</code>.</p></blockquote>
+
+<h4>Repeat the process for your <em>githubWork</em> account.</h4>
+
+<h2>Test PULL</h2>
+
+<h4>Add some text to the <em>readme.md</em> file in your personal account on Github.</h4>
+
+<h4>Now PULL and merge the changes by running the following command within the <em>test-personal</em> directory:</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git pull origin master
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h4>Again, repeat this for your <em>githubWork</em> account.</h4>
+
+<br/>
+
+
+<p>Questons? Comments? Did I miss something? Comment below.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -269,101 +497,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2013/08/06/kickstarting-at-the-local-level/">Kickstarting at the Local Level</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-08-06T14:07:00-06:00" pubdate data-updated="true">Aug 6<span>th</span>, 2013</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>After successfully funding <a href="http://www.kickstarter.com/projects/1369857650/real-python-for-web-development-featuring-web2py">Real Python</a> via Kickstarter, I have become more and more interested in the types of people (or companies) who use Kickstarter as a means of raising capital.</p>
-
-<p>We know that Kickstarter is the go-to crowd-funding source for artists, new technology ventures, and various other unique products. But now it&#8217;s starting to gain more notoriety at the local level. Local Businesses are realizing what Kickstarter can do and are finding new ways to take advantage of its benefits.</p>
-
-<p>To delve into what makes local Kickstarters so unique we spoke to Chris Morell, one of the founders at <a href="http://www.dripdcoffee.com/">Drip’d Coffee</a>, a local coffee bar in the Inner Sunset District of San Francisco. Drip’d ran a successful <a href="http://www.kickstarter.com/projects/816765303/help-dripd-coffee-launch-in-san-franciscos-inner-s">Kickstarter</a> earlier this year, raising $3,854 of their $3,700 goal. (I live in the Inner Sunset and personally put in a WHOPPING $10 to their campaign.)</p>
-
-<p>Analyzing their campaign has allowed me to see the differences in the approach of local business Kickstarters, to everyone else - specifically, to how I approached marketing my campaign.</p>
-
-<p>The main differences are WHAT local business are using Kickstarter for, WHO they are trying to reach, and HOW they are reaching them.</p>
-
-<h2>WHAT are local business using Kickstarter for?</h2>
-
-<p>Many local businesses on Kickstarter are not looking for full funding, like many of the other projects you will see. These local businesses are using Kickstarter as a platform to get a &#8220;piece&#8221; of their business funded. The &#8220;piece&#8221; that Drip&#8217;d needed some extra funding for was their special expresso machine. As Chris said, &#8220;customers can come into the shop and know that they helped purchase our coffee machine and feel good about it&#8221;.</p>
-
-<p>You want to make sure that everyone is benefitting from the Kickstarter. If it is helping an existing business stay a float or giving a new business the extra kick it needs,  Kickstarter is a great tool to make it happen.</p>
-
-<h2>WHO are they trying to reach?</h2>
-
-<p>The main goal of a Local Kickstarter is to reach out to and embrace the surrounding community. It&#8217;s all about getting the word out. Letting the community know that your business is innovating and working hard to be the best business for its community. Local Kickstarters are reaching out more to connections they have already have; it&#8217;s about digging through contacts and showing these people your current projects. Drip&#8217;d knew they would get the most support from the people who knew them or knew someone who knew them - the people within their community.</p>
-
-<p>But don&#8217;t forget, the Kickstarter bonus is that you never know who may stumble upon your page and decide that they are interested in backing the project, even if they are from a different community!</p>
-
-<h2>HOW are they reaching them?</h2>
-
-<p>The great part about a local Kickstarter is that it is a marketing tool in itself. Regardless of whether you succeed or not, people are going to see or hear about the Kickstarter and remember the business it came from. The key to the marketing campaign is a great social media campaign. Drip&#8217;d used its company and individual social profiles to spread the word. Having friends or family repost for you is always a great idea. You want to keep the marketing more friendly. It is for the community and the marketing approach should stay in line with that.</p>
-
-<p>That said, surprisingly, local media, which could have provided a huge boost failed to pick up on the Kickstarter:</p>
-
-<p>&#8220;We did do some outreach with the Kickstarter campaign to local press, but believe it or not, many publications now have a &#8216;no Kickstarter&#8217; policy where they won&#8217;t cover crowd-funding projects. It&#8217;s understandable, but also quite limiting to spreading the word.&#8221;</p>
-
-<hr />
-
-<p>Drip&#8217;d used many of the same tactics I used with regard to marketing:</p>
-
-<ul>
-<li>Reaching out to friends, family, and personal acquaintances</li>
-<li>Targeting the local community</li>
-<li>Focusing on social networks</li>
-</ul>
-
-
-<p>The problem they had is quite obvious: Unlike my product, they had to primarily target the local community, whereas my backers were from all over the world. I had a significantly larger audience to work with.</p>
-
-<p>How can local Kickstarters take advantage of this? After all, in such a tight-knit neighborhood that Drip&#8217;d operates in, how could they have leveraged the community better?</p>
-
-<p>&#8220;It gets tricky,&#8221; Chris said, &#8220;with Kickstarter and reaching your targeted local community if you&#8217;re not up and running as a business. The challenge is reaching a community where you&#8217;re yet to have a real presence. Doing something like setting up a pour-over coffee booth at the local farmer&#8217;s market would have been ideal, but you wouldn&#8217;t believe the permitting requirements just to do that. At the time, we didn&#8217;t have the manpower or time to work that out. Same goes for nearby neighborhoods.</p>
-
-<p>&#8220;Launching the campaign a few months after opening could have generated more buzz and we&#8217;d have had access to a customer base and a means to promote. But at the same time, having the backer funding earlier was a big help. So it&#8217;s a trade-off.&#8221;</p>
-
-<p>Perhaps it falls onto those within the community to start taking more notice of these local Kickstarters?</p>
-
-<p>These are the projects that have the power to affect us and our community on a more direct, everyday level. The issue is that finding such projects is quite difficult, which begs the question: Are people even looking for local projects on Kickstarter?</p>
-
-<p>I don&#8217;t have an answer for you. I know that I seek out local projects, and I know that many of my acquaintances are as well. Cities such as Chicago have taken it a step further, beginning <a href="http://www.kickstarter.com/pages/seedchicago">seed Chicago</a>, a project to draw attention to all local Chicago Kickstarter projects.</p>
-
-<p>Now if we can just take this even further: Create a way for all cities to have a way to quickly and easily identify the Kickstarters within their community.</p>
-
-<p>People love to help fund projects they can watch grow. Now we just need to bridge that connection, to take crowd-funding to the next level.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/10/">&larr; Older</a>
@@ -381,6 +514,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
       </li>
     
@@ -396,17 +533,13 @@
         <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (3)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

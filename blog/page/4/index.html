@@ -9,10 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="Articles in the series: Part 1: Scraping Craigslist
-Part 2: Adding Handlebars
-Part 3: User Authentication with Passport and MongoDB
-Part 4: &hellip;">
+  <meta name="description" content="Spam is irritating. It&#8217;s been especially irritating on a blog I created for a Sinatra tutorial hosted on Heroku where the database was filling &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +76,172 @@ Part 4: &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/">Adding a Captcha to Sinatra to Minimize Spam</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-04T18:43:00-06:00" pubdate data-updated="true">May 4<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Spam is irritating.</p>
+
+<p>It&#8217;s been especially irritating on a <a href="http://sinatra-sings.herokuapp.com/">blog</a> I created for a Sinatra <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku">tutorial</a> hosted on Heroku where the database was filling up so quickly I had to run a <a href="https://github.com/mjhea0/sinatra-blog/blob/master/reset.rb">script</a> to delete all rows once a week. Ugh.</p>
+
+<p>So, let’s add a <a href="https://github.com/bmizerany/sinatra-captcha">captcha</a> to our blog in just five simple steps that will take less than five minutes element in order to help prevent so much spam.</p>
+
+<h2>Steps:</h2>
+
+<h3>1. Add the following gem to your <em>Gemfile</em>:</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">gem</span> <span class="s1">&#39;sinatra-captcha&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>2. Update your gems and their dependencies:</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="err">$</span> <span class="n">bundle</span> <span class="n">install</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>3. Update <em>app.rb</em>:</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">.</span><span class="n">.</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/captcha&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">.</span><span class="n">.</span><span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">post</span> <span class="s2">&quot;/posts&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">halt</span><span class="p">(</span><span class="mi">401</span><span class="p">,</span> <span class="s2">&quot;invalid captcha&quot;</span><span class="p">)</span> <span class="k">unless</span> <span class="n">captcha_pass?</span>
+</span><span class='line'>  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:post</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="vi">@post</span><span class="o">.</span><span class="n">save</span>
+</span><span class='line'>    <span class="n">redirect</span> <span class="s2">&quot;posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="ss">:notice</span> <span class="o">=&gt;</span> <span class="s1">&#39;Congrats! Love the new post. (This message will disapear in 4 seconds.)&#39;</span>
+</span><span class='line'>  <span class="k">else</span>
+</span><span class='line'>    <span class="n">redirect</span> <span class="s2">&quot;posts/create&quot;</span><span class="p">,</span> <span class="ss">:error</span> <span class="o">=&gt;</span> <span class="s1">&#39;Something went wrong. Try again. (This message will disapear in 4 seconds.)&#39;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">.</span><span class="n">.</span><span class="o">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>4. Update the form in the <em>create.erb</em> view:</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">&lt;</span><span class="n">form</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;/posts&quot;</span> <span class="nb">method</span><span class="o">=</span><span class="s2">&quot;post&quot;</span><span class="n">role</span><span class="o">=</span><span class="s2">&quot;form&quot;</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;form-group&quot;</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">label</span> <span class="k">for</span><span class="o">=</span><span class="s2">&quot;post_title&quot;</span><span class="o">&gt;</span><span class="no">Title</span><span class="p">:</span><span class="o">&lt;</span><span class="sr">/label&gt;</span>
+</span><span class='line'><span class="sr">  &lt;br&gt;</span>
+</span><span class='line'><span class="sr">  &lt;input id=&quot;post_title&quot; class=&quot;form-control&quot; name=&quot;post[title]&quot; type=&quot;text&quot; value=&quot;&lt;%= @post.title %&gt;&quot; style=&quot;width=90%&quot;/</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="sr">/div&gt;</span>
+</span><span class='line'><span class="sr">&lt;div class=&quot;form-group&quot;&gt;</span>
+</span><span class='line'><span class="sr">  &lt;label for=&quot;post_body&quot;&gt;Body:&lt;/</span><span class="n">label</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">br</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">textarea</span> <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;post_body&quot;</span> <span class="nb">name</span><span class="o">=</span><span class="s2">&quot;post[body]&quot;</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;form-control&quot;</span> <span class="n">rows</span><span class="o">=</span><span class="s2">&quot;10&quot;</span><span class="o">&gt;&lt;</span><span class="sx">%= @post.body %&gt;&lt;/textarea&gt;</span>
+</span><span class='line'><span class="sx">  &lt;br&gt;</span>
+</span><span class='line'><span class="sx">  &lt;div&gt;&lt;%=</span> <span class="n">captcha_image_tag</span> <span class="sx">%&gt;&lt;/div&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">br</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">label</span><span class="o">&gt;</span><span class="no">Captcha</span><span class="p">:</span><span class="o">&lt;</span><span class="sr">/label&gt;</span>
+</span><span class='line'><span class="sr">  &lt;%= captcha_answer_tag %&gt;</span>
+</span><span class='line'><span class="sr">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">button</span> <span class="n">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;btn btn-success&quot;</span><span class="o">&gt;</span><span class="no">Submit</span><span class="o">&lt;</span><span class="sr">/button&gt;</span>
+</span><span class='line'><span class="sr">&lt;br&gt;</span>
+</span><span class='line'><span class="sr">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>5. Preview locally before updating Heroku:</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="err">$</span> <span class="n">ruby</span> <span class="n">app</span><span class="o">.</span><span class="n">rb</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Navigate to <a href="http://localhost:4567/posts/create">http://localhost:4567/posts/create</a> and you should see:</p>
+
+<p><img src="https://raw.githubusercontent.com/mjhea0/sinatra-blog/master/sinatra_blog_captcha.png" alt="sinatra_blog_captcha" /></p>
+
+<h2>Conclusion</h2>
+
+<p>From now on to post a new post, visitors have to complete the word verification. Keep in mind that this won&#8217;t completely halt all spam - but it will greatly reduce it.</p>
+
+<p><strong>Links:</strong></p>
+
+<ul>
+<li>My app: <a href="http://sinatra-sings.herokuapp.com/">http://sinatra-sings.herokuapp.com/</a></li>
+<li>Git Repo: <a href="https://github.com/mjhea0/sinatra-blog">https://github.com/mjhea0/sinatra-blog</a></li>
+<li>Previous tutorial: <a href="http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/#.U2bp4K1dWYU">Designing With Class: Sinatra + PostgreSQL + Heroku</a></li>
+</ul>
+
+
+<p>Cheers!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1304,1069 +1467,6 @@ Part 4: &hellip;">
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2014/03/18/node-twitter-sentiment-part-2/">Node Twitter Sentiment - Part 2</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-18T11:55:00-06:00" pubdate data-updated="true">Mar 18<span>th</span>, 2014</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This is for the <a href="http://www.meetup.com/Node-js-Denver-Boulder/">Node-js-Denver-Boulder</a> Meetup &lt;3 Cheers!</p>
-
-<blockquote><p>Miss part 1? Check it out <a href="http://mherman.org/blog/2014/02/19/node-twitter-sentiment/">here</a>.</p></blockquote>
-
-<p>Let&#8217;s begin &#8230;</p>
-
-<p>Before adding additional functionality to the <a href="https://github.com/mjhea0/node-twitter-sentiment">Node Twitter Sentiment Analysis</a> application, we need to refactor the code. Frankly, there are some mistakes that were made on purpose to highlight an issue that many new developers overlook when first working with Node.</p>
-
-<p>Remember this function from <em>index.js</em> in the routes folder:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">search</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">// grab the request from the client</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">choices</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// grab the current date</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">today</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
-</span><span class='line'>  <span class="c1">// establish the twitter config (grab your keys at dev.twitter.com)</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">twitter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">twit</span><span class="p">({</span>
-</span><span class='line'>    <span class="nx">consumer_key</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_key</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">consumer_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_secret</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">access_token</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">access_token_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token_secret</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="c1">// set highest score</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">highestScore</span> <span class="o">=</span> <span class="o">-</span><span class="kc">Infinity</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// set highest choice</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">highestChoice</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// create new array</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">array</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>  <span class="c1">// set score</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;----------&quot;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// iterate through the choices array from the request</span>
-</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// add choice to new array</span>
-</span><span class='line'>    <span class="nx">array</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>    <span class="c1">// grad 20 tweets from today</span>
-</span><span class='line'>    <span class="nx">twitter</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;search/tweets&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">q</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="o">+</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; since:&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getFullYear</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span>
-</span><span class='line'>      <span class="p">(</span><span class="nx">today</span><span class="p">.</span><span class="nx">getMonth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getDate</span><span class="p">(),</span> <span class="nx">count</span><span class="o">:</span><span class="mi">20</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// perform sentiment analysis (see below)</span>
-</span><span class='line'>        <span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;score:&quot;</span><span class="p">,</span> <span class="nx">score</span><span class="p">)</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;choice:&quot;</span><span class="p">,</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>        <span class="c1">//  determine winner</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="nx">highestScore</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">highestScore</span> <span class="o">=</span> <span class="nx">score</span><span class="p">;</span>
-</span><span class='line'>          <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;winner:&quot;</span><span class="p">,</span><span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">})(</span><span class="nx">i</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="c1">// send response back to the server side; why the need for the timeout?</span>
-</span><span class='line'>  <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="o">:</span> <span class="nx">highestScore</span><span class="p">,</span> <span class="s1">&#39;choice&#39;</span><span class="o">:</span> <span class="nx">highestChoice</span><span class="p">}))</span> <span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Essentially we&#8217;re grabbing the user inputted data, pulling tweets based on the inputs, and then calculating the sentiment of those tweets. The timeout is necessary because of how Node <a href="http://stackoverflow.com/questions/7931537/whats-the-difference-between-asynchronous-non-blocking-event-base-architectu/9489547#9489547">works</a>. Because Node is asynchronous, functions do not block other functions from running. Without the 5 second time-out, the next function will append the results to the DOM without waiting for the function to finish running. Essentially, nothing is appended. Make sense?</p>
-
-<p>Put another way, when functions run that are blocking, they wait there for the result to come back before another function fires. Node, on the other hand, will continue executing the code that comes after it (because it&#8217;s functions are non-blocking(, then jump back when the result is available.</p>
-
-<p>So, why won&#8217;t a timeout work then?</p>
-
-<p>Again, the code has a function that sends the results in 5 seconds, regardless as to the execution state of the call to twitter. What happens though, if we run the program without a network connection? Or if Twitter is down? Or if we pulled in 10,000 tweets instead of 20?</p>
-
-<p>It&#8217;s still going to return results after 5 seconds. This is not what we want, obviously. So, how do we fix it? There&#8217;s a number of different methods, none of which fully solve it in an elegant manner. In this post, we&#8217;ll look at:</p>
-
-<table width="800">
-<colgroup>
-<col style="text-align:left;"/>
-<col style="text-align:left;"/>
-<col style="text-align:left;"/>
-</colgroup>
-
-<thead>
-<tr>
-    <th style="text-align:center;">Method</th>
-    <th style="text-align:center;">URL</th>
-    <th style="text-align:center;">Library</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-    <td style="text-align:left;">Async</td>
-    <td style="text-align:left;"><a href="https://github.com/Nodejs-Colorado/node-twitter-sentiment-async">node-twitter-sentiment-async</a></td>
-    <td style="text-align:left;"><a href="https://github.com/caolan/async">https://github.com/caolan/async</a></td>
-</tr>
-<tr>
-    <td style="text-align:left;">Promises</td>
-    <td style="text-align:left;"><a href="https://github.com/Nodejs-Colorado/node-twitter-sentiment-promises">node-twitter-sentiment-promises</a></td></td>
-    <td style="text-align:left;"><a href="https://github.com/kriskowal/q">https://github.com/kriskowal/q</a></td>
-</tr>
-<tr>
-    <td style="text-align:left;">Generators</td>
-    <td style="text-align:center;">n/a</td>
-    <td style="text-align:center;">n/a</td>
-</tr>
-<tr>
-    <td style="text-align:left;">IcedCoffeeScript</td>
-    <td style="text-align:center;">n/a</td>
-    <td style="text-align:left;"><a href="https://github.com/maxtaco/coffee-script">https://github.com/maxtaco/coffee-script</a></td>
-</tr>
-</tbody>
-</table>
-
-
-<h2>Async</h2>
-
-<p><strong>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/8358230/">Manish Vachharajani</a> for developing the code for this example.</strong></p>
-
-<p>One solution is to use the <a href="https://github.com/caolan/async">Async</a>. This is often the go-to solution, since the syntax is simple, it&#8217;s totally straightforward, and it uses call backs. In fact, in order to use Async, you must follow the convention of providing the callback as the last argument of the Async function. Thus, for users used to callbacks, this is an extremely easy solution.</p>
-
-<h3>Basics</h3>
-
-<p>Start by installing the package:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install async
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In our code we will be using the <code>map()</code> helper method, which takes an array, a filter function, and a callback. The filter function is an async function that takes a callback.</p>
-
-<p>Simple example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">async</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;async&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;michael&quot;</span><span class="p">,</span><span class="s2">&quot;richard&quot;</span><span class="p">,</span><span class="s2">&quot;john&quot;</span><span class="p">,</span><span class="s2">&quot;jennifer&quot;</span><span class="p">,</span><span class="s2">&quot;ben&quot;</span><span class="p">,</span><span class="s2">&quot;julie&quot;</span><span class="p">];</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">async</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">names</span><span class="p">,</span> <span class="nx">getInfo</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Finished: &#39;</span> <span class="o">+</span> <span class="nx">result</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">function</span> <span class="nx">getInfo</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'><span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">name</span><span class="p">.</span><span class="nx">toUpperCase</span><span class="p">());</span>
-</span><span class='line'><span class="p">},</span> <span class="mi">1000</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Test it out <a href="http://runnable.com/UyXKBzE8BKUZRnR5/node-async-map-example-for-node-js">here</a>.</p>
-
-<p>Basically, we have an array of names, in lower case, which we are converting to uppercase, then outputting via a <code>console.log</code>. Let&#8217;s say that another function depended on the results of <code>getInfo</code>, if <code>getInfo</code> was long-running, then the other function could fire before <code>getInfo</code> returned the results. Thus, the need to suspend the function until the results are returned.</p>
-
-<h3>Update Node-Twitter-Sentiment</h3>
-
-<p>We just need to update the <em>index.js</em> file in the &#8220;routes&#8221; folder:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s2">&quot;use strict&quot;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">twit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;twit&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sentimental</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;Sentimental&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;../config&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">async</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;async&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s2">&quot;Twit-Decision&quot;</span><span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">ping</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;pong!&quot;</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">search</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">// grab the request from the client</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">choices</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// grab the current date</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">today</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
-</span><span class='line'>  <span class="c1">// establish the twitter config (grab your keys at dev.twitter.com)</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">twitter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">twit</span><span class="p">({</span>
-</span><span class='line'>    <span class="nx">consumer_key</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_key</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">consumer_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_secret</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">access_token</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">access_token_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token_secret</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;----------&quot;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// grade 20 tweets from today with keyword choice and call callback</span>
-</span><span class='line'>  <span class="c1">// when done</span>
-</span><span class='line'>  <span class="kd">function</span> <span class="nx">getAndScoreTweets</span><span class="p">(</span><span class="nx">choice</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">twitter</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;search/tweets&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">q</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="o">+</span> <span class="nx">choice</span> <span class="o">+</span> <span class="s1">&#39; since:&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getFullYear</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span>
-</span><span class='line'>      <span class="p">(</span><span class="nx">today</span><span class="p">.</span><span class="nx">getMonth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getDate</span><span class="p">(),</span> <span class="nx">count</span><span class="o">:</span><span class="mi">20</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// perform sentiment analysis (see below)</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">);</span>
-</span><span class='line'>        <span class="k">return</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;score:&quot;</span><span class="p">,</span> <span class="nx">score</span><span class="p">)</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;choice:&quot;</span><span class="p">,</span> <span class="nx">choice</span><span class="p">)</span>
-</span><span class='line'>      <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">score</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="c1">//Grade tweets for each choice in parallel and compute winner when</span>
-</span><span class='line'>  <span class="c1">//all scores are collected</span>
-</span><span class='line'>  <span class="nx">async</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">choices</span><span class="p">,</span> <span class="nx">getAndScoreTweets</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">scores</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Unable to score all tweets&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">highestScore</span> <span class="o">=</span> <span class="nx">scores</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">cur</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">prev</span> <span class="o">&lt;</span> <span class="nx">cur</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
-</span><span class='line'>        <span class="k">return</span> <span class="nx">cur</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="nx">prev</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="o">:</span> <span class="nx">highestScore</span><span class="p">,</span> <span class="s1">&#39;choice&#39;</span><span class="o">:</span> <span class="nx">highestChoice</span><span class="p">}));</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">function</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">tweetSet</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">//set a results variable</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// iterate through the tweets, pulling the text, retweet count, and favorite count</span>
-</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">tweetSet</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">tweet</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">retweets</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;retweet_count&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">favorites</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;favorite_count&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="c1">// remove the hashtag from the tweet text</span>
-</span><span class='line'>    <span class="nx">tweet</span> <span class="o">=</span> <span class="nx">tweet</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// perform sentiment on the text</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">sentimental</span><span class="p">.</span><span class="nx">analyze</span><span class="p">(</span><span class="nx">tweet</span><span class="p">)[</span><span class="s1">&#39;score&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="c1">// calculate score</span>
-</span><span class='line'>    <span class="nx">results</span> <span class="o">+=</span> <span class="nx">score</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">retweets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">retweets</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">favorites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">favorites</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">retweets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">-=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">retweets</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">favorites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">-=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">favorites</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">results</span> <span class="o">+=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="c1">// return score</span>
-</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="nx">results</span> <span class="o">/</span> <span class="nx">tweetSet</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">results</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>What&#8217;s going on?</h4>
-
-<p>Let&#8217;s look at the specific changes:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// grade 20 tweets from today with keyword choice and call callback</span>
-</span><span class='line'><span class="c1">// when done</span>
-</span><span class='line'><span class="kd">function</span> <span class="nx">getAndScoreTweets</span><span class="p">(</span><span class="nx">choice</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">twitter</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;search/tweets&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">q</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="o">+</span> <span class="nx">choice</span> <span class="o">+</span> <span class="s1">&#39; since:&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getFullYear</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span>
-</span><span class='line'>    <span class="p">(</span><span class="nx">today</span><span class="p">.</span><span class="nx">getMonth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getDate</span><span class="p">(),</span> <span class="nx">count</span><span class="o">:</span><span class="mi">20</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="c1">// perform sentiment analysis (see below)</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">);</span>
-</span><span class='line'>      <span class="k">return</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
-</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;score:&quot;</span><span class="p">,</span> <span class="nx">score</span><span class="p">)</span>
-</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;choice:&quot;</span><span class="p">,</span> <span class="nx">choice</span><span class="p">)</span>
-</span><span class='line'>    <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">score</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="c1">//Grade tweets for each choice in parallel and compute winner when</span>
-</span><span class='line'><span class="c1">//all scores are collected</span>
-</span><span class='line'><span class="nx">async</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">choices</span><span class="p">,</span> <span class="nx">getAndScoreTweets</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">scores</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Unable to score all tweets&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">highestScore</span> <span class="o">=</span> <span class="nx">scores</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">cur</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">prev</span> <span class="o">&lt;</span> <span class="nx">cur</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">cur</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">prev</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="o">:</span> <span class="nx">highestScore</span><span class="p">,</span> <span class="s1">&#39;choice&#39;</span><span class="o">:</span> <span class="nx">highestChoice</span><span class="p">}));</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>We pass in the <code>choices</code> array, the <code>getAndScoreTweets()</code> function (which handles the calculating of sentiment), then the results are serialized and sent back to the client. <code>async.map()</code> suspends the <code>getAndScoreTweets()</code> function until it&#8217;s done running. Thus, the results are not sent back to the client until Sentiment is done.</p>
-
-<p>Further, <code>async.map()</code> allows you to do a long delay operation on each array element because of the fact that the mapped function must call &#8220;callback&#8221; - which happens in the <code>getInfo()</code> function.</p>
-
-<p>Simple, right?</p>
-
-<p>Check out the final code here: <a href="https://github.com/mjhea0/node-twitter-sentiment-async">https://github.com/mjhea0/node-twitter-sentiment-async</a></p>
-
-<h2>Promises</h2>
-
-<p><strong>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/23013171/">Richard Lucas</a> for developing the code and writing the following explanation.</strong></p>
-
-<p>Promises are not the easiest JavaScript concept to wrap your head around, so do not feel bad if this concept takes time to understand.  It certainly has taken a lot of time for myself, and I still get caught up and confused in using some of the methods.  In this example, I tried to just use a simple (and hopefully easy to understand) pattern of deferreds using the Q promise library.  You may also have experience with jQuery deferreds via the <code>$.Deferred</code> object.  They are very similar.</p>
-
-<h3>What are promises (from the Q <a href="https://github.com/kriskowal/q">documentation</a>)</h3>
-
-<blockquote><p>If a function cannot return a value or throw an exception without blocking, it can return a promise instead. A promise is an object that represents the return value or the thrown exception that the function may eventually provide. A promise can also be used as a proxy for a remote object to overcome latency.</p></blockquote>
-
-<h3>Here are some great resources for learning more about promises</h3>
-
-<ol>
-<li><a href="http://promises-aplus.github.io/promises-spec/">Promises A+ Spec</a></li>
-<li><a href="http://documentup.com/kriskowal/q/">Q Library</a></li>
-<li><a href="http://www.promisejs.org/">Promisesjs.org - Great introduction</a></li>
-<li><a href="http://nodeschool.io/#promiseitwonthurt">Promises by Nodeschool.io</a></li>
-<li><a href="http://mattgreer.org/articles/promises-in-wicked-detail/?utm_source=javascriptweekly&amp;utm_medium=email">Javascript Promises in Wicked Detail</a></li>
-<li><a href="http://strongloop.com/strongblog/promises-in-node-js-with-q-an-alternative-to-callbacks/">Promises in Node.js</a></li>
-<li><a href="https://github.com/bellbind/using-promise-q/">Using Promises with Q</a></li>
-<li><a href="http://shop.oreilly.com/product/0636920030508.do">Using jQuery Deferreds - Book from O&#8217;Reilly</a></li>
-</ol>
-
-
-<h3>Pattern used</h3>
-
-<p>Here the deferred pattern was used, which goes something like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">promise</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">deferred</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span>
-</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You then go on to using the <code>then</code> and <code>done</code> methods:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">promise</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">doSomething</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'><span class="p">}).</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">finishSomething</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>How they were implemented</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">searchTweets</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">choice</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">defer</span><span class="p">(),</span> <span class="c1">// declare the deferred</span>
-</span><span class='line'>     <span class="p">...</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">twitter</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;search/tweets&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="p">{</span>
-</span><span class='line'>    <span class="nx">q</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="o">+</span> <span class="nx">choice</span> <span class="o">+</span> <span class="s1">&#39; since:&#39;</span> <span class="o">+</span> <span class="nx">dateString</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">count</span><span class="o">:</span> <span class="mi">20</span>
-</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">deferred</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span> <span class="c1">//reject it in the callback</span>
-</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="p">...</span>
-</span><span class='line'>        <span class="nx">choiceData</span><span class="p">[</span><span class="s1">&#39;choice&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">choice</span><span class="p">;</span>
-</span><span class='line'>        <span class="nx">choiceData</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">score</span><span class="p">;</span>
-</span><span class='line'>        <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">choiceData</span><span class="p">);</span> <span class="c1">//resolve it in the callback</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span> <span class="c1">//return the promise object</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The search function.  Note the promise chain:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">search</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">choices</span><span class="p">),</span>
-</span><span class='line'>      <span class="nx">choiceArray</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">promise</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">choices</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">Q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
-</span><span class='line'>    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">choice</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">searchTweets</span><span class="p">(</span><span class="nx">choice</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">fail</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">})</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">choiceArray</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="nx">choiceArray</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">choiceArray</span><span class="p">);</span>
-</span><span class='line'>          <span class="p">}</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>    <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">promise</span><span class="p">(</span><span class="nx">choices</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">scoreCompare</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}).</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;final_result&#39;</span><span class="p">,</span> <span class="nx">result</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Have Fun!</p>
-
-<h2>Generators</h2>
-
-<p>Generators are the new kid on the block, but they look the most promising. Essentially, they make it easy to suspend/pause a function then resume it with the <code>yield</code> function.</p>
-
-<blockquote><p>Make sure you are using a browser that supports ES6: <a href="http://kangax.github.io/es5-compat-table/es6/#Generators_(yield">http://kangax.github.io/es5-compat-table/es6/#Generators_(yield)</a>). I personally use <a href="https://www.google.com/intl/en/chrome/browser/canary.html">Chrome Canary</a>, with experimental Javasctipt enabled: &#8220;chrome://flags/#enable-javascript-harmony&#8221;.</p></blockquote>
-
-<p>&#8230; also &#8230;</p>
-
-<blockquote><p>As of Node v0.11.3, you must use the <code>--harmony_generators</code> flag for running applications that contain generator examples in order to enable ES6 experimental features - e.g., <code>node --harmony_generators app.js</code>.</p></blockquote>
-
-<p>Let&#8217;s look at a quick example.</p>
-
-<h3>Example</h3>
-
-<p>Open the Javascript console, then enter this generator function:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span><span class="o">*</span> <span class="nx">naturalNumbers</span><span class="p">(){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">while</span> <span class="p">(</span><span class="kc">true</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">yield</span> <span class="nx">n</span><span class="o">++</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Next, you can call the function with this line:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">numbers</span> <span class="o">=</span> <span class="nx">naturalNumbers</span><span class="p">();</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Finally, you can generate an object with the returned values by calling <code>numbers.next()</code></p>
-
-<p><img src="https://raw.github.com/mjhea0/node-twitter-sentiment/master/es6-generators.png" alt="es6-generators" /></p>
-
-<p>So, how do we add this to our Sentiment project? I&#8217;m not sure. :)</p>
-
-<h2>IcedCoffeeScript</h2>
-
-<h3>Example</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='coffeescript'><span class='line'><span class="nv">et = </span><span class="nx">require</span> <span class="s">&#39;errTo&#39;</span>
-</span><span class='line'><span class="p">{</span><span class="nx">get</span><span class="p">}</span> <span class="o">=</span> <span class="nx">require</span> <span class="s">&#39;request&#39;</span>
-</span><span class='line'><span class="nv">fn = </span><span class="nf">(done) -&gt;</span>
-</span><span class='line'>  <span class="nx">await</span> <span class="nx">get</span> <span class="s">&#39;http://foo.com&#39;</span><span class="p">,</span> <span class="nx">et</span> <span class="nx">done</span><span class="p">,</span> <span class="nx">defer</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span>
-</span><span class='line'>  <span class="nx">await</span> <span class="nx">get</span> <span class="s">&#39;http://bar.com&#39;</span><span class="p">,</span> <span class="nx">et</span> <span class="nx">done</span><span class="p">,</span> <span class="nx">defer</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span>
-</span><span class='line'>  <span class="nx">do</span> <span class="nx">done</span>
-</span><span class='line'><span class="nx">await</span> <span class="nx">fn</span> <span class="nx">defer</span> <span class="nx">err</span>
-</span><span class='line'><span class="k">throw</span> <span class="nx">err</span> <span class="k">if</span> <span class="nx">err</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So, how do we ad this to our Sentiment project? I&#8217;m not sure. :)</p>
-
-<h2>Data Binding</h2>
-
-<blockquote><p>This isn&#8217;t a method of handling the non-blocking function issue, but it instead shows how easily update the front end. We are using Async again to address the function issue. Check out the code <a href="https://github.com/Nodejs-Colorado/node-twitter-sentiment-databinding">here</a>.</p></blockquote>
-
-<p><strong>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/103374712/">Aaron Vandrey</a> for developing the code and writing the following explanation.</strong></p>
-
-<p>Although there are a number of front-end MV* frameworks that could be used, we chose the <a href="https://github.com/knockout/knockout">KnockoutJS</a> data binding library for simplicity. KnockoutJS uses &#8220;observables&#8221; to enable two-way data binding from the View (HTML) back to the View-model (JavaScript).</p>
-
-<p>From [10 things to know about KnockoutJS on day one])http://www.knockmeout.net/2011/06/10-things-to-know-about-knockoutjs-on.html)&#8221;:</p>
-
-<blockquote><p>Observables are functions. The actual value and subscribers to the observable are cached internally by the function. You set an observable’s value by passing the new value as the only argument to the function and you read the value by passing no arguments.</p></blockquote>
-
-<p>We can use these functions to read the values from the form directly, hide and expose DIVs and change text on the screen.</p>
-
-<p>From the KnockoutJS data-binding <a href="http://knockoutjs.com/documentation/binding-syntax.html">page</a>:</p>
-
-<blockquote><p>Knockout’s declarative binding system provides a concise and powerful way to link data to the UI. It’s generally easy and obvious to bind to simple data properties or to use a single binding.
-…
-A binding consists of two items, the binding name and value, separated by a colon.</p></blockquote>
-
-<h3>Server Side Code</h3>
-
-<h4>Views</h4>
-
-<p>Combining the functions in our <em>main.js</em> (more on this later), on the client side, with Knockout’s declarative data-binding syntax, we can set up the Jade template in the manner shown below.</p>
-
-<p>In the original Jade template there are placeholder DIVs set up that we then use jQuery to interact with - to display the error messages and results. We also used jQuery to update the styles applied to the DIVs. Since we are using data binding in this example, we will go ahead and set up the DIVs for errors and results and have their HTML and styles in the DOM at all times. Then using the &#8220;visible&#8221; data binding on the DIVs we can hide and expose them as needed. In the example below we have a couple of data-bind attributes that KnockoutJS will use to handle the two-way communication from the View to the ViewModel and vise-versa.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>.form-container
-</span><span class='line'>  form(action=&#39;&#39;, method=&#39;post&#39;, data-bind=&#39;submit: formSubmit&#39;)
-</span><span class='line'>    input#choice1.choice(type=&#39;text&#39;, placeholder=&#39;Choice #1...&#39;, name=&#39;choice1&#39;, data-bind=&#39;value: inputOne&#39;)
-</span><span class='line'>    input#choice2.choice(type=&#39;text&#39;, placeholder=&#39;Choice #2...&#39;, name=&#39;choice2&#39;, data-bind=&#39;value: inputTwo&#39;)
-</span><span class='line'>    input#decision.btn.btn-success.btn-lg(type=&#39;submit&#39;, value=&#39;Submit&#39; data-bind=&#39;enable: !hasResults()&#39;)
-</span><span class='line'>.decision-container
-</span><span class='line'>  p(class=&#39;alert alert-danger&#39; data-bind=&#39;visible: error, text: error&#39;)
-</span><span class='line'>  div(class=&#39;progress progress-striped active&#39; data-bind=&#39;visible: isProcessing()&#39;)
-</span><span class='line'>    div(class=&#39;progress-bar progress-bar-primary&#39; role=&#39;progressbar&#39; aria-valuenow=&#39;100&#39; aria-valuemin=&#39;0&#39; aria-valuemax=&#39;100&#39; style=&#39;width: 100%&#39;)
-</span><span class='line'>      span(class=&#39;sr-only&#39;)
-</span><span class='line'>  div(class=&#39;panel panel-lg panel-success&#39; data-bind=&#39;visible: hasResults()&#39;)
-</span><span class='line'>    div(class=&#39;panel-heading&#39;)
-</span><span class='line'>      h3(class=&#39;panel-title&#39;) Decision Results
-</span><span class='line'>    div(class=&#39;panel-body&#39;)
-</span><span class='line'>      p(class=&#39;decision-text&#39;, data-bind=&#39;html: results&#39;)
-</span><span class='line'>      div(class=&#39;text-center&#39;)
-</span><span class='line'>        input#decision.btn.btn-success.btn-sm.text-center(type=&#39;button&#39;, value=&#39;Again?&#39; data-bind=&#39;click: tryAgain&#39;)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In the highlighted text we can see just a few of the many <a href="http://knockoutjs.com/documentation/introduction.html">data-binding</a> possibilities.</p>
-
-<p>The <code>submit</code> binding will handle both the &#8220;click&#8221; event of the submit button as well as a user hitting the &#8220;enter&#8221; key. In the background KnockoutJS will also perform a &#8220;preventDefault&#8221; so that the form does not attempt to submit the form to the server.</p>
-
-<p>The <code>value</code> binding will update the ViewModel with the values entered into the text boxes. A form submit is not needed to consume these values, though in this case we are using a form submit. Alternatively we could use KnockoutJS to <code>subscribe</code> to the change event for these form values and begin our processing when our inputs passed validation.</p>
-
-<p>The <code>text</code> binding will both display values in the View propagated from the ViewModel, as well and send values from the View back to the ViewModel.</p>
-
-<p>The <code>enable</code> binding will disable the submit button when the ViewModel reports back to the View that it has results back from the Twitter Sentiment Analysis.</p>
-
-<h3>Client Side Code</h3>
-
-<h4>Client Side Javascript (<em>main.js</em>)</h4>
-
-<p>The biggest difference to <em>/public/javascripts/main.js</em> is to create a ViewModel, and at the ViewModels closure, call KnockoutJS’s <code>applyBindings</code> method to enable all the two-way data binding goodness.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">ViewModel</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="err">…</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nx">ko</span><span class="p">.</span><span class="nx">applyBindings</span><span class="p">(</span><span class="k">new</span> <span class="nx">ViewModel</span><span class="p">());</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>In order to grab the two choices from the form we write a small method that will take use the KnockoutJS observable’s ‘no parameter’ signature to return the values.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">self</span><span class="p">.</span><span class="nx">formSubmit</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>    <span class="c1">// some error handling</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">self</span><span class="p">.</span><span class="nx">inputOne</span><span class="p">()</span> <span class="o">||</span> <span class="o">!</span><span class="nx">self</span><span class="p">.</span><span class="nx">inputTwo</span><span class="p">()){</span>
-</span><span class='line'>        <span class="nx">self</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">getError</span><span class="p">(</span><span class="s1">&#39;requiredInputsError&#39;</span><span class="p">));</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">inputOne</span><span class="p">()</span> <span class="o">===</span> <span class="nx">self</span><span class="p">.</span><span class="nx">inputTwo</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">self</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">getError</span><span class="p">(</span><span class="s1">&#39;sameInputError&#39;</span><span class="p">));</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">inputOne</span><span class="p">());</span>
-</span><span class='line'>        <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">inputTwo</span><span class="p">());</span>
-</span><span class='line'>        <span class="nx">getDecision</span><span class="p">();</span>
-</span><span class='line'>        <span class="nx">self</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>        <span class="nx">self</span><span class="p">.</span><span class="nx">isProcessing</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The error handling will remain the same, however in the data-binding example we set the value of our <code>error()</code> observable. The act of setting the value of the error observable causes it to change from being a &#8220;falsey&#8221; value to being a &#8220;truthy&#8221; value, which cause the <code>visible</code> data binding to also change from <code>visible = false</code> to <code>visible = true</code>. This changes the visibility of the DIV formatted for error reporting as well as set the text of the specific error we encountered.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">p</span><span class="p">(</span><span class="kr">class</span><span class="o">=</span><span class="s1">&#39;alert alert-danger&#39;</span> <span class="nx">data</span><span class="o">-</span><span class="nx">bind</span><span class="o">=</span><span class="s1">&#39;visible: error, text: error&#39;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>If no errors are encountered on subsequent submissions we can set up the array we need in the call to Twitter. We also blank out the <code>error()</code> observable that will hide the error reporting DIV and also set the <code>isProcessing()</code> observable to true which will expose the &#8220;processing&#8221; animation.</p>
-
-<p>We finish up processing the results. This logic to this is essentially unchanged, however, it is shown here to further exemplify how values are set and retrieved in KnockoutJS.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getDecision</span><span class="p">(){</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/search&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="s1">&#39;choices&#39;</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">choices</span><span class="p">)</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>        <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="nx">self</span><span class="p">.</span><span class="nx">results</span><span class="p">(</span><span class="nx">RESULTS_START_HTML</span> <span class="o">+</span> <span class="nx">results</span><span class="p">.</span><span class="nx">choice</span> <span class="o">+</span> <span class="nx">RESULTS_END_HTML</span> <span class="o">+</span> <span class="nx">results</span><span class="p">.</span><span class="nx">score</span><span class="p">);</span>
-</span><span class='line'>        <span class="nx">self</span><span class="p">.</span><span class="nx">hasResults</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
-</span><span class='line'>        <span class="nx">self</span><span class="p">.</span><span class="nx">isProcessing</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The logic required to turn off the &#8220;processing&#8221; animation, expose the DIV formatted to successful results, and display the results are achieved by manipulating more observables. The <code>isProcssing()</code> observable is set to false to hide the animation, the <code>hasResults()</code> observable is set to true to expose the results DIV and finally, by setting the <code>results()</code> observable to some friendly copy we let the user know the outcome of the sentiment analysis. When writing this value out the page we use the <code>html</code> binding rather than the <code>text</code> binding so that we can inject HTML into the copy we are writing to the screen. If the <code>text</code> binding had been used, rather than the <code>html</code> binding,  the HTML would have been encoded and we would have had the literal string <code>&lt;strong&gt;</code> written to the screen - which obviously is not what we want in this case.</p>
-
-<h4>main.js:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">self</span><span class="p">.</span><span class="nx">RESULTS_START_HTML</span> <span class="o">=</span> <span class="s1">&#39;and the winner is ... &lt;strong&gt;&#39;</span><span class="p">;</span>
-</span><span class='line'><span class="nx">self</span><span class="p">.</span><span class="nx">RESULTS_END_HTML</span> <span class="o">=</span> <span class="s1">&#39;&lt;/strong&gt; ... with a score of &#39;</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>index.jade:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>p(class=&#39;decision-text&#39;, data-bind=&#39;html: results&#39;)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Refactor</h3>
-
-<p>After submitting this code it we determined that the data-binding could have been used even better by not having an error DIV and a results DIV. By taking advantage of the <code>css</code> binding and a KnockoutJS <code>computed</code> observable (an observable that can watch multiple observables and return one value) the Bootstrap class could have easily been changed from <code>danger</code> to <code>success</code> and the title and copy changed using existing observables.</p>
-
-<p>Here <code>shouldShowMessages</code> is a computed observable that will return true if either we have an error or if we have results, otherwise it will return false. Similarly, <code>messageType</code> is a computed observable that will return &#8220;error&#8221; unless we have successfully received results, at which point it will return &#8220;success&#8221;.</p>
-
-<h4>index.jade</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>div(class=&#39;panel panel-lg&#39; data-bind=&#39;visible: shouldShowMessages, css: &quot;panel-&quot; + messageType()&#39;)
-</span><span class='line'>  div(class=&#39;panel-heading&#39;)
-</span><span class='line'>    h3(class=&#39;panel-title&#39; data-bind=&#39;text: messageTitle&#39;)
-</span><span class='line'>  div(class=&#39;panel-body&#39;)
-</span><span class='line'>    p(class=&#39;decision-text&#39;, data-bind=&#39;html: results&#39;)
-</span><span class='line'>    p(class=&#39;text-danger&#39;, data-bind=&#39;text: error&#39;)
-</span><span class='line'>    div(class=&#39;text-center&#39;)
-</span><span class='line'>      input#decision.btn.btn-success.btn-sm.text-center(type=&#39;button&#39;, value=&#39;Again?&#39; data-bind=&#39;visible: hasResults(), click: tryAgain&#39;)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>main.js:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">self</span><span class="p">.</span><span class="nx">shouldShowMessages</span> <span class="o">=</span> <span class="nx">ko</span><span class="p">.</span><span class="nx">computed</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">returnValue</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">self</span><span class="p">.</span><span class="nx">isProcessing</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">hasResults</span><span class="p">()</span> <span class="o">||</span> <span class="nx">self</span><span class="p">.</span><span class="nx">error</span><span class="p">()</span> <span class="o">&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">returnValue</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="nx">returnValue</span><span class="p">;</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="nx">self</span><span class="p">.</span><span class="nx">messageType</span> <span class="o">=</span> <span class="nx">ko</span><span class="p">.</span><span class="nx">computed</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">returnValue</span> <span class="o">=</span> <span class="s1">&#39;danger&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">self</span><span class="p">.</span><span class="nx">messageTitle</span><span class="p">(</span><span class="nx">ERROR_TITLE</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">hasResults</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">returnValue</span> <span class="o">=</span> <span class="s1">&#39;success&#39;</span><span class="p">;</span>
-</span><span class='line'>        <span class="nx">self</span><span class="p">.</span><span class="nx">messageTitle</span><span class="p">(</span><span class="nx">SUCCESS_TITLE</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="nx">returnValue</span><span class="p">;</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>It should be noted that <em>most</em> data-bindings will make a call to <code>ko.utils.unwrapObservable()</code> behind the scenes. This allows us to make the data-bind safely on both observables and non-observables. However, if you take a look at where the <code>messageType</code> observable is used you will notice that we are referencing the observable as a function (with parentheses). This is because we are accessing the observable inside an expression.</p>
-
-<h2>Conclusion</h2>
-
-<p>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/74687302/">John Rosendahl</a> for help with writing the intro.</p>
-
-<p>Pull requests are welcomed/encouraged/needed. Enjoy!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/5/">&larr; Older</a>
@@ -2384,6 +1484,10 @@ A binding consists of two items, the binding name and value, separated by a colo
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
       </li>
     
@@ -2399,17 +1503,13 @@ A binding consists of two items, the binding name and value, separated by a colo
         <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (3)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

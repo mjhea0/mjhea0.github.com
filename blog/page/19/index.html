@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="At one time, when a business or IT person spoke of &#8220;business analytics,&#8221; they were talking primarily about reporting. Today, the &hellip;">
+  <meta name="description" content="I just finished a basic Python script for a client that I&#8217;d like to share with you. He needed an easy means of moving data back and forth &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -83,6 +83,174 @@
   <header>
   
     
+      <h1 class="entry-title"><a href="/blog/2012/09/30/import-data-from-excel-into-mysql-using-python/">Import Data From Excel Into MySQL Using Python</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-30T13:13:00-06:00" pubdate data-updated="true">Sep 30<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I just finished a basic Python script for a client that I&#8217;d like to share with you. He needed an easy means of moving data back and forth between MySQL and Excel, and sometimes he needed to do a bit of manipulation between along the way. In the past I may have relied solely on VBA for this, but I have found it to be much easier with Python. In this post and the accompanying video, I show just part of the project - importing data from Excel into MySQL via Python. Let&#8217;s get started.</p>
+
+<p>Assuming you have Python installed (I&#8217;m using version 2.7), download and install the xlrd library and MySQLdb module-</p>
+
+<ul>
+<li><a href="http://pypi.python.org/pypi/xlrd">http://pypi.python.org/pypi/xlrd</a></li>
+<li><a href="http://sourceforge.net/projects/mysql-python/">http://sourceforge.net/projects/mysql-python/</a></li>
+</ul>
+
+
+<p>Then tailor the following script to fit your needs:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">xlrd</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">MySQLdb</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Open the workbook and define the worksheet</span>
+</span><span class='line'><span class="n">book</span> <span class="o">=</span> <span class="n">xlrd</span><span class="o">.</span><span class="n">open_workbook</span><span class="p">(</span><span class="s">&quot;pytest.xls&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="n">sheet</span> <span class="o">=</span> <span class="n">book</span><span class="o">.</span><span class="n">sheet_by_name</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Establish a MySQL connection</span>
+</span><span class='line'><span class="n">database</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span> <span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">user</span> <span class="o">=</span> <span class="s">&quot;root&quot;</span><span class="p">,</span> <span class="n">passwd</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="s">&quot;mysqlPython&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Get the cursor, which is used to traverse the database, line by line</span>
+</span><span class='line'><span class="n">cursor</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Create the INSERT INTO sql query</span>
+</span><span class='line'><span class="n">query</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;INSERT INTO orders (product, customer_type, rep, date, actual, expected, open_opportunities, closed_opportunities, city, state, zip, population, region) VALUES (</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">)&quot;&quot;&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Create a For loop to iterate through each row in the XLS file, starting at row 2 to skip the headers</span>
+</span><span class='line'><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">nrows</span><span class="p">):</span>
+</span><span class='line'>      <span class="n">product</span>      <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">customer</span> <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">rep</span>          <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">date</span>     <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">actual</span>       <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">expected</span> <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="nb">open</span>        <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">closed</span>       <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">city</span>     <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">state</span>        <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">9</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="nb">zip</span>         <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">pop</span>          <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">11</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>      <span class="n">region</span>   <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c"># Assign values from each row</span>
+</span><span class='line'>      <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">customer</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="nb">open</span><span class="p">,</span> <span class="n">closed</span><span class="p">,</span> <span class="n">city</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="nb">zip</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">region</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c"># Execute sql Query</span>
+</span><span class='line'>      <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Close the cursor</span>
+</span><span class='line'><span class="n">cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Commit the transaction</span>
+</span><span class='line'><span class="n">database</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Close the database connection</span>
+</span><span class='line'><span class="n">database</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Print results</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&quot;All Done! Bye, for now.&quot;</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'><span class="n">columns</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">ncols</span><span class="p">)</span>
+</span><span class='line'><span class="n">rows</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">nrows</span><span class="p">)</span>
+</span><span class='line'><span class="k">print</span> <span class="s">&quot;I just imported &quot;</span> <span class="o">%</span><span class="mi">2</span><span class="n">B</span> <span class="n">columns</span> <span class="o">%</span><span class="mi">2</span><span class="n">B</span> <span class="s">&quot; columns and &quot;</span> <span class="o">%</span><span class="mi">2</span><span class="n">B</span> <span class="n">rows</span> <span class="o">%</span><span class="mi">2</span><span class="n">B</span> <span class="s">&quot; rows to MySQL!&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Hope</span> <span class="n">this</span> <span class="ow">is</span> <span class="n">useful</span><span class="o">.</span> <span class="n">More</span> <span class="n">to</span> <span class="n">come</span><span class="err">!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/YLXFEQLCogM "></iframe></div>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+  
+    
       <h1 class="entry-title"><a href="/blog/2012/09/01/predictive-analytics-top-5-trends-going-forward/">Predictive Analytics - Top 5 Trends Going Forward</a></h1>
       
       
@@ -143,6 +311,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
       </li>
     
@@ -158,17 +330,13 @@
         <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (3)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

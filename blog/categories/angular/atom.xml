@@ -4,7 +4,7 @@
   <title><![CDATA[Category: angular | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/angular/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-04-05T07:42:25-06:00</updated>
+  <updated>2015-04-09T11:38:01-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,801 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Testing AngularJS with Protractor and Karma - part 1]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/"/>
+    <updated>2015-04-09T09:06:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1</id>
+    <content type="html"><![CDATA[<p><strong>This article details how to test a simple AngularJS application using unit tests and end-to-end (E2E) tests.</strong></p>
+
+<div style="text-align:center;">
+  <img src="https://raw.githubusercontent.com/mjhea0/angular-testing-tutorial/master/img/angular-karma.png" style="max-width: 100%; border:0;" alt="angular + karma">
+</div>
+
+
+
+
+<br>
+
+
+<ul>
+<li>Part 1 - In the first part we'll look at unit tests, which ensure that small, isolated pieces of code (e.g., a unit) behave as expected <strong>(current)</strong>.</li>
+<li>Part 2 - In part two we'll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation (coming soon!).</li>
+</ul>
+
+
+<p><em>Contents</em>:</p>
+
+<ol>
+<li><a href="#project-setup">Project Setup</a></li>
+<li><a href="#config-files">Configuration Files</a></li>
+<li><a href="#unit-tests">Unit Tests</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ol>
+
+
+<p>To accomplish this we will be using <a href="http://karma-runner.github.io/">Karma</a> v0.12.31 (test runner) and <a href="http://chaijs.com/">Chai</a> v2.2.0 (assertions) for the unit tests (along with <a href="https://github.com/karma-runner/karma-mocha">Karma-Mocha</a>) and <a href="http://angular.github.io/protractor/#/">Protractor</a> v2.0.0 for the E2E tests. This article also uses <a href="https://angularjs.org/">Angular</a> v1.3.15. Be sure to take note of all dependencies and their versions in the <em>package.json</em> and <em>bower.json</em> files in the <a href="https://github.com/mjhea0/angular-testing-tutorial">repo</a>.</p>
+
+<p>The repo includes the following tags:</p>
+
+<ol>
+<li><em>v1</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v1">project boilerplate</a></li>
+<li><em>v2</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v2">adds testing boilerplate/configuration</a></li>
+<li><em>v3</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v3">adds unit tests</a></li>
+<li><em>v4</em> - adds E2E tests (coming soon!)</li>
+</ol>
+
+
+<h2> <a name="project-setup">Project Setup</a></h2>
+
+
+<p>Start by cloning the repo, checkout out the first tag, and then install the dependencies:</p>
+
+<p><code>sh
+$ git clone https://github.com/mjhea0/angular-testing-tutorial.git
+$ cd angular-testing-tutorial
+$ git checkout tags/v1
+$ npm install &amp;&amp; bower install
+</code></p>
+
+<p>Run the app:</p>
+
+<p><code>sh
+$ gulp
+</code></p>
+
+<p>Navigate to <a href="http://localhost:8888">http://localhost:8888</a> to view the live app.</p>
+
+<div style="text-align:center;">
+  <img src="https://raw.githubusercontent.com/mjhea0/angular-testing-tutorial/master/img/live-app.png" style="max-width: 100%; border:0;" alt="angular app">
+</div>
+
+
+
+
+<br>
+
+
+<p>Test it out. Once done, kill the server and checkout the second tag:</p>
+
+<p><code>sh
+$ git checkout tags/v2
+</code></p>
+
+<p>There should now be a "tests" folder and a few more tasks in the Gulpfile.</p>
+
+<p>Run the unit tests:</p>
+
+<p><code>sh
+$ gulp unit
+</code></p>
+
+<p>They should pass:</p>
+
+<p><code>sh
+[05:28:02] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+[05:28:02] Starting 'unit'...
+INFO [karma]: Karma v0.12.31 server started at http://localhost:9876/
+INFO [launcher]: Starting browser Chrome
+INFO [Chrome 41.0.2272 (Mac OS X 10.10.2)]: Connected on socket JBQp0aEyu8KSqUfGoxsd with id 94772581
+Chrome 41.0.2272 (Mac OS X 10.10.2): Executed 2 of 2 SUCCESS (0.061 secs / 0.002 secs)
+[05:28:05] Finished 'unit' after 3.23 s
+</code></p>
+
+<p>Now for the e2e tests:</p>
+
+<ol>
+<li>1st terminal window: <code>webdriver-manager start</code></li>
+<li>2nd terminal window: <code>gulp</code></li>
+<li>3rd terminal window: <code>gulp e2e</code></li>
+</ol>
+
+
+<p>They should pass as well:</p>
+
+<p>```sh
+[05:29:45] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+[05:29:45] Starting 'e2e'...
+Using the selenium server at http://localhost:4444/wd/hub
+[launcher] Running 1 instances of WebDriver
+.</p>
+
+<p>Finished in 0.921 seconds
+1 test, 1 assertion, 0 failures</p>
+
+<p>[launcher] 0 instance(s) of WebDriver still running
+[launcher] chrome #1 passed
+```</p>
+
+<p>So, what's happening here...</p>
+
+<h2><a name="config-files">Configuration Files</a></h2>
+
+
+<p>There are two configuration files in the "tests" folder - one for Karma and the other for Protractor.</p>
+
+<h3>Karma</h3>
+
+<p><a href="http://karma-runner.github.io/">Karma</a> is a test runner built by the AngularJS team that executes the unit tests and reports the results.</p>
+
+<p>Let's look the config file, <em>karma.conf.js</em>:</p>
+
+<p>```javascript
+module.exports = function(config) {
+  config.set({</p>
+
+<pre><code>// base path that will be used to resolve all patterns
+basePath: '.',
+
+// frameworks to use
+frameworks: ['mocha', 'chai'],
+
+// list of files / patterns to load in the browser
+files: [
+  '../app/bower_components/angular/angular.js',
+  '../app/bower_components/jquery/dist/jquery.js',
+  '../app/bower_components/angular-strap/dist/angular-strap.js',
+  '../app/bower_components/angular-strap/dist/angular-strap.tpl.js',
+  '../app/bower_components/angular-mocks/angular-mocks.js',
+  '../app/bower_components/angular-route/angular-route.js',
+  './unit/*.js',
+  '../app/app.js'
+],
+
+// test result reporter
+reporters: ['progress'],
+
+// web server port
+port: 9876,
+
+// enable / disable colors in the output (reporters and logs)
+colors: true,
+
+// level of logging
+logLevel: config.LOG_INFO,
+
+// enable / disable watching file and executing tests whenever any file changes
+autoWatch: true,
+
+// start these browsers
+browsers: ['Chrome'],
+
+// Continuous Integration mode
+singleRun: false
+</code></pre>
+
+<p>  });
+};
+```</p>
+
+<blockquote><p>You can also tun <code>karma init</code> to be guided through the creation of a config file.</p></blockquote>
+
+<p>Be sure to read over the comments for an overview of each config option. For more information, review the <a href="http://karma-runner.github.io/0.12/config/configuration-file.html">official documentation</a>.</p>
+
+<h3>Protractor</h3>
+
+<p><a href="http://angular.github.io/protractor/#/">Protractor</a> provides a nice wrapper around <a href="http://seleniumhq.github.io/selenium/docs/api/javascript/">Selenium Webdriver</a> to run tests against an AngularJS application running live in a browser.</p>
+
+<p>Turn your attention to the Protractor config file, <em>protractor.conf.js</em>:</p>
+
+<p><code>javascript
+exports.config = {
+  seleniumAddress: 'http://localhost:4444/wd/hub',
+  specs: ['tests/e2e/*.js']
+};
+</code></p>
+
+<p>This tells protractor where to find the test files (called specs) and specifies the address that the Selenium server is running on. Simple.</p>
+
+<p>Ready to start testing?</p>
+
+<h2><a name="unit-tests">Unit Tests</a></h2>
+
+
+<p>We'll start with unit tests since they are much easier to write, debug, and maintain.</p>
+
+<p>Keep in mind that unit tests, by definition, only test isolated units of code so they rely heavily on mocking fake data. This can add much complexity to your tests and can decrease the effectiveness of the actual tests. For example, if you're mocking out an HTTP request to a back-end API, then you're not really testing your application. Instead you're simulating the request and then using fake JSON data to simulate the response back. The tests may run faster, but they are much less effective. Unfortunately, there is no right answer here.</p>
+
+<p>When starting out, mock out only the most expensive requests and make the actual API call in other situations. Over time you will develop a better sense of which requests should be mocked and which should not.</p>
+
+<p>Finally, if you decide not to mock a request in a specific test, then the test is no longer a unit test since it's not testing an isolated unit of code. Instead you are testing multiple units, which is an integration test. For simplicity, we will continue to refer to such tests as unit tests.</p>
+
+<p>With that, let's create some tests, broken up by controller!</p>
+
+<h3>TestOneController</h3>
+
+<p>Take a look at the code in the first controller:</p>
+
+<p>```javascript
+myApp.controller('TestOneController', function($scope) {
+  $scope.greeting = "Hello, World!";
+  $scope.newText = undefined;
+  $scope.changeGreeting = function() {</p>
+
+<pre><code>$scope.greeting = $scope.newText;
+</code></pre>
+
+<p>  };
+});
+```</p>
+
+<p>What's happening here? Confirm your answer by running your app and watching what happens. Now, what can/should we test?</p>
+
+<ol>
+<li><code>greeting</code> has an initial value of <code>"Hello, World!"</code>, and</li>
+<li>The <code>changeGreeting</code> function updates <code>greeting</code>.</li>
+</ol>
+
+
+<p>You probably noticed that we are already testing this in the spec:</p>
+
+<p>```javascript
+describe('TestOneController', function () {</p>
+
+<p>  var controller = null;
+  $scope = null;</p>
+
+<p>  beforeEach(function () {</p>
+
+<pre><code>module('myApp');
+</code></pre>
+
+<p>  });</p>
+
+<p>  beforeEach(inject(function ($controller, $rootScope) {</p>
+
+<pre><code>$scope = $rootScope.$new();
+controller = $controller('TestOneController', {
+  $scope: $scope
+});
+</code></pre>
+
+<p>  }));</p>
+
+<p>  it('initially has a greeting', function () {</p>
+
+<pre><code>assert.equal($scope.greeting, "Hello, World!");
+</code></pre>
+
+<p>  });</p>
+
+<p>  it('clicking the button changes the changes the greeting', function () {</p>
+
+<pre><code>$scope.newText = "Hi!";
+$scope.changeGreeting();
+assert.equal($scope.greeting, "Hi!");
+</code></pre>
+
+<p>  });</p>
+
+<p>});
+```</p>
+
+<p>What's happening?</p>
+
+<ol>
+<li>The <code>describe</code> block is used to group similar tests.</li>
+<li>The module, <code>myApp</code>, is loaded, into each test, in the first <code>beforeEach</code> block, which instantiates a clean testing environment.</li>
+<li>The dependencies are injected, a new scope is created, and the controller is instantiated in the second <code>beforeEach</code>.</li>
+<li>Each <code>it</code> function is a separate test, which includes a title, in human readable form, and a function with the actual test code.</li>
+<li>The first test asserts that the initial state of <code>greeting</code> is <code>"Hello, World!"</code>.</li>
+<li>Meanwhile, the second test assets that the <code>changeGreeting()</code> function actually changes the value of <code>greeting</code>.</li>
+</ol>
+
+
+<p>Make sense?</p>
+
+<p><em>In most cases, unit tests simply change the scope and assert that the results are what we expected.</em></p>
+
+<blockquote><p>In general, when testing controllers, you inject then register the controller with a <code>beforeEach</code> block, along with the <code>$rootScope</code> and then test that the functions within the controller act as expected.</p></blockquote>
+
+<p>Run the tests again to ensure they still pass - <code>gulp unit</code>.</p>
+
+<p>What else could we test? How about if <code>newText</code> doesn't change - e.g., if the user submits the button without entering any text in the input box - then the value of <code>greeting</code> should stay the same. Try writing this on your own, before you look at my answer:</p>
+
+<p><code>javascript
+it('clicking the button does not change the greeting if text is not inputed', function () {
+  $scope.changeGreeting();
+  assert.equal($scope.greeting, "Hello, World!");
+});
+</code></p>
+
+<p>Try running this. It should fail.</p>
+
+<p><code>sh
+Chrome 41.0.2272 (Mac OS X 10.10.2) TestOneController clicking the button does not change the greeting FAILED
+  AssertionError: expected undefined to equal 'Hello, World!'
+</code></p>
+
+<p>So, we've revealed a bug. We could fix this by adding validation to the input box to ensure the end user enters a value or we could update <code>changeGreeting</code> to only update <code>greeting</code> if <code>newText</code> is not <code>undefined</code>. Let's go with the latter.</p>
+
+<p>```javascript
+$scope.changeGreeting = function() {
+  if ($scope.newText !== undefined) {</p>
+
+<pre><code>$scope.greeting = $scope.newText;
+</code></pre>
+
+<p>  }
+};
+```</p>
+
+<p>Save the code, and then run the tests again:</p>
+
+<p><code>sh
+$ gulp unit
+[08:28:18] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+[08:28:18] Starting 'unit'...
+INFO [karma]: Karma v0.12.31 server started at http://localhost:9876/
+INFO [launcher]: Starting browser Chrome
+INFO [Chrome 41.0.2272 (Mac OS X 10.10.2)]: Connected on socket HGnVC5-cAXOZjAsrSCWj with id 83240025
+Chrome 41.0.2272 (Mac OS X 10.10.2): Executed 3 of 3 SUCCESS (0.065 secs / 0.001 secs)
+[08:28:21] Finished 'unit' after 3.13 s
+</code></p>
+
+<p>Nice!</p>
+
+<blockquote><p>Since controllers are used to bind data to the template (via scope), unit tests are perfect for testing the controller logic - e.g., what happens to the scope as the controller runs - while E2E tests ensure that the template is updated accordingly.</p></blockquote>
+
+<h3>TestTwoController</h3>
+
+<p>Start by analyzing the code:</p>
+
+<p>```javascript
+myApp.controller('TestTwoController', function($scope) {
+  $scope.total = 6;
+  $scope.newItem = undefined;
+  $scope.items = [1, 2, 3];
+  $scope.add = function () {</p>
+
+<pre><code>$scope.items.push($scope.newItem);
+$scope.total = 0;
+for(var i = 0; i &lt; $scope.items.length; i++){
+  $scope.total += parseInt($scope.items[i]);
+}
+</code></pre>
+
+<p>  };
+});
+```</p>
+
+<p>What should we test? Take out a pen and paper and write down everything that should be tested. Once done, write the code. Check your code against mine.</p>
+
+<p>Be sure to start with the following boilerplate:</p>
+
+<p>```javascript
+describe('TestTwoController', function () {</p>
+
+<p>  var controller = null;
+  $scope = null;</p>
+
+<p>  beforeEach(function () {</p>
+
+<pre><code>module('myApp');
+</code></pre>
+
+<p>  });</p>
+
+<p>  beforeEach(inject(function ($controller, $rootScope) {</p>
+
+<pre><code>$scope = $rootScope.$new();
+controller = $controller('TestTwoController', {
+  $scope: $scope
+});
+</code></pre>
+
+<p>  }));</p>
+
+<p>});
+```</p>
+
+<h4>Test 1: The initial value of <code>total</code></h4>
+
+<p><code>javascript
+it('initially has a total', function () {
+  assert.equal($scope.total, 6);
+});
+</code></p>
+
+<h4>Test 2: The initial value of <code>items</code></h4>
+
+<p><code>javascript
+it('initially has items', function () {
+  assert.isArray($scope.items);
+  assert.deepEqual($scope.items, [1, 2, 3]);
+});
+</code></p>
+
+<h4>Test 3: The <code>add</code> function updates the <code>total</code> and <code>items</code> array when a value is added</h4>
+
+<p><code>javascript
+it('the `add` function updates the `total` and `items` array when a value is added', function () {
+  $scope.newItem = 7;
+  $scope.add();
+  assert.equal($scope.total, 13);
+  assert.deepEqual($scope.items, [1, 2, 3, 7]);
+});
+</code></p>
+
+<h4>Test 4: The <code>add</code> function does not update the <code>total</code> and <code>items</code> array when an empty value is added</h4>
+
+<p><code>javascript
+it('does not update the `total` and `items` array when an empty value is added', function () {
+  $scope.newItem = undefined;
+  $scope.add();
+  assert.equal($scope.total, 6);
+  assert.deepEqual($scope.items, [1, 2, 3]);
+  $scope.newItem = 22;
+  $scope.add();
+  assert.equal($scope.total, 28);
+  assert.deepEqual($scope.items, [1, 2, 3, 22]);
+});
+</code></p>
+
+<h4>Run</h4>
+
+<p>Each test should be straightforward. Run the tests. There should be one failure:</p>
+
+<p><code>javascript
+Chrome 41.0.2272 (Mac OS X 10.10.2) TestTwoController does not update the `total` and `items` array when an empty value is added FAILED
+  AssertionError: expected NaN to equal 6
+</code></p>
+
+<p>Update the code, adding a conditional again:</p>
+
+<p>```javascript
+$scope.add = function () {
+  if(typeof $scope.newItem == 'number') {</p>
+
+<pre><code>$scope.items.push($scope.newItem);
+$scope.total = 0;
+for(var i = 0; i &lt; $scope.items.length; i++){
+  $scope.total += parseInt($scope.items[i]);
+}
+</code></pre>
+
+<p>  }
+```</p>
+
+<p>Also update the partial:</p>
+
+<p><code>html
+&lt;input type="number" ng-model="newItem"&gt;
+</code></p>
+
+<p>Run it again:</p>
+
+<p><code>sh
+$ gulp unit
+[09:56:10] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+[09:56:10] Starting 'unit'...
+INFO [karma]: Karma v0.12.31 server started at http://localhost:9876/
+INFO [launcher]: Starting browser Chrome
+INFO [Chrome 41.0.2272 (Mac OS X 10.10.2)]: Connected on socket Lbv1sROpYrEHgotlmJZf with id 91008249
+Chrome 41.0.2272 (Mac OS X 10.10.2): Executed 7 of 7 SUCCESS (0.082 secs / 0.003 secs)
+[09:56:13] Finished 'unit' after 3.05 s
+</code></p>
+
+<p>Success!</p>
+
+<p>Did I miss anything? Comment below.</p>
+
+<h3>TestThreeController</h3>
+
+<p>Again, check out the code in <em>app.js</em>:</p>
+
+<p><code>javascript
+myApp.controller('TestThreeController', function($scope) {
+  $scope.modal = {title: 'Hi!', content: 'This is a message!'};
+});
+</code></p>
+
+<p>What can we test here?</p>
+
+<p><code>javascript
+it('initially has a modal', function () {
+  assert.isObject($scope.modal);
+  assert.deepEqual($scope.modal, {title: 'Hi!', content: 'This is a message!'});
+});
+</code></p>
+
+<p>Perhaps a better question is: What <em>should</em> we test here? Is the above test really necessary? Probably not. But we may need to test it out more in the future if we build out the functionality. Let's go for it!</p>
+
+<h4>Update <em>app.js</em>:</h4>
+
+<p>```javascript
+myApp.controller('TestThreeController', function($scope, $modal) {
+  $scope.modalNumber = 1;
+  var myModal = $modal({scope: $scope, template: 'modal.tpl.html', show: false});
+  $scope.showModal = function() {</p>
+
+<pre><code>myModal.$promise.then(myModal.show);
+</code></pre>
+
+<p>  };
+  $scope.changeModalText = function() {</p>
+
+<pre><code>$scope.modalNumber++;
+};
+</code></pre>
+
+<p>});
+```</p>
+
+<p>Here we are defined a custom template, <code>modal.tpl.html</code>, to be used for the modal text and then we assigned <code>$scope.modalNumber</code> to <code>1</code> as well as function to iterate the number.</p>
+
+<h4>Add <em>modal.tpl.html</em>:</h4>
+
+<p>```html</p>
+
+<div class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <span>
+          <button class="btn btn-default" ng-click="changeModalText()">Iterate</button>
+          &nbsp;&#8594;&nbsp;
+          <span></span>
+        </span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" ng-click="$hide()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<p>```</p>
+
+<p>Add this template to the "app" folder.</p>
+
+<h4>Update <em>three.html</em>:</h4>
+
+<p>Finally, update the partial:</p>
+
+<p>```html</p>
+
+<h2>Just a modal</h2>
+
+
+<p><button type="button" class="btn btn-lg btn-default" data-template="modal.tpl.html" bs-modal="modal">
+  Launch modal!
+</button>
+```</p>
+
+<p>Run the app to make sure everything works, and then update the test...</p>
+
+<h4>Test redux</h4>
+
+<p>```javascript
+describe('TestThreeController', function () {</p>
+
+<p>  var controller = null;
+  $scope = null;</p>
+
+<p>  beforeEach(function () {</p>
+
+<pre><code>module('myApp');
+</code></pre>
+
+<p>  });</p>
+
+<p>  beforeEach(inject(function ($controller, $rootScope) {</p>
+
+<pre><code>$scope = $rootScope.$new();
+controller = $controller('TestThreeController', {
+  $scope: $scope
+});
+</code></pre>
+
+<p>  }));</p>
+
+<p>  it('initially has a modalNumber', function () {</p>
+
+<pre><code>assert.equal($scope.modalNumber, 1);
+</code></pre>
+
+<p>  });</p>
+
+<p>  it('updates the <code>modalNumber</code> when a value is added', function () {</p>
+
+<pre><code>$scope.changeModalText();
+assert.equal($scope.modalNumber, 2);
+$scope.changeModalText();
+assert.equal($scope.modalNumber, 3);
+</code></pre>
+
+<p>  });</p>
+
+<p>});
+```</p>
+
+<p>Notice how we're no longer testing that a modal is present. We'll test that via the E2E tests.</p>
+
+<h3>TestFourController</h3>
+
+<p>Finally, let's test the AJAX request:</p>
+
+<p>```sh
+myApp.controller('TestFourController', function($scope, $http) {
+  $scope.repos = [];
+  $scope.loadRepos = function () {</p>
+
+<pre><code>$http.get('https://api.github.com/repositories').then(function (repos) {
+  $scope.repos = repos.data;
+});
+</code></pre>
+
+<p>  };
+});
+```</p>
+
+<p>Remember the discussion earlier on mocking HTTP requests? Well, here's probably a good place to actually use a mocking library since this request hits an external API. To do this, we can use the <code>$httpBackend</code> directive from the <a href="https://docs.angularjs.org/api/ngMock">angular-mocks</a> library.</p>
+
+<p>First, let's first add the <em>mock.js</em> file found in the <a href="https://github.com/mjhea0/angular-testing-tutorial/tree/master/tests/mock">repo</a> into a new folder called "mock" within the "tests" folder. This module use <code>angular.module().value</code> to set a JSON value to use as the fake data.</p>
+
+<p>Next, add the test:</p>
+
+<p>```javascript
+describe('TestFourController', function () {</p>
+
+<p>  var controller = null;
+  var $scope = null;
+  var $httpBackend = null;
+  var mockedDashboardJSON = null;</p>
+
+<p>  beforeEach(function () {</p>
+
+<pre><code>module('myApp', 'mockedDashboardJSON');
+</code></pre>
+
+<p>  });</p>
+
+<pre><code>beforeEach(inject(function ($controller, $rootScope, _$httpBackend_, defaultJSON) {
+  $httpBackend = _$httpBackend_;
+  $scope = $rootScope.$new();
+  $httpBackend.when('GET','https://api.github.com/repositories').respond(defaultJSON.fakeData);
+  controller = $controller('TestFourController', {
+      $scope: $scope
+  });
+}));
+
+afterEach(function () {
+  $httpBackend.verifyNoOutstandingExpectation();
+  $httpBackend.verifyNoOutstandingRequest();
+});
+</code></pre>
+
+<p>  it('initially has repos', function () {</p>
+
+<pre><code>assert.isArray($scope.repos);
+assert.deepEqual($scope.repos, []);
+</code></pre>
+
+<p>  });</p>
+
+<p>  it('clicking the button updates the repos', function () {</p>
+
+<pre><code>  $scope.loadRepos();
+  $httpBackend.flush();
+  assert.equal($scope.repos.length, 100);
+</code></pre>
+
+<p>  });</p>
+
+<p>});
+```</p>
+
+<p>What's happening?</p>
+
+<ol>
+<li>Essentially, here we're injecting <code>defaultJSON</code> so that when the app tries to make the HTTP request, it triggers <code>$httpBackend</code>, which, in turn, uses the <code>defaultJSON</code> value.</li>
+<li>Did you notice the underscores surrounding the <code>$httpBackend</code> directive? This is a hack that allows us to use the dependency in multiple tests. You can find more information on this from the <a href="https://docs.angularjs.org/api/ngMock/function/angular.mock.inject">official documentation</a>.</li>
+<li>Finally, we're using an <code>afterEach</code> block to check that we're not missing any HTTP requests in our tests via the <code>verifyNoOutstandingExpectation()</code> and <code>verifyNoOutstandingRequest()</code> methods. Again, you can read more about these methods from the <a href="https://docs.angularjs.org/api/ngMock/service/$httpBackend">Angular docs</a>.</li>
+</ol>
+
+
+<p>Test it out!</p>
+
+<h3>Routes</h3>
+
+<p>How about the routes, templates, and partials?</p>
+
+<p>```javascript
+describe('routes', function(){</p>
+
+<p>  beforeEach(function () {</p>
+
+<pre><code>module('myApp');
+</code></pre>
+
+<p>  });</p>
+
+<p>  beforeEach(inject(function (<em>$httpBackend</em>, <em>$route</em>, <em>$location</em>, $rootScope) {</p>
+
+<pre><code>$httpBackend = _$httpBackend_;
+$route = _$route_;
+$location = _$location_;
+$scope = $rootScope.$new();
+</code></pre>
+
+<p>  }));</p>
+
+<p>  it('should load the one.html template', function(){</p>
+
+<pre><code>$httpBackend.whenGET('partals/one.html').respond('...');
+$scope.$apply(function() {
+  $location.path('/one');
+});
+assert.equal($route.current.templateUrl, 'partials/one.html');
+assert.equal($route.current.controller, 'TestOneController');
+</code></pre>
+
+<p>  });</p>
+
+<p>});
+```</p>
+
+<ol>
+<li>When the route is loaded, the <code>current</code> property is updated. We then test to ensure that the current controller and template are <code>TestOneController</code> and <code>partials/one.html</code>, respectively.</li>
+<li>Did you notice that we wrapped the route change inside the <code>$apply</code> callback? Since unit tests don't run the full Angular app, we had to simulate it by triggering the <a href="https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$digest">digest cycle</a>.</li>
+<li>Curious about <code>WhenGET</code>? Check out the <a href="https://docs.angularjs.org/api/ngMock/service/$httpBackend">Angular documentation</a>. Take note of <code>ExpectGET</code> as well. Can you re-write the above test to use <code>ExpectGET</code>?</li>
+</ol>
+
+
+<p>Make sure to run the tests one last time:</p>
+
+<p><code>sh
+$ gulp unit
+[05:20:07] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+[05:20:07] Starting 'unit'...
+INFO [karma]: Karma v0.12.31 server started at http://localhost:9876/
+INFO [launcher]: Starting browser Chrome
+INFO [Chrome 41.0.2272 (Mac OS X 10.10.2)]: Connected on socket R5qQUcjswAbpcvMK6JKu with id 67365006
+Chrome 41.0.2272 (Mac OS X 10.10.2): Executed 12 of 12 SUCCESS (0.16 secs / 0.027 secs)
+[05:20:10] Finished 'unit' after 3.44 s
+</code></p>
+
+<h2><a name="conclusion">Conclusion</a></h2>
+
+
+<p>That's it for unit tests. In the next part (coming soon!), we'll test the entire application, front to back, using end-to-end (E2E) tests via Protractor.</p>
+
+<p>Checkout the third tag, <code>v3</code>, to view all the completed unit tests:</p>
+
+<p><code>sh
+$ git checkout tags/v3
+</code></p>
+
+<p>Ready for more?</p>
+
+<p>Try adding some <a href="http://mherman.org/blog/2014/06/12/primer-on-angularjs-service-types/">Factories/Services</a> and Filters to your app to continue practicing. Since the syntax is relatively the same for testing all parts of an Angular app, you should be able to extend your testing knowledge to both factories and filters. Take a look at this <a href="https://github.com/mjhea0/thinkful-mentor/tree/master/angular/projects/angular-unit-test-demo/app/components">example</a> for help getting started. Once you feel comfortable with factories, controllers, and filters, move on to testing more difficult components, like directives, resources, and animations. Good luck!</p>
+
+<p>Comment below with questions.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Kickstarting Angular with Gulp and Browserify, Part 2 - Browserify]]></title>

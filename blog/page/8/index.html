@@ -9,7 +9,8 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="This tutorial is meant for someone who&#8217;s finished a basic Hello World project with Node and Express and ready to take another step. In short, I &hellip;">
+  <meta name="description" content="Here is an index of all the articles in the series that have been published to date: Part 1: Scraping Craigslist
+Part 2: Adding Handlebars &lt;&lt; &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +77,427 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Handling AJAX Calls With Node.js and Express (Part 2)</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-01T07:01:00-06:00" pubdate data-updated="true">Nov 1<span>st</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Here is an index of all the articles in the series that have been published to date:</p>
+
+<ul>
+<li>Part 1: <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">Scraping Craigslist</a></li>
+<li>Part 2: <a href="http://mherman.org/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Adding Handlebars</a> <strong>&lt;&lt; CURRENT</strong></li>
+<li>Part 3: <a href="http://mherman.org/blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/">User Authentication with Passport and MongoDB</a></li>
+<li>Part 4: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Refactoring, Adding styles</a></li>
+<li>Part 5: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5">Saving Jobs</a></li>
+</ul>
+
+
+<p>Last <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">time</a> we looked at how to scrape Craigslist using AJAX, Node, and Express. In this post we&#8217;ll look at adding <a href="http://handlebarsjs.com/">Handlebars</a> into the mix.</p>
+
+<p>We&#8217;ll start with the server-side. Essentially, we need to modify the returned JSON results, creating a data structure appropriate for Handlebars. From there, we&#8217;ll send the newly created data structure back to the client-side, pass it into a  Handlebars template, and finally loop through the structure to ouput each individual result.</p>
+
+<h2>app.js (server-side)</h2>
+
+<p>Our second route, <code>/searching</code>, currently looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// second route</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// input value from search</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">//console.log(val);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// url used to search yql</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">&quot;http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search&quot;</span> <span class="o">+</span>
+</span><span class='line'>  <span class="s2">&quot;%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22&quot;</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">&quot;%22&amp;format=&quot;</span> <span class="o">+</span>
+</span><span class='line'>  <span class="s2">&quot;json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// console.log(url);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
+</span><span class='line'>  <span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+</span><span class='line'>      <span class="c1">// logic used to compare search results with the input from user</span>
+</span><span class='line'>      <span class="c1">// console.log(!body.query.results.RDF.item[&#39;about&#39;])</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="s1">&#39;about&#39;</span><span class="p">]</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">craig</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;about&#39;</span><span class="p">]</span>
+</span><span class='line'>        <span class="nx">craig</span> <span class="o">=</span> <span class="s1">&#39;&lt;a href =&quot;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&quot;&gt;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&lt;/a&gt;&#39;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="c1">// pass back the results to client side</span>
+</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">craig</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// testing the route</span>
+</span><span class='line'>  <span class="c1">// res.send(&quot;WHEEE&quot;);</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Right now we&#8217;re just sending back a single link to a single result from the returned JSON:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;about&#39;</span><span class="p">]</span>
+</span><span class='line'><span class="nx">craig</span> <span class="o">=</span> <span class="s1">&#39;&lt;a href =&quot;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&quot;&gt;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&lt;/a&gt;&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&#8217;s expand this out so that it returns the title, url, and description. It&#8217;s also much easier to loop through an array than an object in Handlebars, so let&#8217;s return an array of objects -</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">[{</span><span class="nx">title</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">title</span><span class="o">&gt;</span><span class="p">,</span> <span class="nx">link</span><span class="o">:&lt;</span><span class="nx">link</span><span class="o">&gt;</span><span class="p">,</span> <span class="nx">description</span><span class="o">:&lt;</span><span class="nx">description</span><span class="o">&gt;</span><span class="p">},</span> <span class="p">.</span> <span class="p">.</span> <span class="p">.]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>How do we do that?</strong> Based on the returned JSON data we know that the data needed is found in the <code>items</code> key. Add the following <code>console.log</code> to the <code>else</code> block:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Fire up your server. Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a>. Run a search on &#8220;Ruby&#8221;. Then check the output in the terminal. You should see something similar to this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span> <span class="nx">about</span><span class="o">:</span> <span class="s1">&#39;http://sfbay.craigslist.org/pen/sad/4151410088.html&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">title</span><span class="o">:</span>
+</span><span class='line'>   <span class="p">[</span> <span class="s1">&#39;Sr. System Administrator (mountain view)&#39;</span><span class="p">,</span>
+</span><span class='line'>     <span class="s1">&#39;Sr. System Administrator (mountain view)&#39;</span> <span class="p">],</span>
+</span><span class='line'>  <span class="nx">link</span><span class="o">:</span> <span class="s1">&#39;http://sfbay.craigslist.org/pen/sad/4151410088.html&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">description</span><span class="o">:</span> <span class="s1">&#39;Sr. System Administrator - Couchbase \nWe are looking to add a smart, energetic, and fast learning System Administrator/Operations Engineer who will develop, manage and support Couchbase\&#39;s growing infrastructure including building and maintaining virt [...]&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">date</span><span class="o">:</span> <span class="s1">&#39;2013-10-25T12:15:03-07:00&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">language</span><span class="o">:</span> <span class="s1">&#39;en-us&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">rights</span><span class="o">:</span> <span class="s1">&#39;&amp;copy; 2013 craigslist&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">source</span><span class="o">:</span> <span class="s1">&#39;http://sfbay.craigslist.org/pen/sad/4151410088.html&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">issued</span><span class="o">:</span> <span class="s1">&#39;2013-10-25T12:15:03-07:00&#39;</span> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Thus, each object will look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">.</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="s2">&quot;link&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p><code>title</code> is an array with two values, where each value contains the exact same result. You can double check this by looking at other returned items.</p></blockquote>
+
+<p>Next, update the loop with the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span>
+</span><span class='line'>  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">resultsArray</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;about&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
+</span><span class='line'>    <span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To test out this code, <code>console.log</code> the array outside of the loop. Run another search for &#8220;ruby&#8221;. You should see something similar to this:</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/part2-results.png" alt="image" /></p>
+
+<p>Which is the exact data structure that we need. Make sure that your <code>request</code> method looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">resultsArray</span> <span class="o">=</span> <span class="p">[];</span>
+</span><span class='line'>  <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+</span><span class='line'>  <span class="c1">// logic used to compare search results with the input from user</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">results</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">resultsArray</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;about&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="c1">// pass back the results to client side</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">resultsArray</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, if no results are found from the search, we&#8217;re sending <code>results</code> back to the client side, otherwise we&#8217;re sending <code>resultsArray</code>.</p>
+
+<p>Finally, let&#8217;s refactor the code to seperate out concerns:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// second route</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="c1">// input value from search</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// url used to search yql</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">&quot;http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search&quot;</span> <span class="o">+</span>
+</span><span class='line'><span class="s2">&quot;%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22&quot;</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">&quot;%22&amp;format=&quot;</span> <span class="o">+</span>
+</span><span class='line'><span class="s2">&quot;json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&quot;</span><span class="p">;</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="nx">requests</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">requests</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
+</span><span class='line'>  <span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">resultsArray</span> <span class="o">=</span> <span class="p">[];</span>
+</span><span class='line'>  <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+</span><span class='line'>  <span class="c1">// console.log(body.query.results.RDF.item)</span>
+</span><span class='line'>  <span class="c1">// logic used to compare search results with the input from user</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">results</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
+</span><span class='line'>    <span class="nx">callback</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">resultsArray</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+</span><span class='line'>        <span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;about&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
+</span><span class='line'>      <span class="p">);</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>    <span class="c1">// pass back the results to client side</span>
+</span><span class='line'>    <span class="nx">callback</span><span class="p">(</span><span class="nx">resultsArray</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>main.js (client-side)</h2>
+
+<p>Back on the client side, add the following <code>if</code> statement:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="k">instanceof</span> <span class="nb">Array</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">$results</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">dataTemplate</span><span class="p">({</span><span class="nx">resultsArray</span><span class="o">:</span><span class="nx">data</span><span class="p">}));</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">$results</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This tests whether the returned data is an array. If so, <code>data</code> is passed to Handledbars, and, if not, <code>data</code> is added to <code>index.html</code>, indicating that no results are found. Test this out. Try searching for a something you know won&#8217;t return any results:</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/no_results.png" alt="image" /></p>
+
+<h2>Handlebars</h2>
+
+<p>Finally, when results are returned, we want to pass <code>data</code>, which is the <code>resultsArray</code> to Handlebars, a client side templating engine. Such engines are extremly powerful as they provide a connection between the UI and underlying business logic. Put simply, this allows us to bind the <code>resultsArray</code> to the UI. This is called <em>data binding</em>. When the underlying data changes, such changes will reflect on the UI.</p>
+
+<p>First, update the <code>index.jade</code> file to include the Handlebars template, <code>template.html</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">extends</span> <span class="nx">layout</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">block</span> <span class="nx">content</span>
+</span><span class='line'>  <span class="nx">h1</span> <span class="nx">search</span> <span class="nx">sf</span> <span class="nx">jobs</span>
+</span><span class='line'>  <span class="nx">input</span><span class="err">#</span><span class="nx">search</span><span class="p">(</span><span class="nx">type</span><span class="o">=</span><span class="s2">&quot;search&quot;</span><span class="p">,</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Search Craig&#39;s Jobs&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">ul</span><span class="err">#</span><span class="nx">results</span>
+</span><span class='line'>  <span class="nx">include</span> <span class="nx">template</span><span class="p">.</span><span class="nx">html</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">script</span><span class="p">(</span><span class="nx">src</span><span class="o">=</span><span class="s2">&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">script</span><span class="p">(</span><span class="nx">src</span><span class="o">=</span><span class="s2">&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">script</span><span class="p">(</span><span class="nx">src</span><span class="o">=</span><span class="s2">&quot;/javascripts/main.js&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next, add <code>template.html</code> to the &#8220;views&#8221; folder, and then add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="o">&lt;</span><span class="nx">script</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;search-results&quot;</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text/x-handlebars-template&quot;</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="p">{{</span><span class="err">#</span><span class="nx">each</span> <span class="nx">resultsArray</span><span class="p">}}</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{{</span><span class="nx">about</span><span class="p">}}</span><span class="o">&gt;</span><span class="p">{{</span><span class="nx">title</span><span class="p">}}</span><span class="o">&lt;</span><span class="err">/a&gt;&lt;br&gt;{{desc}}&gt;&lt;/li&gt;</span>
+</span><span class='line'>  <span class="p">{{</span><span class="err">/each}}</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="nx">br</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="err">/script&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As you probably guessed, the <code>each</code> helper iterates through the list, adding a new list item - which includes the title, link, and description - to the dom.</p>
+
+<p>Test this out one last time. Search for &#8220;ruby&#8221;:</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/ruby-search-results.png" alt="image" /></p>
+
+<p>Looks pretty good.</p>
+
+<h2>Conclusion</h2>
+
+<p>Alright, so next time we&#8217;ll add user login and authentication. You can grab the code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1152,234 +1574,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2013/09/16/managing-multiple-github-accounts/">Managing Multiple Github Accounts</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-09-16T07:43:00-06:00" pubdate data-updated="true">Sep 16<span>th</span>, 2013</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Let&#8217;s look at how to manage multiple Github accounts from one computer. In essence, it&#8217;s simply a matter of balancing both your git and ssh configurations - which actually is not as bad as it might seem.</p>
-
-<blockquote><p>Note: This tutorial is meant for Unix users.</p></blockquote>
-
-<h2>Set up SSH Keys</h2>
-
-<p>Let&#8217;s assume your two Github accounts are named <em>githubPersonal</em> and <em>githubWork</em>, respectively.</p>
-
-<p>Create two SSH keys, saving each to a separate file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd</span> ~/.ssh
-</span><span class='line'><span class="nv">$ </span>ssh-keygen -t rsa -C <span class="s2">&quot;your_email@associated_with_githubPersonal.com&quot;</span>
-</span><span class='line'><span class="c"># save it as id_rsa_personal when prompted</span>
-</span><span class='line'><span class="nv">$ </span>ssh-keygen -t rsa -C <span class="s2">&quot;your_email@associated_with_githubWork.com&quot;</span>
-</span><span class='line'><span class="c"># save it as id_rsa_work when prompted</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above commands setup the following files:</p>
-
-<ul>
-<li><em>id_rsa_personal</em></li>
-<li><em>id_rsa_personal.pub</em></li>
-<li><em>id_rsa_work</em></li>
-<li><em>id_rsa_work.pub</em></li>
-</ul>
-
-
-<h2>Add the keys to your Github accounts:</h2>
-
-<h4>Copy the key to your clipboard:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>pbcopy &lt; ~/.ssh/id_rsa_personal.pub
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>Add the key to your account:</h4>
-
-<ul>
-<li>Go to your Account Settings</li>
-<li>Click &#8220;SSH Keys&#8221; then &#8220;Add SSH key&#8221;</li>
-<li>Paste your key into the &#8220;Key&#8221; field and add a relevant title</li>
-<li>Click &#8220;Add key&#8221; then enter your Github password to confirm</li>
-</ul>
-
-
-<h4>Repeat the process for your <em>githubWork</em> account.</h4>
-
-<h2>Create a configuration file to manage the separate keys</h2>
-
-<h4>Create a config file in ~/.ssh/</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>touch config
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<h4>Edit the file using the text editor of your choice. I used vim - <code>$ vim config</code>:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c"># githubPersonal</span>
-</span><span class='line'>Host personal
-</span><span class='line'>   HostName github.com
-</span><span class='line'>   User git
-</span><span class='line'>   IdentityFile ~/.ssh/id_rsa_personal
-</span><span class='line'>
-</span><span class='line'><span class="c"># githubWork</span>
-</span><span class='line'>Host work
-</span><span class='line'>   HostName github.com
-</span><span class='line'>   User git
-</span><span class='line'>   IdentityFile ~/.ssh/id_rsa_work
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Update stored identities</h2>
-
-<h4>Clear currently stored identities:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh-add -D
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<h4>Add new keys:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh-add id_rsa_personal
-</span><span class='line'><span class="nv">$ </span>ssh-add id_rsa_work
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>Test to make sure new keys are stored:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh-add -l
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<h4>Test to make sure Github recognizes the keys:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh -T personal
-</span><span class='line'>Hi githubPersonal! You<span class="s1">&#39;ve successfully authenticated, but GitHub does not provide shell access.</span>
-</span><span class='line'><span class="s1">$ ssh -T work</span>
-</span><span class='line'><span class="s1">Hi githubWork! You&#39;</span>ve successfully authenticated, but GitHub does not provide shell access.
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<h2>Test PUSH</h2>
-
-<h4>On Github, create a new repo in your personal account, <em>githubPersonal</em>, called <em>test-personal</em>.</h4>
-
-<h4>Back on your local machine, create a test directory:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd</span> ~/documents
-</span><span class='line'><span class="nv">$ </span>mkdir <span class="nb">test</span>-personal
-</span><span class='line'><span class="nv">$ </span><span class="nb">cd test</span>-personal
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>Add a blank &#8220;readme.md&#8221; file and PUSH to Github:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>touch readme.md
-</span><span class='line'><span class="nv">$ </span>git init
-</span><span class='line'><span class="nv">$ </span>git add .
-</span><span class='line'><span class="nv">$ </span>git commit -am <span class="s2">&quot;first commit&quot;</span>
-</span><span class='line'><span class="nv">$ </span>git remote add origin git@personal:githubPersonal/test-personal.git
-</span><span class='line'><span class="nv">$ </span>git push origin master
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>Notice how we&#8217;re using the custom account, <code>git@personal</code>, instead of <code>git@github.com</code>.</p></blockquote>
-
-<h4>Repeat the process for your <em>githubWork</em> account.</h4>
-
-<h2>Test PULL</h2>
-
-<h4>Add some text to the <em>readme.md</em> file in your personal account on Github.</h4>
-
-<h4>Now PULL and merge the changes by running the following command within the <em>test-personal</em> directory:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git pull origin master
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<h4>Again, repeat this for your <em>githubWork</em> account.</h4>
-
-<br/>
-
-
-<p>Questons? Comments? Did I miss something? Comment below.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/9/">&larr; Older</a>
@@ -1397,6 +1591,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
       </li>
     
@@ -1412,17 +1610,13 @@
         <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (3)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

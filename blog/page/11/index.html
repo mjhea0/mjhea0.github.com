@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="&#8220;The average attention span in 2012 was 8 seconds&#8221; That means you have only a few seconds to grab a customer&#8217;s attention. It&#8217; &hellip;">
+  <meta name="description" content="In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,197 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2013/07/04/removing-a-django-app/">Removing a Django App</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-04T09:43:00-06:00" pubdate data-updated="true">Jul 4<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related <a href="https://docs.djangoproject.com/en/1.5/ref/contrib/contenttypes/">contenttypes</a>.</p>
+
+<p>Let&#8217;s look at two ways to handle this: Manually and with <a href="http://south.aeracode.org/">South</a>.</p>
+
+<p>In this case, the application name is called <code>customers</code>, and it contains the following tables within <em>models.py</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Student</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">courses</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="s">&#39;Course&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Course</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Also, I am using a sqlite3 database called <em>test.db</em>, which contains <a href="https://gist.github.com/mjhea0/5959729">this</a> data.</p>
+
+<p>Let&#8217;s say we want to drop the Course table (for reasons unknown).</p>
+
+<h2>Manually</h2>
+
+<ol>
+<li>Navigate to your project working directory and drop the table:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">sqlclear</span> <span class="n">customers</span> <span class="o">&gt;</span> <span class="n">drop_customers_customerprofile</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li><p>Remove the app from the INSTALLED_APPS section in <em>settings.py</em> and delete any associated URL patterns from <em>urls.py</em>.</p></li>
+<li><p>Drop the database tables:</p></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">sqlite3</span> <span class="n">test</span><span class="o">.</span><span class="n">db</span>
+</span><span class='line'><span class="n">sqlite</span><span class="o">&gt;</span> <span class="n">DROP</span> <span class="n">TABLE</span> <span class="n">customers_customerprofile</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>equivalent MySQL command - <code>$ mysql -u root -p &lt;database_name&gt; &lt; drop_&lt;app_name&gt;_&lt;table_name&gt;.sql</code></p></blockquote>
+
+<ol>
+<li>Clean up the related contenttypes from the Shell:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">shell</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">app_label</span><span class="o">=</span><span class="s">&#39;customers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>You can now delete the app folder as well as any associated media files and/or templates. Finally, make sure to uninstall any associated packages or dependencies using <code>pip uninstall &lt;package_name&gt;</code>. <em>Make sure to use virtualenv</em>.</li>
+</ol>
+
+
+<h2>South</h2>
+
+<p>I use South with all my Django projects, so I tend to prefer this method. Let&#8217;s take a look.</p>
+
+<ol>
+<li>Setup the initial migration and push it through:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">schemamigration</span> <span class="n">customers</span> <span class="o">--</span><span class="n">initial</span>
+</span><span class='line'><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span> <span class="n">customers</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li><p>Remove the <code>CustomerProfile</code> class from <em>models.py</em>.</p></li>
+<li><p>Setup the migration to delete the table:</p></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>python manage.py schemamigration customers --auto
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Update the migration file <em>0002_auto__del_customerprofile.py</em>, to clean up the related contenttypes as well as delete the table from the database, by updating the <code>forwards</code> function:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">forwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orm</span><span class="p">):</span>
+</span><span class='line'>   <span class="c"># Deleting model &#39;CustomerProfile&#39;</span>
+</span><span class='line'>   <span class="n">db</span><span class="o">.</span><span class="n">delete_table</span><span class="p">(</span><span class="s">u&#39;customers_customerprofile&#39;</span><span class="p">)</span>
+</span><span class='line'>   <span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
+</span><span class='line'>   <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">app_label</span><span class="o">=</span><span class="s">&#39;customers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Push the migration through:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>python manage.py migrate customers
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Fake a zero migration to remove the migration history and clear up the South tables:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>python manage.py migrate customers zero --fake
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Remove the app from the INSTALLED_APPS section in <em>settings.py</em> and delete any associated URL patterns from <em>urls.py</em>. Then delete the app folder and any related media files and/or templates. Finally, make sure to uninstall any packages or dependencies using <code>pip unistall &lt;package_name&gt;</code>. <em>Make sure to use virtualenv</em>.</li>
+</ol>
+
+
+<p><strong>Comment if you have questions. Cheers!</strong></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -372,1208 +563,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/">Designing With Class: Sinatra + PostgreSQL + Heroku</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-08T07:37:00-06:00" pubdate data-updated="true">Jun 8<span>th</span>, 2013</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>Change Log</strong>:</p>
-
-<ol>
-<li>September 29, 2013: bootstrap 3, jQuery, css</li>
-<li>November 21, 2013: added the ability to edit posts, demonstarted how to escape HTML</li>
-<li>May 4, 2014: added a captcha to the new post form to help prevent spam (see blog post <a href="http://mherman.org/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/">here</a>)</li>
-</ol>
-
-
-<br>
-
-
-<p>Know a little Ruby? Ready to start web development? Before jumping to Rails, get your hands dirty with Sinatra. It&#8217;s the perfect learning tool. My recommendation: Start with a basic dynamic website, backed with SQLite. Create and manage your database tables with raw SQL. Practice deploying on Heroku. Practice.</p>
-
-<p>Once you feel good, add another step. Perhaps switch to DataMapper or ActiveRecord for managing your database with objects. Add a more complex database, such as  PostgreSQL.</p>
-
-<p>Finally, get familiar with front-end. Start with Bootstrap. Play around with JavaScript.</p>
-
-<h2>In this tutorial &#8230;</h2>
-
-<p>… we&#8217;ll be hitting the middle ground. You&#8217;ll be creating a basic blog app. Before you yawn and move on, we will be using some awesome tools/gems for rapid development:</p>
-
-<ul>
-<li><strong>Sinatra</strong>: the web framework, of course</li>
-<li><strong>PostgreSQL</strong>: the database management system</li>
-<li><strong>ActiveRecord</strong>: the ORM</li>
-<li><strong>sinatra-activerecord</strong>: ports ActiveRecord for Sinatra</li>
-<li><strong>Tux</strong>: provides a Shell for Sinatra so we can interact with our application</li>
-</ul>
-
-
-<blockquote><p>This tutorial assumes you are running a Unix-based environment - e.g, Mac OSX, straight Linux, or Linux VM through Windows. I will also be using Sublime 2 as my text editor.</p></blockquote>
-
-<h3>Let&#8217;s get Sinatra singing!</h3>
-
-<h2>Getting started</h2>
-
-<h3>Start by creating a project directory somewhere on your file system:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mkdir sinatra-blog
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Setup your gems using a Gemfile. Create the following <em>Gemfile</em> (no extension) within your main directory:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># Gemfile</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">source</span> <span class="s1">&#39;https://rubygems.org&#39;</span>
-</span><span class='line'><span class="n">ruby</span> <span class="s2">&quot;2.0.0&quot;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">gem</span> <span class="s2">&quot;sinatra&quot;</span>
-</span><span class='line'><span class="n">gem</span> <span class="s2">&quot;activerecord&quot;</span>
-</span><span class='line'><span class="n">gem</span> <span class="s2">&quot;sinatra-activerecord&quot;</span>
-</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;sinatra-flash&#39;</span>
-</span><span class='line'><span class="n">gem</span> <span class="s1">&#39;sinatra-redirect-with-flash&#39;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">group</span> <span class="ss">:development</span> <span class="k">do</span>
-</span><span class='line'> <span class="n">gem</span> <span class="s1">&#39;sqlite3&#39;</span>
-</span><span class='line'> <span class="n">gem</span> <span class="s2">&quot;tux&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">group</span> <span class="ss">:production</span> <span class="k">do</span>
-</span><span class='line'> <span class="n">gem</span> <span class="s1">&#39;pg&#39;</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Notice how we&#8217;re using SQLite3 for our development environment and PostgreSQL for production, in order to simply the dev process.</p>
-
-<h3>Install the gems:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>bundle install
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<p>This will create <em>Gemfile.lock</em>, displaying the exact versions of each gem that were installed.</p>
-
-<h3>Create a <em>config.ru</em> file, which is a standard convention that Heroku looks for.</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># config.ru</span>
-</span><span class='line'>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;./app&#39;</span>
-</span><span class='line'><span class="n">run</span> <span class="no">Sinatra</span><span class="o">::</span><span class="no">Application</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Model</h2>
-
-<h3>Create a file called <em>environments.rb</em> and include the following code for our database configuration:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">configure</span> <span class="ss">:development</span> <span class="k">do</span>
-</span><span class='line'> <span class="n">set</span> <span class="ss">:database</span><span class="p">,</span> <span class="s1">&#39;sqlite:///dev.db&#39;</span>
-</span><span class='line'> <span class="n">set</span> <span class="ss">:show_exceptions</span><span class="p">,</span> <span class="kp">true</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">configure</span> <span class="ss">:production</span> <span class="k">do</span>
-</span><span class='line'> <span class="n">db</span> <span class="o">=</span> <span class="no">URI</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;DATABASE_URL&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="s1">&#39;postgres:///localhost/mydb&#39;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">establish_connection</span><span class="p">(</span>
-</span><span class='line'>   <span class="ss">:adapter</span>  <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;postgres&#39;</span> <span class="p">?</span> <span class="s1">&#39;postgresql&#39;</span> <span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span>
-</span><span class='line'>   <span class="ss">:host</span>     <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">host</span><span class="p">,</span>
-</span><span class='line'>   <span class="ss">:username</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
-</span><span class='line'>   <span class="ss">:password</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">password</span><span class="p">,</span>
-</span><span class='line'>   <span class="ss">:database</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="o">.</span><span class="n">path</span><span class="o">[</span><span class="mi">1</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span><span class="p">,</span>
-</span><span class='line'>   <span class="ss">:encoding</span> <span class="o">=&gt;</span> <span class="s1">&#39;utf8&#39;</span>
-</span><span class='line'> <span class="p">)</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Next, create the main application file, &#8220;app.rb&#8221;. Make sure to include the required gems and the <em>environments.rb</em> file we just created.</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># app.rb</span>
-</span><span class='line'>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/activerecord&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;./environments&#39;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Create a <em>Rakefile</em> (again, no extension) so we can use migrations for setting up the data model:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># Rakefile</span>
-</span><span class='line'>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;./app&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/activerecord/rake&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Now run the following command to setup the migration files:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>rake db:create_migration <span class="nv">NAME</span><span class="o">=</span>create_posts
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>If you look at your project structure. You&#8217;ll see a new folder called &#8220;db&#8221; and within that folder another folder called &#8220;migrate.&#8221; You should then see a Ruby script with a timestamp. This is a migration file. The timestamp tells ActiveRecord the order in which to apply the migrations in case there is more than one file.</p>
-
-<h3>Essentially, these migration files are used for setting up your database tables. Edit the file now.</h3>
-
-<blockquote><p>The up method is used when we complete the migration (<code>rake db:migrate</code>), while the down method is ran when we rollback the last migration (<code>rake db:rollback</code>).</p></blockquote>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">CreatePosts</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
-</span><span class='line'> <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">up</span>
-</span><span class='line'>   <span class="n">create_table</span> <span class="ss">:posts</span> <span class="k">do</span> <span class="o">|</span><span class="n">t</span><span class="o">|</span>
-</span><span class='line'>     <span class="n">t</span><span class="o">.</span><span class="n">string</span> <span class="ss">:title</span>
-</span><span class='line'>     <span class="n">t</span><span class="o">.</span><span class="n">text</span> <span class="ss">:body</span>
-</span><span class='line'>     <span class="n">t</span><span class="o">.</span><span class="n">timestamps</span>
-</span><span class='line'>   <span class="k">end</span>
-</span><span class='line'> <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'> <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">down</span>
-</span><span class='line'>   <span class="n">drop_table</span> <span class="ss">:posts</span>
-</span><span class='line'> <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Run the migration</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>rake db:migrate
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Just so you know, ActiveRecord created these table columns: <code>id</code>, <code>title</code>, <code>body</code>, <code>created_at</code>, <code>updated_at</code></p>
-
-<p>When you create a new post, you only need to specify the title and body; the remaining fields are generated automatically with ActiveRecord&#8217;s magic! Pretty cool, eh?</p>
-
-<h3>Use tux in order to add some data to the database.</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>tux
-</span><span class='line'>&gt;&gt; Post.create<span class="o">(</span>title: <span class="s1">&#39;Testing the title&#39;</span>, body: <span class="s1">&#39;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum venenatis eros eget lectus hendrerit, sed mattis quam pretium. Aenean accumsan eget leo non cursus. Aliquam sagittis luctus mi, quis suscipit neque venenatis et. Pellentesque vitae elementum diam. Quisque iaculis eget neque mattis fermentum. Donec et luctus eros. Suspendisse egestas pharetra elit vel bibendum.&#39;</span><span class="o">)</span>
-</span><span class='line'>&gt;&gt;
-</span><span class='line'>&gt;&gt; Post.all
-</span><span class='line'>D, <span class="o">[</span>2013-06-08T12:26:44.929333 <span class="c">#42914] DEBUG -- :   Post Load (0.2ms)  SELECT &quot;posts&quot;.* FROM &quot;posts&quot; </span>
-</span><span class='line'><span class="o">=</span>&gt; <span class="o">[</span><span class="c">#&lt;Post id: 1, title: &quot;Testing the title&quot;, body: &quot;Lorem ipsum dolor sit amet, consectetur adipiscing ...&quot;, created_at: &quot;2013-06-08 12:24:12&quot;, updated_at: &quot;2013-06-08 12:24:12&quot;&gt;]</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Did you notice the actual SQL syntax used for each command? No? Look again.</p>
-
-<p>Add a few more posts. Then exit:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>&gt;&gt;&gt; <span class="nb">exit</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Version Control</h2>
-
-<h3>Before moving on, let&#8217;s get this app under version control.</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git init
-</span><span class='line'><span class="nv">$ </span>git add .
-</span><span class='line'><span class="nv">$ </span>git commit -am <span class="s2">&quot;initial commit&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Templates and views</h2>
-
-<h3>Add the following code to <em>app.rb</em> to setup the first route:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">get</span> <span class="s2">&quot;/&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;created_at DESC&quot;</span><span class="p">)</span>
-</span><span class='line'>  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">&quot;Welcome.&quot;</span>
-</span><span class='line'>  <span class="n">erb</span> <span class="ss">:&quot;posts/index&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This maps the <code>/</code> url to the template <em>index.html</em> (or <em>index.erb</em> in Ruby terms), found in &#8220;&#8221;views/posts/&#8221; directory.</p>
-
-<blockquote><p>Note: The <em>app.rb</em> file is the controller in MVC-style architecture.</p></blockquote>
-
-<p>Add the helper for the title variable:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">helpers</span> <span class="k">do</span>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">title</span>
-</span><span class='line'>    <span class="k">if</span> <span class="vi">@title</span>
-</span><span class='line'>      <span class="s2">&quot;</span><span class="si">#{</span><span class="vi">@title</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>      <span class="s2">&quot;Welcome.&quot;</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Fire up the dev server:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="err">$</span> <span class="n">ruby</span> <span class="n">app</span><span class="o">.</span><span class="n">rb</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then navigate to <a href="http://localhost:4567/">http://localhost:4567/</a>. You should see an error indicating the template can&#8217;t be found - &#8220;/sinatra-blog/views/posts/index.erb&#8221;. In other words, the URL routing is working; we just need to set up a template.</p>
-
-<p>First create two new directories - &#8220;views/posts&#8221; &#8230;</p>
-
-<h3>Now, setup the associated template called <em>index.erb</em>:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;ul&gt;</span>
-</span><span class='line'><span class="err">&lt;</span>% @posts.each do |post| %&gt;
-</span><span class='line'> <span class="nt">&lt;li&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;h4&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;/posts/&lt;%= post.id %&gt;&quot;</span><span class="nt">&gt;</span><span class="err">&lt;</span>%= post.title %&gt;<span class="nt">&lt;/a&gt;&lt;/h4&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;p&gt;</span>Created: <span class="err">&lt;</span>%= post.created_at %&gt;<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/li&gt;</span>
-</span><span class='line'><span class="err">&lt;</span>% end %&gt;
-</span><span class='line'><span class="nt">&lt;/ul&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Save this file within the &#8220;posts&#8221; directory.</p>
-
-<h3>Now set up the <em>layout.erb</em> template, which is used as the parent template for all other templates. This is just a convention used to speed up development. Child templates, such as <em>index.erb</em> inherent the HTML and CSS (common code) from the parent template.</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;html&gt;</span>
-</span><span class='line'><span class="nt">&lt;head&gt;</span>
-</span><span class='line'> <span class="nt">&lt;title&gt;</span><span class="err">&lt;</span>%= title %&gt;<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'><span class="nt">&lt;/head&gt;</span>
-</span><span class='line'><span class="nt">&lt;body&gt;</span>
-</span><span class='line'> <span class="nt">&lt;ul&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;/&quot;</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;/posts/create&quot;</span><span class="nt">&gt;</span>New Post<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/ul&gt;</span>
-</span><span class='line'> <span class="err">&lt;</span>%= yield %&gt;
-</span><span class='line'><span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Save this file within the &#8220;views&#8221; directory.</p>
-
-<blockquote><p>The yield method indicates where templates are embedded.</p></blockquote>
-
-<h3>Kill the server. Fire it back up. Go back to <a href="http://localhost:4567/">http://localhost:4567/</a>. Refresh. You should see your basic blog. Click on a link for one of the posts. Since we don&#8217;t have a route associated with that URL, Sinatra gives us a little suggestion.</h3>
-
-<h3>Route and template for viewing each post.</h3>
-
-<p>Route:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">get</span> <span class="s2">&quot;/posts/:id&quot;</span> <span class="k">do</span>
-</span><span class='line'> <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'> <span class="vi">@title</span> <span class="o">=</span> <span class="vi">@post</span><span class="o">.</span><span class="n">title</span>
-</span><span class='line'> <span class="n">erb</span> <span class="ss">:&quot;posts/view&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Template (called <em>view.erb</em>):</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h1&gt;</span><span class="err">&lt;</span>%= @post.title %&gt;<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'><span class="nt">&lt;p&gt;</span><span class="err">&lt;</span>%= @post.body %&gt;<span class="nt">&lt;/p&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Route and template for adding new posts.</h3>
-
-<p>Route:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">get</span> <span class="s2">&quot;/posts/create&quot;</span> <span class="k">do</span>
-</span><span class='line'> <span class="vi">@title</span> <span class="o">=</span> <span class="s2">&quot;Create post&quot;</span>
-</span><span class='line'> <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span>
-</span><span class='line'> <span class="n">erb</span> <span class="ss">:&quot;posts/create&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Template (called <em>create.erb</em>):</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h2&gt;</span>Create Post<span class="nt">&lt;/h2&gt;</span>
-</span><span class='line'><span class="nt">&lt;br/&gt;</span>
-</span><span class='line'><span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&quot;/posts&quot;</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span><span class="na">role=</span><span class="s">&quot;form&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'> <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">&quot;post_title&quot;</span><span class="nt">&gt;</span>Title:<span class="nt">&lt;/label&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;br&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">&quot;post_title&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">name=</span><span class="s">&quot;post[title]&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">value=</span><span class="s">&quot;&lt;%= @post.title %&gt;&quot;</span> <span class="na">style=</span><span class="s">&quot;width=90%&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'> <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">&quot;post_body&quot;</span><span class="nt">&gt;</span>Body:<span class="nt">&lt;/label&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;br&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">&quot;post_body&quot;</span> <span class="na">name=</span><span class="s">&quot;post[body]&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">rows=</span><span class="s">&quot;10&quot;</span><span class="nt">&gt;</span><span class="err">&lt;</span>%= @post.body %&gt;<span class="nt">&lt;/textarea&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'> <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-success&quot;</span><span class="nt">&gt;</span>Submit<span class="nt">&lt;/button&gt;</span>
-</span><span class='line'><span class="nt">&lt;/form&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>We also need a route for handling the POST requests.</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">post</span> <span class="s2">&quot;/posts&quot;</span> <span class="k">do</span>
-</span><span class='line'> <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:post</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'> <span class="k">if</span> <span class="vi">@post</span><span class="o">.</span><span class="n">save</span>
-</span><span class='line'>   <span class="n">redirect</span> <span class="s2">&quot;posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span class='line'> <span class="k">else</span>
-</span><span class='line'>   <span class="n">erb</span> <span class="ss">:&quot;posts/create&quot;</span>
-</span><span class='line'> <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Test this out. Did it work? If you get this error &#8220;Couldn&#8217;t find Post with ID=new&#8221; you need to put the last two routes above the route for viewing each post:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># app.rb</span>
-</span><span class='line'>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/activerecord&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;./environments&#39;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">get</span> <span class="s2">&quot;/&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;created_at DESC&quot;</span><span class="p">)</span>
-</span><span class='line'>  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">&quot;Welcome.&quot;</span>
-</span><span class='line'>  <span class="n">erb</span> <span class="ss">:&quot;posts/index&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">helpers</span> <span class="k">do</span>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">title</span>
-</span><span class='line'>    <span class="k">if</span> <span class="vi">@title</span>
-</span><span class='line'>      <span class="s2">&quot;</span><span class="si">#{</span><span class="vi">@title</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>      <span class="s2">&quot;Welcome.&quot;</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">get</span> <span class="s2">&quot;/posts/create&quot;</span> <span class="k">do</span>
-</span><span class='line'> <span class="vi">@title</span> <span class="o">=</span> <span class="s2">&quot;Create post&quot;</span>
-</span><span class='line'> <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span>
-</span><span class='line'> <span class="n">erb</span> <span class="ss">:&quot;posts/create&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">post</span> <span class="s2">&quot;/posts&quot;</span> <span class="k">do</span>
-</span><span class='line'> <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:post</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'> <span class="k">if</span> <span class="vi">@post</span><span class="o">.</span><span class="n">save</span>
-</span><span class='line'>   <span class="n">redirect</span> <span class="s2">&quot;posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span class='line'> <span class="k">else</span>
-</span><span class='line'>   <span class="n">erb</span> <span class="ss">:&quot;posts/create&quot;</span>
-</span><span class='line'> <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">get</span> <span class="s2">&quot;/posts/:id&quot;</span> <span class="k">do</span>
-</span><span class='line'> <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'> <span class="vi">@title</span> <span class="o">=</span> <span class="vi">@post</span><span class="o">.</span><span class="n">title</span>
-</span><span class='line'> <span class="n">erb</span> <span class="ss">:&quot;posts/view&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Validation and Flash Messages</h2>
-
-<h3>Add some basic validation to <em>app.rb</em>:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
-</span><span class='line'> <span class="n">validates</span> <span class="ss">:title</span><span class="p">,</span> <span class="n">presence</span><span class="p">:</span> <span class="kp">true</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="p">{</span> <span class="n">minimum</span><span class="p">:</span> <span class="mi">5</span> <span class="p">}</span>
-</span><span class='line'> <span class="n">validates</span> <span class="ss">:body</span><span class="p">,</span> <span class="n">presence</span><span class="p">:</span> <span class="kp">true</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So, both the title and body cannot be null, and the title has to be at least 5 characters long.</p>
-
-<h3>Navigate to <a href="http://localhost:4567/posts/create">http://localhost:4567/posts/create</a>. Try to submit a blank post and then submit a real one. It&#8217;s a bit confusing to the user when a blank post is submitted and nothing happens, so add some messages indicating that an error has occurred.</h3>
-
-<h3>First, add this to the top of <em>app.rb</em>:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/flash&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/redirect_with_flash&#39;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">enable</span> <span class="ss">:sessions</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Update the POST request route:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">post</span> <span class="s2">&quot;/posts&quot;</span> <span class="k">do</span>
-</span><span class='line'> <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:post</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'> <span class="k">if</span> <span class="vi">@post</span><span class="o">.</span><span class="n">save</span>
-</span><span class='line'>   <span class="n">redirect</span> <span class="s2">&quot;posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="ss">:notice</span> <span class="o">=&gt;</span> <span class="s1">&#39;Congrats! Love the new post. (This message will disapear in 4 seconds.)&#39;</span>
-</span><span class='line'> <span class="k">else</span>
-</span><span class='line'>   <span class="n">redirect</span> <span class="s2">&quot;posts/create&quot;</span><span class="p">,</span> <span class="ss">:error</span> <span class="o">=&gt;</span> <span class="s1">&#39;Something went wrong. Try again. (This message will disapear in 4 seconds.)&#39;</span>
-</span><span class='line'> <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Add the following code to the <em>layout.erb</em> template just above the yield method:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">&lt;</span><span class="sx">% if </span><span class="n">flash</span><span class="o">[</span><span class="ss">:notice</span><span class="o">]</span> <span class="sx">%&gt;</span>
-</span><span class='line'><span class="sx"> &lt;p class=&quot;alert alert-success&quot;&gt;</span><span class="o">&lt;</span><span class="sx">%= flash[:notice] %&gt;</span>
-</span><span class='line'><span class="sx">&lt;% end %&gt;</span>
-</span><span class='line'><span class="sx">&lt;% if flash[:error] %&gt;</span>
-</span><span class='line'><span class="sx"> &lt;p class=</span><span class="s2">&quot;alert alert-error&quot;</span><span class="o">&gt;&lt;%=</span> <span class="n">flash</span><span class="o">[</span><span class="ss">:error</span><span class="o">]</span> <span class="sx">%&gt;</span>
-</span><span class='line'><span class="sx">&lt;% end %&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now test it again!</p>
-
-<h2>Styles</h2>
-
-<p>The app is ugly. Add some quick bootstrap styling.</p>
-
-<h3>Updated <em>layout.erb</em>:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span><span class='line'><span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;head&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span> <span class="na">content=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;author&quot;</span> <span class="na">content=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;title&gt;</span><span class="err">&lt;</span>%= title %&gt;<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&quot;http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css&quot;</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;style&gt;</span>
-</span><span class='line'>      <span class="nt">body</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">padding-top</span><span class="o">:</span> <span class="m">75px</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="nc">.starter-template</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">padding</span><span class="o">:</span> <span class="m">40px</span> <span class="m">15px</span><span class="p">;</span>
-</span><span class='line'>        <span class="k">text-align</span><span class="o">:</span> <span class="k">center</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="nc">.container</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">max-width</span><span class="o">:</span><span class="m">1000px</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="nt">&lt;/style&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nt">&lt;body&gt;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;navbar navbar-inverse navbar-fixed-top&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;navbar-header&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;button&quot;</span> <span class="na">class=</span><span class="s">&quot;navbar-toggle&quot;</span> <span class="na">data-toggle=</span><span class="s">&quot;collapse&quot;</span> <span class="na">data-target=</span><span class="s">&quot;.navbar-collapse&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;/button&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">&quot;navbar-brand&quot;</span> <span class="na">href=</span><span class="s">&quot;/&quot;</span><span class="nt">&gt;</span>Sinatra Sings<span class="nt">&lt;/a&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;collapse navbar-collapse&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;nav navbar-nav&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">&quot;active&quot;</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;/&quot;</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;/posts/create&quot;</span><span class="nt">&gt;</span>New Post<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;/ul&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;/div&gt;</span><span class="c">&lt;!--/.nav-collapse --&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="err">&lt;</span>% if flash[:notice] %&gt;
-</span><span class='line'>        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">&quot;alert alert-success&quot;</span><span class="nt">&gt;</span><span class="err">&lt;</span>%= flash[:notice] %&gt;
-</span><span class='line'>      <span class="err">&lt;</span>% end %&gt;
-</span><span class='line'>      <span class="err">&lt;</span>% if flash[:error] %&gt;
-</span><span class='line'>        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">&quot;alert alert-warning&quot;</span><span class="nt">&gt;</span><span class="err">&lt;</span>%= flash[:error] %&gt;
-</span><span class='line'>      <span class="err">&lt;</span>% end %&gt;
-</span><span class='line'>      <span class="err">&lt;</span>%= yield %&gt;
-</span><span class='line'>
-</span><span class='line'>    <span class="nt">&lt;/div&gt;</span><span class="c">&lt;!-- /.container --&gt;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>    <span class="c">&lt;!-- Bootstrap core JavaScript</span>
-</span><span class='line'><span class="c">    ================================================== --&gt;</span>
-</span><span class='line'>    <span class="c">&lt;!-- Placed at the end of the document so the pages load faster --&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://code.jquery.com/jquery-1.10.2.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://getbootstrap.com/dist/js/bootstrap.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script&gt;</span>
-</span><span class='line'>    <span class="c1">//** removes alerts after 4 seconds */</span>
-</span><span class='line'>    <span class="nb">window</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.alert&quot;</span><span class="p">).</span><span class="nx">fadeTo</span><span class="p">(</span><span class="mi">4500</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">slideUp</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>            <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">remove</span><span class="p">();</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>    <span class="p">},</span> <span class="mi">4000</span><span class="p">);</span>
-</span><span class='line'>    <span class="nt">&lt;/script&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Looking good? Well, a little better.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git add .
-</span><span class='line'><span class="nv">$ </span>git commit -am <span class="s2">&quot;updated&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Edit Posts</h2>
-
-<p>Alright. We need to be able to edit live posts.</p>
-
-<h3>Update app.rb</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># app.rb</span>
-</span><span class='line'>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/activerecord&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;./environments&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/flash&#39;</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;sinatra/redirect_with_flash&#39;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">enable</span> <span class="ss">:sessions</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
-</span><span class='line'>  <span class="n">validates</span> <span class="ss">:title</span><span class="p">,</span> <span class="n">presence</span><span class="p">:</span> <span class="kp">true</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="p">{</span> <span class="n">minimum</span><span class="p">:</span> <span class="mi">5</span> <span class="p">}</span>
-</span><span class='line'>  <span class="n">validates</span> <span class="ss">:body</span><span class="p">,</span> <span class="n">presence</span><span class="p">:</span> <span class="kp">true</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">helpers</span> <span class="k">do</span>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">title</span>
-</span><span class='line'>    <span class="k">if</span> <span class="vi">@title</span>
-</span><span class='line'>      <span class="s2">&quot;</span><span class="si">#{</span><span class="vi">@title</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>      <span class="s2">&quot;Welcome.&quot;</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1"># get ALL posts</span>
-</span><span class='line'><span class="n">get</span> <span class="s2">&quot;/&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;created_at DESC&quot;</span><span class="p">)</span>
-</span><span class='line'>  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">&quot;Welcome.&quot;</span>
-</span><span class='line'>  <span class="n">erb</span> <span class="ss">:&quot;posts/index&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1"># create new post</span>
-</span><span class='line'><span class="n">get</span> <span class="s2">&quot;/posts/create&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">&quot;Create post&quot;</span>
-</span><span class='line'>  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span>
-</span><span class='line'>  <span class="n">erb</span> <span class="ss">:&quot;posts/create&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'><span class="n">post</span> <span class="s2">&quot;/posts&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:post</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'>  <span class="k">if</span> <span class="vi">@post</span><span class="o">.</span><span class="n">save</span>
-</span><span class='line'>    <span class="n">redirect</span> <span class="s2">&quot;posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="ss">:notice</span> <span class="o">=&gt;</span> <span class="s1">&#39;Congrats! Love the new post. (This message will disapear in 4 seconds.)&#39;</span>
-</span><span class='line'>  <span class="k">else</span>
-</span><span class='line'>    <span class="n">redirect</span> <span class="s2">&quot;posts/create&quot;</span><span class="p">,</span> <span class="ss">:error</span> <span class="o">=&gt;</span> <span class="s1">&#39;Something went wrong. Try again. (This message will disapear in 4 seconds.)&#39;</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1"># view post</span>
-</span><span class='line'><span class="n">get</span> <span class="s2">&quot;/posts/:id&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'>  <span class="vi">@title</span> <span class="o">=</span> <span class="vi">@post</span><span class="o">.</span><span class="n">title</span>
-</span><span class='line'>  <span class="n">erb</span> <span class="ss">:&quot;posts/view&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1"># edit post</span>
-</span><span class='line'><span class="n">get</span> <span class="s2">&quot;/posts/:id/edit&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'>  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">&quot;Edit Form&quot;</span>
-</span><span class='line'>  <span class="n">erb</span> <span class="ss">:&quot;posts/edit&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'><span class="n">put</span> <span class="s2">&quot;/posts/:id&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'>  <span class="vi">@post</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:post</span><span class="o">]</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">redirect</span> <span class="s2">&quot;/posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Add an edit template</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h2&gt;</span>Edit Post<span class="nt">&lt;/h2&gt;</span>
-</span><span class='line'><span class="nt">&lt;br/&gt;</span>
-</span><span class='line'><span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&quot;/posts/&lt;%= @post.id %&gt;&quot;</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'> <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;hidden&quot;</span> <span class="na">name=</span><span class="s">&quot;_method&quot;</span> <span class="na">value=</span><span class="s">&quot;put&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">&quot;post_title&quot;</span><span class="nt">&gt;</span>Title:<span class="nt">&lt;/label&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;br&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">&quot;post_title&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">name=</span><span class="s">&quot;post[title]&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">value=</span><span class="s">&quot;&lt;%= @post.title %&gt;&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'> <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">&quot;post_body&quot;</span><span class="nt">&gt;</span>Body:<span class="nt">&lt;/label&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;br&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">&quot;post_body&quot;</span> <span class="na">name=</span><span class="s">&quot;post[body]&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">rows=</span><span class="s">&quot;5&quot;</span><span class="nt">&gt;</span><span class="err">&lt;</span>%= @post.body %&gt;<span class="nt">&lt;/textarea&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-success&quot;</span><span class="nt">&gt;</span>Submit<span class="nt">&lt;/button&gt;</span>
-</span><span class='line'><span class="nt">&lt;/form&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Update the view template</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h1&gt;</span><span class="err">&lt;</span>%= @post.title %&gt;<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'><span class="nt">&lt;p&gt;</span><span class="err">&lt;</span>%= @post.body %&gt;<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'><span class="nt">&lt;br&gt;</span>
-</span><span class='line'><span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/posts/&lt;%= @post.id %&gt;/edit&quot;</span><span class="nt">&gt;</span>Edit Post<span class="nt">&lt;/a&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Test and Commit to Git</h2>
-
-<p>Yes, test to ensure you can edit posts locally, then add and commit to Git.</p>
-
-<h2>Properly Escaping</h2>
-
-<p>Currently, you can enter really anything into the input boxes for the title and body, including HTML. Test this out. Enter these code snippets in the title and/or or body:</p>
-
-<ol>
-<li><code>&lt;strong&gt;Very, very strong&lt;/strong&gt;</code></li>
-<li><code>&lt;script&gt;alert('happy birthday');&lt;/script&gt;</code></li>
-</ol>
-
-
-<p>See the issue? We need to escape the text properly in order to avoid this.</p>
-
-<h3>Update app.rb</h3>
-
-<p>Add the following helper:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">helpers</span> <span class="k">do</span>
-</span><span class='line'>  <span class="kp">include</span> <span class="no">Rack</span><span class="o">::</span><span class="no">Utils</span>
-</span><span class='line'>  <span class="n">alias_method</span> <span class="ss">:h</span><span class="p">,</span> <span class="ss">:escape_html</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Update the view template</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h1&gt;</span><span class="err">&lt;</span>%=h @post.title %&gt;<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'><span class="nt">&lt;p&gt;</span><span class="err">&lt;</span>%=h @post.body %&gt;<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'><span class="nt">&lt;br&gt;</span>
-</span><span class='line'><span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/posts/&lt;%= @post.id %&gt;/edit&quot;</span><span class="nt">&gt;</span>Edit Post<span class="nt">&lt;/a&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Update the edit template</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h2&gt;</span>Edit Post<span class="nt">&lt;/h2&gt;</span>
-</span><span class='line'><span class="nt">&lt;br/&gt;</span>
-</span><span class='line'><span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&quot;/posts/&lt;%= @post.id %&gt;&quot;</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'> <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;hidden&quot;</span> <span class="na">name=</span><span class="s">&quot;_method&quot;</span> <span class="na">value=</span><span class="s">&quot;put&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">&quot;post_title&quot;</span><span class="nt">&gt;</span>Title:<span class="nt">&lt;/label&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;br&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">&quot;post_title&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">name=</span><span class="s">&quot;post[title]&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">value=</span><span class="s">&quot;&lt;%=h @post.title %&gt;&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'> <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">&quot;post_body&quot;</span><span class="nt">&gt;</span>Body:<span class="nt">&lt;/label&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;br&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">&quot;post_body&quot;</span> <span class="na">name=</span><span class="s">&quot;post[body]&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">rows=</span><span class="s">&quot;5&quot;</span><span class="nt">&gt;</span><span class="err">&lt;</span>%=h @post.body %&gt;<span class="nt">&lt;/textarea&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-success&quot;</span><span class="nt">&gt;</span>Submit<span class="nt">&lt;/button&gt;</span>
-</span><span class='line'><span class="nt">&lt;/form&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Update the index template</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;ul&gt;</span>
-</span><span class='line'><span class="err">&lt;</span>% @posts.each do |post| %&gt;
-</span><span class='line'> <span class="nt">&lt;li&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;h4&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;/posts/&lt;%= post.id %&gt;&quot;</span><span class="nt">&gt;</span><span class="err">&lt;</span>%=h post.title %&gt;<span class="nt">&lt;/a&gt;&lt;/h4&gt;</span>
-</span><span class='line'>   <span class="nt">&lt;p&gt;</span>Created: <span class="err">&lt;</span>%=h post.created_at %&gt;<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'> <span class="nt">&lt;/li&gt;</span>
-</span><span class='line'><span class="err">&lt;</span>% end %&gt;
-</span><span class='line'><span class="nt">&lt;/ul&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now try to enter <code>&lt;strong&gt;Very, very strong&lt;/strong&gt;</code>. Notice the difference? See <a href="http://www.sinatrarb.com/faq.html#escape_html">this</a> page for further explanation.</p>
-
-<p>Commit to Git again.</p>
-
-<h2>Deploy</h2>
-
-<p>Finally, let&#8217;s get this app live on Heroku!</p>
-
-<h3>Create an account on Heroku. (if needed)</h3>
-
-<h3>Install the gem - <code>sudo gem install heroku</code> (if needed)</h3>
-
-<h3>Generate an SSH key. (if needed)</h3>
-
-<h3>Push to Heroku:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>heroku create &lt;my-app-name&gt;.
-</span><span class='line'><span class="nv">$ </span>git push heroku master
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Rake the remote database:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>heroku rake db:migrate
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Boom! Check out your live app.</h3>
-
-<p>Links:</p>
-
-<ul>
-<li>My app: <a href="http://sinatra-sings.herokuapp.com/">http://sinatra-sings.herokuapp.com/</a></li>
-<li>Git Repo: <a href="https://github.com/mjhea0/sinatra-blog">https://github.com/mjhea0/sinatra-blog</a></li>
-</ul>
-
-
-<p><em>Sinatra has ended his set (crowd applauds as he exits the main stage).</em></p>
-
-<h2>Add a captcha</h2>
-
-<p>Help elimiante spam by adding a captcha to the new post form. View the blog post - <a href="http://mherman.org/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/">Adding a Captcha to Sinatra to Minimize Spam</a>.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/12/">&larr; Older</a>
@@ -1591,6 +580,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/">Node with Docker - continuous integration and delivery</a>
       </li>
     
@@ -1606,17 +599,13 @@
         <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a primer</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (3)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>
