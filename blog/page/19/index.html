@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="I just finished a basic Python script for a client that I&#8217;d like to share with you. He needed an easy means of moving data back and forth &hellip;">
+  <meta name="description" content="Problem:You need to extract and parse all the headers and links from a web site or an XML feed, and then dump the data into a CSV file. Import &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,173 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2012/10/05/web-scraping-with-regular-expressions/">Web Scraping With Regular Expressions</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-10-05T13:26:00-06:00" pubdate data-updated="true">Oct 5<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>Problem:</strong>You need to extract and parse all the headers and links from a web site or an XML feed, and then dump the data into a CSV file.</p>
+
+<p><strong>Import modules:</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">csv</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">urlopen</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">re</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Perform html/xml query, grab desired fields, create a range:</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">xml</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="s">&quot;http://www.tableausoftware.com/public/feed.rss&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">xmlTitle</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&quot;&amp;lt;title&amp;gt;(.*)&amp;lt;/title&amp;gt;&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="n">xmlLink</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&quot;&amp;lt;link&amp;gt;(.*)&amp;lt;/link&amp;gt;&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">findTitle</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">xmlTitle</span><span class="p">,</span><span class="n">xml</span><span class="p">)</span>
+</span><span class='line'><span class="n">findLink</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">xmlLink</span><span class="p">,</span><span class="n">xml</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">iterate</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'><span class="n">iterate</span><span class="p">[:]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Open CSV file:</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s">&quot;pytest.csv&quot;</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Write header to CSV file (you want to do this before you enter the loop):</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">head</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;Title&quot;</span><span class="p">,</span> <span class="s">&quot;URL&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Write the For loop to iterate through the XML file and write the rows to the CSV file:</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iterate</span><span class="p">:</span>
+</span><span class='line'>  <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">findTitle</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">findLink</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong><em>Final Script:</em></strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">csv</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">urlopen</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">re</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Open and read HTMl / XML</span>
+</span><span class='line'><span class="n">xml</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="s">&quot;http://www.tableausoftware.com/public/feed.rss&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Grab article titles and links using regex</span>
+</span><span class='line'><span class="n">xmlTitle</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&quot;&amp;lt;title&amp;gt;(.*)&amp;lt;/title&amp;gt;&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="n">xmlLink</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&quot;&amp;lt;link&amp;gt;(.*)&amp;lt;/link&amp;gt;&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Find and store the data</span>
+</span><span class='line'><span class="n">findTitle</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">xmlTitle</span><span class="p">,</span><span class="n">xml</span><span class="p">)</span>
+</span><span class='line'><span class="n">findLink</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">xmlLink</span><span class="p">,</span><span class="n">xml</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#Iterate through the articles to create a range</span>
+</span><span class='line'><span class="n">iterate</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'><span class="n">iterate</span><span class="p">[:]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Open the CSV file, write the headers</span>
+</span><span class='line'><span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s">&quot;pytest.csv&quot;</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="n">head</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;Title&quot;</span><span class="p">,</span> <span class="s">&quot;URL&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Using a For Loop, write the results to the CSV file, row by row</span>
+</span><span class='line'><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iterate</span><span class="p">:</span>
+</span><span class='line'>  <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">findTitle</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">findLink</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/DcZTNwdWVeo "></iframe></div>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -311,6 +478,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2/">Testing AngularJS with Protractor and Karma - part 2</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
       </li>
     
@@ -326,17 +497,13 @@
         <a href="/blog/2015/02/05/sublime-text-for-web-developers/">Sublime Text for Web Developers</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (5)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

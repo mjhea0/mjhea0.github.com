@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="This tutorial shows how to create a basic web app using the web2py framework. I came across the framework last night and literally created and &hellip;">
+  <meta name="description" content="In the last tutorial I showed you the basics of web2py, and we even created a web app in less than ten minutes! In Part 2, I&#8217;ll show you how to &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,155 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/">Crash Course in Web2py (Part 2 - Web Forms)</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-01T21:27:00-07:00" pubdate data-updated="true">Dec 1<span>st</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In the last <a href="http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/">tutorial</a> I showed you the basics of web2py, and we even created a web app in less than ten minutes! In Part 2, I&#8217;ll show you how to create a basic web form that stores the submitted data in a SQLite database.</p>
+
+<p><em>Assumptions:</em></p>
+
+<ol>
+<li>You <a href="http://mherman.org/blog/2012/11/27/crash-course-in-web2py-part-1/">installed</a> web2py</li>
+<li>You know what a web form is</li>
+</ol>
+
+
+<p>Anyway - let&#8217;s get going &#8230;</p>
+
+<h2>MVC Architecture</h2>
+
+<p>Real quick, web2py utilizes the Model View Control (MVC) architecture:</p>
+
+<ul>
+<li><em>Model</em> - application data</li>
+<li><em>View</em> - portions of the application data that the end user is <em>allowed</em> to see</li>
+<li><em>Controller</em> - controls the application workflow and the logic used to display the data to the end user</li>
+</ul>
+
+
+<p>Wikipedia has a great diagram of how each part works together-</p>
+
+<p><img src="http://upload.wikimedia.org/wikipedia/commons/f/fd/MVC-Process.png" alt="" /></p>
+
+<p>web2py essentially makes it easier for developers to design each part and create the overall workflow to ensure that each part works together. I hope that&#8217;s clear. If not, please comment, and I&#8217;ll go a little more in depth. It&#8217;s important to understand this, as we will be utilizing this form of development from this point on.</p>
+
+<p>Okay - Go ahead and start the web2py server, go to the admin interface, and then create a new application. I named mine &#8220;form&#8221;. Feel free to come up with something a bit more creative.</p>
+
+<h2>Model*</h2>
+
+<p>Open db.py in the Model&#8217;s section and append the following code below, which defines the database schema. There are three required fields, plus a unique ID that is automatically created by web2py.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">db</span> <span class="o">=</span> <span class="n">DAL</span><span class="p">(</span><span class="s">&#39;sqlite://webform.sqlite&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">db</span><span class="o">.</span><span class="n">define_table</span><span class="p">(</span><span class="s">&#39;register&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;first_name&#39;</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="n">IS_NOT_EMPTY</span><span class="p">()),</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;last_name&#39;</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="n">IS_NOT_EMPTY</span><span class="p">()),</span>
+</span><span class='line'>    <span class="n">Field</span><span class="p">(</span><span class="s">&#39;email&#39;</span><span class="p">,</span> <span class="n">requires</span><span class="o">=</span><span class="n">IS_NOT_EMPTY</span><span class="p">()))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>View</h2>
+
+<p>Create a new HTML file named default/display_your_form.html</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-11-30_2319.png" alt="" /></p>
+
+<p>And then add the following code to call the form-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;center&gt;</span>
+</span><span class='line'><span class="nt">&lt;br</span> <span class="nt">/&gt;&lt;br</span> <span class="nt">/&gt;&lt;br</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;h1&gt;</span>Web Form<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'><span class="nt">&lt;br</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;h2&gt;</span>Inputs:<span class="nt">&lt;/h2&gt;</span>
+</span><span class='line'>{{=form}}
+</span><span class='line'><span class="nt">&lt;h2&gt;</span>Submitted variables:<span class="nt">&lt;/h2&gt;</span>
+</span><span class='line'>{{=BEAUTIFY(request.vars)}}
+</span><span class='line'><span class="nt">&lt;/center&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Controller</h2>
+
+<p>Finally, comment out all the current code in the default.py file and add in this new function to define the form-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">display_your_form</span><span class="p">():</span>
+</span><span class='line'>    <span class="n">form</span> <span class="o">=</span> <span class="n">SQLFORM</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">register</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Test</h2>
+
+<p>Check out your amazing form at <a href="http://127.0.0.1:8000/form/default/display_your_form.html">http://127.0.0.1:8000/form/default/display_your_form.html</a>. Now, Go ahead and test the form to make sure it works. If done correctly, after you input the data and hit submit, the values are displayed.</p>
+
+<p><img src="http://www.backwardsteps.com/uploads/2012-11-30_2330.png" alt="" /></p>
+
+<h2>Recap</h2>
+
+<p>We used the MVC approach to make this form:</p>
+
+<ul>
+<li><em>Model</em>: defines database table and schema</li>
+<li><em>View</em>: calls the form</li>
+<li><em>Controller</em>: constructs the form to be called</li>
+</ul>
+
+
+<p>Alright - Hold off on deploying the app for now, as we will continue to add features in the next part of this series. Pretty soon we&#8217;re going to have the best form on the Internet. Give yourself a pat on the back. You went from creating a useless &#8220;hello world&#8221; app, to creating something functional - all in less than 20 minutes!</p>
+
+<p>You can find the code for db.py, display_your_form.html, and default.py <a href="https://github.com/mjhea0/web2py/tree/master/form%20-%20part%201">here</a>.</p>
+
+<p>In the <a href="http://mherman.org/blog/2012/12/06/crash-course-in-web2py-part-3-form-validation/">next</a> tutorial we&#8217;ll be adding in form validation. Brace yourself.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -231,107 +380,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2012/11/16/the-benefits-of-performing-a-cohort-analysis-in-determining-engagement-over-time/">The Benefits of Performing a Cohort Analysis in Determining Engagement Over Time</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-11-16T18:57:00-07:00" pubdate data-updated="true">Nov 16<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>A cohort analysis is a type of study which is mainly conducted by observation over a period of time. It works by analyzing a given group of individuals who have a trait or experience in common, within a given time. It is a great tool used in retaining customers and it is especially useful for business owners who have websites.</p>
-
-<p>Since more visitors to the site generally translate into more business, it is important to retain these clients and monitor the regularity with which they come back.</p>
-
-<p>The term engagement is used to describe the time that is spent accessing the product. It denotes frequency and it is essential to measure this level and analyze it as it relates to certain intervals.</p>
-
-<p><strong>Examples:</strong></p>
-
-<ol>
-<li>Time to first purchase or engagement (e.g. follow, post, signup)</li>
-<li>% activating in first day, week, month, etc. (B2C vs. B2B)</li>
-<li>Repeat rate, 2x%2B repeat rate, 3x%2B repeat rate, etc.</li>
-<li>How does first purchase (or engagement proxy) impact future revenue/engagement?</li>
-<li>Email Opt-out behavior or member churn</li>
-</ol>
-
-
-<h2><strong>Benefits of Conducting an Effective Cohort Analysis</strong></h2>
-
-<p><strong>Accuracy</strong></p>
-
-<p>Performing a cohort analysis is a highly effective method of study as it helps to separate the clients into cohorts. Thus, individuals who joined the site during a particular period are grouped together e.g. the March cohort, the April cohort and so on. This way, the analysis of their engagement and how it has changed over time, is unaffected by the individuals in other groups, thus keeping the groups completely independent of one another; and facilitating a more accurate study.</p>
-
-<p><strong>Providing a clear distinction between Growth and Engagement</strong></p>
-
-<p>Separating the clients into cohorts is also effective in clearly defining a difference between growth metrics and engagement metrics. These two measurements can sometimes be confused with each other as growth is the successful addition of clients who use one&#8217;s product or service. Generally, added numbers automatically increase the overall engagement but it may only be the new clients who access the website, and will probably cease to do so after a while.</p>
-
-<p>Performing a cohort analysis therefore helps one to make a distinction between the two and as a result, the rate of growth, which may be high, does not hide any issues that may need to be addressed as far as engagement or participation and interaction with the product, is concerned. These issues are therefore identified and effectively dealt with in order to facilitate higher retention.</p>
-
-<p><strong>Effective Comparison of data between Cohorts</strong></p>
-
-<p>A cohort analysis also helps one to compare the results between two or more groups. For instance, if the April cohort is more engaged in the product than the March cohort, an analysis may be required on any changes that may have occurred between the two months. In addition, a further analysis may be performed on the groups themselves to see whether the product is possibly appealing to a particular set of people and not another.</p>
-
-<h2><strong>Studying a Wide Range of Data</strong></h2>
-
-<p>By performing a cohort analysis, it is possible to effectively study data across the <a href="http://500hats.typepad.com/500blogs/2007/09/startup-metrics.html">five major metrics</a> (AARRR) for start-ups:</p>
-
-<ul>
-<li><em>Acquisition:</em> the cost of acquiring first-time users</li>
-<li><em>Activation:</em> the speed at which clients are becoming active, including events, in addition to various actions on the website</li>
-<li><em>Retention:</em> the ability to retain a client who is engaged in the service - they make purchases and are basically a source of recurring revenue</li>
-<li><em>Referral:</em> rate at which people are inviting others to the site, as well as the rate at which the invitees yield to the invitations and actually visit the site</li>
-<li><em>Revenue:</em> first point of purchase as far as the client is concerned.</li>
-</ul>
-
-
-<p>Each of these metrics is important and it is therefore essential that an eye be kept on them to recognize when changes need to be made. A cohort analysis enables one to do just that, without using multiple tools.</p>
-
-<h2>Facilitating speedy Decision Making</h2>
-
-<p>A cohort analysis also helps in identifying times when engagement in the site drops. Since it is a study that takes time into consideration, decisions can be made fast in an effort to rectify the problem areas that may have resulted in the drop. By factoring-in time, there is a clear temporal sequence when analyzing the relationship between first contact with the website, and consequent results.</p>
-
-<hr />
-
-<p>The video below illustrates how a cohort analysis is performed. In my opinion Excel is the best tool to use for cohort analysis as it&#8217;s much easier than say Mixpanel or Kissmetrics - plus you get your hands dirty and (hopefully) gain an understanding of your data. Although, I really do like <a href="http://blog.rjmetrics.com/see-what-drives-repeat-business-in-your-rjmetrics-online-dashboard/">RJMetrics</a> for cohort analysis as well.</p>
-
-<p>In the video, dummy data has been used on the premise that the business has been operating for an entire year.</p>
-
-<p>That said the data has been generated from real data, which I obtained using <a href="https://zapier.com/">Zapier</a>. With Zapier, you can easily source data from hundreds of locations like <a href="https://zapier.com/blog/2012/09/18/making-salesforce-work-with-your-favorite-apps/">Salesforce</a>, ZenDesk, Zoho, MySQL, and <a href="https://zapier.com/blog/2012/07/01/shopify-integrations-boost-retention-increase-upsales-and-provide-killer-customer-support/">Shopify</a>.</p>
-
-<p>The video begins with showing you how to divide the users of a service into cohorts, based on the time that they first subscribed for the services. The retention rate has also been included. These values are obtained by dividing the number of users, who are still subscribing after a particular month, by the total number of users who started in each category. The average retention rate is therefore obtained by calculating the average across the cohort.</p>
-
-<div class="embed-video-container"><iframe src="http://www.youtube.com/embed/2QZQolcLo6M "></iframe></div>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/17/">&larr; Older</a>
@@ -349,6 +397,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2/">Testing AngularJS with Protractor and Karma - part 2</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
       </li>
     
@@ -364,17 +416,13 @@
         <a href="/blog/2015/02/05/sublime-text-for-web-developers/">Sublime Text for Web Developers</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (5)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

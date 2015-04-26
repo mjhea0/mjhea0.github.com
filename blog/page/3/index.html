@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="Hello. Welcome to the second half. Last time, we built a nice Angular starter project, utilizing Gulp and Bower. Let&#8217;s take this a step further &hellip;">
+  <meta name="description" content="Welcome. Using Node, Express, and Mongoose, let&#8217;s create an interactive form. Before you start, make sure you have Node installed for your &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,585 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2014/12/31/node-and-mongoose-a-primer/">Node, Express, and MongoDB - a Primer</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-12-31T02:28:00-07:00" pubdate data-updated="true">Dec 31<span>st</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Welcome. Using Node, Express, and Mongoose, let&#8217;s create an interactive form.</p>
+
+<blockquote><p>Before you start, make sure you have <a href="http://nodejs.org/download/">Node</a> installed for your specific operating system. This tutorial also uses <a href="http://expressjs.com/">Express</a> v4.9.0 and <a href="http://mongoosejs.com/">Mongoose</a> v3.8.21.</p></blockquote>
+
+<h2>Project Setup</h2>
+
+<p>Start by installing the Express generator, which will be used to create a basic project for us:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install -g express-generator@4
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>The <code>-g</code> flag means that we&#8217;re installing this on our entire system.</p></blockquote>
+
+<p>Navigate to a convenient directory, like your &#8220;Desktop&#8221; or &#8220;Documents&#8221;, then create your app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>express node-mongoose-form
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Check out the project structure:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>├── app.js
+</span><span class='line'>├── bin
+</span><span class='line'>│   └── www
+</span><span class='line'>├── package.json
+</span><span class='line'>├── public
+</span><span class='line'>│   ├── images
+</span><span class='line'>│   ├── javascripts
+</span><span class='line'>│   └── stylesheets
+</span><span class='line'>│       └── style.css
+</span><span class='line'>├── routes
+</span><span class='line'>│   ├── index.js
+</span><span class='line'>│   └── users.js
+</span><span class='line'>└── views
+</span><span class='line'>    ├── error.jade
+</span><span class='line'>    ├── index.jade
+</span><span class='line'>    └── layout.jade
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Don&#8217;t worry about the files and folders for now. Just know that we have created a boilerplate that could be used for a number of Node applications. This took care of the heavy lifting, adding common files and functions associated with all apps.</p>
+
+<p>Notice the <em>package.json</em> file. This stores your project&#8217;s dependencies, which we still need to install:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd </span>node-mongoose-form
+</span><span class='line'><span class="nv">$ </span>npm install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now let&#8217;s install one last dependency:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install mongoose --save
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>The <code>--save</code> flag adds the dependencies and their versions to the <em>package.json</em> file. Take a look.</p></blockquote>
+
+<h2>Sanity check</h2>
+
+<p>Let&#8217;s test our setup by running the app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm start
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser and you should see the &#8220;Welcome to Express&#8221; text.</p>
+
+<h3>Supervisor</h3>
+
+<p>I highly recommend setting up <a href="https://github.com/isaacs/node-supervisor">Supervisor</a> so that you can run your app and watch for code changes. Check out the above link to learn more.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install supervisor -g
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Kill the server by pressing CTRL-C.</p>
+
+<p>Once installed, let&#8217;s update the <em>package.json</em> file to utilize Supervisor to run our program.</p>
+
+<p>Simply change this-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s2">&quot;scripts&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>  <span class="s2">&quot;start&quot;</span><span class="o">:</span> <span class="s2">&quot;node ./bin/www&quot;</span>
+</span><span class='line'><span class="p">},</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s2">&quot;scripts&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>  <span class="s2">&quot;start&quot;</span><span class="o">:</span> <span class="s2">&quot;supervisor ./bin/www&quot;</span>
+</span><span class='line'><span class="p">},</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&#8217;s test again:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm start
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In your terminal you should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>Watching directory <span class="s1">&#39;node-mongoose-form&#39;</span> <span class="k">for </span>changes.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you see that, you know it&#8217;s working right. Essentially, Supervisor is watching that directory for code changes, and if they do occur, then it will refresh your app for you so you don&#8217;t have to constantly kill the server then start it back up. It saves a lot of time and keystrokes.</p>
+
+<p>Awesome. With the setup out of the way, let&#8217;s get our hands dirty and actually build something!</p>
+
+<h2>Routes</h2>
+
+<p>Grab your favorite text editor, and then open the main file, <em>app.js</em>, which houses all of the business logic. Take a look at the routes:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">);</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/users&#39;</span><span class="p">,</span> <span class="nx">users</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Understanding how routes work as well as how to trace all the files associated with an individual route is an important skill to learn. You&#8217;ll be able to approach most applications and understand how they work just by starting with the routes.</p>
+
+<p>Let&#8217;s look at this route:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/users&#39;</span><span class="p">,</span> <span class="nx">users</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, we know that this route is associated with the <code>/users</code> endpoint. What&#8217;s an endpoint? Simply navigate to <a href="http://localhost:3000/users">http://localhost:3000/users</a>.</p>
+
+<p>So the end user navigates to that endpoint and expects <em>something</em> to happen. That could mean some HTML is rendered or perhaps JSON is returned. That&#8217;s not important at this point. For now, let&#8217;s look at how Node handles that logic for &#8220;handling routes&#8221;.</p>
+
+<p>Also, within that route, you can see the variable <code>users</code>. Where is that in this file? It&#8217;s at the top, and it loads in another file within our app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/users&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Open that file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* GET users listing. */</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;respond with a resource&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>What&#8217;s happening here? We won&#8217;t touch everything but essentially when that endpoint is hit it responds by sending text in the form of a response to the end user - &#8220;respond with a resource&#8221;. Now, of course you don&#8217;t always have to send text. You could respond with a template or view like a Jade file that gets rendered into HTML. We&#8217;ll look at how this works in just a minute when we add our own routes.</p>
+
+<p><strong>Make sure you understand everything in this section before moving on. This is very important</strong>.</p>
+
+<h3>Add a new route</h3>
+
+<p>Let&#8217;s now add a new route that renders an HTML form to the end user.</p>
+
+<p>Start by adding the route handler in the <em>app.js</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/form&#39;</span><span class="p">,</span> <span class="nx">form</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Remember this simply means <code>app.use('/ENDPOINT', VARIABLE_NAME);</code>,</p></blockquote>
+
+<p>Use the <code>form</code> variable to require a JS file within our routes folder.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">form</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/form&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Take a look in the terminal. You should see an error, indicating Node can&#8217;t find that &#8216;./routes/form&#8217; module. We need to create it!</p>
+
+<p>Create that JS file/module by saving an empty file called <em>form.js</em> to the &#8220;routes&#8221; directory. Add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* GET form. */</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;My funky form&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Remember what this code <code>res.send('My funky form');</code> should do? If not, review the previous section.</p></blockquote>
+
+<p>Navigate to <a href="http://localhost:3000/form">http://localhost:3000/form</a>. You should see the text &#8220;&#8216;My funky form&#8221; on the page. Sweet.</p>
+
+<h2>Jade</h2>
+
+<p>Jade is a templating language, which compiles down to HTML. It makes it easy to separate logic from markup.</p>
+
+<p>Take a quick look at the <em>layout.jade</em> and <em>index.jade</em> files with the &#8220;views&#8221; folder. There&#8217;s a relationship between those two files. It&#8217;s called inheritance. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
+
+<p>Do you see the <code>block</code> keyword?</p>
+
+<p>What really happens when the <em>index</em> file is rendered is that it first inherits the base template because of the <code>extends</code> keywords. So, the <em>layout</em> template then gets rendered, which eventually pulls in the child template, overwriting the <code>block</code> keyword with:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>h1= title
+</span><span class='line'>  p Welcome to #{title}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Hope that makes sense. If not, check out <a href="http://www.learnjade.com/tour/template-inheritance/">this</a> resource for more info.</p>
+
+<h3>Setup <em>form.jade</em></h3>
+
+<p>Create a new file called &#8220;form.jade&#8221; in the &#8220;views&#8221; directory, and then add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>extends layout
+</span><span class='line'>
+</span><span class='line'>block content
+</span><span class='line'>  h1= title
+</span><span class='line'>  p Welcome to #{title}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The same thing is happening here with inheritance. If you&#8217;re unfamiliar with Jade syntax, <code>title</code> is essentially a variable, which we can pass in from <code>./routes/form.js</code>.</p>
+
+<p>Update <code>./routes/form.js</code> by changing-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;My funky form&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;form&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;My funky form&#39;</span> <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This just says, &#8220;When a user hits the <code>/form</code> endpoint, render the <em>form.jade</em> file and pass in <code>My funky form</code> as the title.&#8221;</p>
+
+<blockquote><p>Keep in mind that all Jade files are converted to HTML. Browsers can&#8217;t read the Jade syntax, so it must be in HTML by the time the end user sees it.</p></blockquote>
+
+<p>Ready to test? Simple refresh <a href="http://localhost:3000/form">http://localhost:3000/form</a>.</p>
+
+<p>Did it work? If yes, move on. If not, go back through this section and review. Look in you terminal as well to see the error(s). If you&#8217;re having problems, don&#8217;t beat yourself up. It&#8217;s all part of learning!</p>
+
+<h3>Update <em>form.jade</em></h3>
+
+<p>So, let&#8217;s update the Jade syntax to load a form.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>extends layout
+</span><span class='line'>
+</span><span class='line'>block content
+</span><span class='line'>  //- passed into layout.jade when form.jade is rendered
+</span><span class='line'>  block content
+</span><span class='line'>    h1= title
+</span><span class='line'>    form(method=&quot;post&quot; action=&quot;/create&quot;)
+</span><span class='line'>      label(for=&quot;comment&quot;) Got something to say:
+</span><span class='line'>      input(type=&quot;text&quot;, name=&quot;comment&quot;, value=comment)
+</span><span class='line'>      input(type=&quot;submit&quot;, value=&quot;Save&quot;)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I&#8217;m not going to touch on all the Jade syntax, but essentially, we have just a basic HTML form to submit comments.</p>
+
+<p>Refresh your browser. Do you see the form? Try clicking save. What happens? Well, you just tried to send a POST request to the <code>/create</code> endpoint, which does not exist. Let&#8217;s set it up.</p>
+
+<h2>Add route handler for <code>/create</code></h2>
+
+<p>Open <em>app.js</em> and add a new route:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/create&#39;</span><span class="p">,</span> <span class="nx">form</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Notice how we&#8217;re using the same <code>form</code> variable. What does this mean?</p></blockquote>
+
+<p>Open <em>form.js</em> to add the logic for this new route:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* GET form. */</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;form&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;My funky form&#39;</span> <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* POST form. */</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">comment</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;form&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>1Test this out again. Now, when you submit the form, we have the <code>/create</code> endpoint setup, which then grabs the text from the input box via <code>req.body.comment</code>. Make sure the text is consoled to your terminal.</p>
+
+<p>Okay. So, we are handling the routes, rendering the right template, let&#8217;s now setup Mongoose to save the data from our form.</p>
+
+<h2>Setup Mongoose</h2>
+
+<p><a href="http://mongoosejs.com/">Mongoose</a> is awesome. Start with defining the Schema, which the maps to a collection in Mongo. It utilizes OOP.</p>
+
+<p>Create a file called <em>database.js</em> in your app&#8217;s root directory, then add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Schema</span>   <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Schema</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">title</span> <span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;comments&#39;</span><span class="p">,</span> <span class="nx">Comment</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s1">&#39;mongodb://localhost/node-comment&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, we required/included the Mongoose library along with a reference to the <code>Schema()</code> method. As said, you always start with defining the schema, then we linked it to collection called &#8220;comments&#8221;. Finally, we opened a connection to an instance of our local MongoDB.</p>
+
+<blockquote><p>If you don&#8217;t have the MongoDB server running. Do so now. Open a new terminal window, and run the command <code>sudo mongod</code>.</p></blockquote>
+
+<p>Next, open <em>app.js</em> and require the Mongoose config at the very top of the file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// mongoose config</span>
+</span><span class='line'><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./database&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With Mongoose setup, we need to update <em>form.js</em> to create (via POST) and read (via GET) data from the Mongo collection.</p>
+
+<h2>Handling form GET requests</h2>
+
+<p>Open <em>form.js</em>. Require Mongoose as well as the <code>comments</code> model, which we already created:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;comments&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, update the function handling GET requests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/* GET form. */</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">Comment</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">comments</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">comments</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+</span><span class='line'>      <span class="s1">&#39;form&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">title</span> <span class="o">:</span> <span class="s1">&#39;My funky form&#39;</span><span class="p">,</span> <span class="nx">comments</span> <span class="o">:</span> <span class="nx">comments</span><span class="p">}</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>Comment.find()</code> grabs all comments from the Mongo collection, which we assign to the variable <code>comments</code>. We can now use that variable in our Jade file.</p>
+
+<h2>Update <em>form.jade</em> to display comments</h2>
+
+<p>Let&#8217;s add a loop to iterate through the comments and then display the <code>title</code> key from the collection.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>extends layout
+</span><span class='line'>
+</span><span class='line'>block content
+</span><span class='line'>  //- passed into layout.jade when form.jade is rendered
+</span><span class='line'>  block content
+</span><span class='line'>    h1= title
+</span><span class='line'>    form(method=&quot;post&quot; action=&quot;/create&quot;)
+</span><span class='line'>      label(for=&quot;comment&quot;) Got something to say:
+</span><span class='line'>      input(type=&quot;text&quot;, name=&quot;comment&quot;, value=comment)
+</span><span class='line'>      input(type=&quot;submit&quot;, value=&quot;Save&quot;)
+</span><span class='line'>    br
+</span><span class='line'>    - for comment in comments
+</span><span class='line'>      p= comment.title
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Do you remember where we set the <code>title</code> key? Check out the database schema in <em>database.js</em>.</p></blockquote>
+
+<p>Before this will actually work - e.g., display comments - we first need to add the logic to insert data into the Mongo collection.</p>
+
+<h2>Handling form POST requests</h2>
+
+<p>Back in <em>form.js</em>, update the function handling POST requests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/* POST form. */</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">new</span> <span class="nx">Comment</span><span class="p">({</span><span class="nx">title</span> <span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">comment</span><span class="p">})</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;form&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The simply saves a new comment, which again is grabbed from the form via <code>req.body.comment</code>.</p>
+
+<h2>Sanity Check</h2>
+
+<p>Refresh you app. Add some comments. If you&#8217;ve done everything correctly, the comments should be displayed beneath the form.</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#8217;s it. Grab the code from the <a href="https://github.com/mjhea0/node-form-refresh">repository</a>. Cheers!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1137,218 +1716,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2014/06/12/primer-on-angularjs-service-types/">Primer on AngularJS Services</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-06-12T07:39:00-06:00" pubdate data-updated="true">Jun 12<span>th</span>, 2014</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>What&#8217;s a service &#8230;</h2>
-
-<p>Much to my surprise, the Angular <a href="https://docs.angularjs.org/guide/services">documentation</a> provides a great definition of a service:</p>
-
-<blockquote><p>Angular services are substitutable objects that are wired together using dependency injection (DI). You can use services to organize and share code across your app.</p>
-
-<p>Angular services are:</p>
-
-<ol>
-<li>Lazily instantiated – Angular only instantiates a service when an application component depends on it.</li>
-<li>Singletons – Each component dependent on a service gets a reference to the single instance generated by the service factory.</li>
-</ol>
-
-
-<p>Angular offers several useful services (like $http), but for most applications you&#8217;ll also want to create your own.</p></blockquote>
-
-<p>Services are powerful in that they help keep your code DRY by encapsulating functionality. From an architecture standpoint alone, services help separate out concerns, ensuring that each object is responsible for a single piece of functionality. For example, it&#8217;s common for beginners to put <em>all</em> of their app&#8217;s functionality into the controller. This is fine for smaller apps, but just know that it&#8217;s not a good practice and your controller will balloon quickly as your app scales.</p>
-
-<p>Get in the habit early on to separate concerns. If your controller is handling more than just defining the scope or initial state of your app, connecting your models and views, then it&#8217;s are <em>probably</em> doing too much.</p>
-
-<p>We are all (err, I am) guilty of this. Let&#8217;s look at a very simple app &#8230;</p>
-
-<h4>HTML:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!doctype html&gt;</span>
-</span><span class='line'><span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span> <span class="na">ng-app=</span><span class="s">&#39;myApp&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'><span class="nt">&lt;head&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;title&gt;</span>Angular Boilerplate<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'>  <span class="c">&lt;!-- styles --&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&quot;http://netdna.bootstrapcdn.com/bootswatch/3.1.1/yeti/bootstrap.min.css&quot;</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">media=</span><span class="s">&quot;screen&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&quot;main.css&quot;</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">media=</span><span class="s">&quot;screen&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'><span class="nt">&lt;/head&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;body&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">ng-controller=</span><span class="s">&quot;myController&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;h1&gt;</span>Enter Quantity:<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;number&quot;</span> <span class="na">ng-model=</span><span class="s">&quot;quantity&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;h2&gt;</span>Total Cost: {{calculate(quantity) | currency}}<span class="nt">&lt;/h2&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>    <span class="c">&lt;!-- scripts --&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://code.jquery.com/jquery-1.11.0.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;main.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>Javascript:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;myApp&#39;</span><span class="p">,</span> <span class="p">[])</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;myController&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">quantity</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">calculate</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">number</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="nx">number</span> <span class="o">*</span> <span class="mi">10</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>You can grab the code from <a href="https://github.com/mjhea0/thinkful-mentor/tree/master/angular/fundamentals/services">this</a> repo or from <a href="http://jsfiddle.net/mjhea0/fS4P6/">JSFiddle</a>.</p></blockquote>
-
-<p>So, this just takes an input value (integer or floating point) and multiplies it by 10 in the <code>calculate()</code> function, which then updates the DOM. Not only is the controller defining scope - but it also calculates the total. Despite this being a small app, too much is happening in the controller. We should separate out the calculate <code>function()</code> into a separate service.</p>
-
-<h2>Creating a custom service</h2>
-
-<p>By moving the business logic out of the controller, abstracting much of the code, our controller becomes leaner. <em>It&#8217;s a good practice to write fat services and lean controllers</em>.</p>
-
-<p>To do this, we are will use a service type called a factory, which is the most common type.</p>
-
-<blockquote><p>This is a good time to stop and learn the major service types - constants, values, services, providers, and decorators. Check out <a href="http://angular-tips.com/blog/2013/08/understanding-service-types/">this</a> excellent article for more on the various service types and how and when to use them. <strong>All are slightly different, but, in general, all are dependency injected modules of functionality</strong>.</p></blockquote>
-
-<p>Within the same JS file add the following code beneath the controller:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// Service</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">factory</span><span class="p">(</span><span class="s1">&#39;calculateService&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>  <span class="k">return</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">calculate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">number</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">number</span> <span class="o">*</span> <span class="mi">10</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'> <span class="p">}</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This code creates a service called <code>calculateService</code>. You may be wondering why we have to use the <code>factory()</code> method for this instead of just a regular function. It&#8217;s simple: That method registers the service with Angular; and with Angular aware of its existence, it can be dependency injected into the controller, giving us access to the defined functions - e.g, <code>calculate()</code> within the controller. We can now use this in multiple places within our application, allowing for easy code reuse.</p>
-
-<p>So, we have simply abstracted the logic of taking the user inputted number and multiplying it by 10.</p>
-
-<p>Now update the controller:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;myController&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">calculateService</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">quantity</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-</span><span class='line'>   <span class="nx">$scope</span><span class="p">.</span><span class="nx">calculate</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">number</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="nx">calculateService</span><span class="p">.</span><span class="nx">calculate</span><span class="p">(</span><span class="nx">number</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>And you&#8217;re app should be working. Test it out. <a href="http://jsfiddle.net/mjhea0/Q9b23/">JSFiddle</a></p>
-
-<h2>Conclusion</h2>
-
-<p>Hopefully, you now have a better sense as to -</p>
-
-<ul>
-<li>What a service is,</li>
-<li>Why you should use them, and</li>
-<li>How to use them.</li>
-</ul>
-
-
-<p>Want some practice? Create separate services for each piece of functionality in <a href="https://github.com/mjhea0/thinkful-mentor/tree/master/angular/projects/waitstaff-calc/waitstaff-flask">this</a> app&#8217;s controller. Remember: The controller is responsible for defining scope, all else should be moved out of the controller altogether.</p>
-
-<p>If you need help, start by creating a service that handles the actual API calls. Perhaps use a service name of <code>getData</code> then set up functions for the different HTTP requests - i.e., <code>readData()</code> for a GET request and <code>writeData()</code> for a POST. Then when you use dependency injection to add this service to your controller, you can simply use the following syntax for accessing the <code>readData()</code> function in the controller:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">getData</span><span class="p">.</span><span class="nx">readData</span><span class="p">(</span><span class="nx">some_argument</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Presumably you would pass in an argument supplied by the user. Now you can access that function from the controller without knowing anything about the actual service except for how you use it. The controller is cleaner because you abstracted out all the messy code for making API calls.</p>
-
-<p>Good luck!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/4/">&larr; Older</a>
@@ -1366,6 +1733,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2/">Testing AngularJS with Protractor and Karma - part 2</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
       </li>
     
@@ -1381,17 +1752,13 @@
         <a href="/blog/2015/02/05/sublime-text-for-web-developers/">Sublime Text for Web Developers</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (5)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

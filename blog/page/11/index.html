@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related &hellip;">
+  <meta name="description" content="As an online business owner, you hope that engagement increases over time, leading to a longer period of retention. This is rarely the case, though. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,521 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2013/07/19/cohort-analysis-data-sourcing-with-sql/">Cohort Analysis: Data Sourcing With SQL</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-07-19T09:48:00-06:00" pubdate data-updated="true">Jul 19<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As an online business owner, you hope that engagement increases over time, leading to a longer period of retention. This is rarely the case, though. The majority of web applications see a gradual decrease in user engagement, eventually leading to churn. Your goal then is to stretch out the length of engagement as long as possible. The best way to measure this is through cohort analysis.</p>
+
+<p>Put simply, cohort analysis is used to test whether certain groups of users, based on the conversion date, are active and engaging longer (or shorter) than other groups.</p>
+
+<p>The ultimate goal is to test not only how users within each cohort engaged within your app over time, but to also compare and contrast different cohorts with one another. It&#8217;s quite often the case that even subtle changes in your application&#8217;s feature set will change user engagement, positively or negatively. If the latter, you want to know this as soon as possible to prevent further churn.</p>
+
+<p>That said, let&#8217;s look at how to source and cleanse your data in order to begin analysis.</p>
+
+<blockquote><p>Please note: I will be using a MySQL database for these examples. The corresponding SQL statements should be simple enough to port over to whatever RDMS you use. Comment if you have questions. You can also look at this <a href="http://www.backwardsteps.com/cohort/cohort_analysis.xlsx">spreadsheet</a> to see how to conduct cohort analysis in Excel.</p></blockquote>
+
+<h2>Setup</h2>
+
+<p>If you&#8217;d like to follow along, follow these steps to create the table and load the sample data.</p>
+
+<h3>Create the database and tables</h3>
+
+<ol>
+<li>Access MySQL via the Shell (or your preferred method):</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mysql -u root -p
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Create a new database, and then select it for use:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>mysql&gt; CREATE DATABASE cohortanalysis;
+</span><span class='line'>    mysql&gt; USE cohortanalysis;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Use the following commands to create the tables users and events:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>mysql&gt; CREATE TABLE users <span class="o">(</span>id INT<span class="o">(</span>11<span class="o">)</span> PRIMARY KEY NOT NULL, name VARCHAR<span class="o">(</span>40<span class="o">)</span> NOT NULL, date DATETIME NOT NULL<span class="o">)</span>;
+</span><span class='line'>mysql&gt; CREATE TABLE events <span class="o">(</span>id INT<span class="o">(</span>11<span class="o">)</span> PRIMARY KEY NOT NULL, <span class="nb">type </span>VARCHAR<span class="o">(</span>15<span class="o">)</span>, user_id INT<span class="o">(</span>11<span class="o">)</span> NOT NULL, date DATETIME NOT NULL, FOREIGN KEY <span class="o">(</span>user_id<span class="o">)</span> REFERENCES users<span class="o">(</span>id<span class="o">))</span>;
+</span><span class='line'>mysql&gt; <span class="nb">exit</span>;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Load the data</h3>
+
+<p>Download the database file <a href="http://www.backwardsteps.com/cohort/dump.sql">here</a>. Then using the command line, navigate to the file path where the <em>dump.sql</em> file was downloaded. Now, type the following command into your terminal:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mysql -u root -p cohortanalysis &lt; dump.sql
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This command should take a few minutes to run as it loads the data in the database.</p>
+
+<h2>Sourcing Data</h2>
+
+<p>When sourcing your data, it’s important to begin by structuring your SQL queries around user behavior - engagement, in this case.</p>
+
+<p>In this example, we will use a database filled with sample data for a subscription photo-editing application. The database has one table for customers, <em>Users</em>, and another for engagement, <em>Events</em>, among others:</p>
+
+<p><strong>Users:</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>mysql&gt; DESCRIBE users;
+</span><span class='line'>+-------+-------------+------+-----+---------+-------+
+</span><span class='line'>| Field | Type        | Null | Key | Default | Extra |    
+</span><span class='line'>+-------+-------------+------+-----+---------+-------+    
+</span><span class='line'>| id    | int<span class="o">(</span>11<span class="o">)</span>     | NO   | PRI | NULL    |       |
+</span><span class='line'>| name  | varchar<span class="o">(</span>40<span class="o">)</span> | NO   |     | NULL    |       |
+</span><span class='line'>| date  | datetime    | NO   |     | NULL    |       |
+</span><span class='line'>+-------+-------------+------+-----+---------+-------+
+</span><span class='line'>
+</span><span class='line'>mysql&gt; SELECT COUNT<span class="o">(</span>*<span class="o">)</span> FROM users;
+</span><span class='line'>54541
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Events:</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>mysql&gt; DESCRIBE events;
+</span><span class='line'>+---------+-------------+------+-----+---------+-------+
+</span><span class='line'>| Field   | Type        | Null | Key | Default | Extra |
+</span><span class='line'>+---------+-------------+------+-----+---------+-------+
+</span><span class='line'>| id      | int<span class="o">(</span>11<span class="o">)</span>     | NO   | PRI | NULL    |       |
+</span><span class='line'>| <span class="nb">type</span>    | varchar<span class="o">(</span>15<span class="o">)</span> | YES  |     | NULL    |       |
+</span><span class='line'>| user_id | int<span class="o">(</span>11<span class="o">)</span>     | NO   | MUL | NULL    |       |
+</span><span class='line'>| date    | datetime    | NO   |     | NULL    |       |
+</span><span class='line'>+---------+-------------+------+-----+---------+-------+
+</span><span class='line'>
+</span><span class='line'>mysql&gt; SELECT COUNT<span class="o">(</span>*<span class="o">)</span> FROM events;
+</span><span class='line'>101684
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>As you can tell, there are 54,541 rows of data in the <em>Users</em> table and 101,684 rows in the <em>Events</em> table. The <em>type</em> field in the <em>Events</em> table specifies whether a user has shared (to Twitter or Facebook), commented on, or liked a photo.</p></blockquote>
+
+<p>Start by looking at each table individually, beginning with basic queries before moving on to more advanced queries to get a feel for the data you&#8217;re working with.</p>
+
+<h3>Monthly Cohorts</h3>
+
+<p>I will be using a new Group Date function to create the cohorts. Follow the installation instructions <a href="http://ankane.github.io/groupdate.sql/">here</a>.</p>
+
+<p>Group users into monthly cohorts, based on sign-up date, and add in the total users for each cohort:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>SELECT GD_MONTH<span class="o">(</span>date, <span class="s1">&#39;Greenwich&#39;</span><span class="o">)</span> AS cohort,
+</span><span class='line'>     COUNT<span class="o">(</span>*<span class="o">)</span>
+</span><span class='line'>FROM users
+</span><span class='line'>GROUP BY cohort;
+</span><span class='line'>
+</span><span class='line'>+---------------------+----------+
+</span><span class='line'>| cohort              | COUNT<span class="o">(</span>*<span class="o">)</span> |
+</span><span class='line'>+---------------------+----------+
+</span><span class='line'>| 2013-02-01 00:00:00 |       48 |
+</span><span class='line'>| 2013-03-01 00:00:00 |      338 |
+</span><span class='line'>| 2013-04-01 00:00:00 |     1699 |
+</span><span class='line'>| 2013-05-01 00:00:00 |     7658 |
+</span><span class='line'>| 2013-06-01 00:00:00 |    24716 |
+</span><span class='line'>| 2013-07-01 00:00:00 |    20082 |
+</span><span class='line'>+---------------------+----------+
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Did you notice the time zone (<code>Greenwich</code>)? Try experimenting with other <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zones</a> to see how the results change. This is my favorite feature from the Group Date function.</p></blockquote>
+
+<p>Like the last query, split the events into cohorts:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>SELECT GD_MONTH<span class="o">(</span>date, <span class="s1">&#39;Greenwich&#39;</span><span class="o">)</span> AS cohort,
+</span><span class='line'>     COUNT<span class="o">(</span>*<span class="o">)</span>
+</span><span class='line'>FROM events   
+</span><span class='line'>GROUP BY cohort;
+</span><span class='line'>
+</span><span class='line'>+---------------------+----------+
+</span><span class='line'>| cohort              | COUNT<span class="o">(</span>*<span class="o">)</span> |
+</span><span class='line'>+---------------------+----------+
+</span><span class='line'>| 2013-02-01 00:00:00 |       31 |
+</span><span class='line'>| 2013-03-01 00:00:00 |      223 |
+</span><span class='line'>| 2013-04-01 00:00:00 |     1351 |
+</span><span class='line'>| 2013-05-01 00:00:00 |     6199 |
+</span><span class='line'>| 2013-06-01 00:00:00 |    57898 |
+</span><span class='line'>| 2013-07-01 00:00:00 |    35982 |
+</span><span class='line'>+---------------------+----------+
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Based on these tables, you can see the total engagement vs. the total users. Right off the bat you can tell that engagement decreases in the latter months? Will this trend continue?</p>
+
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/f11068c3-7905-4d7b-8c8e-8037a5905c94/00000212.png" alt="decrease_in_enagement" /></p>
+
+<h3>Individual Cohorts</h3>
+
+<p>Now start looking at each individual cohort to see if you can see any outliers or large discrepancies. For simplicity, you can follow this syntax:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>SELECT
+</span><span class='line'>  &lt;action_or_event_date<span class="o">(</span>s<span class="o">)</span>&gt;
+</span><span class='line'>FROM
+</span><span class='line'>  &lt;table&gt;
+</span><span class='line'>WHERE
+</span><span class='line'>  <span class="nv">user_action</span> <span class="o">=</span> &lt;<span class="s1">&#39;some_action_or_event&#39;</span>&gt;
+</span><span class='line'>  and <span class="nv">user_cohort</span> <span class="o">=</span> &lt;cohort_group&gt;
+</span><span class='line'>GROUP BY &lt;action_or_even_date<span class="o">(</span>s<span class="o">)</span>&gt;;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>SELECT GD_MONTH<span class="o">(</span>events.date, <span class="s1">&#39;Greenwich&#39;</span><span class="o">)</span> AS engagement_date,
+</span><span class='line'>       COUNT<span class="o">(</span>events.id<span class="o">)</span> AS events
+</span><span class='line'>FROM users
+</span><span class='line'>JOIN events ON users.id <span class="o">=</span> events.user_id
+</span><span class='line'>WHERE DATE_FORMAT<span class="o">(</span>users.date, <span class="s1">&#39;%Y/%m&#39;</span><span class="o">)</span> <span class="o">=</span><span class="s1">&#39;2013/02&#39;</span>
+</span><span class='line'>GROUP BY engagement_date;
+</span><span class='line'>
+</span><span class='line'>+---------------------+--------+
+</span><span class='line'>| engagement_date     | events |
+</span><span class='line'>+---------------------+--------+
+</span><span class='line'>| 2013-02-01 00:00:00 |     31 |
+</span><span class='line'>| 2013-03-01 00:00:00 |     63 |
+</span><span class='line'>| 2013-04-01 00:00:00 |     67 |
+</span><span class='line'>| 2013-05-01 00:00:00 |     66 |
+</span><span class='line'>| 2013-06-01 00:00:00 |    113 |
+</span><span class='line'>| 2013-07-01 00:00:00 |     45 |
+</span><span class='line'>+---------------------+--------+
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png" alt="feb_cohort_engagement" /></p>
+
+<p>Continue to add cohorts to learn more about how your users are engaging. See if you can find any trends. Look at comments vs likes vs shares.</p>
+
+<p>In this query, we look at the total percent of twitter shares divided by the total # of engagements:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>SELECT
+</span><span class='line'>  <span class="o">(</span>SELECT count<span class="o">(</span>TYPE<span class="o">)</span>
+</span><span class='line'>   FROM events
+</span><span class='line'>   WHERE <span class="nv">TYPE</span><span class="o">=</span><span class="s2">&quot;twitter share&quot;</span><span class="o">)</span> AS twitter_shares,
+</span><span class='line'>  <span class="o">(</span>SELECT count<span class="o">(</span>*<span class="o">)</span>
+</span><span class='line'>   FROM events<span class="o">)</span> AS total,
+</span><span class='line'>  <span class="o">(</span>SELECT count<span class="o">(</span>TYPE<span class="o">)</span>
+</span><span class='line'>   FROM events
+</span><span class='line'>   WHERE <span class="nv">TYPE</span><span class="o">=</span><span class="s2">&quot;twitter share&quot;</span><span class="o">)</span>/
+</span><span class='line'>  <span class="o">(</span>SELECT count<span class="o">(</span>*<span class="o">)</span>
+</span><span class='line'>   FROM events<span class="o">)</span>*100 AS percent_of_total;
+</span><span class='line'>
+</span><span class='line'>+----------------+--------+------------------+
+</span><span class='line'>| twitter_shares | total  | percent_of_total |
+</span><span class='line'>+----------------+--------+------------------+
+</span><span class='line'>|          14570 | 101684 |          14.3287 |
+</span><span class='line'>+----------------+--------+------------------+
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png" alt="twitter" /></p>
+
+<p>You can even zoom in on individual users:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>SELECT events.id,
+</span><span class='line'>       events.type,
+</span><span class='line'>       events.date AS enagement_date
+</span><span class='line'>FROM events
+</span><span class='line'>JOIN users ON events.user_id <span class="o">=</span> users.id
+</span><span class='line'>WHERE users.id <span class="o">=</span> 1
+</span><span class='line'>ORDER BY events.type;
+</span><span class='line'>
+</span><span class='line'>+-------+----------------+---------------------+
+</span><span class='line'>| id    | <span class="nb">type</span>           | enagement_date      |
+</span><span class='line'>+-------+----------------+---------------------+
+</span><span class='line'>|    22 | comment        | 2013-02-25 05:22:55 |
+</span><span class='line'>|     6 | facebook share | 2013-02-13 17:54:59 |
+</span><span class='line'>|     1 | like           | 2013-02-10 13:40:03 |
+</span><span class='line'>|  6052 | like           | 2013-05-25 16:26:03 |
+</span><span class='line'>|  4245 | like           | 2013-05-19 16:04:57 |
+</span><span class='line'>|    24 | like           | 2013-02-25 21:13:28 |
+</span><span class='line'>|     7 | like           | 2013-02-14 05:20:23 |
+</span><span class='line'>|     4 | like           | 2013-02-12 04:10:14 |
+</span><span class='line'>|     2 | like           | 2013-02-10 15:35:58 |
+</span><span class='line'>|     3 | twitter share  | 2013-02-11 16:40:14 |
+</span><span class='line'>| 53353 | twitter share  | 2013-06-28 02:59:44 |
+</span><span class='line'>+-------+----------------+---------------------+
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Analysis</h3>
+
+<p>Finally, create a chart that shows all the cohorts and their subsequent monthly engagement % for easy comparison. Make sure to normalize the data in this chart (see the ROUND function).</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>SELECT results.months,
+</span><span class='line'>       results.cohort,
+</span><span class='line'>       results.actives AS active_users,
+</span><span class='line'>       user_totals.total AS total_users,
+</span><span class='line'>       results.actives/user_totals.total*100 AS percent_active
+</span><span class='line'>FROM
+</span><span class='line'>  <span class="o">(</span> SELECT ROUND<span class="o">(</span>DATEDIFF<span class="o">(</span>events.date, users.date<span class="o">)</span>/30.4<span class="o">)</span> AS months,
+</span><span class='line'>           DATE_FORMAT<span class="o">(</span>events.date, <span class="s1">&#39;%Y/%m&#39;</span><span class="o">)</span> AS MONTH,
+</span><span class='line'>           DATE_FORMAT<span class="o">(</span>users.date, <span class="s1">&#39;%Y/%m&#39;</span><span class="o">)</span> AS cohort,
+</span><span class='line'>           COUNT<span class="o">(</span>DISTINCT users.id<span class="o">)</span> AS actives
+</span><span class='line'>   FROM users
+</span><span class='line'>   JOIN events ON events.user_id <span class="o">=</span> users.id
+</span><span class='line'>   GROUP BY cohort,
+</span><span class='line'>            months <span class="o">)</span> AS results
+</span><span class='line'>JOIN
+</span><span class='line'>  <span class="o">(</span> SELECT DATE_FORMAT<span class="o">(</span>date, <span class="s2">&quot;%Y/%m&quot;</span><span class="o">)</span> AS cohort,
+</span><span class='line'>           count<span class="o">(</span>id<span class="o">)</span> AS total
+</span><span class='line'>   FROM users
+</span><span class='line'>   GROUP BY cohort <span class="o">)</span> AS user_totals ON user_totals.cohort <span class="o">=</span> results.cohort
+</span><span class='line'>WHERE results.MONTH &lt; DATE_FORMAT<span class="o">(</span>NOW<span class="o">()</span>, <span class="s1">&#39;%Y/%m&#39;</span><span class="o">)</span>;
+</span><span class='line'>
+</span><span class='line'>+--------+---------+--------------+-------------+----------------+
+</span><span class='line'>| months | cohort  | active_users | total_users | percent_active |
+</span><span class='line'>+--------+---------+--------------+-------------+----------------+
+</span><span class='line'>|      0 | 2013/02 |           29 |          48 |        60.4167 |
+</span><span class='line'>|      1 | 2013/02 |           35 |          48 |        72.9167 |
+</span><span class='line'>|      2 | 2013/02 |           38 |          48 |        79.1667 |
+</span><span class='line'>|      3 | 2013/02 |           40 |          48 |        83.3333 |
+</span><span class='line'>|      0 | 2013/03 |          156 |         338 |        46.1538 |
+</span><span class='line'>|      1 | 2013/03 |          251 |         338 |        74.2604 |
+</span><span class='line'>|      2 | 2013/03 |          258 |         338 |        76.3314 |
+</span><span class='line'>|      3 | 2013/03 |          305 |         338 |        90.2367 |
+</span><span class='line'>|      0 | 2013/04 |          888 |        1699 |        52.2660 |
+</span><span class='line'>|      1 | 2013/04 |         1290 |        1699 |        75.9270 |
+</span><span class='line'>|      0 | 2013/05 |         4454 |        7658 |        58.1614 |
+</span><span class='line'>|      1 | 2013/05 |         7004 |        7658 |        91.4599 |
+</span><span class='line'>|      2 | 2013/05 |         2157 |        7658 |        28.1666 |
+</span><span class='line'>|      0 | 2013/06 |        18612 |       24716 |        75.3034 |
+</span><span class='line'>+--------+---------+--------------+-------------+----------------+
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is clearly a difficult query, which will require significant modifications based on your own data. In this query we are defining-</p>
+
+<ul>
+<li>each cohort by breaking the dates into intervals of 30.4 days (~ one month); and,</li>
+<li>the percent of active users (grouped by cohort) by dividing the number of cohorts by total activities for each cohort, then obtaining a percentage by multiplying the results by 100.</li>
+</ul>
+
+
+<p>To make such queries easier, make sure you -</p>
+
+<ol>
+<li>Understand your schema/table relationships</li>
+<li>Break your query up into smaller, manageable pieces</li>
+<li>Conduct quick spot checks beforehand on a portion of the data to ensure that the results you get are correct (yes, add in test driven development for a quick sanity check)</li>
+</ol>
+
+
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png" alt="final" /></p>
+
+<p>Now, even though this is quite difficult, try to come up with the same results in Excel. It&#8217;s much harder. Once you become comfortable with SQL - and can break each query down into small bits - it&#8217;s actual much easier with SQL.</p>
+
+<h2>Summary</h2>
+
+<p>As you go through your own cohort analysis measuring retention and engagement, think about why your users may stop engaging and leave. For example, is your application useful, perhaps the novelty factor wears off too quickly, or all engagement options have been exhausted.</p>
+
+<p>Remember that even though you may be experiencing a huge amount of growth, engagement may be low - which can be easily be overlooked. This could result in increased churn much sooner. It can&#8217;t be said enough that retaining a customer is much cheaper than adding a new customer. Do your best to sustain high engagement over time and locate areas of improvement via cohort analysis.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -318,251 +833,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2013/06/13/up-and-running-with-espresso-rapid-web-development-in-the-browser/">Up and Running With Espresso: Rapid Web Development in the Browser</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-13T08:06:00-06:00" pubdate data-updated="true">Jun 13<span>th</span>, 2013</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>Please note: The developer of Espresso is no longer maintaining the project. I revived it for the sake of this tutorial, but I will not be maintaining it either. If you wish to take on this awesome project, please contact me. Cheers!</strong></p>
-
-<p>In this tutorial we&#8217;ll be developing a simple application with <a href="https://github.com/mjhea0/espresso">Espresso</a>, a minimalist Ruby web framework, in the typical MVC fashion. We will also be using <a href="https://rubygems.org/gems/e">Enginery</a> and <a href="https://rubygems.org/gems/frontline">Frontline</a> to speed up the development process by developing straight from the browser.</p>
-
-<h2>Espresso + Enginery</h2>
-
-<p>Create a new project directory:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mkdir espresso
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Install Espresso and Enginery:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="err">$</span> <span class="n">gem</span> <span class="n">install</span> <span class="n">espresso</span><span class="o">-</span><span class="n">framework</span>
-</span><span class='line'><span class="err">$</span> <span class="n">gem</span> <span class="n">install</span> <span class="n">enginery</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Create a new application utilizing DataMapper:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>enginery g orm:dm
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Watch your terminal window. Enginery is generating a project structure, adding the required Gems (&#8216;data_mapper&#8217; and &#8216;dm-sqlite-adapter&#8217;) to the Gemfile, updating the Rakefile and configuration file, and finally running bundler to install the Gems.</p>
-
-<p>Essentially, Enginery is similar to the Rails&#8217; Scaffolding functionality, allowing rapid development of a project built around the MCV-style architecture. It logically separates the project into Models, Views, and Controllers, and defines basic defaults - which can be modified to fit your particular application.</p>
-
-<p>Next, generate your first model:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>enginery g:m Tasks column:name column:description:text
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This generates a Tasks model with 3 columns in it:
-- <strong>id:</strong> primary key, generated automatically by DataMapper
-- <strong>name:</strong> string, which is the default data type
-- <strong>description:</strong>  text</p>
-
-<p>Now we need to create a table for our Tasks model by migrating up the initialization migration. When we created our model, this generated a serial number associated with the migration. You can find the migrations within your project structure.</p>
-
-<p>For example:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>base/migrations/tasks/1.2013-06-12_19-34-15.initializing-Tasks-model.rb
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This particular migration has a serial number of 1.</p>
-
-<p>Let&#8217;s finish the migration:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>enginery m:up 1
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>With a table now associated with the database, let&#8217;s add some tasks!</p>
-
-<p>Fire up the server:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ruby app.rb
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then navigate to <a href="http://localhost:5252/admin">http://localhost:5252/admin</a>, click Tasks and add a few in. Get creative.</p>
-
-<p>Fast, right? Let&#8217;s get even faster with Frontline.</p>
-
-<h2>Espresso + Enginery + Frontline</h2>
-
-<p>Frontline is is a front-end manager for Enginery, which allows you to fully manage applications within the browser. Yes, you heard that right.</p>
-
-<p>Install it:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>gem install frontline
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Run it:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>frontline
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Rock it: <a href="http://localhost:5000">http://localhost:5000</a></p>
-
-<p>Boom! Is any explanation needed? Perhaps &#8230;</p>
-
-<p>Load your existing app using the project name, <code>espresso</code>, and the path, <code>/Users/michaelherman/desktop/espresso</code> (customize for your app and path). From here you have total control over setting up and maintaining your application. You can even put it under version control.</p>
-
-<p>Let&#8217;s update the base view. Click the &#8220;Maintenance&#8221; menu and select &#8220;layout.erb&#8221;. Update the code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span><span class='line'><span class="nt">&lt;html&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;head&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;title&gt;</span>Espresso + Enginery + Frontline<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&quot;http://twitter.github.io/bootstrap/assets/css/bootstrap.css&quot;</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&#39;http://fonts.googleapis.com/css?family=Open+Sans&#39;</span> <span class="na">rel=</span><span class="s">&#39;stylesheet&#39;</span> <span class="na">type=</span><span class="s">&#39;text/css&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;body</span> <span class="na">style=</span><span class="s">&quot;padding-top: 50px;&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;navbar navbar-fixed-top&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;navbar-inner&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">&quot;brand&quot;</span> <span class="na">href=</span><span class="s">&quot;#&quot;</span><span class="nt">&gt;</span>Espresso + Enginery + Frontline<span class="nt">&lt;/a&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;nav&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;/ul&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;nav pull-right&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>              <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;/&quot;</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;/ul&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="err">&lt;</span>%= yield %&gt;
-</span><span class='line'>  <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now let&#8217;s add some controllers, routes, and additional views. Enginery already generated the <code>Index</code> controller with an <code>index</code> route in it. Let&#8217;s create a new route within the <code>Index</code> controller. Click &#8220;Controllers&#8221; => &#8220;Index&#8221; => &#8220;New Actions&#8221;. For the action name, enter &#8220;list&#8221; and click the arrow to the right to process.</p>
-
-<p>Let&#8217;s add some logic to the new route. Click &#8220;Index Action&#8221;, and then &#8220;list&#8221;. Add the following code to the <em>list.rb</em> file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Index</span>
-</span><span class='line'>  <span class="c1"># action-specific setups</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">list</span>
-</span><span class='line'>    <span class="vi">@tasks</span> <span class="o">=</span> <span class="no">Tasks</span><span class="o">.</span><span class="n">all</span>
-</span><span class='line'>    <span class="n">render</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then add the following code to <em>list.erb</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;br/&gt;</span>
-</span><span class='line'><span class="nt">&lt;ul&gt;</span>
-</span><span class='line'><span class="err">&lt;</span>% @tasks.each do |task| %&gt;
-</span><span class='line'>  <span class="nt">&lt;li&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;h4&gt;</span><span class="err">&lt;</span>%= task.name %&gt;<span class="nt">&lt;/h4&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;p&gt;</span><span class="err">&lt;</span>%= task.description %&gt;<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/li&gt;</span>
-</span><span class='line'><span class="err">&lt;</span>% end %&gt;
-</span><span class='line'><span class="nt">&lt;/ul&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then check out your live app at <a href="http://localhost:5252/list">http://localhost:5252/list</a></p>
-
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/45d09f61-b994-4ee4-a8ac-6034723747ff/00000164.png" alt="image" /></p>
-
-<p>Cheers!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/12/">&larr; Older</a>
@@ -580,6 +850,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2/">Testing AngularJS with Protractor and Karma - part 2</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
       </li>
     
@@ -595,17 +869,13 @@
         <a href="/blog/2015/02/05/sublime-text-for-web-developers/">Sublime Text for Web Developers</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (5)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

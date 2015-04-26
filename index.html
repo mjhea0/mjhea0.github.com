@@ -83,6 +83,681 @@
   <header>
   
     
+      <h1 class="entry-title"><a href="/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2/">Testing AngularJS With Protractor and Karma - Part 2</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-04-26T08:06:00-06:00" pubdate data-updated="true">Apr 26<span>th</span>, 2015</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>This article details how to test a simple AngularJS application using unit tests and end-to-end (E2E) tests.</strong></p>
+
+<div style="text-align:center;">
+  <img src="https://raw.githubusercontent.com/mjhea0/angular-testing-tutorial/master/img/angular-protractor.png" style="max-width: 100%; border:0;" alt="angular + protractor">
+</div>
+
+
+
+
+<br>
+
+
+<ul>
+<li><a href="http://mherman.org/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1">Part 1</a> - In the first part we&#8217;ll look at unit tests, which ensure that small, isolated pieces of code (e.g., a unit) behave as expected.</li>
+<li>Part 2 - In part two we&#8217;ll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation. <strong>(current)</strong></li>
+</ul>
+
+
+<p><em>Contents</em>:</p>
+
+<ol>
+<li><a href="#project-setup">Project Setup</a></li>
+<li><a href="#the-tests">The Tests</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ol>
+
+
+<p>Having finished up unit testing, let&#8217;s now turn our attention to e2e testing using <a href="http://angular.github.io/protractor/#/">Protractor</a>, which is a testing framework built specifically for AngularJS apps. Essentially, it runs tests against an app in the browser via <a href="http://seleniumhq.github.io/selenium/docs/api/javascript/">Selenium Webdriver</a>, interacting with the app from an end user’s perspective.</p>
+
+<div style="text-align:center;">
+  <img src="https://raw.githubusercontent.com/mjhea0/angular-testing-tutorial/master/img/components.png" style="max-width: 100%; border:0;" alt="protractor components">
+</div>
+
+
+
+
+<br>
+
+
+<p>Since e2e tests are much more expensive than unit tests - e.g., they generally take more time to run and are harder to write and maintain - you should almost always focus the majority of your testing efforts on unit tests. It&#8217;s good to follow the 80/20 rule - 80% of your tests are unit tests, while 20% are e2e tests. That said, this tutorial series breaks this rule since the goal is to educate. Keep this in mind as you write your own tests against your own application.</p>
+
+<p>Also, make sure you test the most important aspects/functions of your application with your e2e tests. Don&#8217;t waste time on the trivial. Again, they are expensive, so make each one count.</p>
+
+<p>The <a href="https://github.com/mjhea0/angular-testing-tutorial">repo</a> includes the following tags:</p>
+
+<ol>
+<li><em>v1</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v1">project boilerplate</a></li>
+<li><em>v2</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v2">adds testing boilerplate/configuration</a></li>
+<li><em>v3</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v3">adds unit tests</a></li>
+<li><em>v4</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v4">adds E2E tests</a></li>
+</ol>
+
+
+<h2> <a name="project-setup">Project Setup</a></h2>
+
+
+<p>Assuming you followed the <a href="http://mherman.org/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1">first part</a> of this tutorial, checkout the third tag, <code>v3</code>, and then run the current test suite starting with the unit tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git checkout tags/v3
+</span><span class='line'><span class="nv">$ </span>gulp unit
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>23:30:01<span class="o">]</span> Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+</span><span class='line'><span class="o">[</span>23:30:01<span class="o">]</span> Starting <span class="s1">&#39;unit&#39;</span>...
+</span><span class='line'>INFO <span class="o">[</span>karma<span class="o">]</span>: Karma v0.12.31 server started at http://localhost:9876/
+</span><span class='line'>INFO <span class="o">[</span>launcher<span class="o">]</span>: Starting browser Chrome
+</span><span class='line'>INFO <span class="o">[</span>Chrome 42.0.2311 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)]</span>: Connected on socket i04LmGbgt7P1lNIUTgIJ with id 48442826
+</span><span class='line'>Chrome 42.0.2311 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)</span>: Executed 12 of 12 SUCCESS <span class="o">(</span>0.236 secs / 0.051 secs<span class="o">)</span>
+</span><span class='line'><span class="o">[</span>23:30:06<span class="o">]</span> Finished <span class="s1">&#39;unit&#39;</span> after 4.43 s
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For the e2e tests, you&#8217;ll need to open two new terminal windows. In the first new window, run <code>webdriver-manager start</code>. In the second, navigate to your project directory and then run the app - <code>gulp</code>.</p>
+
+<p>Finally, back in the original window, run the tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>gulp e2e
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>23:31:11<span class="o">]</span> Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+</span><span class='line'><span class="o">[</span>23:31:11<span class="o">]</span> Starting <span class="s1">&#39;e2e&#39;</span>...
+</span><span class='line'>Using the selenium server at http://localhost:4444/wd/hub
+</span><span class='line'><span class="o">[</span>launcher<span class="o">]</span> Running 1 instances of WebDriver
+</span><span class='line'>.
+</span><span class='line'>
+</span><span class='line'>Finished in 1.174 seconds
+</span><span class='line'>1 <span class="nb">test</span>, 1 assertion, 0 failures
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>launcher<span class="o">]</span> 0 instance<span class="o">(</span>s<span class="o">)</span> of WebDriver still running
+</span><span class='line'><span class="o">[</span>launcher<span class="o">]</span> chrome <span class="c">#1 passed</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Everything look good?</p>
+
+<h2> <a name="the-tests">The Tests</a></h2>
+
+
+<p>Open the test spec, <em>spec.js</em>, within the &#8220;tests/e2e&#8221; directory. Let&#8217;s look at the first test:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;myController&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;the dom initially has a greeting&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">browser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8888/#/one&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">id</span><span class="p">(</span><span class="s1">&#39;greeting&#39;</span><span class="p">)).</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Notice how we&#8217;re still using <a href="http://chaijs.com/">Mocha</a> and <a href="http://chaijs.com/">Chai</a> to <a href="http://angular.github.io/protractor/#/frameworks">manage/structure</a> the test so that it simply opens <code>http://localhost:8888/#/one</code> and then asserts that the text within the HTML element with an ID of <code>greeting</code> is  <code>Hello, World!</code>. Simple, right?</p>
+
+<p>Let&#8217;s take a quick look at the Angular services that we&#8217;re using:</p>
+
+<ol>
+<li><a href="http://angular.github.io/protractor/#/api?view=Protractor">browser</a> - loads the page in the browser</li>
+<li><a href="http://angular.github.io/protractor/#/api?view=ElementFinder">element</a> - interacts with the page</li>
+<li><a href="http://angular.github.io/protractor/#/api?view=ProtractorBy">by</a> - finds elements within the page</li>
+</ol>
+
+
+<p>Finally, one important thing to note is how these tests run. Notice that there&#8217;s no callbacks and/or promises in the test. How does that work with asynchronous code? Simple: Protractor continues to check each assertion until it passes or a certain amount of <a href="https://github.com/angular/protractor/blob/master/docs/timeouts.md">time</a> passes. There also is a <a href="http://angular.github.io/protractor/#/api?view=then">promise</a> attached to most methods that can be access using <code>then</code>.</p>
+
+<p>With that, let&#8217;s write some tests on our own.</p>
+
+<h3>TestOneController</h3>
+
+<p>Just like in the first part, open the controller code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">myApp</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;TestOneController&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="s2">&quot;Hello, World!&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">newText</span> <span class="o">=</span> <span class="kc">undefined</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">changeGreeting</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">newText</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">newText</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>How about the HTML?</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h2&gt;</span>Say something<span class="nt">&lt;/h2&gt;</span>
+</span><span class='line'><span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">ng-model=</span><span class="s">&quot;newText&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">&quot;btn btn-default&quot;</span> <span class="na">ng-click=</span><span class="s">&quot;changeGreeting()&quot;</span><span class="nt">&gt;</span>Change!<span class="nt">&lt;/button&gt;</span>
+</span><span class='line'><span class="nt">&lt;p</span> <span class="na">id=</span><span class="s">&quot;greeting&quot;</span><span class="nt">&gt;</span><span class="nt">&lt;/p&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Looking at the Angular code along with the HTML, we know that on the button click, <code>greeting</code> is updated with the user supplied text from the input box. Sound right? Test this out: With the app running via Gulp, navigate to <a href="http://localhost:8888/#/one">http://localhost:8888/#/one</a> and manually test the app to ensure that the controller is working as it should.</p>
+
+<p>Now since we already tested the initial state of <code>greeting</code>, let&#8217;s write the test to ensure that the state updates on the button click:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;TestOneController&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">browser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8888/#/one&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;initially has a greeting&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">id</span><span class="p">(</span><span class="s1">&#39;greeting&#39;</span><span class="p">)).</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;clicking the button changes the greeting if text is inputed&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;[ng-model=&quot;newText&quot;]&#39;</span><span class="p">)).</span><span class="nx">sendKeys</span><span class="p">(</span><span class="s1">&#39;Hi!&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;.btn-default&#39;</span><span class="p">)).</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">id</span><span class="p">(</span><span class="s1">&#39;greeting&#39;</span><span class="p">)).</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;Hi!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;clicking the button does not change the greeting if text is not inputed&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;.btn-default&#39;</span><span class="p">)).</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">id</span><span class="p">(</span><span class="s1">&#39;greeting&#39;</span><span class="p">)).</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, in both new test cases we&#8217;re targeting the input form - via the global <a href="http://angular.github.io/protractor/#/locators">element</a> function - and adding text to it with the <code>sendKeys()</code> method - <code>Hi!</code> in the first test and no text in the second. Then after clicking the button, we&#8217;re asserting that the text contained within the HTML element with an id of &#8220;greeting&#8221; is as expected.</p>
+
+<p>Run the tests. If all went well, you should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">[</span>06:15:45<span class="o">]</span> Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+</span><span class='line'><span class="o">[</span>06:15:45<span class="o">]</span> Starting <span class="s1">&#39;e2e&#39;</span>...
+</span><span class='line'>Using the selenium server at http://localhost:4444/wd/hub
+</span><span class='line'><span class="o">[</span>launcher<span class="o">]</span> Running 1 instances of WebDriver
+</span><span class='line'>...
+</span><span class='line'>
+</span><span class='line'>Finished in 3.606 seconds
+</span><span class='line'>3 tests, 3 assertions, 0 failures
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span>launcher<span class="o">]</span> 0 instance<span class="o">(</span>s<span class="o">)</span> of WebDriver still running
+</span><span class='line'><span class="o">[</span>launcher<span class="o">]</span> chrome <span class="c">#1 passed</span>
+</span><span class='line'>Michaels-MacBook-Pro-3:angular-testing-tutorial michael<span class="err">$</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Did you see Chrome open in a new window and run the tests, then close itself? It&#8217;s super fast!! Want to run the tests in Firefox (or a different <a href="http://angular.github.io/protractor/#/browser-support">browser</a>) as well? Simply update the Protractor config file, <em>protractor.conf.js</em>, like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">seleniumAddress</span><span class="o">:</span> <span class="s1">&#39;http://localhost:4444/wd/hub&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">specs</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;tests/e2e/*.js&#39;</span><span class="p">],</span>
+</span><span class='line'>  <span class="nx">multiCapabilities</span><span class="o">:</span> <span class="p">[{</span>
+</span><span class='line'>    <span class="nx">browserName</span><span class="o">:</span> <span class="s1">&#39;firefox&#39;</span>
+</span><span class='line'>  <span class="p">},</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">browserName</span><span class="o">:</span> <span class="s1">&#39;chrome&#39;</span>
+</span><span class='line'>  <span class="p">}]</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Test it again. You should now see the tests run in both Chrome and Firefox simultaneously. Nice.</p>
+
+<p>Finally, to simplify the code and speed up the tests (so we only search the DOM once per element), we can assign each element to a variable:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;TestOneController&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">greeting</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">id</span><span class="p">(</span><span class="s1">&#39;greeting&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">textInputBox</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;[ng-model=&quot;newText&quot;]&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">changeGreetingButton</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;.btn-default&#39;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">browser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8888/#/one&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;initially has a greeting&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">greeting</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;clicking the button changes the greeting if text is inputed&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">textInputBox</span><span class="p">.</span><span class="nx">sendKeys</span><span class="p">(</span><span class="s1">&#39;Hi!&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">changeGreetingButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">greeting</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;Hi!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;clicking the button does not change the greeting if text is not inputed&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">textInputBox</span><span class="p">.</span><span class="nx">sendKeys</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">changeGreetingButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">greeting</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Test one last time to ensure that this refactor didn&#8217;t break anything.</p>
+
+<h3>TestTwoController</h3>
+
+<p>Again, start with the code.</p>
+
+<p>Angular:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>myApp.controller<span class="o">(</span><span class="s1">&#39;TestTwoController&#39;</span>, <span class="k">function</span><span class="o">(</span><span class="nv">$scope</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="nv">$scope</span>.total <span class="o">=</span> 6;
+</span><span class='line'>  <span class="nv">$scope</span>.newItem <span class="o">=</span> undefined;
+</span><span class='line'>  <span class="nv">$scope</span>.items <span class="o">=</span> <span class="o">[</span>1, 2, 3<span class="o">]</span>;
+</span><span class='line'>  <span class="nv">$scope</span>.add <span class="o">=</span> <span class="k">function</span> <span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span>typeof <span class="nv">$scope</span>.newItem <span class="o">==</span> <span class="s1">&#39;number&#39;</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="nv">$scope</span>.items.push<span class="o">(</span><span class="nv">$scope</span>.newItem<span class="o">)</span>;
+</span><span class='line'>      <span class="nv">$scope</span>.total <span class="o">=</span> 0;
+</span><span class='line'>      <span class="k">for</span><span class="o">(</span>var <span class="nv">i</span> <span class="o">=</span> 0; i &lt; <span class="nv">$scope</span>.items.length; i++<span class="o">){</span>
+</span><span class='line'>        <span class="nv">$scope</span>.total +<span class="o">=</span> parseInt<span class="o">(</span><span class="nv">$scope</span>.items<span class="o">[</span>i<span class="o">])</span>;
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>;
+</span><span class='line'><span class="o">})</span>;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>HTML:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h2&gt;</span>Add values<span class="nt">&lt;/h2&gt;</span>
+</span><span class='line'><span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;number&quot;</span> <span class="na">ng-model=</span><span class="s">&quot;newItem&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">&quot;btn btn-default&quot;</span> <span class="na">ng-click=</span><span class="s">&quot;add()&quot;</span><span class="nt">&gt;</span>Add!<span class="nt">&lt;/button&gt;</span>
+</span><span class='line'><span class="nt">&lt;p&gt;</span><span class="nt">&lt;/p&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then test it in the browser.</p>
+
+<p>Like last time, we simply need to ensure that <code>total</code> is updated appropriately when the end user submits a number in the input box and then clicks the button.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;TestTwoController&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">total</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">tagName</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">numberInputBox</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;[ng-model=&quot;newItem&quot;]&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">changeTotalButton</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;.btn-default&#39;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">browser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8888/#/two&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;initially has a total&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">total</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;6&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;updates the `total` when a value is added&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">numberInputBox</span><span class="p">.</span><span class="nx">sendKeys</span><span class="p">(</span><span class="mi">7</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">changeTotalButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">numberInputBox</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">total</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;13&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">numberInputBox</span><span class="p">.</span><span class="nx">sendKeys</span><span class="p">(</span><span class="mi">7</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">changeTotalButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">total</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;20&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">numberInputBox</span><span class="p">.</span><span class="nx">clear</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">numberInputBox</span><span class="p">.</span><span class="nx">sendKeys</span><span class="p">(</span><span class="o">-</span><span class="mi">700</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">changeTotalButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">total</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;-680&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;does not update the `total` when an empty value is added&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">numberInputBox</span><span class="p">.</span><span class="nx">sendKeys</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">changeTotalButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">total</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;6&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">numberInputBox</span><span class="p">.</span><span class="nx">sendKeys</span><span class="p">(</span><span class="s1">&#39;hi!&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">changeTotalButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">total</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;6&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run the tests and you should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>6 tests, 9 assertions, 0 failures
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Moving along&#8230;</p>
+
+<h3>TestThreeController</h3>
+
+<p>You know the drill:</p>
+
+<ol>
+<li>Look at the Angular and HTML code</li>
+<li>Manually test in the browser</li>
+<li>Write the e2e test to automate the manual test</li>
+</ol>
+
+
+<p>Try this on your own before looking at the code below.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;TestThreeController&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">modalNumber</span> <span class="o">=</span> <span class="nx">element</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">tagName</span><span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">)).</span><span class="nx">get</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">modalButton</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">tagName</span><span class="p">(</span><span class="s1">&#39;button&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">iterateButton</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;[ng-click=&quot;changeModalText()&quot;]&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">hideButton</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s1">&#39;[ng-click=&quot;$hide()&quot;]&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">justSomeText</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">tagName</span><span class="p">(</span><span class="s1">&#39;h2&#39;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">browser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8888/#/three&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;initially has a modalNumber&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">modalButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">modalNumber</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;updates the `modalNumber` when a value is added&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">modalButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">iterateButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">modalNumber</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">iterateButton</span><span class="p">.</span><span class="nx">click</span><span class="p">().</span><span class="nx">click</span><span class="p">().</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">modalNumber</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;5&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">hideButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">justSomeText</span><span class="p">.</span><span class="nx">getText</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;Just a modal&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>TestFourController</h3>
+
+<p>Since this controller makes an external call to <a href="https://api.github.com/repositories">https://api.github.com/repositories</a> you can either mock out (fake) this request using <a href="https://docs.angularjs.org/api/ngMockE2E">ngMockE2E</a>, like we did for the unit test, or you can actually make the API call. Again, this depends on how expensive the call is and how important the functionality is to your application. In most cases, it&#8217;s better to actually make the call since e2e tests should mimic the actual end user experience as much as possible. Plus, unlike unit tests which test implementation, these tests test user behavior, across several independent units - thus, these tests should not be isolated and can rely on making actual API calls either to the back-end or externally.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;TestFourController&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">loadButton</span> <span class="o">=</span> <span class="nx">element</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">tagName</span><span class="p">(</span><span class="s1">&#39;button&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">ul</span> <span class="o">=</span> <span class="nx">element</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">tagName</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">));</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">li</span> <span class="o">=</span> <span class="nx">element</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">by</span><span class="p">.</span><span class="nx">tagName</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">browser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8888/#/four&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;updates the DOM when the button is clicked&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">ul</span><span class="p">.</span><span class="nx">count</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">li</span><span class="p">.</span><span class="nx">count</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">loadButton</span><span class="p">.</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">ul</span><span class="p">.</span><span class="nx">count</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="mi">101</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">expect</span><span class="p">(</span><span class="nx">li</span><span class="p">.</span><span class="nx">count</span><span class="p">()).</span><span class="nx">toEqual</span><span class="p">(</span><span class="mi">105</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, when the button is clicked, the API call is made and the scope is updated. We then assert that there are 101 UL tags and 105 LI tags, representing a Github username and repo returned from the API call, present on the DOM.</p>
+
+<p>That&#8217;s it!</p>
+
+<h2><a name="conclusion">Conclusion</a></h2>
+
+
+<p><em>Want more?</em></p>
+
+<ol>
+<li>Take a look at the <a href="http://angular.github.io/protractor/#/page-objects">Page Objects</a> design pattern and refactor the tests so that they are better organized.</li>
+<li>Break a test, and then <a href="http://angular.github.io/protractor/#/debugging#pausing-to-debug">pause</a> the test before the break via <code>browser.pause()</code> and/or <code>browser.debugger()</code> to debug.</li>
+<li>Test your own Angular app, and then add a link to the comments to get feedback.</li>
+</ol>
+
+
+<p>Be sure to check the <a href="http://angular.github.io/protractor/#/">Protractor</a> documentation for more. Thanks again for reading, and happy testing!</p>
+
+<hr><br>
+
+
+<p><em>Interested in learning how to test an Angular + Django app? Check out <a href="http://www.realpython.com/">Real Python</a> for details.</em></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+  
+    
       <h1 class="entry-title"><a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS With Protractor and Karma - Part 1</a></h1>
       
       
@@ -121,7 +796,7 @@
 
 <ul>
 <li>Part 1 - In the first part we&#8217;ll look at unit tests, which ensure that small, isolated pieces of code (e.g., a unit) behave as expected <strong>(current)</strong>.</li>
-<li>Part 2 - In part two we&#8217;ll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation (coming soon!).</li>
+<li><a href="http://mherman.org/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2">Part 2</a> - In part two we&#8217;ll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation.</li>
 </ul>
 
 
@@ -143,7 +818,7 @@
 <li><em>v1</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v1">project boilerplate</a></li>
 <li><em>v2</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v2">adds testing boilerplate/configuration</a></li>
 <li><em>v3</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v3">adds unit tests</a></li>
-<li><em>v4</em> - adds E2E tests (coming soon!)</li>
+<li><em>v4</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v4">adds E2E tests</a></li>
 </ol>
 
 
@@ -1142,7 +1817,7 @@
 <h2><a name="conclusion">Conclusion</a></h2>
 
 
-<p>That&#8217;s it for unit tests. In the next part (coming soon!), we&#8217;ll test the entire application, front to back, using end-to-end (E2E) tests via Protractor.</p>
+<p>That&#8217;s it for unit tests. In the next <a href="http://mherman.org/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2">part</a>, we&#8217;ll test the entire application, front to back, using end-to-end (E2E) tests via Protractor.</p>
 
 <p>Checkout the third tag, <code>v3</code>, to view all the completed unit tests:</p>
 
@@ -1580,1262 +2255,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2015/02/12/postgresql-and-nodejs/">PostgreSQL and NodeJS</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-02-12T19:07:00-07:00" pubdate data-updated="true">Feb 12<span>th</span>, 2015</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>Today we&#8217;re going to build a CRUD todo single page application with Node, Express, Angular, and PostgreSQL.</strong></p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-postgres-todo/master/_blog/node-todo-postges.jpg" alt="node todo app" /></p>
-
-<blockquote><p>Technologies/Tools used - <a href="http://nodejs.org/">Node</a> v0.10.36, <a href="https://www.npmjs.com/package/express">Express</a> v4.11.1, <a href="https://angularjs.org/">Angular</a> v1.3.12.</p></blockquote>
-
-<h2>Project Setup</h2>
-
-<p>Start by installing the <a href="http://expressjs.com/starter/generator.html">Express generator</a> if you don&#8217;t already have it:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install -g express-generator@4
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then create a new project and install the dependencies:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>express node-postgres-todo
-</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>node-postgres-todo <span class="o">&amp;&amp;</span> npm install
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Add <a href="https://github.com/isaacs/node-supervisor">Supervisor</a> to watch for code changes:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install supervisor -g
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Update the ‘start’ script in the <em>package.json</em> file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="s2">&quot;scripts&quot;</span><span class="err">:</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="s2">&quot;supervisor ./bin/www&quot;</span>
-</span><span class='line'><span class="p">}</span><span class="err">,</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Run the app:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm start
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser. You should see the &#8220;Welcome to Express&#8221; text.</p>
-
-<h2>Postgres Setup</h2>
-
-<blockquote><p>Need to setup Postgres? On a Mac? Check out <a href="http://postgresapp.com/">Postgres.app</a>.</p></blockquote>
-
-<p>With your Postgres server up and listening on port 5432, making a database connection is easy with the <a href="https://www.npmjs.com/package/pg">pg</a> library:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install pg --save
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now let’s set up a simple table creation script:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">pg</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;pg&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">connectionString</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DATABASE_URL</span> <span class="o">||</span> <span class="s1">&#39;postgres://localhost:5432/todo&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">pg</span><span class="p">.</span><span class="nx">Client</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">);</span>
-</span><span class='line'><span class="nx">client</span><span class="p">.</span><span class="nx">connect</span><span class="p">();</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;CREATE TABLE items(id SERIAL PRIMARY KEY, text VARCHAR(40) not null, complete BOOLEAN)&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span> <span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Save this as <em>database.js</em> in a new folder called &#8220;models&#8221;.</p>
-
-<p>Here we create a new instance of <code>Client</code> to interact with the database and then establish communication with it via the <code>connect()</code> method. We then set run a SQL query via the <code>query()</code> method. Communication is closed via the <code>end()</code> method. Be sure to check out the <a href="https://github.com/brianc/node-postgres/wiki/Client">documentation</a> for more info.</p>
-
-<p>Make sure you have a database called &#8220;todo&#8221; setup, and then run the script to setup the table and subsequent fields:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node models/database.js
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Verify the table/schema creation in <a href="http://postgresguide.com/utilities/psql.html">psql</a>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">michaelherman</span><span class="o">=</span><span class="c"># \c todo</span>
-</span><span class='line'>You are now connected to database <span class="s2">&quot;todo&quot;</span> as user <span class="s2">&quot;michaelherman&quot;</span>.
-</span><span class='line'><span class="nv">todo</span><span class="o">=</span><span class="c"># \d+ items</span>
-</span><span class='line'>                                                     Table <span class="s2">&quot;public.items&quot;</span>
-</span><span class='line'>  Column  |         Type          |                     Modifiers                      | Storage  | Stats target | Description
-</span><span class='line'>----------+-----------------------+----------------------------------------------------+----------+--------------+-------------
-</span><span class='line'> id       | integer               | not null default nextval<span class="o">(</span><span class="s1">&#39;items_id_seq&#39;</span>::regclass<span class="o">)</span> | plain    |              |
-</span><span class='line'> text     | character varying<span class="o">(</span>40<span class="o">)</span> | not null                                           | extended |              |
-</span><span class='line'> <span class="nb">complete</span> | boolean               |                                                    | plain    |              |
-</span><span class='line'>Indexes:
-</span><span class='line'>    <span class="s2">&quot;items_pkey&quot;</span> PRIMARY KEY, btree <span class="o">(</span>id<span class="o">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>With the database connection setup along with the &#8220;items&#8221; table, we can now configure the CRUD portion of our app.</p>
-
-<h2>Server-Side: Routes</h2>
-
-<p>Let’s keep it simple by adding all endpoints to the <em>index.js</em> file within the &#8220;routes&#8221; folder. Make sure to update the imports:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">pg</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;pg&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">connectionString</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DATABASE_URL</span> <span class="o">||</span> <span class="s1">&#39;postgres://localhost:5432/todo&#39;</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now, let’s add each endpoint.</p>
-
-<table style="font-size:16px;border-spacing:10px 0px;border-collapse:separate;border:1px solid black;">
-<thead>
-<tr>
-<th style="text-align:center"><strong>Function</strong></th>
-<th style="text-align:center"><strong>URL</strong></th>
-<th style="text-align:center"><strong>Action</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>CREATE</td>
-<td>/api/v1/todos</td>
-<td>Create a single todo</td>
-</tr>
-<tr>
-<td>READ</td>
-<td>/api/v1/todos</td>
-<td>Get all todos</td>
-</tr>
-<tr>
-<td>UPDATE</td>
-<td>/api/v1/todos/:todo_id</td>
-<td>Update a single todo</td>
-</tr>
-<tr>
-<td>DELETE</td>
-<td>/api/v1/todos/:todo_id</td>
-<td>Delete a single todo</td>
-</tr>
-</tbody>
-</table>
-
-
-
-
-<br>
-
-
-<p>Follow along with the inline comments below for an explanation of what’s happening. Also, be sure to check out the <a href="https://github.com/brianc/node-postgres/wiki/Connection">pg documentation</a> to learn about connection pooling. How does that differ from <code>pg.Client</code>?</p>
-
-<h3>Create</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Grab data from http request</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span><span class="nx">text</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="nx">complete</span><span class="o">:</span> <span class="kc">false</span><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Get a Postgres client from the connection pool</span>
-</span><span class='line'>    <span class="nx">pg</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">client</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// SQL Query &gt; Insert Data</span>
-</span><span class='line'>        <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;INSERT INTO items(text, complete) values($1, $2)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">complete</span><span class="p">]);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// SQL Query &gt; Select Data</span>
-</span><span class='line'>        <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM items ORDER BY id ASC&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Stream results back one row at a time</span>
-</span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">results</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">row</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// After all data is returned, close connection and return results</span>
-</span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Handle Errors</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Test this out via Curl in your terminal:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;text=test&amp;complete=false&quot;</span> http://127.0.0.1:3000/api/v1/todos
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then confirm that the data was INSERT’ed correctly into the database via psql:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">todo</span><span class="o">=</span><span class="c"># SELECT * FROM items ORDER BY id ASC;</span>
-</span><span class='line'> id | text  | <span class="nb">complete</span>
-</span><span class='line'>----+-------+----------
-</span><span class='line'>  1 | <span class="nb">test</span>  | f
-</span><span class='line'><span class="o">(</span>1 row<span class="o">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Read</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Get a Postgres client from the connection pool</span>
-</span><span class='line'>    <span class="nx">pg</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">client</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// SQL Query &gt; Select Data</span>
-</span><span class='line'>        <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM items ORDER BY id ASC;&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Stream results back one row at a time</span>
-</span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">results</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">row</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// After all data is returned, close connection and return results</span>
-</span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Handle Errors</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Add a few more rows of data via Curl, and then test the endpoint out in your browser at <a href="http://localhost:3000/api/v1/todos">http://localhost:3000/api/v1/todos</a>. You should see an array of JSON objects:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">[</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="err">id:</span> <span class="err">1,</span>
-</span><span class='line'>        <span class="err">text:</span> <span class="nt">&quot;test&quot;</span><span class="p">,</span>
-</span><span class='line'>        <span class="err">complete:</span> <span class="err">false</span>
-</span><span class='line'>    <span class="p">},</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="err">id:</span> <span class="err">2,</span>
-</span><span class='line'>        <span class="err">text:</span> <span class="nt">&quot;test2&quot;</span><span class="p">,</span>
-</span><span class='line'>        <span class="err">complete:</span> <span class="err">false</span>
-</span><span class='line'>    <span class="p">},</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="err">id:</span> <span class="err">3,</span>
-</span><span class='line'>        <span class="err">text:</span> <span class="nt">&quot;test3&quot;</span><span class="p">,</span>
-</span><span class='line'>        <span class="err">complete:</span> <span class="err">false</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Update</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos/:todo_id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Grab data from the URL parameters</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">todo_id</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Grab data from http request</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span><span class="nx">text</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="nx">complete</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">complete</span><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Get a Postgres client from the connection pool</span>
-</span><span class='line'>    <span class="nx">pg</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">client</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// SQL Query &gt; Update Data</span>
-</span><span class='line'>        <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;UPDATE items SET text=($1), complete=($2) WHERE id=($3)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">complete</span><span class="p">,</span> <span class="nx">id</span><span class="p">]);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// SQL Query &gt; Select Data</span>
-</span><span class='line'>        <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM items ORDER BY id ASC&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Stream results back one row at a time</span>
-</span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">results</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">row</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// After all data is returned, close connection and return results</span>
-</span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Handle Errors</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Again, test via Curl:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -X PUT --data <span class="s2">&quot;text=test&amp;complete=true&quot;</span> http://127.0.0.1:3000/api/v1/todos/1
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Navigate to <a href="http://localhost:3000/api/v1/todos">http://localhost:3000/api/v1/todos</a> to make sure the data has been updated correctly.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">[</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="err">id:</span> <span class="err">1,</span>
-</span><span class='line'>        <span class="err">text:</span> <span class="nt">&quot;test&quot;</span><span class="p">,</span>
-</span><span class='line'>        <span class="err">complete:</span> <span class="err">true</span>
-</span><span class='line'>    <span class="p">},</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="err">id:</span> <span class="err">2,</span>
-</span><span class='line'>        <span class="err">text:</span> <span class="nt">&quot;test2&quot;</span><span class="p">,</span>
-</span><span class='line'>        <span class="err">complete:</span> <span class="err">false</span>
-</span><span class='line'>    <span class="p">},</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="err">id:</span> <span class="err">3,</span>
-</span><span class='line'>        <span class="err">text:</span> <span class="nt">&quot;test3&quot;</span><span class="p">,</span>
-</span><span class='line'>        <span class="err">complete:</span> <span class="err">false</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Delete</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos/:todo_id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Grab data from the URL parameters</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">todo_id</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Get a Postgres client from the connection pool</span>
-</span><span class='line'>    <span class="nx">pg</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">client</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// SQL Query &gt; Delete Data</span>
-</span><span class='line'>        <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;DELETE FROM items WHERE id=($1)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">id</span><span class="p">]);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// SQL Query &gt; Select Data</span>
-</span><span class='line'>        <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM items ORDER BY id ASC&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Stream results back one row at a time</span>
-</span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">results</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">row</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// After all data is returned, close connection and return results</span>
-</span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
-</span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Handle Errors</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Final Curl test:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -X DELETE http://127.0.0.1:3000/api/v1/todos/3
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>And you should now have:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">[</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="err">id:</span> <span class="err">1,</span>
-</span><span class='line'>        <span class="err">text:</span> <span class="nt">&quot;test&quot;</span><span class="p">,</span>
-</span><span class='line'>        <span class="err">complete:</span> <span class="err">true</span>
-</span><span class='line'>    <span class="p">},</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="err">id:</span> <span class="err">2,</span>
-</span><span class='line'>        <span class="err">text:</span> <span class="nt">&quot;test2&quot;</span><span class="p">,</span>
-</span><span class='line'>        <span class="err">complete:</span> <span class="err">false</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">]</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>Refactoring</h2>
-
-<p>Before we jump to the client-side to add Angular, be aware that our code should be refactored to address a few issues. We’ll handle this later on in this tutorial, but this is an excellent opportunity to refactor the code on your own. Good luck!</p>
-
-<h2>Client-Side: Angular</h2>
-
-<p>Let’s dive right in to Angular.</p>
-
-<blockquote><p>Keep in mind that this is not meant to be an exhaustive tutorial. If you’re new to Angular I suggest following my &#8220;AngularJS by Example&#8221; tutorial - <a href="https://github.com/mjhea0/thinkful-angular">Building a Bitcoin Investment Calculator</a>.</p></blockquote>
-
-<h3>Module</h3>
-
-<p>Create a file called <em>app.js</em> in the &#8220;public/javascripts&#8221; folder. This file will house our Angular module and controller:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;nodeTodo&#39;</span><span class="p">,</span> <span class="p">[])</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;mainController&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$http</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">$scope</span><span class="p">.</span><span class="nx">formData</span> <span class="o">=</span> <span class="p">{};</span>
-</span><span class='line'>    <span class="nx">$scope</span><span class="p">.</span><span class="nx">todoData</span> <span class="o">=</span> <span class="p">{};</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1">// Get all todos</span>
-</span><span class='line'>    <span class="nx">$http</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos&#39;</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">$scope</span><span class="p">.</span><span class="nx">todoData</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
-</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">})</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nx">error</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Here we define our module as well as the controller. Within the controller we are using the <a href="https://docs.angularjs.org/api/ng/service/$http"><code>$http</code></a> service to make an AJAX request to the <code>'/api/v1/todos'</code> endpoint and then updating the scope accordingly.</p>
-
-<p>What else is going on?</p>
-
-<p>Well, we’re <a href="https://docs.angularjs.org/guide/di">injecting</a> the <code>$scope</code> and <code>$http</code> services. Also, we’re defining and updating <code>$scope</code> to handle <a href="https://docs.angularjs.org/guide/databinding">binding</a>.</p>
-
-<h3>Update <code>/</code> Route</h3>
-
-<p>Let’s update the main route in <em>index.js</em> within the &#8220;routes&#8221; folder:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">sendFile</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;../views&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So when the end user hits the main endpoint, we send the <em>index.html</em> file. This file will contain our HTML and Angular templates.</p>
-
-<p>Make sure to add the following dependency as well:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>View</h3>
-
-<p>Now, let’s add our basic Angular view within <em>index.html</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span><span class='line'><span class="nt">&lt;html</span> <span class="na">ng-app=</span><span class="s">&quot;nodeTodo&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;head&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;title&gt;</span>Todo App - with Node + Express + Angular + PostgreSQL<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&quot;http://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css&quot;</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">media=</span><span class="s">&quot;screen&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;body</span> <span class="na">ng-controller=</span><span class="s">&quot;mainController&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;ul</span> <span class="na">ng-repeat=</span><span class="s">&quot;todo in todoData&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;li&gt;&lt;/li&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;/ul&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://code.jquery.com/jquery-1.11.2.min.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://netdna.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.12/angular.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;javascripts/app.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This should all be straightforward. We bootstrap Angular - <code>ng-app="nodeTodo"</code>, define the scope of the controller - <code>ng-controller="mainController"</code> - and then use <code>ng-repeat</code> to loop through the <code>todoData</code> object, adding each individual todo to the page.</p>
-
-<h3>Module (round two)</h3>
-
-<p>Next, let’s update the module to handle the Create and Delete functions:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// Create a new todo</span>
-</span><span class='line'><span class="nx">$http</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos&#39;</span><span class="p">,</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">formData</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">$scope</span><span class="p">.</span><span class="nx">formData</span> <span class="o">=</span> <span class="p">{};</span>
-</span><span class='line'>        <span class="nx">$scope</span><span class="p">.</span><span class="nx">todoData</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nx">error</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Delete a todo</span>
-</span><span class='line'><span class="nx">$http</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos/&#39;</span> <span class="o">+</span> <span class="nx">todoID</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">$scope</span><span class="p">.</span><span class="nx">todoData</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now, let’s update our view…</p>
-
-<h3>View (round two)</h3>
-
-<p>Simply update each list item like so:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;li&gt;&lt;input</span> <span class="na">type=</span><span class="s">&quot;checkbox&quot;</span> <span class="na">ng-click=</span><span class="s">&quot;deleteTodo(todo.id)&quot;</span><span class="nt">&gt;</span><span class="ni">&amp;nbsp;</span>{{ todo.text }}<span class="nt">&lt;/li&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>{$ endraw %}</p>
-
-<p>This uses the <a href="https://docs.angularjs.org/api/ng/directive/ngClick"><code>ng-click</code></a> directive to call the <code>deleteTodo()</code> function - which we still need to define - that takes a unique <code>id</code> associated with each todo as an argument.</p>
-
-<h3>Module (round three)</h3>
-
-<p>Update the controller:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// Delete a todo</span>
-</span><span class='line'><span class="nx">$scope</span><span class="p">.</span><span class="nx">deleteTodo</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">todoID</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">$http</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos/&#39;</span> <span class="o">+</span> <span class="nx">todoID</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">$scope</span><span class="p">.</span><span class="nx">todoData</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
-</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">})</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>We simply wrapped the delete functionality in the <code>deleteTodo()</code> function. Test this out. Make sure that when you click a check box the todo is removed.</p>
-
-<h3>View (round three)</h3>
-
-<p>To handle the creation of a new todo, we need to add an HTML form:</p>
-
-<p>{% raw %}</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nt">&lt;form&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control input-lg&quot;</span> <span class="na">placeholder=</span><span class="s">&quot;Add a todo...&quot;</span> <span class="na">ng-model=</span><span class="s">&quot;formData.text&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-primary btn-lg&quot;</span> <span class="na">ng-click=</span><span class="s">&quot;createTodo()&quot;</span><span class="nt">&gt;</span>Add Todo<span class="nt">&lt;/button&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/form&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nt">&lt;ul</span> <span class="na">ng-repeat=</span><span class="s">&quot;todo in todoData&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;li&gt;&lt;input</span> <span class="na">type=</span><span class="s">&quot;checkbox&quot;</span> <span class="na">ng-click=</span><span class="s">&quot;deleteTodo(todo.id)&quot;</span><span class="nt">&gt;</span><span class="ni">&amp;nbsp;</span>{{ todo.text }}<span class="nt">&lt;/li&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/ul&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;/div&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Again, we use <code>ng-click</code> to call a function in the controller.</p>
-
-<h3>Module (round four)</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// Create a new todo</span>
-</span><span class='line'><span class="nx">$scope</span><span class="p">.</span><span class="nx">createTodo</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">todoID</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">$http</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos&#39;</span><span class="p">,</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">formData</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">$scope</span><span class="p">.</span><span class="nx">formData</span> <span class="o">=</span> <span class="p">{};</span>
-</span><span class='line'>            <span class="nx">$scope</span><span class="p">.</span><span class="nx">todoData</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
-</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">})</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nx">error</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Test this out!</p>
-
-<h2>View (round four)</h2>
-
-<p>With the main functionality done, let’s update the front-end to make it look, well, presentable.</p>
-
-<p><strong>HTML</strong>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span><span class='line'><span class="nt">&lt;html</span> <span class="na">ng-app=</span><span class="s">&quot;nodeTodo&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;head&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;title&gt;</span>Todo App - with Node + Express + Angular + PostgreSQL<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="c">&lt;!-- styles --&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&quot;http://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css&quot;</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">media=</span><span class="s">&quot;screen&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">&quot;stylesheets/style.css&quot;</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">media=</span><span class="s">&quot;screen&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;body</span> <span class="na">ng-controller=</span><span class="s">&quot;mainController&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;header&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;h1&gt;</span>Todo App<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;hr&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;h1</span> <span class="na">class=</span><span class="s">&quot;lead&quot;</span><span class="nt">&gt;</span>Node + Express + Angular + PostgreSQL<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;todo-form&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;form&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control input-lg&quot;</span> <span class="na">placeholder=</span><span class="s">&quot;Enter text...&quot;</span> <span class="na">ng-model=</span><span class="s">&quot;formData.text&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-primary btn-lg btn-block&quot;</span> <span class="na">ng-click=</span><span class="s">&quot;createTodo()&quot;</span><span class="nt">&gt;</span>Add Todo<span class="nt">&lt;/button&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;/form&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="nt">&lt;br&gt;</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;todo-list&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;ul</span> <span class="na">ng-repeat=</span><span class="s">&quot;todo in todoData&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;li&gt;&lt;h3&gt;&lt;input</span> <span class="na">class=</span><span class="s">&quot;lead&quot;</span> <span class="na">type=</span><span class="s">&quot;checkbox&quot;</span> <span class="na">ng-click=</span><span class="s">&quot;deleteTodo(todo.id)&quot;</span><span class="nt">&gt;</span><span class="ni">&amp;nbsp;</span>{{ todo.text }}<span class="nt">&lt;/li&gt;&lt;/h3&gt;&lt;hr&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;/ul&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c">&lt;!-- scripts --&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://code.jquery.com/jquery-1.11.2.min.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://netdna.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.12/angular.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;javascripts/app.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>CSS</strong>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class='css'><span class='line'><span class="nt">body</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">padding</span><span class="o">:</span> <span class="m">50px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">font</span><span class="o">:</span> <span class="m">14px</span> <span class="s2">&quot;Lucida Grande&quot;</span><span class="o">,</span> <span class="n">Helvetica</span><span class="o">,</span> <span class="n">Arial</span><span class="o">,</span> <span class="k">sans-serif</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">a</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">color</span><span class="o">:</span> <span class="m">#00B7FF</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">ul</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">list-style-type</span><span class="o">:</span> <span class="k">none</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">padding-left</span><span class="o">:</span> <span class="m">10px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nc">.container</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">max-width</span><span class="o">:</span> <span class="m">400px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">background-color</span><span class="o">:</span> <span class="m">#eeeeee</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">border</span><span class="o">:</span> <span class="m">1px</span> <span class="k">solid</span> <span class="nb">black</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nc">.header</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">text-align</span><span class="o">:</span> <span class="k">center</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>How’s that? Not up to par? Continue working on it on your end.</p>
-
-<h2>Refactoring (for real)</h2>
-
-<p>Now that we added the front-end functionality, let’s update our application’s structure and refactor parts of the code.</p>
-
-<h3>Structure</h3>
-
-<p>Since our application is logically split between the client and server, let’s do the same for our project structure. So, make the following changes to your folder structure:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>├── app.js
-</span><span class='line'>├── bin
-</span><span class='line'>│   └── www
-</span><span class='line'>├── client
-</span><span class='line'>│   ├── public
-</span><span class='line'>│   │   ├── javascripts
-</span><span class='line'>│   │   │   └── app.js
-</span><span class='line'>│   │   └── stylesheets
-</span><span class='line'>│   │       └── style.css
-</span><span class='line'>│   └── views
-</span><span class='line'>│       └── index.html
-</span><span class='line'>├── config.js
-</span><span class='line'>├── package.json
-</span><span class='line'>└── server
-</span><span class='line'>    ├── models
-</span><span class='line'>    │   └── database.js
-</span><span class='line'>    └── routes
-</span><span class='line'>        └── index.js
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now, we need to make a few updates to the code:</p>
-
-<p><em>server/routes/index.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">sendFile</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;../&#39;</span><span class="p">,</span> <span class="s1">&#39;../&#39;</span><span class="p">,</span> <span class="s1">&#39;client&#39;</span><span class="p">,</span> <span class="s1">&#39;views&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><em>app.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">routes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./server/routes/index&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><em>app.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="kr">static</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;./client&#39;</span><span class="p">,</span> <span class="s1">&#39;public&#39;</span><span class="p">)));</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Configuration</h3>
-
-<p>Next, let’s move the <code>connectionString</code> variable - which specifies the database URI (<code>process.env.DATABASE_URL || 'postgres://localhost:5432/todo';</code>) - to a configuration file since we are reusing the same same connection throughout our application.</p>
-
-<p>Create a file called <em>config.js</em> in the root directory, and then add the following code to it:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">connectionString</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DATABASE_URL</span> <span class="o">||</span> <span class="s1">&#39;postgres://localhost:5432/todo&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">connectionString</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then update the <code>connectionString</code> variable in both <em>server/models/database.js</em> and <em>server/routes/index.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">connectionString</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;../&#39;</span><span class="p">,</span> <span class="s1">&#39;../&#39;</span><span class="p">,</span> <span class="s1">&#39;config&#39;</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>And make sure to add <code>var path = require('path');</code> to the former file as well.</p>
-
-<h3>Utility Function</h3>
-
-<p>Did you notice in our routes that we are reusing the same code in each of the CRUD functions:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// SQL Query &gt; Select Data</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM items ORDER BY id ASC&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Stream results back one row at a time</span>
-</span><span class='line'><span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">results</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">row</span><span class="p">);</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// After all data is returned, close connection and return results</span>
-</span><span class='line'><span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
-</span><span class='line'>    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// Handle Errors</span>
-</span><span class='line'><span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>We should abstract that out into a utility function so we&#8217;re not duplicating code. Do this on your own, and then post a link to your code in the comments for review.</p>
-
-<h2>Conclusion and next steps</h2>
-
-<p>That&#8217;s it! Now, since there&#8217;s a number of moving pieces here, please review how each piece fits into the overall process and whether each is part of the client or server-side. Comment below with questions. Grab the code from the <a href="https://github.com/mjhea0/node-postgres-todo">repo</a>.</p>
-
-<br><hr><br>
-
-
-<p><strong>Finally, this app is far from finished. What else do we need to do?</strong></p>
-
-<ol>
-<li>Handle Permissions via <a href="http://passportjs.org/">passport.js</a></li>
-<li>Add a task runner - like <a href="http://gulpjs.com/">Gulp</a></li>
-<li>Test with <a href="http://mochajs.org/">Mocha</a> and <a href="http://chaijs.com/">Chai</a></li>
-<li>Check test coverage with <a href="https://github.com/gotwarlost/istanbul">Istanbul</a></li>
-<li>Add <a href="https://docs.angularjs.org/api/ng/service/$q">promises</a></li>
-<li>Use <a href="http://bower.io/">Bower</a> for managing client-side dependencies</li>
-<li>Utilize Angular <a href="https://docs.angularjs.org/api/ngRoute/provider/$routeProvider">Routing</a>, <a href="https://docs.angularjs.org/guide/forms">form validation</a>, <a href="https://docs.angularjs.org/guide/services">Services</a>, and <a href="https://docs.angularjs.org/guide/templates">Templates</a></li>
-<li>Handle updates/PUT requests</li>
-<li>Update the Express <a href="http://expressjs.com/guide/using-template-engines.html">View Engine</a> to HTML</li>
-<li>Better manage the database layer by adding an ORM - like <a href="http://sequelizejs.com/">Sequelize</a> - and a means of managing <a href="https://sequelize.readthedocs.org/en/latest/docs/migrations/">migrations</a></li>
-</ol>
-
-
-<p>What else? Comment below.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -2849,6 +2268,10 @@
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2/">Testing AngularJS with Protractor and Karma - part 2</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
@@ -2866,17 +2289,13 @@
         <a href="/blog/2015/02/05/sublime-text-for-web-developers/">Sublime Text for Web Developers</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (5)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>

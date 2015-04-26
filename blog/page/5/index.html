@@ -9,7 +9,10 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="This is for the Node-js-Denver-Boulder Meetup &lt;3 Cheers! Miss part 1? Check it out here. Let&#8217;s begin &#8230; Before adding additional &hellip;">
+  <meta name="description" content="Articles in the series: Part 1: Scraping Craigslist
+Part 2: Adding Handlebars
+Part 3: User Authentication with Passport and MongoDB
+Part 4: &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +79,605 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+  
+    
+      <h1 class="entry-title"><a href="/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Handling AJAX Calls With Node.js and Express (Part 4)</a></h1>
+      
+      
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-15T15:27:00-06:00" pubdate data-updated="true">Apr 15<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Articles in the series:</p>
+
+<ul>
+<li>Part 1: <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">Scraping Craigslist</a></li>
+<li>Part 2: <a href="http://mherman.org/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Adding Handlebars</a></li>
+<li>Part 3: <a href="http://mherman.org/blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/">User Authentication with Passport and MongoDB</a></li>
+<li>Part 4: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Refactoring, Adding styles</a> <strong>&lt;&lt; CURRENT</strong></li>
+<li>Part 5: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5">Saving Jobs</a></li>
+</ul>
+
+
+<p>If you&#8217;ve been following along with this series, you should have a basic application for searching and scraping Craigslist for jobs in San Francisco. The end goal is to have an application that users can login to, then search for jobs. From there the end user can either apply for jobs or save jobs they may be interested in.</p>
+
+<p>Before adding any additional functionality, we need to refactor the code a bit by moving some code out of <em>app.js</em> and into separate modules so that the entire app is more modular.</p>
+
+<h2>Configuration</h2>
+
+<p>First, move the config settings into a separate file, outside the main project. It&#8217;s always a good idea to separate configuration from actual code so that other users who wish to use your project can easily make it their own by quickly adding their own configuration.</p>
+
+<p>Create a <em>config.js</em> file and add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">google</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">returnURL</span><span class="o">:</span> <span class="s1">&#39;http://127.0.0.1:3000/auth/google/callback&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">realm</span><span class="o">:</span> <span class="s1">&#39;http://127.0.0.1:3000&#39;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="nx">mongoUrl</span><span class="o">:</span> <span class="s1">&#39;mongodb://localhost/craigslist&#39;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then make sure to include the file as part of <em>app.js</em>&#8217;s dependencies:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./config&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Finally, update these two areas within <em>app.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// connect to the database</span>
+</span><span class='line'><span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">mongoUrl</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">GoogleStrategy</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">returnURL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">returnURL</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">realm</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">realm</span>
+</span><span class='line'><span class="p">},</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>User Model</h2>
+
+<p>Next, update the user schema for mongoose.</p>
+
+<p>Create a new folder called &#8220;models&#8221; and add a file called <em>user.js</em> to hold the user schema:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// create a user model</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">userSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">name</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">email</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">lowercase</span><span class="o">:</span> <span class="kc">true</span> <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">,</span> <span class="nx">userSchema</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Add this to the dependencies:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./models/user&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then update <em>app.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// passport settings</span>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">serializeUser</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;serializeUser: &#39;</span> <span class="o">+</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">deserializeUser</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">user</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">_id</span> <span class="o">:</span> <span class="nx">id</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">err</span><span class="p">)</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">else</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">GoogleStrategy</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">returnURL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">returnURL</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">realm</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">realm</span>
+</span><span class='line'><span class="p">},</span>
+</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">identifier</span><span class="p">,</span> <span class="nx">profile</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">profile</span><span class="p">.</span><span class="nx">emails</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">user</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="s1">&#39;email&#39;</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">emails</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">});</span>
+</span><span class='line'>      <span class="nx">query</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">oldUser</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">oldUser</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Found registered user: &quot;</span> <span class="o">+</span> <span class="nx">oldUser</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; is logged in!&quot;</span><span class="p">);</span>
+</span><span class='line'>          <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">oldUser</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>          <span class="kd">var</span> <span class="nx">newUser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">user</span><span class="p">();</span>
+</span><span class='line'>          <span class="nx">newUser</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">displayName</span><span class="p">;</span>
+</span><span class='line'>          <span class="nx">newUser</span><span class="p">.</span><span class="nx">email</span> <span class="o">=</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">emails</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">;</span>
+</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newUser</span><span class="p">);</span>
+</span><span class='line'>          <span class="nx">newUser</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>            <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>              <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;New user, &quot;</span> <span class="o">+</span> <span class="nx">newUser</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot;, was created&quot;</span><span class="p">);</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">newUser</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The Passport code searches the database to see if a user already exists before creating a new one - which is no different from last time. However, see if you can dig a bit deeper and see the subtle differences.</p>
+
+<h2>Routes</h2>
+
+<p>Next, move the main routing into a separate module by adding the following code to <em>routes/index.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">request</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;request&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">user</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">user</span> <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">search</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;search&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">user</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span> <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">searching</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="c1">// input value from search</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// url used to search yql</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">&quot;http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search&quot;</span> <span class="o">+</span>
+</span><span class='line'>  <span class="s2">&quot;%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22&quot;</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">&quot;%22&amp;format=&quot;</span> <span class="o">+</span>
+</span><span class='line'>  <span class="s2">&quot;json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">requests</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">requests</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
+</span><span class='line'>  <span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">resultsArray</span> <span class="o">=</span> <span class="p">[];</span>
+</span><span class='line'>    <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// console.log(body.query.results.RDF.item)</span>
+</span><span class='line'>    <span class="c1">// logic used to compare search results with the input from user</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">results</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
+</span><span class='line'>      <span class="nx">callback</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">resultsArray</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+</span><span class='line'>          <span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">title</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">about</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;about&quot;</span><span class="p">],</span> <span class="nx">desc</span><span class="o">:</span><span class="nx">results</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]}</span>
+</span><span class='line'>        <span class="p">);</span>
+</span><span class='line'>      <span class="p">};</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>    <span class="c1">// pass back the results to client side</span>
+</span><span class='line'>    <span class="nx">callback</span><span class="p">(</span><span class="nx">resultsArray</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Again, add the dependency: <code>var routes = require('./routes');</code></p>
+
+<p>The routes section in <em>app.js</em> should now look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// user routes</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">index</span><span class="p">);</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/search&#39;</span><span class="p">,</span> <span class="nx">ensureAuthenticated</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">search</span><span class="p">);</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="nx">ensureAuthenticated</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">searching</span><span class="p">);</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">req</span><span class="p">.</span><span class="nx">logOut</span><span class="p">();</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// auth routes</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/auth/google&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">&#39;google&#39;</span><span class="p">),</span>
+</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/auth/google/callback&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">&#39;google&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">failureRedirect</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span> <span class="p">}),</span>
+</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/search&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// test authentication</span>
+</span><span class='line'><span class="kd">function</span> <span class="nx">ensureAuthenticated</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">())</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">next</span><span class="p">();</span> <span class="p">}</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Passport</h2>
+
+<p>Now, move the main authentication code to a separate file.</p>
+
+<p>Create a new file called <em>authentication.js</em> and add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// authentication </span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">GoogleStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-google&#39;</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./config&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./models/user&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// passport settings</span>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">serializeUser</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;serializeUser: &#39;</span> <span class="o">+</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">deserializeUser</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">user</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">_id</span> <span class="o">:</span> <span class="nx">id</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">err</span><span class="p">)</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">else</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">GoogleStrategy</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">returnURL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">returnURL</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">realm</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">realm</span>
+</span><span class='line'><span class="p">},</span>
+</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">identifier</span><span class="p">,</span> <span class="nx">profile</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">profile</span><span class="p">.</span><span class="nx">emails</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">user</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="s1">&#39;email&#39;</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">emails</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">});</span>
+</span><span class='line'>      <span class="nx">query</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">oldUser</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">oldUser</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Found registered user: &quot;</span> <span class="o">+</span> <span class="nx">oldUser</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; is logged in!&quot;</span><span class="p">);</span>
+</span><span class='line'>          <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">oldUser</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>          <span class="kd">var</span> <span class="nx">newUser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">user</span><span class="p">();</span>
+</span><span class='line'>          <span class="nx">newUser</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">displayName</span><span class="p">;</span>
+</span><span class='line'>          <span class="nx">newUser</span><span class="p">.</span><span class="nx">email</span> <span class="o">=</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">emails</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">;</span>
+</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newUser</span><span class="p">);</span>
+</span><span class='line'>          <span class="nx">newUser</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>            <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>              <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;New user, &quot;</span> <span class="o">+</span> <span class="nx">newUser</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot;, was created&quot;</span><span class="p">);</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">newUser</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">passport</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then back in <em>app.js</em>, make sure to import that module back in by adding it as a dependency:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./authentication&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Fire up the server, and test your app out. If it all went well, everything should still work properly.</p>
+
+<p>Finally, let&#8217;s update the styles.</p>
+
+<h2>Styles</h2>
+
+<p>First, add in a <a href="http://getbootstrap.com/">Bootstrap</a> stylesheet to the <em>layout.jade</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>link(rel=&#39;stylesheet&#39;, href=&#39;//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css&#39;)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>index.jade</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>extends layout
+</span><span class='line'>
+</span><span class='line'>block content
+</span><span class='line'>    h1 Search Login
+</span><span class='line'>    .lead Please login to search
+</span><span class='line'>    br
+</span><span class='line'>    form(METHOD=&quot;LINK&quot;, ACTION=&quot;/auth/google&quot;)
+</span><span class='line'>        input(type=&quot;submit&quot;, value=&quot;Login with Google&quot;, class=&#39;btn btn-large btn-primary&#39;)
+</span><span class='line'>
+</span><span class='line'>    script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;)
+</span><span class='line'>    script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;)
+</span><span class='line'>    script(src=&quot;/javascripts/main.js&quot;)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>search.jade</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>extends layout
+</span><span class='line'>
+</span><span class='line'>block content
+</span><span class='line'>    h1 Search SF Jobs
+</span><span class='line'>    .lead Welcome, #{user}
+</span><span class='line'>    form(METHOD=&quot;LINK&quot;, ACTION=&quot;logout&quot;)
+</span><span class='line'>        input(type=&quot;submit&quot;, value=&quot;Logout&quot;, class=&#39;btn btn-sm btn-primary&#39;)
+</span><span class='line'>    br
+</span><span class='line'>    br
+</span><span class='line'>    input#search(type=&quot;search&quot;, placeholder=&quot;search...&quot;)
+</span><span class='line'>    br
+</span><span class='line'>    br
+</span><span class='line'>    ul#results
+</span><span class='line'>    include template.html
+</span><span class='line'>
+</span><span class='line'>    script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;)
+</span><span class='line'>    script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;)
+</span><span class='line'>    script(src=&quot;/javascripts/main.js&quot;)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Wait? How did we capture the user&#8217;s name? Go back and look at the <code>/searching</code> route.</p>
+
+<p>Looks a little better. :)</p>
+
+<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/part4.png" alt="part-4" /></p>
+
+<p>Alright, next time we&#8217;ll expand the app&#8217;s functionality to allow users to save jobs they may be interested in applying to at a later date. Until then, check out the latest code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>. Cheers!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1978,425 +2580,6 @@ Let&#8217;s add that function:</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-  
-    
-      <h1 class="entry-title"><a href="/blog/2014/02/16/getting-started-with-node/">Getting Started With Node</a></h1>
-      
-      
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-02-16T07:57:00-07:00" pubdate data-updated="true">Feb 16<span>th</span>, 2014</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>For the <a href="http://www.meetup.com/Node-js-Denver-Boulder/">Node-js-Denver-Boulder Meetup</a> &lt;3</p>
-
-<p><strong>You can grab the example code <a href="https://github.com/mjhea0/node-getting-started">here</a>.</strong></p>
-
-<h2>Part 1</h2>
-
-<h3>Node Setup</h3>
-
-<h4>1. Download <a href="http://nodejs.org/download/">Node</a> for your specific platform. <em>This also installs <a href="https://npmjs.org/">NPM</a></em>. More on this later.</h4>
-
-<h4>2. Create a new folder. Within that folder create a file called <em>app.js</em>. and add the following code to the file:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// load http module</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// configure http server</span>
-</span><span class='line'><span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">response</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">});</span>
-</span><span class='line'>  <span class="nx">response</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s1">&#39;Hello, World!\n&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">1137</span><span class="p">,</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// inform user what is happening</span>
-</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Server running at http://127.0.0.1:1137/&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>  Save the file.</p>
-
-<h4>3. Navigate to the folder in your terminal and fire up the server:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node app.js
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>4. Point your browser to <a href="http://localhost:1137/">http://localhost:1137/</a>.</h4>
-
-<h5>What&#8217;s going on?</h5>
-
-<ul>
-<li><code>var http = require('http')</code> uses the HTTP server to process requests and send subsequent responses.</li>
-<li><code>http.createServer</code> creates the web server object.</li>
-<li><code>function (request, response) {}</code> handles requests and serves responses.</li>
-<li><code>response.writeHead(200, {'Content-Type': 'text/plain'})</code> sends a response header in the form of a status code along with the exact header message.</li>
-<li><code>response.end('Hello, World!\n')</code> tells the server that all response headers as well as the body have been sent.</li>
-<li><code>.listen(1137, "127.0.0.1")</code> accepts connections on port 1137 on URL <a href="http://127.0.0.1">http://127.0.0.1</a> (or <a href="http://localhost">http://localhost</a>).</li>
-</ul>
-
-
-<p>Please consult the Node API <a href="http://nodejs.org/api/">documentation</a> for more info/further explanation.</p>
-
-<h3>Extended Example</h3>
-
-<h4>1. Open <em>app.js</em> and save it as <em>app2.js</em>, then add the following code:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// load http module and use fs to access the file system</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// configure http server</span>
-</span><span class='line'><span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// what&#39;s going on here?</span>
-</span><span class='line'><span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;data.txt&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">readData</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">response</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">});</span>
-</span><span class='line'>  <span class="nx">response</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'><span class="p">})</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">1137</span><span class="p">,</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// inform user what is happening</span>
-</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Server running at http://127.0.0.1:1137/&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>3. Save and run.</h4>
-
-<h4>4. Go over this line by line. See if you can figure out what&#8217;s going on? Need help? Consult the Node <a href="http://nodejs.org/api/">documentation</a> and/or use the &#8220;Google-it-first&#8221; algorithm.</h4>
-
-<p><strong>Next time we&#8217;ll add <a href="http://expressjs.com/">Express</a> into the mix!</strong></p>
-
-<h2>Part 2</h2>
-
-<p><strong>We&#8217;ll be creating an entirely new app for this tutorial.</strong></p>
-
-<p>As promised, let&#8217;s add Express, which is a lightweight framework for Node.</p>
-
-<p>There&#8217;s also an Express command line tool used to set up a project structure/boilerplate for use with, well, the Express framework. We can install them at the same time &#8230;</p>
-
-<p>Start by installing Express globally:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install -g express
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Project Setup</h3>
-
-<h4>1. Use the Express command line tool to create our project structure:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>express &lt;new_folder&gt;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>  This creates a new directory with a basic project structure.</p>
-
-<h4>2. Before we can begin developing, navigate into the folder then run the following command to load the Express dependencies from the <em>package.json</em> file:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>Please note: The dependencies within <em>package.json</em> are generally listed by name and version. In some cases, instead of a version, you&#8217;ll see an <code>*</code>, which means that npm will retrieve the latest version of the dependency. For more information on NPM, please check out this <a href="https://www.npmjs.org/doc/json.html">link</a>.</p></blockquote>
-
-<p>  Your project structure should now look like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>├── app.js
-</span><span class='line'>├── package.json
-</span><span class='line'>├── public
-</span><span class='line'>│   ├── images
-</span><span class='line'>│   ├── javascripts
-</span><span class='line'>│   └── stylesheets
-</span><span class='line'>│       └── style.css
-</span><span class='line'>├── routes
-</span><span class='line'>│   ├── index.js
-</span><span class='line'>│   └── user.js
-</span><span class='line'>└── views
-</span><span class='line'>    ├── index.jade
-</span><span class='line'>    └── layout.jade
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h5>What&#8217;s going on?</h5>
-
-<ul>
-<li><em>app.js</em> includes your app configuration, middleware, and routing.</li>
-<li><em>package.json</em> holds you app&#8217;s dependencies configs.</li>
-<li>The &#8220;public&#8221; folder contains images, Javascript files, and stylesheets.</li>
-<li>The file in your &#8220;routes&#8221; folder define the app&#8217;s business logic.</li>
-<li>&#8220;views&#8221; contain views, templates, and partials.</li>
-</ul>
-
-
-<h4>3. Test out your app to ensure everything is installed:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node app
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>  Point your browser to <a href="http://localhost:3000/">http://localhost:3000/</a>, and you should see:</p>
-
-<p>  <img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/welcome.png" alt="express" /></p>
-
-<p>  Congrats! You just set up Express. Now, we just need to customize it. In this case we are going to build a form for submitting random strings that will be displayed beneath the form upon submission.</p>
-
-<h3>Server Side</h3>
-
-<h4>1.  Open <em>app.js</em>, then update the routes to match the following code:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// load dependencies</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">routes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// config - all environments</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">3000</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;views&#39;</span><span class="p">,</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;views&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;view engine&#39;</span><span class="p">,</span> <span class="s1">&#39;jade&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">favicon</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;dev&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">methodOverride</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">router</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="kr">static</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;public&#39;</span><span class="p">)));</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// config - development only</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="s1">&#39;development&#39;</span> <span class="o">==</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;env&#39;</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">errorHandler</span><span class="p">());</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// routes</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">index</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// configure http server</span>
-</span><span class='line'><span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">),</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Express server listening on port &#39;</span> <span class="o">+</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>What&#8217;s going on?</h4>
-
-<ul>
-<li>First, we load our module dependencies. Essentially, when you structure a Node app, you use the global <code>require()</code> method to load and cache Javascript modules. The <code>app</code> variable is the actual Express server.</li>
-<li>In the second section, <code>app.set()</code> is used to tell Express that we want to use Jade templates and where to find
-our &#8220;views&#8221; folder. Meanwhile <code>app.use()</code> functions are for middlewares, which you can read more about <a href="http://expressjs.com/api.html#middleware">here</a>.</li>
-<li>Next, we have routes. The actual endpoint, or path, is defined here as well as the specific HTTP method. The actual callback is handled within the &#8220;routes&#8221; folder in the <em>index.js</em> file.</li>
-<li> Finally, we configure the HTTP server like in Part 1.</li>
-</ul>
-
-
-<h4>2. Next, let&#8217;s set up the first route. Open <em>index.js</em> from the &#8220;routes&#8221; folder. Update the code as follows:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">title</span><span class="o">:</span><span class="s1">&#39;AJAX Testing&#39;</span><span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>  <em>Remember:</em> Routes have a path (string and/or regex), callback function, and a HTTP method. In the above code, we are simply adding the callback, which renders the <code>index</code> view and sets a title.</p>
-
-<h4>3. Update your <em>index.jade</em> file:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>doctype html
-</span><span class='line'>html
-</span><span class='line'>head
-</span><span class='line'>  title= title
-</span><span class='line'>  link(rel=&#39;stylesheet&#39;, href=&#39;http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css&#39;)
-</span><span class='line'>  link(rel=&#39;stylesheet&#39;, href=&#39;/stylesheets/style.css&#39;)
-</span><span class='line'>body
-</span><span class='line'>.container
-</span><span class='line'>  form(method=&#39;&#39;, action=&#39;&#39;, role=&quot;form&quot;)
-</span><span class='line'>    input#input.form-control(type=&#39;text&#39;, placeholder=&#39;enter something&#39;)
-</span><span class='line'>    br
-</span><span class='line'>    input#submit.btn.btn-default(type=&#39;submit&#39;)
-</span><span class='line'>  br
-</span><span class='line'>  #results
-</span><span class='line'>script(src=&#39;http://code.jquery.com/jquery-1.10.2.min.js&#39;)
-</span><span class='line'>script(src=&#39;http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js&#39;)
-</span><span class='line'>script(src=&#39;/javascripts/main.js&#39;)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>  Jade is a templating language, which compiles down to HTML. It makes it easy to separate logic from markup. If you&#8217;re having trouble with the syntax, check out the online convertor <a href="http://html2jade.aaron-powell.com/">here</a>. Keep practicing!</p>
-
-<h3>Client Side</h3>
-
-<h4>1. Add a <em>main.js</em> file to the &#8220;javascripts&#8221; file and add the following code to the file:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#submit&quot;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">requestData</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#input&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">requestData</span><span class="p">)</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#results&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">requestData</span><span class="p">);</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>  Here we grab the value from the <code>input</code> upon form submission and assign it to the variable <code>requestData</code>. Then we simply append the value back to the DOM.</p>
-
-<h4>2. We&#8217;re just about done. Let&#8217;s add one custom style to <em>style.css</em>:</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='css'><span class='line'><span class="nc">.container</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">max-width</span><span class="o">:</span> <span class="m">500px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>  Refresh the page. Test it out. Boom!</p>
-
-<h2>Part 3</h2>
-
-<p>Try this on your own. Create a basic number guessing game.</p>
-
-<p>Building on the code from the second part, update the code so that you enter a number instead of text. Create a new route that checks to see if the number is equal to the right number. If the user guesses right, return &#8220;Right!&#8221;; but, if the user guesses wrong, return &#8220;Wrong. Guess again.&#8221; Finally, update your <em>main.js</em> to call the new endpoint of the route - passing the inputted number - then have it wait for a callback (&#8220;Right!&#8221; or &#8220;Wrong. Guess again.&#8221;), which will be appended to the DOM.</p>
-
-<p>Need help? Check out my answer in the <a href="https://github.com/mjhea0/node-getting-started">&#8220;part3&#8221;</a> folder.</p>
-
-<p>Cheers!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/6/">&larr; Older</a>
@@ -2414,6 +2597,10 @@ our &#8220;views&#8221; folder. Meanwhile <code>app.use()</code> functions are f
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2/">Testing AngularJS with Protractor and Karma - part 2</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">Testing AngularJS with Protractor and Karma - part 1</a>
       </li>
     
@@ -2429,17 +2616,13 @@ our &#8220;views&#8221; folder. Meanwhile <code>app.use()</code> functions are f
         <a href="/blog/2015/02/05/sublime-text-for-web-developers/">Sublime Text for Web Developers</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2015/01/31/local-authentication-with-passport-and-express-4/">User Authentication with Passport and Express 4</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/analytics/'>analytics (8)</a></li>
-<li class='category'><a href='/blog/categories/angular/'>angular (4)</a></li>
+<li class='category'><a href='/blog/categories/angular/'>angular (5)</a></li>
 <li class='category'><a href='/blog/categories/crowdfunding/'>crowdfunding (1)</a></li>
 <li class='category'><a href='/blog/categories/docker/'>docker (1)</a></li>
 <li class='category'><a href='/blog/categories/excel/'>excel (3)</a></li>
