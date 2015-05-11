@@ -21,19 +21,16 @@
   <link rel="canonical" href="http://mjhea0.github.com/blog/page/11">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/stylesheets/jquery.messagebar.min.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Michael Herman" type="application/atom+xml">
   <script src="/javascripts/modernizr-2.0.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
   <script src="/javascripts/octopress.js" type="text/javascript"></script>
-    <script src="/javascripts/jquery.messagebar.js" type="text/javascript"></script>
   <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
 <link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
-
   
   <script type="text/javascript">
     var _gaq = _gaq || [];
@@ -67,7 +64,6 @@
   
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
   <li><a href="/about">About</a></li>
 </ul>
 
@@ -111,15 +107,17 @@
 
 <p>Put simply, cohort analysis is used to test whether certain groups of users, based on the conversion date, are active and engaging longer (or shorter) than other groups.</p>
 
-<p>The ultimate goal is to test not only how users within each cohort engaged within your app over time, but to also compare and contrast different cohorts with one another. It&#8217;s quite often the case that even subtle changes in your application&#8217;s feature set will change user engagement, positively or negatively. If the latter, you want to know this as soon as possible to prevent further churn.</p>
+<p>The ultimate goal is to test not only how users within each cohort engaged within your app over time, but to also compare and contrast different cohorts with one another. It&#39;s quite often the case that even subtle changes in your application&#39;s feature set will change user engagement, positively or negatively. If the latter, you want to know this as soon as possible to prevent further churn.</p>
 
-<p>That said, let&#8217;s look at how to source and cleanse your data in order to begin analysis.</p>
+<p>That said, let&#39;s look at how to source and cleanse your data in order to begin analysis. </p>
 
-<blockquote><p>Please note: I will be using a MySQL database for these examples. The corresponding SQL statements should be simple enough to port over to whatever RDMS you use. Comment if you have questions. You can also look at this <a href="http://www.backwardsteps.com/cohort/cohort_analysis.xlsx">spreadsheet</a> to see how to conduct cohort analysis in Excel.</p></blockquote>
+<blockquote>
+<p>Please note: I will be using a MySQL database for these examples. The corresponding SQL statements should be simple enough to port over to whatever RDMS you use. Comment if you have questions. You can also look at this <a href="http://www.backwardsteps.com/cohort/cohort_analysis.xlsx">spreadsheet</a> to see how to conduct cohort analysis in Excel.  </p>
+</blockquote>
 
 <h2>Setup</h2>
 
-<p>If you&#8217;d like to follow along, follow these steps to create the table and load the sample data.</p>
+<p>If you&#39;d like to follow along, follow these steps to create the table and load the sample data.</p>
 
 <h3>Create the database and tables</h3>
 
@@ -127,28 +125,25 @@
 <li>Access MySQL via the Shell (or your preferred method):</li>
 </ol>
 
-
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mysql -u root -p
 </span></code></pre></td></tr></table></div></figure>
-
+        
 
 <ol>
 <li>Create a new database, and then select it for use:</li>
 </ol>
-
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'>mysql&gt; CREATE DATABASE cohortanalysis;
 </span><span class='line'>    mysql&gt; USE cohortanalysis;
 </span></code></pre></td></tr></table></div></figure>
-
+        
 
 <ol>
 <li>Use the following commands to create the tables users and events:</li>
 </ol>
-
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -157,7 +152,7 @@
 </span><span class='line'>mysql&gt; CREATE TABLE events <span class="o">(</span>id INT<span class="o">(</span>11<span class="o">)</span> PRIMARY KEY NOT NULL, <span class="nb">type </span>VARCHAR<span class="o">(</span>15<span class="o">)</span>, user_id INT<span class="o">(</span>11<span class="o">)</span> NOT NULL, date DATETIME NOT NULL, FOREIGN KEY <span class="o">(</span>user_id<span class="o">)</span> REFERENCES users<span class="o">(</span>id<span class="o">))</span>;
 </span><span class='line'>mysql&gt; <span class="nb">exit</span>;
 </span></code></pre></td></tr></table></div></figure>
-
+        
 
 <h3>Load the data</h3>
 
@@ -166,13 +161,13 @@
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mysql -u root -p cohortanalysis &lt; dump.sql
 </span></code></pre></td></tr></table></div></figure>
+    
 
-
-<p>This command should take a few minutes to run as it loads the data in the database.</p>
+<p>This command should take a few minutes to run as it loads the data in the database. </p>
 
 <h2>Sourcing Data</h2>
 
-<p>When sourcing your data, it’s important to begin by structuring your SQL queries around user behavior - engagement, in this case.</p>
+<p>When sourcing your data, it’s important to begin by structuring your SQL queries around user behavior - engagement, in this case. </p>
 
 <p>In this example, we will use a database filled with sample data for a subscription photo-editing application. The database has one table for customers, <em>Users</em>, and another for engagement, <em>Events</em>, among others:</p>
 
@@ -202,7 +197,6 @@
 </span><span class='line'>54541
 </span></code></pre></td></tr></table></div></figure>
 
-
 <p><strong>Events:</strong></p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -231,10 +225,11 @@
 </span><span class='line'>101684
 </span></code></pre></td></tr></table></div></figure>
 
+<blockquote>
+<p>As you can tell, there are 54,541 rows of data in the <em>Users</em> table and 101,684 rows in the <em>Events</em> table. The <em>type</em> field in the <em>Events</em> table specifies whether a user has shared (to Twitter or Facebook), commented on, or liked a photo.</p>
+</blockquote>
 
-<blockquote><p>As you can tell, there are 54,541 rows of data in the <em>Users</em> table and 101,684 rows in the <em>Events</em> table. The <em>type</em> field in the <em>Events</em> table specifies whether a user has shared (to Twitter or Facebook), commented on, or liked a photo.</p></blockquote>
-
-<p>Start by looking at each table individually, beginning with basic queries before moving on to more advanced queries to get a feel for the data you&#8217;re working with.</p>
+<p>Start by looking at each table individually, beginning with basic queries before moving on to more advanced queries to get a feel for the data you&#39;re working with.</p>
 
 <h3>Monthly Cohorts</h3>
 
@@ -273,9 +268,11 @@
 </span><span class='line'>| 2013-07-01 00:00:00 |    20082 |
 </span><span class='line'>+---------------------+----------+
 </span></code></pre></td></tr></table></div></figure>
+    
 
-
-<blockquote><p>Did you notice the time zone (<code>Greenwich</code>)? Try experimenting with other <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zones</a> to see how the results change. This is my favorite feature from the Group Date function.</p></blockquote>
+<blockquote>
+<p>Did you notice the time zone (<code>Greenwich</code>)? Try experimenting with other <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zones</a> to see how the results change. This is my favorite feature from the Group Date function. </p>
+</blockquote>
 
 <p>Like the last query, split the events into cohorts:</p>
 
@@ -311,10 +308,9 @@
 </span><span class='line'>+---------------------+----------+
 </span></code></pre></td></tr></table></div></figure>
 
-
 <p>Based on these tables, you can see the total engagement vs. the total users. Right off the bat you can tell that engagement decreases in the latter months? Will this trend continue?</p>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/f11068c3-7905-4d7b-8c8e-8037a5905c94/00000212.png" alt="decrease_in_enagement" /></p>
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/f11068c3-7905-4d7b-8c8e-8037a5905c94/00000212.png" alt="decrease_in_enagement"></p>
 
 <h3>Individual Cohorts</h3>
 
@@ -337,7 +333,6 @@
 </span><span class='line'>  and <span class="nv">user_cohort</span> <span class="o">=</span> &lt;cohort_group&gt;
 </span><span class='line'>GROUP BY &lt;action_or_even_date<span class="o">(</span>s<span class="o">)</span>&gt;;
 </span></code></pre></td></tr></table></div></figure>
-
 
 <p>For example:</p>
 
@@ -376,11 +371,11 @@
 </span><span class='line'>| 2013-07-01 00:00:00 |     45 |
 </span><span class='line'>+---------------------+--------+
 </span></code></pre></td></tr></table></div></figure>
+    
 
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png" alt="feb_cohort_engagement"> </p>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png" alt="feb_cohort_engagement" /></p>
-
-<p>Continue to add cohorts to learn more about how your users are engaging. See if you can find any trends. Look at comments vs likes vs shares.</p>
+<p>Continue to add cohorts to learn more about how your users are engaging. See if you can find any trends. Look at comments vs likes vs shares. </p>
 
 <p>In this query, we look at the total percent of twitter shares divided by the total # of engagements:</p>
 
@@ -420,8 +415,7 @@
 </span><span class='line'>+----------------+--------+------------------+
 </span></code></pre></td></tr></table></div></figure>
 
-
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png" alt="twitter" /></p>
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png" alt="twitter">            </p>
 
 <p>You can even zoom in on individual users:</p>
 
@@ -472,7 +466,6 @@
 </span><span class='line'>| 53353 | twitter share  | 2013-06-28 02:59:44 |
 </span><span class='line'>+-------+----------------+---------------------+
 </span></code></pre></td></tr></table></div></figure>
-
 
 <h3>Analysis</h3>
 
@@ -558,14 +551,12 @@
 </span><span class='line'>+--------+---------+--------------+-------------+----------------+
 </span></code></pre></td></tr></table></div></figure>
 
-
 <p>This is clearly a difficult query, which will require significant modifications based on your own data. In this query we are defining-</p>
 
 <ul>
 <li>each cohort by breaking the dates into intervals of 30.4 days (~ one month); and,</li>
-<li>the percent of active users (grouped by cohort) by dividing the number of cohorts by total activities for each cohort, then obtaining a percentage by multiplying the results by 100.</li>
+<li>the percent of active users (grouped by cohort) by dividing the number of cohorts by total activities for each cohort, then obtaining a percentage by multiplying the results by 100. </li>
 </ul>
-
 
 <p>To make such queries easier, make sure you -</p>
 
@@ -575,16 +566,15 @@
 <li>Conduct quick spot checks beforehand on a portion of the data to ensure that the results you get are correct (yes, add in test driven development for a quick sanity check)</li>
 </ol>
 
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png" alt="final"> </p>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png" alt="final" /></p>
-
-<p>Now, even though this is quite difficult, try to come up with the same results in Excel. It&#8217;s much harder. Once you become comfortable with SQL - and can break each query down into small bits - it&#8217;s actual much easier with SQL.</p>
+<p>Now, even though this is quite difficult, try to come up with the same results in Excel. It&#39;s much harder. Once you become comfortable with SQL - and can break each query down into small bits - it&#39;s actual much easier with SQL.</p>
 
 <h2>Summary</h2>
 
-<p>As you go through your own cohort analysis measuring retention and engagement, think about why your users may stop engaging and leave. For example, is your application useful, perhaps the novelty factor wears off too quickly, or all engagement options have been exhausted.</p>
+<p>As you go through your own cohort analysis measuring retention and engagement, think about why your users may stop engaging and leave. For example, is your application useful, perhaps the novelty factor wears off too quickly, or all engagement options have been exhausted. </p>
 
-<p>Remember that even though you may be experiencing a huge amount of growth, engagement may be low - which can be easily be overlooked. This could result in increased churn much sooner. It can&#8217;t be said enough that retaining a customer is much cheaper than adding a new customer. Do your best to sustain high engagement over time and locate areas of improvement via cohort analysis.</p>
+<p>Remember that even though you may be experiencing a huge amount of growth, engagement may be low - which can be easily be overlooked. This could result in increased churn much sooner. It can&#39;t be said enough that retaining a customer is much cheaper than adding a new customer. Do your best to sustain high engagement over time and locate areas of improvement via cohort analysis.</p>
 </div>
   
   
@@ -624,7 +614,7 @@
 
   <div class="entry-content"><p>In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related <a href="https://docs.djangoproject.com/en/1.5/ref/contrib/contenttypes/">contenttypes</a>.</p>
 
-<p>Let&#8217;s look at two ways to handle this: Manually and with <a href="http://south.aeracode.org/">South</a>.</p>
+<p>Let&#39;s look at two ways to handle this: Manually and with <a href="http://south.aeracode.org/">South</a>.</p>
 
 <p>In this case, the application name is called <code>customers</code>, and it contains the following tables within <em>models.py</em>:</p>
 
@@ -654,10 +644,9 @@
 </span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 </span></code></pre></td></tr></table></div></figure>
 
-
 <p>Also, I am using a sqlite3 database called <em>test.db</em>, which contains <a href="https://gist.github.com/mjhea0/5959729">this</a> data.</p>
 
-<p>Let&#8217;s say we want to drop the Course table (for reasons unknown).</p>
+<p>Let&#39;s say we want to drop the Course table (for reasons unknown).</p>
 
 <h2>Manually</h2>
 
@@ -665,31 +654,29 @@
 <li>Navigate to your project working directory and drop the table:</li>
 </ol>
 
-
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">sqlclear</span> <span class="n">customers</span> <span class="o">&gt;</span> <span class="n">drop_customers_customerprofile</span>
 </span></code></pre></td></tr></table></div></figure>
-
 
 <ol>
 <li><p>Remove the app from the INSTALLED_APPS section in <em>settings.py</em> and delete any associated URL patterns from <em>urls.py</em>.</p></li>
 <li><p>Drop the database tables:</p></li>
 </ol>
 
-
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">sqlite3</span> <span class="n">test</span><span class="o">.</span><span class="n">db</span>
 </span><span class='line'><span class="n">sqlite</span><span class="o">&gt;</span> <span class="n">DROP</span> <span class="n">TABLE</span> <span class="n">customers_customerprofile</span><span class="p">;</span>
 </span></code></pre></td></tr></table></div></figure>
+       
 
-
-<blockquote><p>equivalent MySQL command - <code>$ mysql -u root -p &lt;database_name&gt; &lt; drop_&lt;app_name&gt;_&lt;table_name&gt;.sql</code></p></blockquote>
+<blockquote>
+<p>equivalent MySQL command - <code>$ mysql -u root -p &lt;database_name&gt; &lt; drop_&lt;app_name&gt;_&lt;table_name&gt;.sql</code></p>
+</blockquote>
 
 <ol>
 <li>Clean up the related contenttypes from the Shell:</li>
 </ol>
-
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -699,43 +686,38 @@
 </span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">app_label</span><span class="o">=</span><span class="s">&#39;customers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </span></code></pre></td></tr></table></div></figure>
 
-
 <ol>
 <li>You can now delete the app folder as well as any associated media files and/or templates. Finally, make sure to uninstall any associated packages or dependencies using <code>pip uninstall &lt;package_name&gt;</code>. <em>Make sure to use virtualenv</em>.</li>
 </ol>
 
-
 <h2>South</h2>
 
-<p>I use South with all my Django projects, so I tend to prefer this method. Let&#8217;s take a look.</p>
+<p>I use South with all my Django projects, so I tend to prefer this method. Let&#39;s take a look.</p>
 
 <ol>
 <li>Setup the initial migration and push it through:</li>
 </ol>
-
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">schemamigration</span> <span class="n">customers</span> <span class="o">--</span><span class="n">initial</span>
 </span><span class='line'><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span> <span class="n">customers</span>
 </span></code></pre></td></tr></table></div></figure>
-
+       
 
 <ol>
 <li><p>Remove the <code>CustomerProfile</code> class from <em>models.py</em>.</p></li>
 <li><p>Setup the migration to delete the table:</p></li>
 </ol>
 
-
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>python manage.py schemamigration customers --auto
 </span></code></pre></td></tr></table></div></figure>
-
+       
 
 <ol>
-<li>Update the migration file <em>0002_auto__del_customerprofile.py</em>, to clean up the related contenttypes as well as delete the table from the database, by updating the <code>forwards</code> function:</li>
+<li>Update the migration file <em>0002<em>auto</em><em>del</em>customerprofile.py</em>, to clean up the related contenttypes as well as delete the table from the database, by updating the <code>forwards</code> function:</li>
 </ol>
-
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -748,32 +730,29 @@
 </span><span class='line'>   <span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
 </span><span class='line'>   <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">app_label</span><span class="o">=</span><span class="s">&#39;customers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </span></code></pre></td></tr></table></div></figure>
-
+ 
 
 <ol>
 <li>Push the migration through:</li>
 </ol>
 
-
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>python manage.py migrate customers
 </span></code></pre></td></tr></table></div></figure>
-
+       
 
 <ol>
 <li>Fake a zero migration to remove the migration history and clear up the South tables:</li>
 </ol>
 
-
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>python manage.py migrate customers zero --fake
 </span></code></pre></td></tr></table></div></figure>
-
+       
 
 <ol>
 <li>Remove the app from the INSTALLED_APPS section in <em>settings.py</em> and delete any associated URL patterns from <em>urls.py</em>. Then delete the app folder and any related media files and/or templates. Finally, make sure to uninstall any packages or dependencies using <code>pip unistall &lt;package_name&gt;</code>. <em>Make sure to use virtualenv</em>.</li>
 </ol>
-
 
 <p><strong>Comment if you have questions. Cheers!</strong></p>
 </div>
@@ -813,17 +792,17 @@
   </header>
 
 
-  <div class="entry-content"><p><em>&#8220;The average attention span in 2012    was 8 seconds&#8221;</em></p>
+  <div class="entry-content"><p><em>&quot;The average attention span in 2012    was 8 seconds&quot;</em></p>
 
-<p>That means you have only a few seconds to grab a customer&#8217;s attention. It&#8217;s all about first impressions and fast impressions. As soon as they click on your website or come into your store they want to know what you do, and how you do it. You need to keep options simple.</p>
+<p>That means you have only a few seconds to grab a customer&#39;s attention. It&#39;s all about first impressions and fast impressions. As soon as they click on your website or come into your store they want to know what you do, and how you do it. You need to keep options simple. </p>
 
 <p>Too many options can overwhelm a customer. If you are offering  too many products or services the customer can not grasp what your business is really about. Again, you only have so long to keep their attention. If those few seconds are spent on trying to figure out what you really are offering than you will not convert that customer into a sale. That is why <em>Less is More</em>. A clear defined product, in a clear defined industry will keep them interested.</p>
 
-<p>Sometimes this can be a hard fact to swallow. You want to offer everything you can. You want to capitalize on every opportunity you can. It&#8217;s great to have options, but when those options take a completely different direction, you will lose the customer. Too much unnecessary noise will distract the customer from your most important products or services. Stick to what you do BEST. This will make you the go to company for that niche item.</p>
+<p>Sometimes this can be a hard fact to swallow. You want to offer everything you can. You want to capitalize on every opportunity you can. It&#39;s great to have options, but when those options take a completely different direction, you will lose the customer. Too much unnecessary noise will distract the customer from your most important products or services. Stick to what you do BEST. This will make you the go to company for that niche item.</p>
 
 <p>Remember it is okay to minimize your offer list. Let the customers attention be pushed towards fewer options. This will give them more time to focus on what the product or service does and how it will benefit them to have it. Eliminate the excess variables in the equation. It will make it much easier to make sure that you are meeting the customers needs and wants.</p>
 
-<p>You need to keep your brand in mind at all times. What is your company about? Are all your products and services in line with the brand you are trying to promote. You want customers to have a clear view of what you do and what you offer. Brand extension needs to be strategic. For example, Burger King added underwear to their product list, Paula Deen selling kid&#8217;s furniture, or Zippo lighters trying to add women&#8217;s perfume to their brand. None of these make sense, make sure that the products you are offering are limited to ones that make sense! Do not start offering all of these extra items. Stick to what your company is good at, keep the customer focused on your best products or services. Do not distract them with other unnecessary offers.</p>
+<p>You need to keep your brand in mind at all times. What is your company about? Are all your products and services in line with the brand you are trying to promote. You want customers to have a clear view of what you do and what you offer. Brand extension needs to be strategic. For example, Burger King added underwear to their product list, Paula Deen selling kid&#39;s furniture, or Zippo lighters trying to add women&#39;s perfume to their brand. None of these make sense, make sure that the products you are offering are limited to ones that make sense! Do not start offering all of these extra items. Stick to what your company is good at, keep the customer focused on your best products or services. Do not distract them with other unnecessary offers.</p>
 
 <p>It is like going to a restaurant and opening a 5 page menu with way too many options. You feel overwhelmed. You start wondering that if they make everything, is anything actually good? You just want to close the menu and go somewhere simpler. Do not let your customers feel like this. Make those 8 seconds you get of their attention count.</p>
 </div>
@@ -957,6 +936,5 @@
 
 
 
-  <script type="text/javascript" src="//s3.amazonaws.com/scripts.hellobar.com/4bda7d5a1c9bd6b6b8382efaf71e4fccbcf180ce.js"></script>
 </body>
 </html>

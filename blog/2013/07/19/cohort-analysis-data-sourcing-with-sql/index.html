@@ -21,19 +21,16 @@
   <link rel="canonical" href="http://mjhea0.github.com/blog/2013/07/19/cohort-analysis-data-sourcing-with-sql">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/stylesheets/jquery.messagebar.min.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Michael Herman" type="application/atom+xml">
   <script src="/javascripts/modernizr-2.0.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
   <script src="/javascripts/octopress.js" type="text/javascript"></script>
-    <script src="/javascripts/jquery.messagebar.js" type="text/javascript"></script>
   <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
 <link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
-
   
   <script type="text/javascript">
     var _gaq = _gaq || [];
@@ -67,7 +64,6 @@
   
 <ul class="main-navigation">
   <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
   <li><a href="/about">About</a></li>
 </ul>
 
@@ -108,15 +104,17 @@
 
 <p>Put simply, cohort analysis is used to test whether certain groups of users, based on the conversion date, are active and engaging longer (or shorter) than other groups.</p>
 
-<p>The ultimate goal is to test not only how users within each cohort engaged within your app over time, but to also compare and contrast different cohorts with one another. It&#8217;s quite often the case that even subtle changes in your application&#8217;s feature set will change user engagement, positively or negatively. If the latter, you want to know this as soon as possible to prevent further churn.</p>
+<p>The ultimate goal is to test not only how users within each cohort engaged within your app over time, but to also compare and contrast different cohorts with one another. It&#39;s quite often the case that even subtle changes in your application&#39;s feature set will change user engagement, positively or negatively. If the latter, you want to know this as soon as possible to prevent further churn.</p>
 
-<p>That said, let&#8217;s look at how to source and cleanse your data in order to begin analysis.</p>
+<p>That said, let&#39;s look at how to source and cleanse your data in order to begin analysis. </p>
 
-<blockquote><p>Please note: I will be using a MySQL database for these examples. The corresponding SQL statements should be simple enough to port over to whatever RDMS you use. Comment if you have questions. You can also look at this <a href="http://www.backwardsteps.com/cohort/cohort_analysis.xlsx">spreadsheet</a> to see how to conduct cohort analysis in Excel.</p></blockquote>
+<blockquote>
+<p>Please note: I will be using a MySQL database for these examples. The corresponding SQL statements should be simple enough to port over to whatever RDMS you use. Comment if you have questions. You can also look at this <a href="http://www.backwardsteps.com/cohort/cohort_analysis.xlsx">spreadsheet</a> to see how to conduct cohort analysis in Excel.  </p>
+</blockquote>
 
 <h2>Setup</h2>
 
-<p>If you&#8217;d like to follow along, follow these steps to create the table and load the sample data.</p>
+<p>If you&#39;d like to follow along, follow these steps to create the table and load the sample data.</p>
 
 <h3>Create the database and tables</h3>
 
@@ -124,28 +122,25 @@
 <li>Access MySQL via the Shell (or your preferred method):</li>
 </ol>
 
-
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mysql -u root -p
 </span></code></pre></td></tr></table></div></figure>
-
+        
 
 <ol>
 <li>Create a new database, and then select it for use:</li>
 </ol>
-
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'>mysql&gt; CREATE DATABASE cohortanalysis;
 </span><span class='line'>    mysql&gt; USE cohortanalysis;
 </span></code></pre></td></tr></table></div></figure>
-
+        
 
 <ol>
 <li>Use the following commands to create the tables users and events:</li>
 </ol>
-
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -154,7 +149,7 @@
 </span><span class='line'>mysql&gt; CREATE TABLE events <span class="o">(</span>id INT<span class="o">(</span>11<span class="o">)</span> PRIMARY KEY NOT NULL, <span class="nb">type </span>VARCHAR<span class="o">(</span>15<span class="o">)</span>, user_id INT<span class="o">(</span>11<span class="o">)</span> NOT NULL, date DATETIME NOT NULL, FOREIGN KEY <span class="o">(</span>user_id<span class="o">)</span> REFERENCES users<span class="o">(</span>id<span class="o">))</span>;
 </span><span class='line'>mysql&gt; <span class="nb">exit</span>;
 </span></code></pre></td></tr></table></div></figure>
-
+        
 
 <h3>Load the data</h3>
 
@@ -163,13 +158,13 @@
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mysql -u root -p cohortanalysis &lt; dump.sql
 </span></code></pre></td></tr></table></div></figure>
+    
 
-
-<p>This command should take a few minutes to run as it loads the data in the database.</p>
+<p>This command should take a few minutes to run as it loads the data in the database. </p>
 
 <h2>Sourcing Data</h2>
 
-<p>When sourcing your data, it’s important to begin by structuring your SQL queries around user behavior - engagement, in this case.</p>
+<p>When sourcing your data, it’s important to begin by structuring your SQL queries around user behavior - engagement, in this case. </p>
 
 <p>In this example, we will use a database filled with sample data for a subscription photo-editing application. The database has one table for customers, <em>Users</em>, and another for engagement, <em>Events</em>, among others:</p>
 
@@ -199,7 +194,6 @@
 </span><span class='line'>54541
 </span></code></pre></td></tr></table></div></figure>
 
-
 <p><strong>Events:</strong></p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -228,10 +222,11 @@
 </span><span class='line'>101684
 </span></code></pre></td></tr></table></div></figure>
 
+<blockquote>
+<p>As you can tell, there are 54,541 rows of data in the <em>Users</em> table and 101,684 rows in the <em>Events</em> table. The <em>type</em> field in the <em>Events</em> table specifies whether a user has shared (to Twitter or Facebook), commented on, or liked a photo.</p>
+</blockquote>
 
-<blockquote><p>As you can tell, there are 54,541 rows of data in the <em>Users</em> table and 101,684 rows in the <em>Events</em> table. The <em>type</em> field in the <em>Events</em> table specifies whether a user has shared (to Twitter or Facebook), commented on, or liked a photo.</p></blockquote>
-
-<p>Start by looking at each table individually, beginning with basic queries before moving on to more advanced queries to get a feel for the data you&#8217;re working with.</p>
+<p>Start by looking at each table individually, beginning with basic queries before moving on to more advanced queries to get a feel for the data you&#39;re working with.</p>
 
 <h3>Monthly Cohorts</h3>
 
@@ -270,9 +265,11 @@
 </span><span class='line'>| 2013-07-01 00:00:00 |    20082 |
 </span><span class='line'>+---------------------+----------+
 </span></code></pre></td></tr></table></div></figure>
+    
 
-
-<blockquote><p>Did you notice the time zone (<code>Greenwich</code>)? Try experimenting with other <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zones</a> to see how the results change. This is my favorite feature from the Group Date function.</p></blockquote>
+<blockquote>
+<p>Did you notice the time zone (<code>Greenwich</code>)? Try experimenting with other <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zones</a> to see how the results change. This is my favorite feature from the Group Date function. </p>
+</blockquote>
 
 <p>Like the last query, split the events into cohorts:</p>
 
@@ -308,10 +305,9 @@
 </span><span class='line'>+---------------------+----------+
 </span></code></pre></td></tr></table></div></figure>
 
-
 <p>Based on these tables, you can see the total engagement vs. the total users. Right off the bat you can tell that engagement decreases in the latter months? Will this trend continue?</p>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/f11068c3-7905-4d7b-8c8e-8037a5905c94/00000212.png" alt="decrease_in_enagement" /></p>
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/f11068c3-7905-4d7b-8c8e-8037a5905c94/00000212.png" alt="decrease_in_enagement"></p>
 
 <h3>Individual Cohorts</h3>
 
@@ -334,7 +330,6 @@
 </span><span class='line'>  and <span class="nv">user_cohort</span> <span class="o">=</span> &lt;cohort_group&gt;
 </span><span class='line'>GROUP BY &lt;action_or_even_date<span class="o">(</span>s<span class="o">)</span>&gt;;
 </span></code></pre></td></tr></table></div></figure>
-
 
 <p>For example:</p>
 
@@ -373,11 +368,11 @@
 </span><span class='line'>| 2013-07-01 00:00:00 |     45 |
 </span><span class='line'>+---------------------+--------+
 </span></code></pre></td></tr></table></div></figure>
+    
 
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png" alt="feb_cohort_engagement"> </p>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png" alt="feb_cohort_engagement" /></p>
-
-<p>Continue to add cohorts to learn more about how your users are engaging. See if you can find any trends. Look at comments vs likes vs shares.</p>
+<p>Continue to add cohorts to learn more about how your users are engaging. See if you can find any trends. Look at comments vs likes vs shares. </p>
 
 <p>In this query, we look at the total percent of twitter shares divided by the total # of engagements:</p>
 
@@ -417,8 +412,7 @@
 </span><span class='line'>+----------------+--------+------------------+
 </span></code></pre></td></tr></table></div></figure>
 
-
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png" alt="twitter" /></p>
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png" alt="twitter">            </p>
 
 <p>You can even zoom in on individual users:</p>
 
@@ -469,7 +463,6 @@
 </span><span class='line'>| 53353 | twitter share  | 2013-06-28 02:59:44 |
 </span><span class='line'>+-------+----------------+---------------------+
 </span></code></pre></td></tr></table></div></figure>
-
 
 <h3>Analysis</h3>
 
@@ -555,14 +548,12 @@
 </span><span class='line'>+--------+---------+--------------+-------------+----------------+
 </span></code></pre></td></tr></table></div></figure>
 
-
 <p>This is clearly a difficult query, which will require significant modifications based on your own data. In this query we are defining-</p>
 
 <ul>
 <li>each cohort by breaking the dates into intervals of 30.4 days (~ one month); and,</li>
-<li>the percent of active users (grouped by cohort) by dividing the number of cohorts by total activities for each cohort, then obtaining a percentage by multiplying the results by 100.</li>
+<li>the percent of active users (grouped by cohort) by dividing the number of cohorts by total activities for each cohort, then obtaining a percentage by multiplying the results by 100. </li>
 </ul>
-
 
 <p>To make such queries easier, make sure you -</p>
 
@@ -572,16 +563,15 @@
 <li>Conduct quick spot checks beforehand on a portion of the data to ensure that the results you get are correct (yes, add in test driven development for a quick sanity check)</li>
 </ol>
 
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png" alt="final"> </p>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png" alt="final" /></p>
-
-<p>Now, even though this is quite difficult, try to come up with the same results in Excel. It&#8217;s much harder. Once you become comfortable with SQL - and can break each query down into small bits - it&#8217;s actual much easier with SQL.</p>
+<p>Now, even though this is quite difficult, try to come up with the same results in Excel. It&#39;s much harder. Once you become comfortable with SQL - and can break each query down into small bits - it&#39;s actual much easier with SQL.</p>
 
 <h2>Summary</h2>
 
-<p>As you go through your own cohort analysis measuring retention and engagement, think about why your users may stop engaging and leave. For example, is your application useful, perhaps the novelty factor wears off too quickly, or all engagement options have been exhausted.</p>
+<p>As you go through your own cohort analysis measuring retention and engagement, think about why your users may stop engaging and leave. For example, is your application useful, perhaps the novelty factor wears off too quickly, or all engagement options have been exhausted. </p>
 
-<p>Remember that even though you may be experiencing a huge amount of growth, engagement may be low - which can be easily be overlooked. This could result in increased churn much sooner. It can&#8217;t be said enough that retaining a customer is much cheaper than adding a new customer. Do your best to sustain high engagement over time and locate areas of improvement via cohort analysis.</p>
+<p>Remember that even though you may be experiencing a huge amount of growth, engagement may be low - which can be easily be overlooked. This could result in increased churn much sooner. It can&#39;t be said enough that retaining a customer is much cheaper than adding a new customer. Do your best to sustain high engagement over time and locate areas of improvement via cohort analysis.</p>
 </div>
 
 
@@ -617,27 +607,13 @@
     </p>
     
       <div class="sharing">
-<!--   
+  
   <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mjhea0.github.com/blog/2013/07/19/cohort-analysis-data-sourcing-with-sql/" data-via="" data-counturl="http://mjhea0.github.com/blog/2013/07/19/cohort-analysis-data-sourcing-with-sql/" >Tweet</a>
   
   
   
     <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
-   -->
-  <br>
-  <!-- AddThis Button BEGIN -->
-  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
-  <a class="addthis_button_preferred_1"></a>
-  <a class="addthis_button_preferred_2"></a>
-  <a class="addthis_button_preferred_3"></a>
-  <a class="addthis_button_preferred_4"></a>
-  <a class="addthis_button_compact"></a>
-  <a class="addthis_counter addthis_bubble_style"></a>
-  </div>
-  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
-  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
-  <!-- AddThis Button END -->
-  <br>
+  
 </div>
 
     
@@ -778,6 +754,5 @@
 
 
 
-  <script type="text/javascript" src="//s3.amazonaws.com/scripts.hellobar.com/4bda7d5a1c9bd6b6b8382efaf71e4fccbcf180ce.js"></script>
 </body>
 </html>
