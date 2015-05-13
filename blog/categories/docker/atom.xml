@@ -4,7 +4,7 @@
   <title><![CDATA[Category: docker | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/docker/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-05-11T17:07:29-06:00</updated>
+  <updated>2015-05-13T09:15:16-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -28,6 +28,8 @@
 
 <p><br></p>
 
+<p><em>Updated on May 13th, 2015</em> - Upgraded to the latest versions of Docker (1.6.1), boot2docker (1.6.1), and Docker Compose (1.2.0)</p>
+
 <blockquote>
 <p>This tutorial is ported from <a href="https://realpython.com/blog/python/docker-in-action-fitter-happier-more-productive/">Docker in Action - Fitter, Happier, More Productive</a>.</p>
 </blockquote>
@@ -38,9 +40,9 @@
 <li><a href="http://nodejs.org/">NodeJS</a> v0.12.0</li>
 <li><a href="http://expressjs.com/">Express</a> v3.4.8</li>
 <li><a href="http://redis.io/">Redis</a> v2.8.19</li>
-<li><a href="https://www.docker.com/">Docker</a> v1.5.0</li>
-<li><a href="http://boot2docker.io/">boot2docker</a> v1.5.0</li>
-<li><a href="https://docs.docker.com/compose/">Docker Compose</a> v1.1.0</li>
+<li><a href="https://www.docker.com/">Docker</a> v1.6.1</li>
+<li><a href="http://boot2docker.io/">boot2docker</a> v1.6.1</li>
+<li><a href="https://docs.docker.com/compose/">Docker Compose</a> v1.2.0</li>
 <li><a href="https://hub.docker.com/">Docker Hub</a></li>
 <li><a href="https://circleci.com/">CircleCI</a></li>
 <li><a href="https://www.digitalocean.com/">Digital Ocean</a></li>
@@ -96,14 +98,12 @@ $ $(boot2docker shellinit)<br>
 <p>Grab the base code from the <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/base">repo</a>, and add it to your project directory:</p>
 
 <p><code>sh<br>
-├── app<br>
-│   ├── Dockerfile<br>
-│   ├── index.js<br>
-│   ├── package.json<br>
-│   └── test<br>
-│       └── test.js<br>
-└── redis<br>
-    └── Dockerfile<br>
+└── app<br>
+    ├── Dockerfile<br>
+    ├── index.js<br>
+    ├── package.json<br>
+    └── test<br>
+        └── test.js<br>
 </code></p>
 
 <h3>Compose Up!</h3>
@@ -112,12 +112,12 @@ $ $(boot2docker shellinit)<br>
 
 <p><code>sh<br>
 $ docker-compose --version<br>
-docker-compose 1.1.0<br>
+docker-compose 1.2.0<br>
 </code></p>
 
 <p>Now we just need to define the services - web (NodeJS) and persistence (Redis) in a configuration file called  <em>docker-compose.yml</em>:</p>
 
-<p><code><br>
+<p><code>yaml<br>
 web:<br>
   build: ./app<br>
   volumes:<br>
@@ -127,7 +127,7 @@ web:<br>
   links:<br>
    - redis<br>
 redis:<br>
-    build: ./redis<br>
+    image: redis:latest<br>
     ports:<br>
         - &quot;6379:6379&quot;<br>
 </code></p>
@@ -135,8 +135,8 @@ redis:<br>
 <p>Here we add the services that make up our basic stack:</p>
 
 <ol>
-<li><strong>web</strong>: First, we build the image based on the instructions in the <em>Dockerfile</em> - where we setup our Node environment, create a volume, install the required dependencies, and fire up the app running on port 3000. Then we forward that port in the container to port 80 on the host environment - e.g., the boot2docker VM.</li>
-<li><strong>redis</strong>: Next, the Redis service is again built from the instructions in the <em>Dockerfile</em>. Port 6379 is exposed and forwarded.</li>
+<li><strong>web</strong>: First, we build the image based on the instructions in the <em>app/Dockerfile</em> - where we setup our Node environment, create a volume, install the required dependencies, and fire up the app running on port 3000. Then we forward that port in the container to port 80 on the host environment - e.g., the boot2docker VM.</li>
+<li><strong>redis</strong>: Next, the Redis service is built from the <a href="https://registry.hub.docker.com/_/redis/">image</a> on Docker Hub. Port 6379 is exposed and forwarded.</li>
 </ol>
 
 <h3>Profit</h3>
@@ -185,7 +185,7 @@ redis:<br>
 
 <p>Next we need to add a configuration file, called <em>circle.yml</em>, to the root folder of the project so that CircleCI can properly create the build.</p>
 
-<p>```<br>
+<p>```yaml<br>
 machine:<br>
   services:<br>
     - docker</p>
@@ -196,11 +196,11 @@ machine:<br>
 
 <p>test:<br>
   override:<br>
-    - docker-compose run -d --no-deps web<br>
+    - sudo pip install --upgrade docker-compose<br>
     - cd app; mocha<br>
 ```</p>
 
-<p>Here, we install Docker Compose, then we create a new image, and run the container along with our unit tests.</p>
+<p>Here, we install Docker Compose, create a new image, and run the container along with our unit tests.</p>
 
 <blockquote>
 <p>Notice how we’re using the command <code>docker-compose run -d --no-deps web</code>, to run the web process, instead of <code>docker-compose up</code>. This is because CircleCI already has Redis <a href="https://circleci.com/docs/environment#databases">running</a> and available to us for our tests. So, we just need to run the web process.</p>
