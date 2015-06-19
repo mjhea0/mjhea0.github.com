@@ -4,7 +4,7 @@
   <title><![CDATA[Category: analytics | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/analytics/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-06-19T11:58:47-06:00</updated>
+  <updated>2015-06-19T12:03:42-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -24,10 +24,10 @@
 
 <p>The ultimate goal is to test not only how users within each cohort engaged within your app over time, but to also compare and contrast different cohorts with one another. It&#39;s quite often the case that even subtle changes in your application&#39;s feature set will change user engagement, positively or negatively. If the latter, you want to know this as soon as possible to prevent further churn.</p>
 
-<p>That said, let&#39;s look at how to source and cleanse your data in order to begin analysis. </p>
+<p>That said, let&#39;s look at how to source and cleanse your data in order to begin analysis.</p>
 
 <blockquote>
-<p>Please note: I will be using a MySQL database for these examples. The corresponding SQL statements should be simple enough to port over to whatever RDMS you use. Comment if you have questions. You can also look at this <a href="http://www.backwardsteps.com/cohort/cohort_analysis.xlsx">spreadsheet</a> to see how to conduct cohort analysis in Excel.  </p>
+<p>Please note: I will be using a MySQL database for these examples. The corresponding SQL statements should be simple enough to port over to whatever RDMS you use. Comment if you have questions. You can also look at this <a href="http://www.backwardsteps.com/cohort/cohort_analysis.xlsx">spreadsheet</a> to see how to conduct cohort analysis in Excel.</p>
 </blockquote>
 
 <h2>Setup</h2>
@@ -57,7 +57,7 @@ mysql&gt; CREATE DATABASE cohortanalysis;<br>
 <li>Use the following commands to create the tables users and events:</li>
 </ol>
 
-<p><code>sh       <br>
+<p><code>sh<br>
 mysql&gt; CREATE TABLE users (id INT(11) PRIMARY KEY NOT NULL, name VARCHAR(40) NOT NULL, date DATETIME NOT NULL);<br>
 mysql&gt; CREATE TABLE events (id INT(11) PRIMARY KEY NOT NULL, type VARCHAR(15), user_id INT(11) NOT NULL, date DATETIME NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id));<br>
 mysql&gt; exit;<br>
@@ -67,15 +67,15 @@ mysql&gt; exit;<br>
 
 <p>Download the database file <a href="http://www.backwardsteps.com/cohort/dump.sql">here</a>. Then using the command line, navigate to the file path where the <em>dump.sql</em> file was downloaded. Now, type the following command into your terminal:</p>
 
-<p><code>sh   <br>
+<p><code>sh<br>
 $ mysql -u root -p cohortanalysis &lt; dump.sql<br>
 </code></p>
 
-<p>This command should take a few minutes to run as it loads the data in the database. </p>
+<p>This command should take a few minutes to run as it loads the data in the database.</p>
 
 <h2>Sourcing Data</h2>
 
-<p>When sourcing your data, it’s important to begin by structuring your SQL queries around user behavior - engagement, in this case. </p>
+<p>When sourcing your data, it’s important to begin by structuring your SQL queries around user behavior - engagement, in this case.</p>
 
 <p>In this example, we will use a database filled with sample data for a subscription photo-editing application. The database has one table for customers, <em>Users</em>, and another for engagement, <em>Events</em>, among others:</p>
 
@@ -84,8 +84,8 @@ $ mysql -u root -p cohortanalysis &lt; dump.sql<br>
 <p>```sh<br>
 mysql&gt; DESCRIBE users;<br>
 +-------+-------------+------+-----+---------+-------+<br>
-| Field | Type        | Null | Key | Default | Extra |<br><br>
-+-------+-------------+------+-----+---------+-------+<br><br>
+| Field | Type        | Null | Key | Default | Extra |<br>
++-------+-------------+------+-----+---------+-------+<br>
 | id    | int(11)     | NO   | PRI | NULL    |       |<br>
 | name  | varchar(40) | NO   |     | NULL    |       |<br>
 | date  | datetime    | NO   |     | NULL    |       |<br>
@@ -124,7 +124,7 @@ mysql&gt; DESCRIBE events;<br>
 
 <p>Group users into monthly cohorts, based on sign-up date, and add in the total users for each cohort:</p>
 
-<p>```sh<br><br>
+<p>```sh<br>
 SELECT GD_MONTH(date, &#39;Greenwich&#39;) AS cohort,<br>
        COUNT(*)<br>
 FROM users<br>
@@ -143,7 +143,7 @@ GROUP BY cohort;</p>
 ```</p>
 
 <blockquote>
-<p>Did you notice the time zone (<code>Greenwich</code>)? Try experimenting with other <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zones</a> to see how the results change. This is my favorite feature from the Group Date function. </p>
+<p>Did you notice the time zone (<code>Greenwich</code>)? Try experimenting with other <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">time zones</a> to see how the results change. This is my favorite feature from the Group Date function.</p>
 </blockquote>
 
 <p>Like the last query, split the events into cohorts:</p>
@@ -151,7 +151,7 @@ GROUP BY cohort;</p>
 <p>```sh<br>
 SELECT GD_MONTH(date, &#39;Greenwich&#39;) AS cohort,<br>
        COUNT(*)<br>
-FROM events <br>
+FROM events<br>
 GROUP BY cohort;</p>
 
 <p>+---------------------+----------+<br>
@@ -176,13 +176,13 @@ GROUP BY cohort;</p>
 
 <p><code>sh<br>
 SELECT<br>
-    &lt;action_or_event_date(s)&gt; <br>
+    &lt;action_or_event_date(s)&gt;<br>
 FROM<br>
-    &lt;table&gt; <br>
+    &lt;table&gt;<br>
 WHERE<br>
-    user_action = &lt;&#39;some_action_or_event&#39;&gt; <br>
-    and user_cohort = &lt;cohort_group&gt; <br>
-GROUP BY &lt;action_or_even_date(s)&gt;; <br>
+    user_action = &lt;&#39;some_action_or_event&#39;&gt;<br>
+    and user_cohort = &lt;cohort_group&gt;<br>
+GROUP BY &lt;action_or_even_date(s)&gt;;<br>
 </code></p>
 
 <p>For example:</p>
@@ -207,9 +207,9 @@ GROUP BY engagement_date;</p>
 +---------------------+--------+<br>
 ```</p>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png" alt="feb_cohort_engagement"> </p>
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png" alt="feb_cohort_engagement"></p>
 
-<p>Continue to add cohorts to learn more about how your users are engaging. See if you can find any trends. Look at comments vs likes vs shares. </p>
+<p>Continue to add cohorts to learn more about how your users are engaging. See if you can find any trends. Look at comments vs likes vs shares.</p>
 
 <p>In this query, we look at the total percent of twitter shares divided by the total # of engagements:</p>
 
@@ -233,7 +233,7 @@ SELECT<br>
 +----------------+--------+------------------+<br>
 ```</p>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png" alt="twitter">            </p>
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png" alt="twitter"></p>
 
 <p>You can even zoom in on individual users:</p>
 
@@ -306,14 +306,14 @@ WHERE results.MONTH &lt; DATE</em>FORMAT(NOW(), &#39;%Y/%m&#39;);</p>
 |      1 | 2013/05 |         7004 |        7658 |        91.4599 |<br>
 |      2 | 2013/05 |         2157 |        7658 |        28.1666 |<br>
 |      0 | 2013/06 |        18612 |       24716 |        75.3034 |<br>
-+--------+---------+--------------+-------------+----------------+<br><br>
++--------+---------+--------------+-------------+----------------+<br>
 ```</p>
 
 <p>This is clearly a difficult query, which will require significant modifications based on your own data. In this query we are defining-</p>
 
 <ul>
 <li>each cohort by breaking the dates into intervals of 30.4 days (~ one month); and,</li>
-<li>the percent of active users (grouped by cohort) by dividing the number of cohorts by total activities for each cohort, then obtaining a percentage by multiplying the results by 100. </li>
+<li>the percent of active users (grouped by cohort) by dividing the number of cohorts by total activities for each cohort, then obtaining a percentage by multiplying the results by 100.</li>
 </ul>
 
 <p>To make such queries easier, make sure you -</p>
@@ -324,49 +324,15 @@ WHERE results.MONTH &lt; DATE</em>FORMAT(NOW(), &#39;%Y/%m&#39;);</p>
 <li>Conduct quick spot checks beforehand on a portion of the data to ensure that the results you get are correct (yes, add in test driven development for a quick sanity check)</li>
 </ol>
 
-<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png" alt="final"> </p>
+<p><img src="http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png" alt="final"></p>
 
 <p>Now, even though this is quite difficult, try to come up with the same results in Excel. It&#39;s much harder. Once you become comfortable with SQL - and can break each query down into small bits - it&#39;s actual much easier with SQL.</p>
 
 <h2>Summary</h2>
 
-<p>As you go through your own cohort analysis measuring retention and engagement, think about why your users may stop engaging and leave. For example, is your application useful, perhaps the novelty factor wears off too quickly, or all engagement options have been exhausted. </p>
+<p>As you go through your own cohort analysis measuring retention and engagement, think about why your users may stop engaging and leave. For example, is your application useful, perhaps the novelty factor wears off too quickly, or all engagement options have been exhausted.</p>
 
 <p>Remember that even though you may be experiencing a huge amount of growth, engagement may be low - which can be easily be overlooked. This could result in increased churn much sooner. It can&#39;t be said enough that retaining a customer is much cheaper than adding a new customer. Do your best to sustain high engagement over time and locate areas of improvement via cohort analysis.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Charting Best Practices: Proper Data Visualization]]></title>
-    <link href="http://mjhea0.github.com/blog/2013/04/28/charting-best-practices-proper-data-visualization/"/>
-    <updated>2013-04-28T13:09:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2013/04/28/charting-best-practices-proper-data-visualization</id>
-    <content type="html"><![CDATA[<p>Charting data and determining business progress is an important part of measuring success. From recording financial statistics to webpage visitor tracking, finding the best practices for charting your data is vastly important for your company&#39;s success. Here is a look at five charting best practices for optimal data visualization and analysis.</p>
-
-<p><ol><br>
-<strong><li>Arrange Data in a Clean, Presentable Manner</strong><br/><br>
-<br/><br>
-To optimize your chart&#39;s readability and presentation, it is vital that you present your data in a clean and easy to read format. Avoid putting too much data on your chart, ensure that your variables are labeled clearly and decisively, and organize your data in a strategic format. For instance, you could have your variables organized from smallest to largest if you are comparing sales figures, or if you are monitoring figures over a length of time, make sure that your chart is in chronological order. Presenting a clean and easily read chart will only improve your ability to analyze your data more effectively.</li><br/></p>
-
-<p><strong><li>Identifying the Right Type of Chart for Your Data</strong><br/><br>
-<br/></p>
-
-<p>One chart will not meet all of your business needs. It is important to use the chart that will most effectively organize your data and boost your ability to analyze and record data in the future. For example, if you are analyzing revenue totals across a time frame, a line graph may be best for you. Meanwhile, if you are running figures on trends and trying to determine a percentage breakdown for popular opinion a pie chart may be most effective. There are a variety of different charts you can use. To maximize your research&#39;s effectiveness, it is vital that you select the right type of chart.</li><br/></p>
-
-<p><strong><li>Determine What Vital Information Should Be Captured in Your Chart</strong><br/><br>
-<br/></p>
-
-<p>Most businesses run many reports that they obtain data from. Although you may have to keep track of a variety of data, it is important to keep your reporting clean and charts highly visual and readable. Determine what vital information belongs on your chart. Organization is key to maintaining clean charts and allowing you to effectively analyze data in the future. Keep only what you need on your chart, you can always create separate ones for different metrics (and you should!). On a similar note, it is important to remove unnecessary data from your chart. Keep it clean and concise to allow users to easily read the data they need, without having to filter or delete fields at a later time. </li><br/></p>
-
-<p><strong><li>Create Charts with Vibrant Color Coding to Assist in Data Visualization</strong><br/><br>
-<br/></p>
-
-<p>Creating charts with vibrant colors and bolded fonts allows users to easily and effectively analyze your chart in less time. It has also been proven that vibrant charts and presentations keep the users more engaged than boring, flat data charts and slides. Engage your audience with vivid charts that read easy and are cleanly presented.</li><br/></p>
-
-<p><strong><li>Keep Your Language Simple</strong><br/><br>
-<br/></p>
-
-<p>While you may be aiming to impress your audience with impressive statistics and a thorough presentation, it should be said that your chart should include language that is easy to understand. Your chart is no place for adverbs or expressive language. Label your chart clearly and simply, making it easy to read and view. </li></p>
 ]]></content>
   </entry>
   
@@ -488,6 +454,27 @@ To optimize your chart&#39;s readability and presentation, it is vital that you 
 <p>The video begins with showing you how to divide the users of a service into cohorts, based on the time that they first subscribed for the services. The retention rate has also been included. These values are obtained by dividing the number of users, who are still subscribing after a particular month, by the total number of users who started in each category. The average retention rate is therefore obtained by calculating the average across the cohort.</p>
 
 <p><div class="embed-video-container"><iframe src="http://www.youtube.com/embed/2QZQolcLo6M "></iframe></div></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Sentiment Analysis: Feelings, not Facts]]></title>
+    <link href="http://mjhea0.github.com/blog/2012/10/19/sentiment-analysis-feelings-not-facts/"/>
+    <updated>2012-10-19T14:32:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2012/10/19/sentiment-analysis-feelings-not-facts</id>
+    <content type="html"><![CDATA[<p>Sentiment analysis is a process, which gathers the latest input from a human source or several human sources and uses it to determine the general opinion of a person, place or thing. For example, the old-fashioned comment boxes and comment cards is a form of sentiment analysis. Often called opinion gathering, sentiment analysis can be generated from various technological sources, like Twitter or Facebook. Like the old fashioned comment box, sentiment analysis can help owners or managers find the strengths and weaknesses of a business.</p>
+
+<p>Sentiment analysis, using modern social media platforms, benefits your business by giving a true grasp of what the customers think about the business. Customers will say exactly what they think as social media has a cloak of anonymity associated with it. They often will say names and help you pinpoint the best and worst of your employees. Sentiment analysis is important to your business as it aids in evaluation and discovery of the need for new products, services, and improvements.  For example, if a reoccurring tweet on twitter addresses the awful paint on the wall, the business can address the ambiance issue. In addition, the international nature of social media ensures that plenty of people will read the sentiment and adjust their behavior accordingly.</p>
+
+<p>A single opinion posted on the web can damage a business&#39;s image quickly. And finding opinions on the web takes only a rudimentary knowledge of search engine. Think of the social media as technical, international version of word-of-mouth. A single opinion can spread like gasoline and a match. Making sentiment analysis of social platforms part of the business&#39;s regular routine will help the person in charge limit the damage.</p>
+
+<p>On the other hand, a good comment on social media can bring in more customers.  Performing sentiment analysis on twitter and other social media platforms let the business owner market based on the positive sentiment. After all, if one person likes something, such a certain product or customer service, then others will like it, too.</p>
+
+<p>That&#39;s why sentiment analysis is important to businesses. It allows business owners or managers to keep their finger on the pulse of their business. The most successful businesses know that customers are the life blood of the business and their opinion matters. Gone are the days of hardwood boxes and paper forms, but sentiment analysis is still just as important to the success of a business. Business owners and managers use it to improve every aspect of their business. How would you use sentiment analysis to improve your business?</p>
+
+<hr>
+
+<p><div class="embed-video-container"><iframe src="http://www.youtube.com/embed/YmOYrozqCps "></iframe></div></p>
 ]]></content>
   </entry>
   
