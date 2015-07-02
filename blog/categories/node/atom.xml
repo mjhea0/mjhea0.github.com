@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-06-19T13:23:54-06:00</updated>
+  <updated>2015-07-02T13:22:27-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,636 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Handling User Authentication with the MEAN Stack]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/07/02/handling-user-authentication-with-the-mean-stack/"/>
+    <updated>2015-07-02T07:04:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/07/02/handling-user-authentication-with-the-mean-stack</id>
+    <content type="html"><![CDATA[<p><strong>This post provides a solution to the question, &quot;How do I handle user authentication with the MEAN Stack - MongoDB, ExpressJS, AngularJS, NodeJS?&quot;.</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mjhea0.github.com/images/mean-auth.png" style="max-width: 100%; border:0;" alt="mean stack authentication">
+</div>
+
+<p><br></p>
+
+<blockquote>
+<p>Much of this post is ported from <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">Handling User Authentication with Angular and Flask</a>.</p>
+</blockquote>
+
+<p>Keep in mind that this solution posed in this tutorial is not the <em>only</em> solution to the question at hand, and it may not even be the <em>right</em> solution for your situation. Regardless of the solution you implement, it is important to note that since end users have full control of the browser as well as access to the front-end code, sensitive data living in your server-side API must be secure. In other words, make certain that you implement an authentication strategy on the server-side to protect sensitive API endpoints.</p>
+
+<p>That said, we need to enable the following workflow:</p>
+
+<ol>
+<li>When the client accesses the main route, an index page is served, at which point Angular takes over.</li>
+<li>The Angular app immediately &quot;asks&quot; the server if a user is logged in.</li>
+<li>Assuming the server indicates that a user is not logged in, the client is immediately asked to log in.</li>
+<li>Once logged in, the Angular app then tracks the user&#39;s login status.</li>
+</ol>
+
+<blockquote>
+<p>This tutorial uses <a href="http://docs.mongodb.org/v2.6/">MongoDB</a> v2.6.7, <a href="http://expressjs.com/4x/api.html">ExpressJS</a> v4.9.8, <a href="https://code.angularjs.org/1.3.15/docs/guide">AngularJS</a> v1.3.15, <a href="https://nodejs.org/">NodeJS</a> v0.12.2, and <a href="https://github.com/jaredhanson/passport-local">Passport-Local</a> v1.0.0. For a full list of dependencies, please view the <em><a href="https://github.com/mjhea0/mean-auth/blob/master/package.json">package.json</a></em> file.</p>
+</blockquote>
+
+<h2>Getting Started</h2>
+
+<p>First, grab the boilerplate code from the <a href="https://github.com/mjhea0/mean-auth/releases/tag/v1">project repo</a>, install the requirements, and then test out the app:</p>
+
+<p><code>sh<br>
+$ npm start<br>
+</code></p>
+
+<p>Navigate to <a href="http://localhost:1337/">http://localhost:1337/</a> and you should see a simple welcome message - &quot;Yo!&quot;. Once you&#39;re finishing admiring the page, kill the server, and glance over the code within the project folder:</p>
+
+<p><code>sh<br>
+├── client<br>
+│   ├── index.html<br>
+│   ├── main.js<br>
+│   └── partials<br>
+│       └── home.html<br>
+├── package.json<br>
+└── server<br>
+    ├── app.js<br>
+    ├── models<br>
+    │   └── user.js<br>
+    ├── routes<br>
+    │   └── api.js<br>
+    └── server.js<br>
+</code></p>
+
+<p>Nothing too spectacular. You can see that the back-end code resides in the &quot;server&quot; folder, while the front-end code lives in the &quot;client&quot; folder. Explore the files and folder within each.</p>
+
+<h2>Login API</h2>
+
+<p>Let&#39;s start with the back-end API. This is already built out, for your convenience. Why? The focus is mainly on the client-side. If you&#39;re looking for a back-end tutorial for setting up Passport with NodeJS, ExpressJS, and MongoDB take a look at this <a href="http://mherman.org/blog/2015/01/31/local-authentication-with-passport-and-express-4/#.VZCK9xNViko">tutorial</a>.</p>
+
+<h3>User Registration</h3>
+
+<p>Open the &quot;routes&quot; folder and find the following code:</p>
+
+<p><code>javascript<br>
+router.post(&#39;/register&#39;, function(req, res) {<br>
+  User.register(new User({ username: req.body.username }), req.body.password, function(err, account) {<br>
+    if (err) {<br>
+      return res.status(500).json({err: err});<br>
+    }<br>
+    passport.authenticate(&#39;local&#39;)(req, res, function () {<br>
+      return res.status(200).json({status: &#39;Registration successful!&#39;});<br>
+    });<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Here, we grab the values from the payload sent with the POST request (from the client-side), create a new <code>User</code> instance, and then attempt to add the instance to the database. If this succeeds a user is added, of course, and then we return a JSON response with a <code>status</code> of &quot;success&quot;. If it fails, an &quot;error&quot; response is sent.</p>
+
+<p>Let&#39;s test this via curl. Fire up the server and then run the following command:</p>
+
+<p><code>sh<br>
+$ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST \<br>
+-d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; http://localhost:1337/user/register<br>
+</code></p>
+
+<p>You should see a success message:</p>
+
+<p><code>sh<br>
+{&quot;status&quot;:&quot;Registration successful!&quot;}<br>
+</code></p>
+
+<p>Try it again, with the exact same username and password, and you should see an error:</p>
+
+<p><code>sh<br>
+{&quot;err&quot;:{&quot;name&quot;:&quot;BadRequestError&quot;,&quot;message&quot;:&quot;User already exists with username test@test.com&quot;}}<br>
+</code></p>
+
+<p>On to the login...</p>
+
+<h3>User Login</h3>
+
+<p><code>javascript<br>
+router.post(&#39;/login&#39;, function(req, res, next) {<br>
+  passport.authenticate(&#39;local&#39;, function(err, user, info) {<br>
+    if (err) {<br>
+      return res.status(500).json({err: err});<br>
+    }<br>
+    if (!user) {<br>
+      return res.status(401).json({err: info});<br>
+    }<br>
+    req.logIn(user, function(err) {<br>
+      if (err) {<br>
+        return res.status(500).json({err: &#39;Could not log in user&#39;});<br>
+      }<br>
+      res.status(200).json({status: &#39;Login successful!&#39;});<br>
+    });<br>
+  })(req, res, next);<br>
+});<br>
+</code></p>
+
+<p>This utilizes Passport&#39;s <a href="https://github.com/jaredhanson/passport-local">local strategy</a> to verify the username/email as well as the password. The appropriate response is then returned.</p>
+
+<p>With the server running, test again with curl-</p>
+
+<p><code>sh<br>
+curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST \<br>
+-d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; http://localhost:1337/user/login<br>
+</code></p>
+
+<p>-and you should see:</p>
+
+<p><code>sh<br>
+{&quot;message&quot;:&quot;Login successful!&quot;}<br>
+</code></p>
+
+<p>Test again with curl, sending the wrong password, and you should see:</p>
+
+<p><code>sh<br>
+{&quot;err&quot;:{&quot;status&quot;:&quot;Incorrect password&quot;}}<br>
+</code></p>
+
+<p>Perfect!</p>
+
+<h3>User Logout</h3>
+
+<p>Finally, take a look at the logout:</p>
+
+<p><code>javascript<br>
+router.get(&#39;/logout&#39;, function(req, res) {<br>
+  req.logout();<br>
+  res.status(200).json({status: &#39;Bye!&#39;});<br>
+});<br>
+</code></p>
+
+<p>This should be straightforward, and you can probably guess what the response will look like - but let&#39;s test it  again:</p>
+
+<p><code>javascript<br>
+$ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X GET \<br>
+http://localhost:1337/user/logout<br>
+</code></p>
+
+<p>You should see:</p>
+
+<p><code>sh<br>
+{&quot;status&quot;:&quot;Bye!&quot;}<br>
+</code></p>
+
+<p>On to the client-side!</p>
+
+<h2>Angular App</h2>
+
+<p>Before diving in, remember that since end users have full access to the power of the browser as well as <a href="https://developer.chrome.com/devtools">DevTools</a> and the client-side code, it&#39;s vital that you not only restrict access to sensitive endpoints on the server-side - but that you also do not store sensitive data on the client-side. Keep this in mind as you add auth functionality to your own MEAN application stack.</p>
+
+<h3>Client-side Routing</h3>
+
+<p>Let&#39;s add the remainder of the client-side routes to the <em>main.js</em> file:</p>
+
+<p><code>javascript<br>
+myApp.config(function ($routeProvider) {<br>
+  $routeProvider<br>
+    .when(&#39;/&#39;, {templateUrl: &#39;partials/home.html&#39;})<br>
+    .when(&#39;/login&#39;, {templateUrl: &#39;partials/login.html&#39;, controller: &#39;loginController&#39;})<br>
+    .when(&#39;/logout&#39;, {controller: &#39;logoutController&#39;})<br>
+    .when(&#39;/register&#39;, {templateUrl: &#39;partials/register.html&#39;, controller: &#39;registerController&#39;})<br>
+    .when(&#39;/one&#39;, {template: &#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;})<br>
+    .when(&#39;/two&#39;, {template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;})<br>
+    .otherwise({redirectTo: &#39;/&#39;});<br>
+});<br>
+</code></p>
+
+<p>Here, we created five new routes. Before we add the subsequent templates and controllers, let&#39;s create a <a href="https://docs.angularjs.org/guide/services">service</a> to handle authentication.</p>
+
+<h3>Authentication Service</h3>
+
+<p>Start by adding the basic structure of the service to a new file called <em>services.js</em> in the &quot;client&quot; directory:</p>
+
+<p>```javascript<br>
+angular.module(&#39;myApp&#39;).factory(&#39;AuthService&#39;,<br>
+  [&#39;$q&#39;, &#39;$timeout&#39;, &#39;$http&#39;,<br>
+  function ($q, $timeout, $http) {</p>
+<div class="highlight"><pre><code class="text">// create user variable
+var user = null;
+
+// return available functions for use in controllers
+return ({
+  isLoggedIn: isLoggedIn,
+  getUserStatus: getUserStatus,
+  login: login,
+  logout: logout,
+  register: register
+});
+</code></pre>
+</div>
+
+<p>}]);<br>
+```</p>
+
+<p>Here, we simply defined the service name, <code>AuthService</code>, and then injected the dependencies that we will be using - <code>$q</code>, <code>$timeout</code>, <code>$http</code> - and then returned the functions, which we still need to write, for use outside the service.</p>
+
+<p>Make sure to add the script to the <em>index.html</em> file:</p>
+
+<p><code>html<br>
+&lt;script src=&quot;./services.js&quot;&gt;&lt;/script&gt;<br>
+</code></p>
+
+<p>Let&#39;s create each function...</p>
+
+<p><strong><code>isLoggedIn()</code></strong></p>
+
+<p><code>javascript<br>
+function isLoggedIn() {<br>
+  if(user) {<br>
+    return true;<br>
+  } else {<br>
+    return false;<br>
+  }<br>
+}<br>
+</code></p>
+
+<p>This function returns <code>true</code> if <code>user</code> evaluates to <code>true</code> - a user is logged in - otherwise it returns false.</p>
+
+<p><strong><code>getUserStatus()</code></strong></p>
+
+<p><code>javascript<br>
+function getUserStatus() {<br>
+  return user;<br>
+}<br>
+</code></p>
+
+<p><strong><code>login()</code></strong></p>
+
+<p>```javascript<br>
+function login(username, password) {</p>
+
+<p>// create a new instance of deferred<br>
+  var deferred = $q.defer();</p>
+
+<p>// send a post request to the server<br>
+  $http.post(&#39;/user/login&#39;, {username: username, password: password})<br>
+    // handle success<br>
+    .success(function (data, status) {<br>
+      if(status === 200 &amp;&amp; data.status){<br>
+        user = true;<br>
+        deferred.resolve();<br>
+      } else {<br>
+        user = false;<br>
+        deferred.reject();<br>
+      }<br>
+    })<br>
+    // handle error<br>
+    .error(function (data) {<br>
+      user = false;<br>
+      deferred.reject();<br>
+    });</p>
+
+<p>// return promise object<br>
+  return deferred.promise;</p>
+
+<p>}<br>
+```</p>
+
+<p>Here, we used the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$q">$q</a> service to set up a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a>, which we&#39;ll access in a future controller. We also utilized the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$http">$http</a> service to send an AJAX request to the <code>/api/login</code> endpoint that we already set up in our back-end Node/Express app.</p>
+
+<p>Based on the returned response, we either <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">resolve</a> or <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">reject</a> and set the value of <code>user</code> to <code>true</code> or <code>false</code>.</p>
+
+<p><strong><code>logout()</code></strong></p>
+
+<p>```javascript<br>
+function logout() {</p>
+
+<p>// create a new instance of deferred<br>
+  var deferred = $q.defer();</p>
+
+<p>// send a get request to the server<br>
+  $http.get(&#39;/user/logout&#39;)<br>
+    // handle success<br>
+    .success(function (data) {<br>
+      user = false;<br>
+      deferred.resolve();<br>
+    })<br>
+    // handle error<br>
+    .error(function (data) {<br>
+      user = false;<br>
+      deferred.reject();<br>
+    });</p>
+
+<p>// return promise object<br>
+  return deferred.promise;</p>
+
+<p>}<br>
+```</p>
+
+<p>Here, we followed the same formula as the <code>login()</code> function, except we sent a GET request rather than a POST and to be save we just went ahead and handled the error the same as the success.</p>
+
+<p><strong><code>register()</code></strong></p>
+
+<p>```javascript<br>
+function register(username, password) {</p>
+
+<p>// create a new instance of deferred<br>
+  var deferred = $q.defer();</p>
+
+<p>// send a post request to the server<br>
+  $http.post(&#39;/user/register&#39;, {username: username, password: password})<br>
+    // handle success<br>
+    .success(function (data, status) {<br>
+      if(status === 200 &amp;&amp; data.status){<br>
+        deferred.resolve();<br>
+      } else {<br>
+        deferred.reject();<br>
+      }<br>
+    })<br>
+    // handle error<br>
+    .error(function (data) {<br>
+      deferred.reject();<br>
+    });</p>
+
+<p>// return promise object<br>
+  return deferred.promise;</p>
+
+<p>}<br>
+```</p>
+
+<p>Again, we followed a similar formula to the <code>logout()</code> function. Can you tell what&#39;s happening?</p>
+
+<p>That&#39;s it for the service. Keep in mind that we still have not &quot;used&quot; this service. In order to that we just need to inject it into the necessary components in the Angular app. In our case, that will be the controllers, which we&#39;ll build next.</p>
+
+<h3>Templates and Controllers</h3>
+
+<p>Looking back at our routes, we need to setup two partials/templates and three controllers:</p>
+
+<p><code>javascript<br>
+.when(&#39;/login&#39;, {templateUrl: &#39;partials/login.html&#39;, controller: &#39;loginController&#39;})<br>
+.when(&#39;/logout&#39;, {controller: &#39;logoutController&#39;})<br>
+.when(&#39;/register&#39;, {templateUrl: &#39;partials/register.html&#39;, controller: &#39;registerController&#39;})<br>
+</code></p>
+
+<p><strong>Login</strong></p>
+
+<p>First, add the following HTML to a new file called <em>login.html</em>:</p>
+
+<p><code>html<br>
+&lt;div class=&quot;col-md-4&quot;&gt;<br>
+  &lt;h1&gt;Login&lt;/h2&gt;<br>
+  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;&lt;/div&gt;<br>
+  &lt;form class=&quot;form&quot; ng-submit=&quot;login()&quot;&gt;<br>
+    &lt;div class=&quot;form-group&quot;&gt;<br>
+      &lt;label&gt;Username&lt;/label&gt;<br>
+      &lt;input type=&quot;text&quot; class=&quot;form-control&quot; name=&quot;username&quot; ng-model=&quot;loginForm.username&quot; required&gt;<br>
+    &lt;/div&gt;<br>
+    &lt;div class=&quot;form-group&quot;&gt;<br>
+      &lt;label&gt;Password&lt;/label&gt;<br>
+        &lt;input type=&quot;password&quot; class=&quot;form-control&quot; name=&quot;password&quot; ng-model=&quot;loginForm.password&quot; required&gt;<br>
+      &lt;/div&gt;<br>
+      &lt;div&gt;<br>
+        &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot; ng-disabled=&quot;disabled&quot;&gt;Login&lt;/button&gt;<br>
+      &lt;/div&gt;<br>
+  &lt;/form&gt;<br>
+&lt;/div&gt;<br>
+</code></p>
+
+<p>Add this file to the &quot;partials&quot; directory.</p>
+
+<p>Take note of the form. We used the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngModel">ng-model</a> directive on each of the inputs so that we can capture those values in the controller. Also, when the form is submitted, the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngSubmit">ng-submit</a> directive handles the event by firing the <code>login()</code> function.</p>
+
+<p>Next, within the &quot;client&quot; folder, add a new file called <em>controllers.js</em>. Yes, this will hold all of our Angular app&#39;s controllers. Don&#39;t forget to add the script to the <em>index.html</em> file:</p>
+
+<p><code>html<br>
+&lt;script src=&quot;./controllers.js&quot;&gt;&lt;/script&gt;<br>
+</code></p>
+
+<p>Now, let&#39;s add the first controller:</p>
+
+<p>```javascript<br>
+angular.module(&#39;myApp&#39;).controller(&#39;loginController&#39;,<br>
+  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
+  function ($scope, $location, AuthService) {</p>
+<div class="highlight"><pre><code class="text">console.log(AuthService.getUserStatus());
+
+$scope.login = function () {
+
+  // initial values
+  $scope.error = false;
+  $scope.disabled = true;
+
+  // call login from service
+  AuthService.login($scope.loginForm.username, $scope.loginForm.password)
+    // handle success
+    .then(function () {
+      $location.path(&#39;/&#39;);
+      $scope.disabled = false;
+      $scope.loginForm = {};
+    })
+    // handle error
+    .catch(function () {
+      $scope.error = true;
+      $scope.errorMessage = &quot;Invalid username and/or password&quot;;
+      $scope.disabled = false;
+      $scope.loginForm = {};
+    });
+
+};
+</code></pre>
+</div>
+
+<p>}]);<br>
+```</p>
+
+<p>So, when the <code>login()</code> function is fired, we set some initial values and then call <code>login()</code> from the <code>AuthService</code>, passing the user inputed email and password as arguments. The subsequent success or error is then handled and the DOM/view/template is updated appropriately.</p>
+
+<p>Did you notice how we logged the return value of <code>AuthService.getUserStatus()</code> to the console? This is to ensure that the value is correct based on whether a user is logged in or out - <code>true</code> or <code>false</code>, respectively.</p>
+
+<p>Ready to test the first round-trip - client =&gt; server =&gt; client?</p>
+
+<p>Fire up the server and navigate to <a href="http://localhost:5000/#/login">http://localhost:1337/#/login</a> in your browser. First, try logging in with the user credentials used to register earlier - e.g, <code>test@test.com</code> and <code>test</code>, respectively. If all went well, you should be redirected to the main URL. Next, try to log in using invalid credentials. You should see the error message flash, &quot;Invalid username and/or password&quot;.</p>
+
+<p><strong>Logout</strong></p>
+
+<p>Add the controller:</p>
+
+<p>```javascript<br>
+angular.module(&#39;myApp&#39;).controller(&#39;logoutController&#39;,<br>
+  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
+  function ($scope, $location, AuthService) {</p>
+<div class="highlight"><pre><code class="text">$scope.logout = function () {
+
+  console.log(AuthService.getUserStatus());
+
+  // call logout from service
+  AuthService.logout()
+    .then(function () {
+      $location.path(&#39;/login&#39;);
+    });
+
+};
+</code></pre>
+</div>
+
+<p>}]);<br>
+```</p>
+
+<p>Here, we called <code>AuthService.logout()</code> and then redirected the user to the <code>/login</code> route after the promise is resolved.</p>
+
+<p>Add a button to <em>home.html</em>:</p>
+
+<p><code>html<br>
+&lt;div ng-controller=&quot;logoutController&quot;&gt;<br>
+  &lt;a ng-click=&#39;logout()&#39; class=&quot;btn btn-default&quot;&gt;Logout&lt;/a&gt;<br>
+&lt;/div&gt;<br>
+</code></p>
+
+<p>And then test it out again.</p>
+
+<p><strong>Register</strong></p>
+
+<p>Add a new new file called <em>register.html</em> to the &quot;partials&quot; folder and add the following HTML:</p>
+
+<p><code>html<br>
+&lt;div class=&quot;col-md-4&quot;&gt;<br>
+  &lt;h1&gt;Register&lt;/h2&gt;<br>
+  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;&lt;/div&gt;<br>
+  &lt;form class=&quot;form&quot; ng-submit=&quot;register()&quot;&gt;<br>
+    &lt;div class=&quot;form-group&quot;&gt;<br>
+      &lt;label&gt;Username&lt;/label&gt;<br>
+      &lt;input type=&quot;text&quot; class=&quot;form-control&quot; name=&quot;username&quot; ng-model=&quot;registerForm.username&quot; required&gt;<br>
+    &lt;/div&gt;<br>
+    &lt;div class=&quot;form-group&quot;&gt;<br>
+      &lt;label&gt;Password&lt;/label&gt;<br>
+        &lt;input type=&quot;password&quot; class=&quot;form-control&quot; name=&quot;password&quot; ng-model=&quot;registerForm.password&quot; required&gt;<br>
+      &lt;/div&gt;<br>
+      &lt;div&gt;<br>
+        &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot; ng-disabled=&quot;disabled&quot;&gt;Register&lt;/button&gt;<br>
+      &lt;/div&gt;<br>
+  &lt;/form&gt;<br>
+&lt;/div&gt;<br>
+</code></p>
+
+<p>Next, add the controller:</p>
+
+<p>```javascript<br>
+angular.module(&#39;myApp&#39;).controller(&#39;registerController&#39;,<br>
+  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
+  function ($scope, $location, AuthService) {</p>
+<div class="highlight"><pre><code class="text">console.log(AuthService.getUserStatus());
+
+$scope.register = function () {
+
+  // initial values
+  $scope.error = false;
+  $scope.disabled = true;
+
+  // call register from service
+  AuthService.register($scope.registerForm.username, $scope.registerForm.password)
+    // handle success
+    .then(function () {
+      $location.path(&#39;/login&#39;);
+      $scope.disabled = false;
+      $scope.registerForm = {};
+    })
+    // handle error
+    .catch(function () {
+      $scope.error = true;
+      $scope.errorMessage = &quot;Something went wrong!&quot;;
+      $scope.disabled = false;
+      $scope.registerForm = {};
+    });
+
+};
+</code></pre>
+</div>
+
+<p>}]);<br>
+```</p>
+
+<p>You&#39;ve seen this before, so let&#39;s move right on to testing.</p>
+
+<p>Fire up the server and register a new user at <a href="http://localhost:1337/#/register">http://localhost:1337/#/register</a>. Make sure to test logging in with that new user as well.</p>
+
+<p>Well, that&#39;s it for the templates and controllers. We now need to add in functionality to check if a user is logged in on each and every change of route.</p>
+
+<h3>Route Changes</h3>
+
+<p>Start by adding the following code to <em>main.js</em>:</p>
+
+<p><code>javascript<br>
+myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
+  $rootScope.$on(&#39;$routeChangeStart&#39;, function (event, next, current) {<br>
+    if (AuthService.isLoggedIn() === false) {<br>
+      $location.path(&#39;/login&#39;);<br>
+    }<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>The <a href="https://code.angularjs.org/1.3.15/docs/api/ngRoute/service/$route">$routeChangeStart</a> event happens before the actual route change occurs. So, whenever a route is accessed, before the view is served, we ensure that the user is logged in. Test this out!</p>
+
+<h2>Route Restriction</h2>
+
+<p>Right now all client-side routes require a user to be logged in. What if you want certain routes restricted and other routes open?</p>
+
+<p>You can add the following code to each route handler, replacing <code>true</code> with <code>false</code> for routes that you do not want to restrict:</p>
+
+<p><code>javascript<br>
+access: {restricted: true}<br>
+</code></p>
+
+<p>For example:</p>
+
+<p><code>javascript<br>
+myApp.config(function ($routeProvider) {<br>
+  $routeProvider<br>
+    .when(&#39;/&#39;, {templateUrl: &#39;partials/home.html&#39;})<br>
+    .when(&#39;/login&#39;, {<br>
+      templateUrl: &#39;partials/login.html&#39;,<br>
+      controller: &#39;loginController&#39;,<br>
+      access: {restricted: false}<br>
+    })<br>
+    .when(&#39;/logout&#39;, {<br>
+      controller: &#39;logoutController&#39;,<br>
+      access: {restricted: true}<br>
+    })<br>
+    .when(&#39;/register&#39;, {<br>
+      templateUrl: &#39;partials/register.html&#39;,<br>
+      controller: &#39;registerController&#39;,<br>
+      access: {restricted: true}<br>
+    })<br>
+    .when(&#39;/one&#39;, {<br>
+      template: &#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;,<br>
+      access: {restricted: true}<br>
+    })<br>
+    .when(&#39;/two&#39;, {<br>
+      template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;,<br>
+      access: {restricted: false}<br>
+    })<br>
+    .otherwise({redirectTo: &#39;/&#39;});<br>
+});<br>
+</code></p>
+
+<p>Now just update the <code>$routeChangeStart</code> code in <em>main.js</em>:</p>
+
+<p><code>javascript<br>
+myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
+  $rootScope.$on(&#39;$routeChangeStart&#39;, function (event, next, current) {<br>
+    if (next.access.restricted &amp;&amp; AuthService.isLoggedIn() === false) {<br>
+      $location.path(&#39;/login&#39;);<br>
+      $route.reload();<br>
+    }<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Test it out!</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#39;s it. One thing you should note is that the Angular app can be used with various frameworks as long as the endpoints are set up correctly in the AJAX requests. So, you can easily take the Angular portion and add it to your Django or Pyramid or NodeJS app. Try it!</p>
+
+<blockquote>
+<p>Check out a Python/Flask app with Angular Auth <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">here</a></p>
+</blockquote>
+
+<p>Grab the final code from the <a href="https://github.com/mjhea0/mean-auth">repo</a>. Cheers!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[User Authentication with Passport and Express 4]]></title>
@@ -1780,693 +2410,6 @@ script(src=&quot;/javascripts/main.js&quot;)
 <p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/part4.png" alt="part-4"></p>
 
 <p>Alright, next time we&#39;ll expand the app&#39;s functionality to allow users to save jobs they may be interested in applying to at a later date. Until then, check out the latest code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>. Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Node Twitter Sentiment - Part 2]]></title>
-    <link href="http://mjhea0.github.com/blog/2014/03/18/node-twitter-sentiment-part-2/"/>
-    <updated>2014-03-18T11:55:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2014/03/18/node-twitter-sentiment-part-2</id>
-    <content type="html"><![CDATA[<p>This is for the <a href="http://www.meetup.com/Node-js-Denver-Boulder/">Node-js-Denver-Boulder</a> Meetup &lt;3 Cheers!</p>
-
-<blockquote>
-<p>Miss part 1? Check it out <a href="http://mherman.org/blog/2014/02/19/node-twitter-sentiment/">here</a>.</p>
-</blockquote>
-
-<p>Let&#39;s begin ...</p>
-
-<p>Before adding additional functionality to the <a href="https://github.com/mjhea0/node-twitter-sentiment">Node Twitter Sentiment Analysis</a> application, we need to refactor the code. Frankly, there are some mistakes that were made on purpose to highlight an issue that many new developers overlook when first working with Node.</p>
-
-<p>Remember this function from <em>index.js</em> in the routes folder:</p>
-
-<p>```javascript<br>
-exports.search = function(req, res) {<br>
-  // grab the request from the client<br>
-  var choices = JSON.parse(req.body.choices);<br>
-  // grab the current date<br>
-  var today = new Date();<br>
-  // establish the twitter config (grab your keys at dev.twitter.com)<br>
-  var twitter = new twit({<br>
-    consumer<em>key: config.consumer</em>key,<br>
-    consumer<em>secret: config.consumer</em>secret,<br>
-    access<em>token: config.access</em>token,<br>
-    access<em>token</em>secret: config.access<em>token</em>secret<br>
-  });<br>
-  // set highest score<br>
-  var highestScore = -Infinity;<br>
-  // set highest choice<br>
-  var highestChoice = null;<br>
-  // create new array<br>
-  var array = [];<br>
-  // set score<br>
-  var score = 0;<br>
-  console.log(&quot;----------&quot;)</p>
-
-<p>// iterate through the choices array from the request<br>
-  for(var i = 0; i &lt; choices.length; i++) {<br>
-    (function(i) {<br>
-    // add choice to new array<br>
-    array.push(choices[i])<br>
-    // grad 20 tweets from today<br>
-    twitter.get(&#39;search/tweets&#39;, {q: &#39;&#39; + choices[i] + &#39; since:&#39; + today.getFullYear() + &#39;-&#39; +<br>
-      (today.getMonth() + 1) + &#39;-&#39; + today.getDate(), count:20}, function(err, data) {<br>
-        // perform sentiment analysis (see below)<br>
-        score = performAnalysis(data[&#39;statuses&#39;]);<br>
-        console.log(&quot;score:&quot;, score)<br>
-        console.log(&quot;choice:&quot;, choices[i])<br>
-        //  determine winner<br>
-        if(score &gt; highestScore) {<br>
-          highestScore = score;<br>
-          highestChoice = choices[i];<br>
-          console.log(&quot;winner:&quot;,choices[i])<br>
-        }<br>
-        console.log(&quot;&quot;)<br>
-      });<br>
-    })(i)<br>
-  }<br>
-  // send response back to the server side; why the need for the timeout?<br>
-  setTimeout(function() { res.end(JSON.stringify({&#39;score&#39;: highestScore, &#39;choice&#39;: highestChoice})) }, 5000);<br>
-};<br>
-```</p>
-
-<p>Essentially we&#39;re grabbing the user inputted data, pulling tweets based on the inputs, and then calculating the sentiment of those tweets. The timeout is necessary because of how Node <a href="http://stackoverflow.com/questions/7931537/whats-the-difference-between-asynchronous-non-blocking-event-base-architectu/9489547#9489547">works</a>. Because Node is asynchronous, functions do not block other functions from running. Without the 5 second time-out, the next function will append the results to the DOM without waiting for the function to finish running. Essentially, nothing is appended. Make sense?</p>
-
-<p>Put another way, when functions run that are blocking, they wait there for the result to come back before another function fires. Node, on the other hand, will continue executing the code that comes after it (because it&#39;s functions are non-blocking(, then jump back when the result is available.</p>
-
-<p>So, why won&#39;t a timeout work then?</p>
-
-<p>Again, the code has a function that sends the results in 5 seconds, regardless as to the execution state of the call to twitter. What happens though, if we run the program without a network connection? Or if Twitter is down? Or if we pulled in 10,000 tweets instead of 20?</p>
-
-<p>It&#39;s still going to return results after 5 seconds. This is not what we want, obviously. So, how do we fix it? There&#39;s a number of different methods, none of which fully solve it in an elegant manner. In this post, we&#39;ll look at:</p>
-
-<table width="800">
-<colgroup>
-<col style="text-align:left;"/>
-<col style="text-align:left;"/>
-<col style="text-align:left;"/>
-</colgroup>
-
-<thead>
-<tr>
-    <th style="text-align:center;">Method</th>
-    <th style="text-align:center;">URL</th>
-    <th style="text-align:center;">Library</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-    <td style="text-align:left;">Async</td>
-    <td style="text-align:left;"><a href="https://github.com/Nodejs-Colorado/node-twitter-sentiment-async">node-twitter-sentiment-async</a></td>
-    <td style="text-align:left;"><a href="https://github.com/caolan/async">https://github.com/caolan/async</a></td>
-</tr>
-<tr>
-    <td style="text-align:left;">Promises</td>
-    <td style="text-align:left;"><a href="https://github.com/Nodejs-Colorado/node-twitter-sentiment-promises">node-twitter-sentiment-promises</a></td></td>
-    <td style="text-align:left;"><a href="https://github.com/kriskowal/q">https://github.com/kriskowal/q</a></td>
-</tr>
-<tr>
-    <td style="text-align:left;">Generators</td>
-    <td style="text-align:center;">n/a</td>
-    <td style="text-align:center;">n/a</td>
-</tr>
-<tr>
-    <td style="text-align:left;">IcedCoffeeScript</td>
-    <td style="text-align:center;">n/a</td>
-    <td style="text-align:left;"><a href="https://github.com/maxtaco/coffee-script">https://github.com/maxtaco/coffee-script</a></td>
-</tr>
-</tbody>
-</table>
-
-<h2>Async</h2>
-
-<p><strong>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/8358230/">Manish Vachharajani</a> for developing the code for this example.</strong></p>
-
-<p>One solution is to use the <a href="https://github.com/caolan/async">Async</a>. This is often the go-to solution, since the syntax is simple, it&#39;s totally straightforward, and it uses call backs. In fact, in order to use Async, you must follow the convention of providing the callback as the last argument of the Async function. Thus, for users used to callbacks, this is an extremely easy solution.</p>
-
-<h3>Basics</h3>
-
-<p>Start by installing the package:</p>
-
-<p><code>sh<br>
-$ npm install async<br>
-</code></p>
-
-<p>In our code we will be using the <code>map()</code> helper method, which takes an array, a filter function, and a callback. The filter function is an async function that takes a callback.</p>
-
-<p>Simple example:</p>
-
-<p>```javascript<br>
-var async = require(&#39;async&#39;);</p>
-
-<p>var names = [&quot;michael&quot;,&quot;richard&quot;,&quot;john&quot;,&quot;jennifer&quot;,&quot;ben&quot;,&quot;julie&quot;];</p>
-
-<p>async.map(names, getInfo, function (err, result) {<br>
-if(!err) {<br>
-  console.log(&#39;Finished: &#39; + result);<br>
-} else {<br>
-  console.log(&#39;Error: &#39; + err);<br>
-}</p>
-
-<p>});</p>
-
-<p>function getInfo(name, callback) {<br>
-setTimeout(function() {<br>
-  callback(null, name.toUpperCase());<br>
-}, 1000);<br>
-}<br>
-```</p>
-
-<p>Test it out <a href="http://runnable.com/UyXKBzE8BKUZRnR5/node-async-map-example-for-node-js">here</a>.</p>
-
-<p>Basically, we have an array of names, in lower case, which we are converting to uppercase, then outputting via a <code>console.log</code>. Let&#39;s say that another function depended on the results of <code>getInfo</code>, if <code>getInfo</code> was long-running, then the other function could fire before <code>getInfo</code> returned the results. Thus, the need to suspend the function until the results are returned.</p>
-
-<h3>Update Node-Twitter-Sentiment</h3>
-
-<p>We just need to update the <em>index.js</em> file in the &quot;routes&quot; folder:<br>
-```javascript<br>
-&quot;use strict&quot;;</p>
-
-<p>var path = require(&quot;path&quot;);<br>
-var twit = require(&#39;twit&#39;);<br>
-var sentimental = require(&#39;Sentimental&#39;);<br>
-var config = require(&quot;../config&quot;);<br>
-var async = require(&#39;async&#39;);</p>
-
-<p>exports.index = function(req, res){<br>
-  res.render(&#39;index&#39;, { title: &quot;Twit-Decision&quot;});<br>
-};</p>
-
-<p>exports.ping = function(req, res){<br>
-  res.send(&quot;pong!&quot;, 200);<br>
-};</p>
-
-<p>exports.search = function(req, res) {<br>
-  // grab the request from the client<br>
-  var choices = JSON.parse(req.body.choices);<br>
-  // grab the current date<br>
-  var today = new Date();<br>
-  // establish the twitter config (grab your keys at dev.twitter.com)<br>
-  var twitter = new twit({<br>
-    consumer<em>key: config.consumer</em>key,<br>
-    consumer<em>secret: config.consumer</em>secret,<br>
-    access<em>token: config.access</em>token,<br>
-    access<em>token</em>secret: config.access<em>token</em>secret<br>
-  });<br>
-  console.log(&quot;----------&quot;)</p>
-
-<p>// grade 20 tweets from today with keyword choice and call callback<br>
-  // when done<br>
-  function getAndScoreTweets(choice, callback) {<br>
-    twitter.get(&#39;search/tweets&#39;, {q: &#39;&#39; + choice + &#39; since:&#39; + today.getFullYear() + &#39;-&#39; +<br>
-      (today.getMonth() + 1) + &#39;-&#39; + today.getDate(), count:20}, function(err, data) {<br>
-        // perform sentiment analysis (see below)<br>
-      if(err) {<br>
-        console.log(err);<br>
-        callback(err.message, undefined);<br>
-        return;<br>
-      }<br>
-      var score = performAnalysis(data[&#39;statuses&#39;]);<br>
-      console.log(&quot;score:&quot;, score)<br>
-      console.log(&quot;choice:&quot;, choice)<br>
-      callback(null, score);<br>
-    });<br>
-  }<br>
-  //Grade tweets for each choice in parallel and compute winner when<br>
-  //all scores are collected<br>
-  async.map(choices, getAndScoreTweets, function(err, scores) {<br>
-    if(err) {<br>
-      console.log(&quot;Unable to score all tweets&quot;);<br>
-      res.end(JSON.stringify(err));<br>
-    }<br>
-    var highestChoice = choices[0];<br>
-    var highestScore = scores.reduce(function(prev, cur, index) {<br>
-      if(prev &lt; cur) {<br>
-        highestChoice = choices[index];<br>
-        return cur;<br>
-      } else {<br>
-        return prev;<br>
-      }<br>
-    });<br>
-    res.end(JSON.stringify({&#39;score&#39;: highestScore, &#39;choice&#39;: highestChoice}));<br>
-  });<br>
-}</p>
-
-<p>function performAnalysis(tweetSet) {<br>
-  //set a results variable<br>
-  var results = 0;<br>
-  // iterate through the tweets, pulling the text, retweet count, and favorite count<br>
-  for(var i = 0; i &lt; tweetSet.length; i++) {<br>
-    var tweet = tweetSet[i][&#39;text&#39;];<br>
-    var retweets = tweetSet[i][&#39;retweet_count&#39;];<br>
-    var favorites = tweetSet[i][&#39;favorite_count&#39;];<br>
-    // remove the hashtag from the tweet text<br>
-    tweet = tweet.replace(&#39;#&#39;, &#39;&#39;);<br>
-    // perform sentiment on the text<br>
-    var score = sentimental.analyze(tweet)[&#39;score&#39;];<br>
-    // calculate score<br>
-    results += score;<br>
-    if(score &gt; 0){<br>
-      if(retweets &gt; 0) {<br>
-        results += (Math.log(retweets)/Math.log(2));<br>
-      }<br>
-      if(favorites &gt; 0) {<br>
-        results += (Math.log(favorites)/Math.log(2));<br>
-      }<br>
-    }<br>
-    else if(score &lt; 0){<br>
-      if(retweets &gt; 0) {<br>
-        results -= (Math.log(retweets)/Math.log(2));<br>
-      }<br>
-      if(favorites &gt; 0) {<br>
-        results -= (Math.log(favorites)/Math.log(2));<br>
-      }<br>
-    }<br>
-    else {<br>
-      results += 0;<br>
-    }<br>
-  }<br>
-  // return score<br>
-  results = results / tweetSet.length;<br>
-  return results<br>
-}<br>
-```</p>
-
-<h4>What&#39;s going on?</h4>
-
-<p>Let&#39;s look at the specific changes:</p>
-
-<p><code>javascript<br>
-// grade 20 tweets from today with keyword choice and call callback<br>
-// when done<br>
-function getAndScoreTweets(choice, callback) {<br>
-  twitter.get(&#39;search/tweets&#39;, {q: &#39;&#39; + choice + &#39; since:&#39; + today.getFullYear() + &#39;-&#39; +<br>
-    (today.getMonth() + 1) + &#39;-&#39; + today.getDate(), count:20}, function(err, data) {<br>
-      // perform sentiment analysis (see below)<br>
-    if(err) {<br>
-      console.log(err);<br>
-      callback(err.message, undefined);<br>
-      return;<br>
-    }<br>
-    var score = performAnalysis(data[&#39;statuses&#39;]);<br>
-    console.log(&quot;score:&quot;, score)<br>
-    console.log(&quot;choice:&quot;, choice)<br>
-    callback(null, score);<br>
-  });<br>
-}<br>
-//Grade tweets for each choice in parallel and compute winner when<br>
-//all scores are collected<br>
-async.map(choices, getAndScoreTweets, function(err, scores) {<br>
-  if(err) {<br>
-    console.log(&quot;Unable to score all tweets&quot;);<br>
-    res.end(JSON.stringify(err));<br>
-  }<br>
-  var highestChoice = choices[0];<br>
-  var highestScore = scores.reduce(function(prev, cur, index) {<br>
-    if(prev &lt; cur) {<br>
-      highestChoice = choices[index];<br>
-      return cur;<br>
-    } else {<br>
-      return prev;<br>
-    }<br>
-  });<br>
-  res.end(JSON.stringify({&#39;score&#39;: highestScore, &#39;choice&#39;: highestChoice}));<br>
-});<br>
-</code></p>
-
-<p>We pass in the <code>choices</code> array, the <code>getAndScoreTweets()</code> function (which handles the calculating of sentiment), then the results are serialized and sent back to the client. <code>async.map()</code> suspends the <code>getAndScoreTweets()</code> function until it&#39;s done running. Thus, the results are not sent back to the client until Sentiment is done.</p>
-
-<p>Further, <code>async.map()</code> allows you to do a long delay operation on each array element because of the fact that the mapped function must call &quot;callback&quot; - which happens in the <code>getInfo()</code> function.</p>
-
-<p>Simple, right?</p>
-
-<p>Check out the final code here: <a href="https://github.com/mjhea0/node-twitter-sentiment-async">https://github.com/mjhea0/node-twitter-sentiment-async</a></p>
-
-<h2>Promises</h2>
-
-<p><strong>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/23013171/">Richard Lucas</a> for developing the code and writing the following explanation.</strong></p>
-
-<p>Promises are not the easiest JavaScript concept to wrap your head around, so do not feel bad if this concept takes time to understand.  It certainly has taken a lot of time for myself, and I still get caught up and confused in using some of the methods.  In this example, I tried to just use a simple (and hopefully easy to understand) pattern of deferreds using the Q promise library.  You may also have experience with jQuery deferreds via the <code>$.Deferred</code> object.  They are very similar.</p>
-
-<h3>What are promises (from the Q <a href="https://github.com/kriskowal/q">documentation</a>)</h3>
-
-<blockquote>
-<p>If a function cannot return a value or throw an exception without blocking, it can return a promise instead. A promise is an object that represents the return value or the thrown exception that the function may eventually provide. A promise can also be used as a proxy for a remote object to overcome latency.</p>
-</blockquote>
-
-<h3>Here are some great resources for learning more about promises</h3>
-
-<ol>
-<li><a href="http://promises-aplus.github.io/promises-spec/">Promises A+ Spec</a></li>
-<li><a href="http://documentup.com/kriskowal/q/">Q Library</a></li>
-<li><a href="http://www.promisejs.org/">Promisesjs.org - Great introduction</a></li>
-<li><a href="http://nodeschool.io/#promiseitwonthurt">Promises by Nodeschool.io</a></li>
-<li><a href="http://mattgreer.org/articles/promises-in-wicked-detail/?utm_source=javascriptweekly&amp;utm_medium=email">Javascript Promises in Wicked Detail</a></li>
-<li><a href="http://strongloop.com/strongblog/promises-in-node-js-with-q-an-alternative-to-callbacks/">Promises in Node.js</a></li>
-<li><a href="https://github.com/bellbind/using-promise-q/">Using Promises with Q</a></li>
-<li><a href="http://shop.oreilly.com/product/0636920030508.do">Using jQuery Deferreds - Book from O&#39;Reilly</a></li>
-</ol>
-
-<h3>Pattern used</h3>
-
-<p>Here the deferred pattern was used, which goes something like this:</p>
-
-<p><code>javascript<br>
-var promise = function(err, result) {<br>
-  var deferred = Q.defer();<br>
-  if (err) {<br>
-    deferred.reject(new Error(err));<br>
-  } else {<br>
-    deferred.resolve(result);<br>
-  }<br>
-  return deferred.promise;<br>
-}<br>
-</code></p>
-
-<p>You then go on to using the <code>then</code> and <code>done</code> methods:</p>
-
-<p><code>javascript<br>
-promise.then(function(data) {<br>
-  return doSomething(data);<br>
-}).done(function(data) {<br>
-  return finishSomething(data);<br>
-});<br>
-</code></p>
-
-<h3>How they were implemented</h3>
-
-<p>```javascript<br>
-var searchTweets = function(choice) {<br>
-  var deferred = Q.defer(), // declare the deferred<br>
-     ...</p>
-
-<p>twitter.get(&#39;search/tweets&#39;,<br>
-  {<br>
-    q: &#39;&#39; + choice + &#39; since:&#39; + dateString,<br>
-    count: 20<br>
-  }, function(err, data) {<br>
-      if (err) {<br>
-        deferred.reject(new Error(err)); //reject it in the callback<br>
-      } else {<br>
-        ...<br>
-        choiceData[&#39;choice&#39;] = choice;<br>
-        choiceData[&#39;score&#39;] = score;<br>
-        deferred.resolve(choiceData); //resolve it in the callback<br>
-      }<br>
-      console.log(&quot;&quot;);<br>
-    });<br>
-  return deferred.promise; //return the promise object<br>
-};<br>
-```</p>
-
-<p>The search function.  Note the promise chain:</p>
-
-<p>```javascript<br>
-exports.search = function(req, res) {<br>
-  var choices = JSON.parse(req.body.choices),<br>
-      choiceArray = [];</p>
-
-<p>var promise = function(choices) {<br>
-    var deferred = Q.defer();<br>
-    choices.forEach(function(choice, index) {<br>
-      searchTweets(choice)<br>
-        .fail(function(error) {<br>
-          throw new Error(error);<br>
-        })<br>
-        .done(function(data) {<br>
-          choiceArray.push(data);<br>
-          if (choiceArray.length === choices.length) {<br>
-            deferred.resolve(choiceArray);<br>
-          }<br>
-        });<br>
-    });<br>
-    return deferred.promise;<br>
-  };</p>
-
-<p>promise(choices).then(function(data) {<br>
-      return scoreCompare(data);<br>
-    }).done(function(result) {<br>
-      console.log(&#39;final_result&#39;, result);<br>
-      res.send(result);<br>
-    });</p>
-
-<p>};<br>
-```</p>
-
-<p>Have Fun!</p>
-
-<h2>Generators</h2>
-
-<p>Generators are the new kid on the block, but they look the most promising. Essentially, they make it easy to suspend/pause a function then resume it with the <code>yield</code> function.</p>
-
-<blockquote>
-<p>Make sure you are using a browser that supports ES6: <a href="http://kangax.github.io/es5-compat-table/es6/#Generators_(yield">http://kangax.github.io/es5-compat-table/es6/#Generators_(yield)</a>). I personally use <a href="https://www.google.com/intl/en/chrome/browser/canary.html">Chrome Canary</a>, with experimental Javasctipt enabled: &quot;chrome://flags/#enable-javascript-harmony&quot;.</p>
-</blockquote>
-
-<p>... also ...</p>
-
-<blockquote>
-<p>As of Node v0.11.3, you must use the <code>--harmony_generators</code> flag for running applications that contain generator examples in order to enable ES6 experimental features - e.g., <code>node --harmony_generators app.js</code>.</p>
-</blockquote>
-
-<p>Let&#39;s look at a quick example.</p>
-
-<h3>Example</h3>
-
-<p>Open the Javascript console, then enter this generator function:<br>
-<code>javascript<br>
-function* naturalNumbers(){<br>
-  var n = 1;<br>
-  while (true){<br>
-    yield n++;<br>
-  }<br>
-}<br>
-</code></p>
-
-<p>Next, you can call the function with this line:</p>
-
-<p><code>javascript<br>
-var numbers = naturalNumbers();<br>
-</code></p>
-
-<p>Finally, you can generate an object with the returned values by calling <code>numbers.next()</code></p>
-
-<p><img src="https://raw.github.com/mjhea0/node-twitter-sentiment/master/es6-generators.png" alt="es6-generators"></p>
-
-<p>So, how do we add this to our Sentiment project? I&#39;m not sure. :)</p>
-
-<h2>IcedCoffeeScript</h2>
-
-<h3>Example</h3>
-
-<p><code>coffeescript<br>
-et = require &#39;errTo&#39;<br>
-{get} = require &#39;request&#39;<br>
-fn = (done) -&gt;<br>
-  await get &#39;http://foo.com&#39;, et done, defer resp, body<br>
-  await get &#39;http://bar.com&#39;, et done, defer resp, body<br>
-  do done<br>
-await fn defer err<br>
-throw err if err<br>
-</code></p>
-
-<p>So, how do we ad this to our Sentiment project? I&#39;m not sure. :)</p>
-
-<h2>Data Binding</h2>
-
-<blockquote>
-<p>This isn&#39;t a method of handling the non-blocking function issue, but it instead shows how easily update the front end. We are using Async again to address the function issue. Check out the code <a href="https://github.com/Nodejs-Colorado/node-twitter-sentiment-databinding">here</a>.</p>
-</blockquote>
-
-<p><strong>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/103374712/">Aaron Vandrey</a> for developing the code and writing the following explanation.</strong></p>
-
-<p>Although there are a number of front-end MV* frameworks that could be used, we chose the <a href="https://github.com/knockout/knockout">KnockoutJS</a> data binding library for simplicity. KnockoutJS uses &quot;observables&quot; to enable two-way data binding from the View (HTML) back to the View-model (JavaScript).</p>
-
-<p>From [10 things to know about KnockoutJS on day one])http://www.knockmeout.net/2011/06/10-things-to-know-about-knockoutjs-on.html)&quot;:</p>
-
-<blockquote>
-<p>Observables are functions. The actual value and subscribers to the observable are cached internally by the function. You set an observable’s value by passing the new value as the only argument to the function and you read the value by passing no arguments.</p>
-</blockquote>
-
-<p>We can use these functions to read the values from the form directly, hide and expose DIVs and change text on the screen.</p>
-
-<p>From the KnockoutJS data-binding <a href="http://knockoutjs.com/documentation/binding-syntax.html">page</a>:</p>
-
-<blockquote>
-<p>Knockout’s declarative binding system provides a concise and powerful way to link data to the UI. It’s generally easy and obvious to bind to simple data properties or to use a single binding.<br>
-…<br>
-A binding consists of two items, the binding name and value, separated by a colon.</p>
-</blockquote>
-
-<h3>Server Side Code</h3>
-
-<h4>Views</h4>
-
-<p>Combining the functions in our <em>main.js</em> (more on this later), on the client side, with Knockout’s declarative data-binding syntax, we can set up the Jade template in the manner shown below.</p>
-
-<p>In the original Jade template there are placeholder DIVs set up that we then use jQuery to interact with - to display the error messages and results. We also used jQuery to update the styles applied to the DIVs. Since we are using data binding in this example, we will go ahead and set up the DIVs for errors and results and have their HTML and styles in the DOM at all times. Then using the &quot;visible&quot; data binding on the DIVs we can hide and expose them as needed. In the example below we have a couple of data-bind attributes that KnockoutJS will use to handle the two-way communication from the View to the ViewModel and vise-versa.</p>
-
-<p><code>html<br>
-.form-container<br>
-  form(action=&#39;&#39;, method=&#39;post&#39;, data-bind=&#39;submit: formSubmit&#39;)<br>
-    input#choice1.choice(type=&#39;text&#39;, placeholder=&#39;Choice #1...&#39;, name=&#39;choice1&#39;, data-bind=&#39;value: inputOne&#39;)<br>
-    input#choice2.choice(type=&#39;text&#39;, placeholder=&#39;Choice #2...&#39;, name=&#39;choice2&#39;, data-bind=&#39;value: inputTwo&#39;)<br>
-    input#decision.btn.btn-success.btn-lg(type=&#39;submit&#39;, value=&#39;Submit&#39; data-bind=&#39;enable: !hasResults()&#39;)<br>
-.decision-container<br>
-  p(class=&#39;alert alert-danger&#39; data-bind=&#39;visible: error, text: error&#39;)<br>
-  div(class=&#39;progress progress-striped active&#39; data-bind=&#39;visible: isProcessing()&#39;)<br>
-    div(class=&#39;progress-bar progress-bar-primary&#39; role=&#39;progressbar&#39; aria-valuenow=&#39;100&#39; aria-valuemin=&#39;0&#39; aria-valuemax=&#39;100&#39; style=&#39;width: 100%&#39;)<br>
-      span(class=&#39;sr-only&#39;)<br>
-  div(class=&#39;panel panel-lg panel-success&#39; data-bind=&#39;visible: hasResults()&#39;)<br>
-    div(class=&#39;panel-heading&#39;)<br>
-      h3(class=&#39;panel-title&#39;) Decision Results<br>
-    div(class=&#39;panel-body&#39;)<br>
-      p(class=&#39;decision-text&#39;, data-bind=&#39;html: results&#39;)<br>
-      div(class=&#39;text-center&#39;)<br>
-        input#decision.btn.btn-success.btn-sm.text-center(type=&#39;button&#39;, value=&#39;Again?&#39; data-bind=&#39;click: tryAgain&#39;)<br>
-</code></p>
-
-<p>In the highlighted text we can see just a few of the many <a href="http://knockoutjs.com/documentation/introduction.html">data-binding</a> possibilities.</p>
-
-<p>The <code>submit</code> binding will handle both the &quot;click&quot; event of the submit button as well as a user hitting the &quot;enter&quot; key. In the background KnockoutJS will also perform a &quot;preventDefault&quot; so that the form does not attempt to submit the form to the server.</p>
-
-<p>The <code>value</code> binding will update the ViewModel with the values entered into the text boxes. A form submit is not needed to consume these values, though in this case we are using a form submit. Alternatively we could use KnockoutJS to <code>subscribe</code> to the change event for these form values and begin our processing when our inputs passed validation.</p>
-
-<p>The <code>text</code> binding will both display values in the View propagated from the ViewModel, as well and send values from the View back to the ViewModel.</p>
-
-<p>The <code>enable</code> binding will disable the submit button when the ViewModel reports back to the View that it has results back from the Twitter Sentiment Analysis.</p>
-
-<h3>Client Side Code</h3>
-
-<h4>Client Side Javascript (<em>main.js</em>)</h4>
-
-<p>The biggest difference to <em>/public/javascripts/main.js</em> is to create a ViewModel, and at the ViewModels closure, call KnockoutJS’s <code>applyBindings</code> method to enable all the two-way data binding goodness.</p>
-
-<p>```javascript<br>
-function ViewModel() {</p>
-<div class="highlight"><pre><code class="text">…
-</code></pre>
-</div>
-
-<p>}<br>
-ko.applyBindings(new ViewModel());<br>
-```</p>
-
-<p>In order to grab the two choices from the form we write a small method that will take use the KnockoutJS observable’s ‘no parameter’ signature to return the values.</p>
-
-<p><code>javascript<br>
-self.formSubmit = function(){<br>
-    // some error handling<br>
-    if(!self.inputOne() || !self.inputTwo()){<br>
-        self.error(getError(&#39;requiredInputsError&#39;));<br>
-    } else if(self.inputOne() === self.inputTwo()) {<br>
-        self.error(getError(&#39;sameInputError&#39;));<br>
-    } else {<br>
-        choices.push(self.inputOne());<br>
-        choices.push(self.inputTwo());<br>
-        getDecision();<br>
-        self.error(&#39;&#39;);<br>
-        self.isProcessing(true);<br>
-    }<br>
-};<br>
-</code></p>
-
-<p>The error handling will remain the same, however in the data-binding example we set the value of our <code>error()</code> observable. The act of setting the value of the error observable causes it to change from being a &quot;falsey&quot; value to being a &quot;truthy&quot; value, which cause the <code>visible</code> data binding to also change from <code>visible = false</code> to <code>visible = true</code>. This changes the visibility of the DIV formatted for error reporting as well as set the text of the specific error we encountered.</p>
-
-<p><code>javascript<br>
-p(class=&#39;alert alert-danger&#39; data-bind=&#39;visible: error, text: error&#39;)<br>
-</code></p>
-
-<p>If no errors are encountered on subsequent submissions we can set up the array we need in the call to Twitter. We also blank out the <code>error()</code> observable that will hide the error reporting DIV and also set the <code>isProcessing()</code> observable to true which will expose the &quot;processing&quot; animation.</p>
-
-<p>We finish up processing the results. This logic to this is essentially unchanged, however, it is shown here to further exemplify how values are set and retrieved in KnockoutJS.</p>
-
-<p>```javascript<br>
-function getDecision(){<br>
-    $.post(&#39;/search&#39;, { &#39;choices&#39;: JSON.stringify(choices) }, function(data) {<br>
-        choices.length = 0;<br>
-        var results = JSON.parse(data);</p>
-<div class="highlight"><pre><code class="text">    self.results(RESULTS_START_HTML + results.choice + RESULTS_END_HTML + results.score);
-    self.hasResults(true);
-    self.isProcessing(false);
-});
-</code></pre>
-</div>
-
-<p>}<br>
-```</p>
-
-<p>The logic required to turn off the &quot;processing&quot; animation, expose the DIV formatted to successful results, and display the results are achieved by manipulating more observables. The <code>isProcssing()</code> observable is set to false to hide the animation, the <code>hasResults()</code> observable is set to true to expose the results DIV and finally, by setting the <code>results()</code> observable to some friendly copy we let the user know the outcome of the sentiment analysis. When writing this value out the page we use the <code>html</code> binding rather than the <code>text</code> binding so that we can inject HTML into the copy we are writing to the screen. If the <code>text</code> binding had been used, rather than the <code>html</code> binding,  the HTML would have been encoded and we would have had the literal string <code>&lt;strong&gt;</code> written to the screen - which obviously is not what we want in this case.</p>
-
-<h4>main.js:</h4>
-
-<p><code>javascript<br>
-self.RESULTS_START_HTML = &#39;and the winner is ... &lt;strong&gt;&#39;;<br>
-self.RESULTS_END_HTML = &#39;&lt;/strong&gt; ... with a score of &#39;;<br>
-</code></p>
-
-<h4>index.jade:</h4>
-
-<p><code>html<br>
-p(class=&#39;decision-text&#39;, data-bind=&#39;html: results&#39;)<br>
-</code></p>
-
-<h3>Refactor</h3>
-
-<p>After submitting this code it we determined that the data-binding could have been used even better by not having an error DIV and a results DIV. By taking advantage of the <code>css</code> binding and a KnockoutJS <code>computed</code> observable (an observable that can watch multiple observables and return one value) the Bootstrap class could have easily been changed from <code>danger</code> to <code>success</code> and the title and copy changed using existing observables.</p>
-
-<p>Here <code>shouldShowMessages</code> is a computed observable that will return true if either we have an error or if we have results, otherwise it will return false. Similarly, <code>messageType</code> is a computed observable that will return &quot;error&quot; unless we have successfully received results, at which point it will return &quot;success&quot;.</p>
-
-<h4>index.jade</h4>
-
-<p><code>html<br>
-div(class=&#39;panel panel-lg&#39; data-bind=&#39;visible: shouldShowMessages, css: &quot;panel-&quot; + messageType()&#39;)<br>
-  div(class=&#39;panel-heading&#39;)<br>
-    h3(class=&#39;panel-title&#39; data-bind=&#39;text: messageTitle&#39;)<br>
-  div(class=&#39;panel-body&#39;)<br>
-    p(class=&#39;decision-text&#39;, data-bind=&#39;html: results&#39;)<br>
-    p(class=&#39;text-danger&#39;, data-bind=&#39;text: error&#39;)<br>
-    div(class=&#39;text-center&#39;)<br>
-      input#decision.btn.btn-success.btn-sm.text-center(type=&#39;button&#39;, value=&#39;Again?&#39; data-bind=&#39;visible: hasResults(), click: tryAgain&#39;)<br>
-</code></p>
-
-<h4>main.js:</h4>
-
-<p>```javascript<br>
-self.shouldShowMessages = ko.computed(function(){<br>
-    var returnValue = false;</p>
-<div class="highlight"><pre><code class="text">if (!self.isProcessing() &amp;&amp; (self.hasResults() || self.error() &gt; &#39;&#39;)) {
-    returnValue = true;
-}
-
-return returnValue;
-</code></pre>
-</div>
-
-<p>});<br>
-self.messageType = ko.computed(function(){<br>
-    var returnValue = &#39;danger&#39;;</p>
-<div class="highlight"><pre><code class="text">self.messageTitle(ERROR_TITLE);
-if (self.hasResults()) {
-    returnValue = &#39;success&#39;;
-    self.messageTitle(SUCCESS_TITLE);
-}
-
-return returnValue;
-</code></pre>
-</div>
-
-<p>});<br>
-```</p>
-
-<p>It should be noted that <em>most</em> data-bindings will make a call to <code>ko.utils.unwrapObservable()</code> behind the scenes. This allows us to make the data-bind safely on both observables and non-observables. However, if you take a look at where the <code>messageType</code> observable is used you will notice that we are referencing the observable as a function (with parentheses). This is because we are accessing the observable inside an expression.</p>
-
-<h2>Conclusion</h2>
-
-<p>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/74687302/">John Rosendahl</a> for help with writing the intro.</p>
-
-<p>Pull requests are welcomed/encouraged/needed. Enjoy!</p>
 ]]></content>
   </entry>
   

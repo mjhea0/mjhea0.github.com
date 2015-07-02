@@ -4,7 +4,7 @@
   <title><![CDATA[Category: angular | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/angular/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-06-19T13:23:54-06:00</updated>
+  <updated>2015-07-02T13:22:27-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,636 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Handling User Authentication with the MEAN Stack]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/07/02/handling-user-authentication-with-the-mean-stack/"/>
+    <updated>2015-07-02T07:04:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/07/02/handling-user-authentication-with-the-mean-stack</id>
+    <content type="html"><![CDATA[<p><strong>This post provides a solution to the question, &quot;How do I handle user authentication with the MEAN Stack - MongoDB, ExpressJS, AngularJS, NodeJS?&quot;.</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mjhea0.github.com/images/mean-auth.png" style="max-width: 100%; border:0;" alt="mean stack authentication">
+</div>
+
+<p><br></p>
+
+<blockquote>
+<p>Much of this post is ported from <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">Handling User Authentication with Angular and Flask</a>.</p>
+</blockquote>
+
+<p>Keep in mind that this solution posed in this tutorial is not the <em>only</em> solution to the question at hand, and it may not even be the <em>right</em> solution for your situation. Regardless of the solution you implement, it is important to note that since end users have full control of the browser as well as access to the front-end code, sensitive data living in your server-side API must be secure. In other words, make certain that you implement an authentication strategy on the server-side to protect sensitive API endpoints.</p>
+
+<p>That said, we need to enable the following workflow:</p>
+
+<ol>
+<li>When the client accesses the main route, an index page is served, at which point Angular takes over.</li>
+<li>The Angular app immediately &quot;asks&quot; the server if a user is logged in.</li>
+<li>Assuming the server indicates that a user is not logged in, the client is immediately asked to log in.</li>
+<li>Once logged in, the Angular app then tracks the user&#39;s login status.</li>
+</ol>
+
+<blockquote>
+<p>This tutorial uses <a href="http://docs.mongodb.org/v2.6/">MongoDB</a> v2.6.7, <a href="http://expressjs.com/4x/api.html">ExpressJS</a> v4.9.8, <a href="https://code.angularjs.org/1.3.15/docs/guide">AngularJS</a> v1.3.15, <a href="https://nodejs.org/">NodeJS</a> v0.12.2, and <a href="https://github.com/jaredhanson/passport-local">Passport-Local</a> v1.0.0. For a full list of dependencies, please view the <em><a href="https://github.com/mjhea0/mean-auth/blob/master/package.json">package.json</a></em> file.</p>
+</blockquote>
+
+<h2>Getting Started</h2>
+
+<p>First, grab the boilerplate code from the <a href="https://github.com/mjhea0/mean-auth/releases/tag/v1">project repo</a>, install the requirements, and then test out the app:</p>
+
+<p><code>sh<br>
+$ npm start<br>
+</code></p>
+
+<p>Navigate to <a href="http://localhost:1337/">http://localhost:1337/</a> and you should see a simple welcome message - &quot;Yo!&quot;. Once you&#39;re finishing admiring the page, kill the server, and glance over the code within the project folder:</p>
+
+<p><code>sh<br>
+├── client<br>
+│   ├── index.html<br>
+│   ├── main.js<br>
+│   └── partials<br>
+│       └── home.html<br>
+├── package.json<br>
+└── server<br>
+    ├── app.js<br>
+    ├── models<br>
+    │   └── user.js<br>
+    ├── routes<br>
+    │   └── api.js<br>
+    └── server.js<br>
+</code></p>
+
+<p>Nothing too spectacular. You can see that the back-end code resides in the &quot;server&quot; folder, while the front-end code lives in the &quot;client&quot; folder. Explore the files and folder within each.</p>
+
+<h2>Login API</h2>
+
+<p>Let&#39;s start with the back-end API. This is already built out, for your convenience. Why? The focus is mainly on the client-side. If you&#39;re looking for a back-end tutorial for setting up Passport with NodeJS, ExpressJS, and MongoDB take a look at this <a href="http://mherman.org/blog/2015/01/31/local-authentication-with-passport-and-express-4/#.VZCK9xNViko">tutorial</a>.</p>
+
+<h3>User Registration</h3>
+
+<p>Open the &quot;routes&quot; folder and find the following code:</p>
+
+<p><code>javascript<br>
+router.post(&#39;/register&#39;, function(req, res) {<br>
+  User.register(new User({ username: req.body.username }), req.body.password, function(err, account) {<br>
+    if (err) {<br>
+      return res.status(500).json({err: err});<br>
+    }<br>
+    passport.authenticate(&#39;local&#39;)(req, res, function () {<br>
+      return res.status(200).json({status: &#39;Registration successful!&#39;});<br>
+    });<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Here, we grab the values from the payload sent with the POST request (from the client-side), create a new <code>User</code> instance, and then attempt to add the instance to the database. If this succeeds a user is added, of course, and then we return a JSON response with a <code>status</code> of &quot;success&quot;. If it fails, an &quot;error&quot; response is sent.</p>
+
+<p>Let&#39;s test this via curl. Fire up the server and then run the following command:</p>
+
+<p><code>sh<br>
+$ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST \<br>
+-d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; http://localhost:1337/user/register<br>
+</code></p>
+
+<p>You should see a success message:</p>
+
+<p><code>sh<br>
+{&quot;status&quot;:&quot;Registration successful!&quot;}<br>
+</code></p>
+
+<p>Try it again, with the exact same username and password, and you should see an error:</p>
+
+<p><code>sh<br>
+{&quot;err&quot;:{&quot;name&quot;:&quot;BadRequestError&quot;,&quot;message&quot;:&quot;User already exists with username test@test.com&quot;}}<br>
+</code></p>
+
+<p>On to the login...</p>
+
+<h3>User Login</h3>
+
+<p><code>javascript<br>
+router.post(&#39;/login&#39;, function(req, res, next) {<br>
+  passport.authenticate(&#39;local&#39;, function(err, user, info) {<br>
+    if (err) {<br>
+      return res.status(500).json({err: err});<br>
+    }<br>
+    if (!user) {<br>
+      return res.status(401).json({err: info});<br>
+    }<br>
+    req.logIn(user, function(err) {<br>
+      if (err) {<br>
+        return res.status(500).json({err: &#39;Could not log in user&#39;});<br>
+      }<br>
+      res.status(200).json({status: &#39;Login successful!&#39;});<br>
+    });<br>
+  })(req, res, next);<br>
+});<br>
+</code></p>
+
+<p>This utilizes Passport&#39;s <a href="https://github.com/jaredhanson/passport-local">local strategy</a> to verify the username/email as well as the password. The appropriate response is then returned.</p>
+
+<p>With the server running, test again with curl-</p>
+
+<p><code>sh<br>
+curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST \<br>
+-d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; http://localhost:1337/user/login<br>
+</code></p>
+
+<p>-and you should see:</p>
+
+<p><code>sh<br>
+{&quot;message&quot;:&quot;Login successful!&quot;}<br>
+</code></p>
+
+<p>Test again with curl, sending the wrong password, and you should see:</p>
+
+<p><code>sh<br>
+{&quot;err&quot;:{&quot;status&quot;:&quot;Incorrect password&quot;}}<br>
+</code></p>
+
+<p>Perfect!</p>
+
+<h3>User Logout</h3>
+
+<p>Finally, take a look at the logout:</p>
+
+<p><code>javascript<br>
+router.get(&#39;/logout&#39;, function(req, res) {<br>
+  req.logout();<br>
+  res.status(200).json({status: &#39;Bye!&#39;});<br>
+});<br>
+</code></p>
+
+<p>This should be straightforward, and you can probably guess what the response will look like - but let&#39;s test it  again:</p>
+
+<p><code>javascript<br>
+$ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X GET \<br>
+http://localhost:1337/user/logout<br>
+</code></p>
+
+<p>You should see:</p>
+
+<p><code>sh<br>
+{&quot;status&quot;:&quot;Bye!&quot;}<br>
+</code></p>
+
+<p>On to the client-side!</p>
+
+<h2>Angular App</h2>
+
+<p>Before diving in, remember that since end users have full access to the power of the browser as well as <a href="https://developer.chrome.com/devtools">DevTools</a> and the client-side code, it&#39;s vital that you not only restrict access to sensitive endpoints on the server-side - but that you also do not store sensitive data on the client-side. Keep this in mind as you add auth functionality to your own MEAN application stack.</p>
+
+<h3>Client-side Routing</h3>
+
+<p>Let&#39;s add the remainder of the client-side routes to the <em>main.js</em> file:</p>
+
+<p><code>javascript<br>
+myApp.config(function ($routeProvider) {<br>
+  $routeProvider<br>
+    .when(&#39;/&#39;, {templateUrl: &#39;partials/home.html&#39;})<br>
+    .when(&#39;/login&#39;, {templateUrl: &#39;partials/login.html&#39;, controller: &#39;loginController&#39;})<br>
+    .when(&#39;/logout&#39;, {controller: &#39;logoutController&#39;})<br>
+    .when(&#39;/register&#39;, {templateUrl: &#39;partials/register.html&#39;, controller: &#39;registerController&#39;})<br>
+    .when(&#39;/one&#39;, {template: &#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;})<br>
+    .when(&#39;/two&#39;, {template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;})<br>
+    .otherwise({redirectTo: &#39;/&#39;});<br>
+});<br>
+</code></p>
+
+<p>Here, we created five new routes. Before we add the subsequent templates and controllers, let&#39;s create a <a href="https://docs.angularjs.org/guide/services">service</a> to handle authentication.</p>
+
+<h3>Authentication Service</h3>
+
+<p>Start by adding the basic structure of the service to a new file called <em>services.js</em> in the &quot;client&quot; directory:</p>
+
+<p>```javascript<br>
+angular.module(&#39;myApp&#39;).factory(&#39;AuthService&#39;,<br>
+  [&#39;$q&#39;, &#39;$timeout&#39;, &#39;$http&#39;,<br>
+  function ($q, $timeout, $http) {</p>
+<div class="highlight"><pre><code class="text">// create user variable
+var user = null;
+
+// return available functions for use in controllers
+return ({
+  isLoggedIn: isLoggedIn,
+  getUserStatus: getUserStatus,
+  login: login,
+  logout: logout,
+  register: register
+});
+</code></pre>
+</div>
+
+<p>}]);<br>
+```</p>
+
+<p>Here, we simply defined the service name, <code>AuthService</code>, and then injected the dependencies that we will be using - <code>$q</code>, <code>$timeout</code>, <code>$http</code> - and then returned the functions, which we still need to write, for use outside the service.</p>
+
+<p>Make sure to add the script to the <em>index.html</em> file:</p>
+
+<p><code>html<br>
+&lt;script src=&quot;./services.js&quot;&gt;&lt;/script&gt;<br>
+</code></p>
+
+<p>Let&#39;s create each function...</p>
+
+<p><strong><code>isLoggedIn()</code></strong></p>
+
+<p><code>javascript<br>
+function isLoggedIn() {<br>
+  if(user) {<br>
+    return true;<br>
+  } else {<br>
+    return false;<br>
+  }<br>
+}<br>
+</code></p>
+
+<p>This function returns <code>true</code> if <code>user</code> evaluates to <code>true</code> - a user is logged in - otherwise it returns false.</p>
+
+<p><strong><code>getUserStatus()</code></strong></p>
+
+<p><code>javascript<br>
+function getUserStatus() {<br>
+  return user;<br>
+}<br>
+</code></p>
+
+<p><strong><code>login()</code></strong></p>
+
+<p>```javascript<br>
+function login(username, password) {</p>
+
+<p>// create a new instance of deferred<br>
+  var deferred = $q.defer();</p>
+
+<p>// send a post request to the server<br>
+  $http.post(&#39;/user/login&#39;, {username: username, password: password})<br>
+    // handle success<br>
+    .success(function (data, status) {<br>
+      if(status === 200 &amp;&amp; data.status){<br>
+        user = true;<br>
+        deferred.resolve();<br>
+      } else {<br>
+        user = false;<br>
+        deferred.reject();<br>
+      }<br>
+    })<br>
+    // handle error<br>
+    .error(function (data) {<br>
+      user = false;<br>
+      deferred.reject();<br>
+    });</p>
+
+<p>// return promise object<br>
+  return deferred.promise;</p>
+
+<p>}<br>
+```</p>
+
+<p>Here, we used the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$q">$q</a> service to set up a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a>, which we&#39;ll access in a future controller. We also utilized the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$http">$http</a> service to send an AJAX request to the <code>/api/login</code> endpoint that we already set up in our back-end Node/Express app.</p>
+
+<p>Based on the returned response, we either <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">resolve</a> or <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">reject</a> and set the value of <code>user</code> to <code>true</code> or <code>false</code>.</p>
+
+<p><strong><code>logout()</code></strong></p>
+
+<p>```javascript<br>
+function logout() {</p>
+
+<p>// create a new instance of deferred<br>
+  var deferred = $q.defer();</p>
+
+<p>// send a get request to the server<br>
+  $http.get(&#39;/user/logout&#39;)<br>
+    // handle success<br>
+    .success(function (data) {<br>
+      user = false;<br>
+      deferred.resolve();<br>
+    })<br>
+    // handle error<br>
+    .error(function (data) {<br>
+      user = false;<br>
+      deferred.reject();<br>
+    });</p>
+
+<p>// return promise object<br>
+  return deferred.promise;</p>
+
+<p>}<br>
+```</p>
+
+<p>Here, we followed the same formula as the <code>login()</code> function, except we sent a GET request rather than a POST and to be save we just went ahead and handled the error the same as the success.</p>
+
+<p><strong><code>register()</code></strong></p>
+
+<p>```javascript<br>
+function register(username, password) {</p>
+
+<p>// create a new instance of deferred<br>
+  var deferred = $q.defer();</p>
+
+<p>// send a post request to the server<br>
+  $http.post(&#39;/user/register&#39;, {username: username, password: password})<br>
+    // handle success<br>
+    .success(function (data, status) {<br>
+      if(status === 200 &amp;&amp; data.status){<br>
+        deferred.resolve();<br>
+      } else {<br>
+        deferred.reject();<br>
+      }<br>
+    })<br>
+    // handle error<br>
+    .error(function (data) {<br>
+      deferred.reject();<br>
+    });</p>
+
+<p>// return promise object<br>
+  return deferred.promise;</p>
+
+<p>}<br>
+```</p>
+
+<p>Again, we followed a similar formula to the <code>logout()</code> function. Can you tell what&#39;s happening?</p>
+
+<p>That&#39;s it for the service. Keep in mind that we still have not &quot;used&quot; this service. In order to that we just need to inject it into the necessary components in the Angular app. In our case, that will be the controllers, which we&#39;ll build next.</p>
+
+<h3>Templates and Controllers</h3>
+
+<p>Looking back at our routes, we need to setup two partials/templates and three controllers:</p>
+
+<p><code>javascript<br>
+.when(&#39;/login&#39;, {templateUrl: &#39;partials/login.html&#39;, controller: &#39;loginController&#39;})<br>
+.when(&#39;/logout&#39;, {controller: &#39;logoutController&#39;})<br>
+.when(&#39;/register&#39;, {templateUrl: &#39;partials/register.html&#39;, controller: &#39;registerController&#39;})<br>
+</code></p>
+
+<p><strong>Login</strong></p>
+
+<p>First, add the following HTML to a new file called <em>login.html</em>:</p>
+
+<p><code>html<br>
+&lt;div class=&quot;col-md-4&quot;&gt;<br>
+  &lt;h1&gt;Login&lt;/h2&gt;<br>
+  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;&lt;/div&gt;<br>
+  &lt;form class=&quot;form&quot; ng-submit=&quot;login()&quot;&gt;<br>
+    &lt;div class=&quot;form-group&quot;&gt;<br>
+      &lt;label&gt;Username&lt;/label&gt;<br>
+      &lt;input type=&quot;text&quot; class=&quot;form-control&quot; name=&quot;username&quot; ng-model=&quot;loginForm.username&quot; required&gt;<br>
+    &lt;/div&gt;<br>
+    &lt;div class=&quot;form-group&quot;&gt;<br>
+      &lt;label&gt;Password&lt;/label&gt;<br>
+        &lt;input type=&quot;password&quot; class=&quot;form-control&quot; name=&quot;password&quot; ng-model=&quot;loginForm.password&quot; required&gt;<br>
+      &lt;/div&gt;<br>
+      &lt;div&gt;<br>
+        &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot; ng-disabled=&quot;disabled&quot;&gt;Login&lt;/button&gt;<br>
+      &lt;/div&gt;<br>
+  &lt;/form&gt;<br>
+&lt;/div&gt;<br>
+</code></p>
+
+<p>Add this file to the &quot;partials&quot; directory.</p>
+
+<p>Take note of the form. We used the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngModel">ng-model</a> directive on each of the inputs so that we can capture those values in the controller. Also, when the form is submitted, the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngSubmit">ng-submit</a> directive handles the event by firing the <code>login()</code> function.</p>
+
+<p>Next, within the &quot;client&quot; folder, add a new file called <em>controllers.js</em>. Yes, this will hold all of our Angular app&#39;s controllers. Don&#39;t forget to add the script to the <em>index.html</em> file:</p>
+
+<p><code>html<br>
+&lt;script src=&quot;./controllers.js&quot;&gt;&lt;/script&gt;<br>
+</code></p>
+
+<p>Now, let&#39;s add the first controller:</p>
+
+<p>```javascript<br>
+angular.module(&#39;myApp&#39;).controller(&#39;loginController&#39;,<br>
+  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
+  function ($scope, $location, AuthService) {</p>
+<div class="highlight"><pre><code class="text">console.log(AuthService.getUserStatus());
+
+$scope.login = function () {
+
+  // initial values
+  $scope.error = false;
+  $scope.disabled = true;
+
+  // call login from service
+  AuthService.login($scope.loginForm.username, $scope.loginForm.password)
+    // handle success
+    .then(function () {
+      $location.path(&#39;/&#39;);
+      $scope.disabled = false;
+      $scope.loginForm = {};
+    })
+    // handle error
+    .catch(function () {
+      $scope.error = true;
+      $scope.errorMessage = &quot;Invalid username and/or password&quot;;
+      $scope.disabled = false;
+      $scope.loginForm = {};
+    });
+
+};
+</code></pre>
+</div>
+
+<p>}]);<br>
+```</p>
+
+<p>So, when the <code>login()</code> function is fired, we set some initial values and then call <code>login()</code> from the <code>AuthService</code>, passing the user inputed email and password as arguments. The subsequent success or error is then handled and the DOM/view/template is updated appropriately.</p>
+
+<p>Did you notice how we logged the return value of <code>AuthService.getUserStatus()</code> to the console? This is to ensure that the value is correct based on whether a user is logged in or out - <code>true</code> or <code>false</code>, respectively.</p>
+
+<p>Ready to test the first round-trip - client =&gt; server =&gt; client?</p>
+
+<p>Fire up the server and navigate to <a href="http://localhost:5000/#/login">http://localhost:1337/#/login</a> in your browser. First, try logging in with the user credentials used to register earlier - e.g, <code>test@test.com</code> and <code>test</code>, respectively. If all went well, you should be redirected to the main URL. Next, try to log in using invalid credentials. You should see the error message flash, &quot;Invalid username and/or password&quot;.</p>
+
+<p><strong>Logout</strong></p>
+
+<p>Add the controller:</p>
+
+<p>```javascript<br>
+angular.module(&#39;myApp&#39;).controller(&#39;logoutController&#39;,<br>
+  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
+  function ($scope, $location, AuthService) {</p>
+<div class="highlight"><pre><code class="text">$scope.logout = function () {
+
+  console.log(AuthService.getUserStatus());
+
+  // call logout from service
+  AuthService.logout()
+    .then(function () {
+      $location.path(&#39;/login&#39;);
+    });
+
+};
+</code></pre>
+</div>
+
+<p>}]);<br>
+```</p>
+
+<p>Here, we called <code>AuthService.logout()</code> and then redirected the user to the <code>/login</code> route after the promise is resolved.</p>
+
+<p>Add a button to <em>home.html</em>:</p>
+
+<p><code>html<br>
+&lt;div ng-controller=&quot;logoutController&quot;&gt;<br>
+  &lt;a ng-click=&#39;logout()&#39; class=&quot;btn btn-default&quot;&gt;Logout&lt;/a&gt;<br>
+&lt;/div&gt;<br>
+</code></p>
+
+<p>And then test it out again.</p>
+
+<p><strong>Register</strong></p>
+
+<p>Add a new new file called <em>register.html</em> to the &quot;partials&quot; folder and add the following HTML:</p>
+
+<p><code>html<br>
+&lt;div class=&quot;col-md-4&quot;&gt;<br>
+  &lt;h1&gt;Register&lt;/h2&gt;<br>
+  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;&lt;/div&gt;<br>
+  &lt;form class=&quot;form&quot; ng-submit=&quot;register()&quot;&gt;<br>
+    &lt;div class=&quot;form-group&quot;&gt;<br>
+      &lt;label&gt;Username&lt;/label&gt;<br>
+      &lt;input type=&quot;text&quot; class=&quot;form-control&quot; name=&quot;username&quot; ng-model=&quot;registerForm.username&quot; required&gt;<br>
+    &lt;/div&gt;<br>
+    &lt;div class=&quot;form-group&quot;&gt;<br>
+      &lt;label&gt;Password&lt;/label&gt;<br>
+        &lt;input type=&quot;password&quot; class=&quot;form-control&quot; name=&quot;password&quot; ng-model=&quot;registerForm.password&quot; required&gt;<br>
+      &lt;/div&gt;<br>
+      &lt;div&gt;<br>
+        &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot; ng-disabled=&quot;disabled&quot;&gt;Register&lt;/button&gt;<br>
+      &lt;/div&gt;<br>
+  &lt;/form&gt;<br>
+&lt;/div&gt;<br>
+</code></p>
+
+<p>Next, add the controller:</p>
+
+<p>```javascript<br>
+angular.module(&#39;myApp&#39;).controller(&#39;registerController&#39;,<br>
+  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
+  function ($scope, $location, AuthService) {</p>
+<div class="highlight"><pre><code class="text">console.log(AuthService.getUserStatus());
+
+$scope.register = function () {
+
+  // initial values
+  $scope.error = false;
+  $scope.disabled = true;
+
+  // call register from service
+  AuthService.register($scope.registerForm.username, $scope.registerForm.password)
+    // handle success
+    .then(function () {
+      $location.path(&#39;/login&#39;);
+      $scope.disabled = false;
+      $scope.registerForm = {};
+    })
+    // handle error
+    .catch(function () {
+      $scope.error = true;
+      $scope.errorMessage = &quot;Something went wrong!&quot;;
+      $scope.disabled = false;
+      $scope.registerForm = {};
+    });
+
+};
+</code></pre>
+</div>
+
+<p>}]);<br>
+```</p>
+
+<p>You&#39;ve seen this before, so let&#39;s move right on to testing.</p>
+
+<p>Fire up the server and register a new user at <a href="http://localhost:1337/#/register">http://localhost:1337/#/register</a>. Make sure to test logging in with that new user as well.</p>
+
+<p>Well, that&#39;s it for the templates and controllers. We now need to add in functionality to check if a user is logged in on each and every change of route.</p>
+
+<h3>Route Changes</h3>
+
+<p>Start by adding the following code to <em>main.js</em>:</p>
+
+<p><code>javascript<br>
+myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
+  $rootScope.$on(&#39;$routeChangeStart&#39;, function (event, next, current) {<br>
+    if (AuthService.isLoggedIn() === false) {<br>
+      $location.path(&#39;/login&#39;);<br>
+    }<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>The <a href="https://code.angularjs.org/1.3.15/docs/api/ngRoute/service/$route">$routeChangeStart</a> event happens before the actual route change occurs. So, whenever a route is accessed, before the view is served, we ensure that the user is logged in. Test this out!</p>
+
+<h2>Route Restriction</h2>
+
+<p>Right now all client-side routes require a user to be logged in. What if you want certain routes restricted and other routes open?</p>
+
+<p>You can add the following code to each route handler, replacing <code>true</code> with <code>false</code> for routes that you do not want to restrict:</p>
+
+<p><code>javascript<br>
+access: {restricted: true}<br>
+</code></p>
+
+<p>For example:</p>
+
+<p><code>javascript<br>
+myApp.config(function ($routeProvider) {<br>
+  $routeProvider<br>
+    .when(&#39;/&#39;, {templateUrl: &#39;partials/home.html&#39;})<br>
+    .when(&#39;/login&#39;, {<br>
+      templateUrl: &#39;partials/login.html&#39;,<br>
+      controller: &#39;loginController&#39;,<br>
+      access: {restricted: false}<br>
+    })<br>
+    .when(&#39;/logout&#39;, {<br>
+      controller: &#39;logoutController&#39;,<br>
+      access: {restricted: true}<br>
+    })<br>
+    .when(&#39;/register&#39;, {<br>
+      templateUrl: &#39;partials/register.html&#39;,<br>
+      controller: &#39;registerController&#39;,<br>
+      access: {restricted: true}<br>
+    })<br>
+    .when(&#39;/one&#39;, {<br>
+      template: &#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;,<br>
+      access: {restricted: true}<br>
+    })<br>
+    .when(&#39;/two&#39;, {<br>
+      template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;,<br>
+      access: {restricted: false}<br>
+    })<br>
+    .otherwise({redirectTo: &#39;/&#39;});<br>
+});<br>
+</code></p>
+
+<p>Now just update the <code>$routeChangeStart</code> code in <em>main.js</em>:</p>
+
+<p><code>javascript<br>
+myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
+  $rootScope.$on(&#39;$routeChangeStart&#39;, function (event, next, current) {<br>
+    if (next.access.restricted &amp;&amp; AuthService.isLoggedIn() === false) {<br>
+      $location.path(&#39;/login&#39;);<br>
+      $route.reload();<br>
+    }<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Test it out!</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#39;s it. One thing you should note is that the Angular app can be used with various frameworks as long as the endpoints are set up correctly in the AJAX requests. So, you can easily take the Angular portion and add it to your Django or Pyramid or NodeJS app. Try it!</p>
+
+<blockquote>
+<p>Check out a Python/Flask app with Angular Auth <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">here</a></p>
+</blockquote>
+
+<p>Grab the final code from the <a href="https://github.com/mjhea0/mean-auth">repo</a>. Cheers!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Testing AngularJS with Protractor and Karma - part 2]]></title>
@@ -30,14 +660,6 @@
 <li><a href="http://mherman.org/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1">Part 1</a> - In the first part we&#39;ll look at unit tests, which ensure that small, isolated pieces of code (e.g., a unit) behave as expected.</li>
 <li>Part 2 - In part two we&#39;ll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation. <strong>(current)</strong></li>
 </ul>
-
-<p><em>Contents</em>:</p>
-
-<ol>
-<li><a href="#project-setup">Project Setup</a></li>
-<li><a href="#the-tests">The Tests</a></li>
-<li><a href="#conclusion">Conclusion</a></li>
-</ol>
 
 <p>Having finished up unit testing, let&#39;s now turn our attention to e2e testing using <a href="http://angular.github.io/protractor/#/">Protractor</a>, which is a testing framework built specifically for AngularJS apps. Essentially, it runs tests against an app in the browser via <a href="http://seleniumhq.github.io/selenium/docs/api/javascript/">Selenium Webdriver</a>, interacting with the app from an end user’s perspective.</p>
 
@@ -60,7 +682,7 @@
 <li><em>v4</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v4">adds E2E tests</a></li>
 </ol>
 
-<h2> <a name="project-setup">Project Setup</a></h2>
+<h2>Project Setup</h2>
 
 <p>Assuming you followed the <a href="http://mherman.org/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1">first part</a> of this tutorial, checkout the third tag, <code>v3</code>, and then run the current test suite starting with the unit tests:</p>
 
@@ -99,7 +721,7 @@ Using the selenium server at http://localhost:4444/wd/hub<br>
 
 <p>Everything look good?</p>
 
-<h2> <a name="the-tests">The Tests</a></h2>
+<h2>The Tests</h2>
 
 <p>Open the test spec, <em>spec.js</em>, within the &quot;tests/e2e&quot; directory. Let&#39;s look at the first test:</p>
 
@@ -407,7 +1029,7 @@ describe(&#39;TestFourController&#39;, function () {</p>
 
 <p>That&#39;s it!</p>
 
-<h2><a name="conclusion">Conclusion</a></h2>
+<h2>Conclusion</h2>
 
 <p><em>Want more?</em></p>
 
@@ -443,15 +1065,6 @@ describe(&#39;TestFourController&#39;, function () {</p>
 <li><a href="http://mherman.org/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2">Part 2</a> - In part two we&#39;ll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation.</li>
 </ul>
 
-<p><em>Contents</em>:</p>
-
-<ol>
-<li><a href="#project-setup">Project Setup</a></li>
-<li><a href="#config-files">Configuration Files</a></li>
-<li><a href="#unit-tests">Unit Tests</a></li>
-<li><a href="#conclusion">Conclusion</a></li>
-</ol>
-
 <p>To accomplish this we will be using <a href="http://karma-runner.github.io/">Karma</a> v0.12.31 (test runner) and <a href="http://chaijs.com/">Chai</a> v2.2.0 (assertions) for the unit tests (along with <a href="https://github.com/karma-runner/karma-mocha">Karma-Mocha</a>) and <a href="http://angular.github.io/protractor/#/">Protractor</a> v2.0.0 for the E2E tests. This article also uses <a href="https://angularjs.org/">Angular</a> v1.3.15. Be sure to take note of all dependencies and their versions in the <em>package.json</em> and <em>bower.json</em> files in the <a href="https://github.com/mjhea0/angular-testing-tutorial">repo</a>.</p>
 
 <p>The repo includes the following tags:</p>
@@ -463,7 +1076,7 @@ describe(&#39;TestFourController&#39;, function () {</p>
 <li><em>v4</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v4">adds E2E tests</a></li>
 </ol>
 
-<h2> <a name="project-setup">Project Setup</a></h2>
+<h2>Project Setup</h2>
 
 <p>Start by cloning the repo, checkout out the first tag, and then install the dependencies:</p>
 
@@ -540,7 +1153,7 @@ Using the selenium server at http://localhost:4444/wd/hub<br>
 
 <p>So, what&#39;s happening here...</p>
 
-<h2><a name="config-files">Configuration Files</a></h2>
+<h2>Configuration Files</h2>
 
 <p>There are two configuration files in the &quot;tests&quot; folder - one for Karma and the other for Protractor.</p>
 
@@ -621,7 +1234,7 @@ exports.config = {<br>
 
 <p>Ready to start testing?</p>
 
-<h2><a name="unit-tests">Unit Tests</a></h2>
+<h2>Unit Tests</h2>
 
 <p>We&#39;ll start with unit tests since they are much easier to write, debug, and maintain.</p>
 
@@ -1130,7 +1743,7 @@ Chrome 41.0.2272 (Mac OS X 10.10.2): Executed 12 of 12 SUCCESS (0.16 secs / 0.02
 [05:20:10] Finished &#39;unit&#39; after 3.44 s<br>
 </code></p>
 
-<h2><a name="conclusion">Conclusion</a></h2>
+<h2>Conclusion</h2>
 
 <p>That&#39;s it for unit tests. In the next <a href="http://mherman.org/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2">part</a>, we&#39;ll test the entire application, front to back, using end-to-end (E2E) tests via Protractor.</p>
 
@@ -1821,148 +2434,6 @@ $ gulp clean build<br>
 <p>Well, hopefully you now have a better understanding of how Gulp can greatly simply the build process, handling a number of repetitive tasks. Next time we&#39;ll clean up some of the mess that the Bower components leave behind by adding Browserify into the mix and detail a nice workflow that you can use for all your Angular projects.</p>
 
 <p>Leave questions and comments below. Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Primer on AngularJS Services]]></title>
-    <link href="http://mjhea0.github.com/blog/2014/06/12/primer-on-angularjs-service-types/"/>
-    <updated>2014-06-12T07:39:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2014/06/12/primer-on-angularjs-service-types</id>
-    <content type="html"><![CDATA[<h2>What&#39;s a service ...</h2>
-
-<p>Much to my surprise, the Angular <a href="https://docs.angularjs.org/guide/services">documentation</a> provides a great definition of a service:</p>
-
-<blockquote>
-<p>Angular services are substitutable objects that are wired together using dependency injection (DI). You can use services to organize and share code across your app.</p>
-
-<p>Angular services are:</p>
-
-<ol>
-<li>Lazily instantiated – Angular only instantiates a service when an application component depends on it.</li>
-<li>Singletons – Each component dependent on a service gets a reference to the single instance generated by the service factory.</li>
-</ol>
-
-<p>Angular offers several useful services (like $http), but for most applications you&#39;ll also want to create your own.</p>
-</blockquote>
-
-<p>Services are powerful in that they help keep your code DRY by encapsulating functionality. From an architecture standpoint alone, services help separate out concerns, ensuring that each object is responsible for a single piece of functionality. For example, it&#39;s common for beginners to put <em>all</em> of their app&#39;s functionality into the controller. This is fine for smaller apps, but just know that it&#39;s not a good practice and your controller will balloon quickly as your app scales.</p>
-
-<p>Get in the habit early on to separate concerns. If your controller is handling more than just defining the scope or initial state of your app, connecting your models and views, then it&#39;s are <em>probably</em> doing too much.</p>
-
-<p>We are all (err, I am) guilty of this. Let&#39;s look at a very simple app ...</p>
-
-<h4>HTML:</h4>
-
-<p><br>
-<code>html<br>
-&lt;!doctype html&gt;<br>
-&lt;html lang=&quot;en&quot; ng-app=&#39;myApp&#39;&gt;<br>
-&lt;head&gt;<br>
-  &lt;meta charset=&quot;UTF-8&quot;&gt;<br>
-  &lt;title&gt;Angular Boilerplate&lt;/title&gt;<br>
-  &lt;!-- styles --&gt;<br>
-  &lt;link href=&quot;http://netdna.bootstrapcdn.com/bootswatch/3.1.1/yeti/bootstrap.min.css&quot; rel=&quot;stylesheet&quot; media=&quot;screen&quot;&gt;<br>
-  &lt;link href=&quot;main.css&quot; rel=&quot;stylesheet&quot; media=&quot;screen&quot;&gt;<br>
-&lt;/head&gt;<br>
-  &lt;body&gt;<br>
-    &lt;div class=&quot;container&quot;&gt;<br>
-      &lt;div ng-controller=&quot;myController&quot;&gt;<br>
-        &lt;h1&gt;Enter Quantity:&lt;/h1&gt;<br>
-        &lt;input type=&quot;number&quot; ng-model=&quot;quantity&quot;&gt;&lt;/p&gt;<br>
-        &lt;h2&gt;Total Cost: {{calculate(quantity) | currency}}&lt;/h2&gt;<br>
-      &lt;/div&gt;<br>
-    &lt;/div&gt;<br>
-    &lt;!-- scripts --&gt;<br>
-    &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;<br>
-    &lt;script src=&quot;http://code.jquery.com/jquery-1.11.0.min.js&quot;&gt;&lt;/script&gt;<br>
-    &lt;script src=&quot;http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js&quot;&gt;&lt;/script&gt;<br>
-    &lt;script src=&quot;main.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;<br>
-  &lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</code><br>
-</p>
-
-<h4>Javascript:</h4>
-
-<p>```javascript<br>
-var app = angular.module(&#39;myApp&#39;, [])</p>
-
-<p>app.controller(&#39;myController&#39;, function($scope) {<br>
-  $scope.quantity = 100;<br>
-  $scope.calculate = function(number) {<br>
-    return number * 10;<br>
-  }<br>
-});<br>
-```</p>
-
-<blockquote>
-<p>You can grab the code from <a href="https://github.com/mjhea0/thinkful-mentor/tree/master/angular/fundamentals/services">this</a> repo or from <a href="http://jsfiddle.net/mjhea0/fS4P6/">JSFiddle</a>.</p>
-</blockquote>
-
-<p>So, this just takes an input value (integer or floating point) and multiplies it by 10 in the <code>calculate()</code> function, which then updates the DOM. Not only is the controller defining scope - but it also calculates the total. Despite this being a small app, too much is happening in the controller. We should separate out the calculate <code>function()</code> into a separate service.</p>
-
-<h2>Creating a custom service</h2>
-
-<p>By moving the business logic out of the controller, abstracting much of the code, our controller becomes leaner. <em>It&#39;s a good practice to write fat services and lean controllers</em>.</p>
-
-<p>To do this, we are will use a service type called a factory, which is the most common type.</p>
-
-<blockquote>
-<p>This is a good time to stop and learn the major service types - constants, values, services, providers, and decorators. Check out <a href="http://angular-tips.com/blog/2013/08/understanding-service-types/">this</a> excellent article for more on the various service types and how and when to use them. <strong>All are slightly different, but, in general, all are dependency injected modules of functionality</strong>.</p>
-</blockquote>
-
-<p>Within the same JS file add the following code beneath the controller:</p>
-
-<p><code>javascript<br>
-// Service<br>
-app.factory(&#39;calculateService&#39;, function(){<br>
-  return {<br>
-    calculate: function(number){<br>
-      return number * 10<br>
-    }<br>
- }<br>
-});<br>
-</code></p>
-
-<p>This code creates a service called <code>calculateService</code>. You may be wondering why we have to use the <code>factory()</code> method for this instead of just a regular function. It&#39;s simple: That method registers the service with Angular; and with Angular aware of its existence, it can be dependency injected into the controller, giving us access to the defined functions - e.g, <code>calculate()</code> within the controller. We can now use this in multiple places within our application, allowing for easy code reuse.</p>
-
-<p>So, we have simply abstracted the logic of taking the user inputted number and multiplying it by 10.</p>
-
-<p>Now update the controller:</p>
-
-<p><code>javascript<br>
-app.controller(&#39;myController&#39;, function($scope, calculateService) {<br>
-  $scope.quantity = 100;<br>
-   $scope.calculate = function(number) {<br>
-    return calculateService.calculate(number);<br>
-  }<br>
-});<br>
-</code></p>
-
-<p>And you&#39;re app should be working. Test it out. <a href="http://jsfiddle.net/mjhea0/Q9b23/">JSFiddle</a></p>
-
-<h2>Conclusion</h2>
-
-<p>Hopefully, you now have a better sense as to -</p>
-
-<ul>
-<li>What a service is,</li>
-<li>Why you should use them, and</li>
-<li>How to use them.</li>
-</ul>
-
-<p>Want some practice? Create separate services for each piece of functionality in <a href="https://github.com/mjhea0/thinkful-mentor/tree/master/angular/projects/waitstaff-calc/waitstaff-flask">this</a> app&#39;s controller. Remember: The controller is responsible for defining scope, all else should be moved out of the controller altogether.</p>
-
-<p>If you need help, start by creating a service that handles the actual API calls. Perhaps use a service name of <code>getData</code> then set up functions for the different HTTP requests - i.e., <code>readData()</code> for a GET request and <code>writeData()</code> for a POST. Then when you use dependency injection to add this service to your controller, you can simply use the following syntax for accessing the <code>readData()</code> function in the controller:</p>
-
-<p><code>javascript<br>
-getData.readData(some_argument)<br>
-</code></p>
-
-<p>Presumably you would pass in an argument supplied by the user. Now you can access that function from the controller without knowing anything about the actual service except for how you use it. The controller is cleaner because you abstracted out all the messy code for making API calls.</p>
-
-<p>Good luck!</p>
 ]]></content>
   </entry>
   
