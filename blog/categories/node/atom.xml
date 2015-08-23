@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-07-13T19:03:14-06:00</updated>
+  <updated>2015-08-23T14:22:50-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,352 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Primer on Swig Templating]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/08/23/primer-on-swig-templating/"/>
+    <updated>2015-08-23T14:10:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/08/23/primer-on-swig-templating</id>
+    <content type="html"><![CDATA[<p><strong>Let&#39;s look at the basics of <a href="http://paularmstrong.github.io/swig/">Swig</a>, &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.</strong></p>
+
+<p><hr><br></p>
+
+<p>First off, a templating engine creates web pages (or views) dynamically by combining variables and programming logic with HTML. Essentially, you can add placeholders (or tags) to your HTML that are replaced by <em>actual</em> code defined from your router or controller. In general, tags, for the majority of templating engines, fall within one of two categores-</p>
+
+<ol>
+<li><em>Variables/Output Tags</em> - surrounded by double curly brackets <code></code>, these output the results of a logic tag or a variable to the end user</li>
+<li><em>Logic Tags</em> - surrouded by <code>{% ... %}</code>, these handle programming logic, like loops and conditionals</li>
+</ol>
+
+<blockquote>
+<p>Before diving in, grab the basic project structure from <a href="https://github.com/mjhea0/swig-primer/releases/tag/v1">Github</a>, install the dependencies via NPM - <code>npm install</code> - and then run the server. Pay attention to where we initialize Swig and set it as the templating language in <em>app.js</em>:<br>
+    <code><br>
+    var swig = new swig.Swig();<br>
+    app.engine(&#39;html&#39;, swig.renderFile);<br>
+    app.set(&#39;view engine&#39;, &#39;html&#39;);<br>
+</code></p>
+</blockquote>
+
+<h2>Output Tags</h2>
+
+<p>Let&#39;s start with some basic examples...</p>
+
+<h3>Basics</h3>
+
+<p>First, we can pass variables from our route handlers/view functions directly to the templates.</p>
+
+<p>Update the <em>index.html</em> file:</p>
+
+<p><code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  &lt;h1&gt;&lt;/h1&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code></p>
+
+<p>Now, we can pass in a variable called <code>title</code> to the template from <em>app.js</em>:</p>
+
+<p><code>javascript<br>
+// *** main routes *** //<br>
+app.get(&#39;/&#39;, function(req, res) {<br>
+  res.render(&#39;index.html&#39;, {title: &#39;Swig Primer!&#39;});<br>
+});<br>
+</code></p>
+
+<p>Fire up the server and test this out. Nice. <strong>Try adding another variable to the template.</strong></p>
+
+<p><em>index.html</em>:</p>
+
+<p><code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  &lt;h1&gt;&lt;/h1&gt;<br>
+  &lt;p&gt;&lt;/p&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code></p>
+
+<p><em>app.js</em>:</p>
+
+<p><code>javascript<br>
+app.get(&#39;/&#39;, function(req, res) {<br>
+  var title = &#39;Swig Primer!&#39;<br>
+  var description = &#39;Swig is &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.&#39;<br>
+  res.render(&#39;index.html&#39;, {title: title, description: description});<br>
+});<br>
+</code></p>
+
+<p>Keep in mind that all variable outputs are <a href="http://paularmstrong.github.io/swig/docs/api/#SwigOpts">automtomatically escaped</a> except for function outputs:</p>
+
+<p><code>javascript<br>
+// *** main routes *** //<br>
+app.get(&#39;/&#39;, function(req, res) {<br>
+  var title = &#39;Swig Primer!&#39;<br>
+  var description = &#39;Swig is &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.&#39;<br>
+  function allthethings() {<br>
+    return &#39;&lt;span&gt;All the things!&lt;/span&gt;&#39;;<br>
+  }<br>
+  res.render(&#39;index.html&#39;, {<br>
+    title: title,<br>
+    description: description,<br>
+    allthethings: allthethings<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Don&#39;t forget to call the function in the template - <code>&lt;p&gt;&lt;/p&gt;</code></p>
+
+<blockquote>
+<p>Please see the official <a href="http://paularmstrong.github.io/swig/docs/#variables">documentation</a> for more info on output tags.</p>
+</blockquote>
+
+<h3>Filters</h3>
+
+<p>Filters, which are just simple methods, can be used to modify the output value. To illustrate some examples, add another route handler to <em>app.js</em>, like so:</p>
+
+<p><code>javascript<br>
+app.get(&#39;/filter&#39;, function(req, res) {<br>
+  res.render(&#39;filter.html&#39;, {<br>
+    title: &#39;Hello, World!&#39;,<br>
+    date: new Date(),<br>
+    nameArray: [&#39;This&#39;, &#39;is&#39;, &#39;just&#39;, &#39;an&#39;, &#39;example&#39;]<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Now just add a new template, <em>filter.html</em>, adding in a number of filters:</p>
+
+<p><code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  &lt;h1&gt;&lt;/h1&gt;<br>
+  &lt;p&gt;Liquid error: wrong number of arguments (1 for 2)&lt;/p&gt;<br>
+  &lt;p&gt;&lt;/p&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code></p>
+
+<blockquote>
+<p>Check out all the available <a href="http://paularmstrong.github.io/swig/docs/filters/">filters</a>. You can also extend the functionality of Swig by adding your own <a href="http://paularmstrong.github.io/swig/docs/extending/">custom filters</a>!</p>
+</blockquote>
+
+<h2>Logic Tags</h2>
+
+<p>As the name suggests, <a href="http://paularmstrong.github.io/swig/docs/tags/">logic tags</a> let you use, well, logic in your templates.</p>
+
+<h3>IF statements</h3>
+
+<p>Here&#39;s a simple example...</p>
+
+<p><em>app.js</em>:</p>
+
+<p><code>javascript<br>
+app.get(&#39;/logic&#39;, function(req, res) {<br>
+  var title = &#39;Swig Logic!&#39;<br>
+  res.render(&#39;logic.html&#39;, {title: title});<br>
+});<br>
+</code></p>
+
+<p><em>logic.html</em>:</p>
+
+<p><code>html<br>
+<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% if title %}<br>
+    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  {% endif %}<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+<br>
+</code></p>
+
+<p><strong>Test out some more examples of <a href="http://paularmstrong.github.io/swig/docs/tags/#if">if</a>, <a href="http://paularmstrong.github.io/swig/docs/tags/#elif">elif</a>, and <a href="http://paularmstrong.github.io/swig/docs/tags/#else">else</a>.</strong></p>
+
+<h3>Loops</h3>
+
+<p><strong>How about a for loop?</strong></p>
+
+<p><em>app.js</em>:</p>
+
+<p><code>javascript<br>
+app.get(&#39;/logic&#39;, function(req, res) {<br>
+  var title = &#39;Swig Logic!&#39;<br>
+  var numberArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]<br>
+  res.render(&#39;logic.html&#39;, {title: title, numberArray: numberArray});<br>
+});<br>
+</code></p>
+
+<p><em>logic.html</em>:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% if title %}<br>
+    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  {% endif %}<br>
+  &lt;ul&gt;<br>
+    {% for num in numberArray %}<br>
+      &lt;li&gt;{{ num }}&lt;/li&gt;<br>
+    {% endfor %}<br>
+  &lt;/ul&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p><strong>Need to reverse the loop?</strong></p>
+
+<p>Simply add a filter:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% if title %}<br>
+    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  {% endif %}<br>
+  &lt;ul&gt;<br>
+    {% for num in numberArray | reverse %}<br>
+      &lt;li&gt;{{ num }}&lt;/li&gt;<br>
+    {% endfor %}<br>
+  &lt;/ul&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p><strong>What would a basic loop and filter look like?</strong></p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% if title %}<br>
+    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  {% endif %}<br>
+  &lt;ul&gt;<br>
+    {% for num in numberArray %}<br>
+      {% if num % 2 === 0 %}<br>
+        &lt;li&gt;{{ num }}&lt;/li&gt;<br>
+      {% endif %}<br>
+    {% endfor %}<br>
+  &lt;/ul&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<blockquote>
+<p>You could also write a custom filter for this if you needed to do the <em>same</em> filtering logic a number of times throughout your application.</p>
+</blockquote>
+
+<p>There&#39;s also a number of <a href="http://paularmstrong.github.io/swig/docs/tags/#for">helper methods</a> available with loops:</p>
+
+<ul>
+<li><code>loop.index</code> returns the current iteration of the loop (1-indexed)</li>
+<li><code>loop.index0</code> returns the current iteration of the loop (0-indexed)</li>
+<li><code>loop.revindex</code> returns the number of iterations from the end of the loop (1-indexed)</li>
+<li><code>loop.revindex0</code> returns the number of iterations from the end of the loop (0-indexed)</li>
+<li><code>loop.key</code> returns the key of the current item, if the iterator is an object; otherwise it will operate the same as <code>loop.index</code></li>
+<li><code>loop.first</code> returns true if the current object is the first in the object or array.</li>
+<li><code>loop.last</code> returns true if the current object is the last in the object or array.</li>
+</ul>
+
+<p>Try some of these out:</p>
+
+<p><br>
+<code>html<br>
+{% for num in numberArray | reverse %}<br>
+  {% if num % 2 === 0 %}<br>
+    &lt;li&gt;{{ num }} - {{loop.index}}&lt;/li&gt;<br>
+  {% endif %}<br>
+{% endfor %}<br>
+</code><br>
+</p>
+
+<h2>Template Inheritence</h2>
+
+<p>Logic tags can also be used to extend common code from a base template to child templates. You can use the <code>block</code> tag to accomplish this.</p>
+
+<p>Create a new HTML file called <em>layout.html</em>:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{{title}}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% block content %}{% endblock %}<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p>Did you notice the <code>{% block content %}{% endblock %}</code> tags? These are like placeholders that child templates fill in.</p>
+
+<p>Add another new file called <em>test.html</em>:</p>
+
+<p><br>
+<code>html<br>
+{% extends &quot;layout.html&quot; %}<br>
+{% block content %}<br>
+  &lt;h3&gt; This is the start of a child template&lt;/h3&gt;<br>
+{% endblock %}<br>
+</code><br>
+</p>
+
+<p>Finally, add a route handler to <em>app.js</em>:</p>
+
+<p><br>
+<code>html<br>
+{% extends &quot;layout.html&quot; %}<br>
+{% block content %}<br>
+  &lt;h1&gt;This is the start of a child template&lt;/h1&gt;<br>
+  &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+{% endblock %}<br>
+</code><br>
+</p>
+
+<p>So, the blocks -  <code>{% block content %}{% endblock %}</code> correspond to the block placeholders from the layout file, and since this file extends from the layout, the content defined here is placed in the corresponding placeholders in the layout.</p>
+
+<h2>Conclusion</h2>
+
+<p>Check the <a href="http://paularmstrong.github.io/swig/">documentation</a> for more info. Add your questions below. Cheers!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Handling User Authentication with the MEAN Stack]]></title>
@@ -2060,356 +2406,6 @@ $.get( &#39;/save&#39;, parameters, function(data) {<br>
 <p>You can grab the code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>.</p>
 
 <p>See you next time!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Handling AJAX Calls With Node.js and Express (part 4)]]></title>
-    <link href="http://mjhea0.github.com/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/"/>
-    <updated>2014-04-15T15:27:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4</id>
-    <content type="html"><![CDATA[<p>Articles in the series:</p>
-
-<ul>
-<li>Part 1: <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">Scraping Craigslist</a></li>
-<li>Part 2: <a href="http://mherman.org/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Adding Handlebars</a></li>
-<li>Part 3: <a href="http://mherman.org/blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/">User Authentication with Passport and MongoDB</a></li>
-<li>Part 4: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Refactoring, Adding styles</a> <strong>&lt;&lt; CURRENT</strong></li>
-<li>Part 5: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5">Saving Jobs</a></li>
-</ul>
-
-<p>If you&#39;ve been following along with this series, you should have a basic application for searching and scraping Craigslist for jobs in San Francisco. The end goal is to have an application that users can login to, then search for jobs. From there the end user can either apply for jobs or save jobs they may be interested in.</p>
-
-<p>Before adding any additional functionality, we need to refactor the code a bit by moving some code out of <em>app.js</em> and into separate modules so that the entire app is more modular.</p>
-
-<h2>Configuration</h2>
-
-<p>First, move the config settings into a separate file, outside the main project. It&#39;s always a good idea to separate configuration from actual code so that other users who wish to use your project can easily make it their own by quickly adding their own configuration.</p>
-
-<p>Create a <em>config.js</em> file and add the following code:</p>
-
-<p><code>javascript<br>
-module.exports = {<br>
-  google: {<br>
-    returnURL: &#39;http://127.0.0.1:3000/auth/google/callback&#39;,<br>
-    realm: &#39;http://127.0.0.1:3000&#39;<br>
-  },<br>
-  mongoUrl: &#39;mongodb://localhost/craigslist&#39;<br>
-};<br>
-</code></p>
-
-<p>Then make sure to include the file as part of <em>app.js</em>&#39;s dependencies:</p>
-
-<p><code>javascript<br>
-var config = require(&#39;./config&#39;);<br>
-</code></p>
-
-<p>Finally, update these two areas within <em>app.js</em>:</p>
-
-<p><code>javascript<br>
-// connect to the database<br>
-mongoose.connect(config.mongoUrl);<br>
-</code></p>
-
-<p>And:</p>
-
-<p><code>javascript<br>
-passport.use(new GoogleStrategy({<br>
-  returnURL: config.google.returnURL,<br>
-  realm: config.google.realm<br>
-},<br>
-</code></p>
-
-<h2>User Model</h2>
-
-<p>Next, update the user schema for mongoose.</p>
-
-<p>Create a new folder called &quot;models&quot; and add a file called <em>user.js</em> to hold the user schema:</p>
-
-<p>```javascript<br>
-var mongoose = require(&#39;mongoose&#39;);<br>
-var config = require(&#39;../config&#39;);</p>
-
-<p>console.log(config);</p>
-
-<p>// create a user model<br>
-var userSchema = new mongoose.Schema({<br>
-  name: String,<br>
-  email: {type: String, lowercase: true }<br>
-});</p>
-
-<p>module.exports = mongoose.model(&#39;User&#39;, userSchema);<br>
-```</p>
-
-<p>Add this to the dependencies:</p>
-
-<p><code>javascript<br>
-var user = require(&#39;./models/user&#39;);<br>
-</code></p>
-
-<p>Then update <em>app.js</em>:</p>
-
-<p>```javascript<br>
-// passport settings<br>
-passport.serializeUser(function(user, done) {<br>
-  console.log(&#39;serializeUser: &#39; + user.id)<br>
-  done(null, user.id);<br>
-});<br>
-passport.deserializeUser(function(id, done) {<br>
-  user.findOne({_id : id}, function(err, user) {<br>
-    console.log(user)<br>
-    if(!err) done(null, user);<br>
-    else done(err, null)<br>
-  });<br>
-});</p>
-
-<p>passport.use(new GoogleStrategy({<br>
-  returnURL: config.google.returnURL,<br>
-  realm: config.google.realm<br>
-},<br>
-  function(identifier, profile, done) {<br>
-    console.log(profile.emails[0].value)<br>
-    process.nextTick(function() {<br>
-      var query = user.findOne({&#39;email&#39;: profile.emails[0].value});<br>
-      query.exec(function(err, oldUser) {<br>
-        if(oldUser) {<br>
-          console.log(&quot;Found registered user: &quot; + oldUser.name + &quot; is logged in!&quot;);<br>
-          done(null, oldUser);<br>
-        } else {<br>
-          var newUser = new user();<br>
-          newUser.name = profile.displayName;<br>
-          newUser.email = profile.emails[0].value;<br>
-          console.log(newUser);<br>
-          newUser.save(function(err){<br>
-            if(err){<br>
-              throw err;<br>
-            }<br>
-            console.log(&quot;New user, &quot; + newUser.name + &quot;, was created&quot;);<br>
-            done(null, newUser);<br>
-          });<br>
-        }<br>
-      });<br>
-    });<br>
-  }<br>
-));<br>
-```</p>
-
-<p>The Passport code searches the database to see if a user already exists before creating a new one - which is no different from last time. However, see if you can dig a bit deeper and see the subtle differences.</p>
-
-<h2>Routes</h2>
-
-<p>Next, move the main routing into a separate module by adding the following code to <em>routes/index.js</em>:</p>
-
-<p>```javascript<br>
-var request = require(&#39;request&#39;);</p>
-
-<p>exports.index = function(req, res){<br>
-  res.render(&#39;index&#39;, { user: req.user });<br>
-};</p>
-
-<p>exports.search = function(req, res) {<br>
-  res.render(&#39;search&#39;, { user: req.user.name });<br>
-};</p>
-
-<p>exports.searching = function(req, res){<br>
-  // input value from search<br>
-  var val = req.query.search;<br>
-  // url used to search yql<br>
-  var url = &quot;http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search&quot; +<br>
-  &quot;%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22&quot; + val + &quot;%22&amp;format=&quot; +<br>
-  &quot;json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&quot;;</p>
-
-<p>requests(url,function(data){<br>
-    res.send(data);<br>
-  });<br>
-};</p>
-
-<p>function requests(url, callback) {<br>
-  // request module is used to process the yql url and return the results in JSON format<br>
-  request(url, function(err, resp, body) {<br>
-    var resultsArray = [];<br>
-    body = JSON.parse(body);<br>
-    // console.log(body.query.results.RDF.item)<br>
-    // logic used to compare search results with the input from user<br>
-    if (!body.query.results.RDF.item) {<br>
-      results = &quot;No results found. Try again.&quot;;<br>
-      callback(results);<br>
-    } else {<br>
-      results = body.query.results.RDF.item;<br>
-      for (var i = 0; i &lt; results.length; i++) {<br>
-        resultsArray.push(<br>
-          {title:results[i].title[0], about:results[i][&quot;about&quot;], desc:results[i][&quot;description&quot;]}<br>
-        );<br>
-      };<br>
-    };<br>
-    // pass back the results to client side<br>
-    callback(resultsArray);<br>
-  });<br>
-};<br>
-```</p>
-
-<p>Again, add the dependency: <code>var routes = require(&#39;./routes&#39;);</code></p>
-
-<p>The routes section in <em>app.js</em> should now look like this:</p>
-
-<p>```javascript<br>
-// user routes<br>
-app.get(&#39;/&#39;, routes.index);<br>
-app.get(&#39;/search&#39;, ensureAuthenticated, routes.search);<br>
-app.get(&#39;/searching&#39;, ensureAuthenticated, routes.searching);<br>
-app.get(&#39;/logout&#39;, function(req, res){<br>
-  req.logOut();<br>
-  res.redirect(&#39;/&#39;);<br>
-});</p>
-
-<p>// auth routes<br>
-app.get(&#39;/auth/google&#39;,<br>
-  passport.authenticate(&#39;google&#39;),<br>
-  function(req, res){<br>
-});<br>
-app.get(&#39;/auth/google/callback&#39;,<br>
-passport.authenticate(&#39;google&#39;, { failureRedirect: &#39;/&#39; }),<br>
-  function(req, res) {<br>
-    res.redirect(&#39;/search&#39;);<br>
-  }<br>
-);</p>
-
-<p>// test authentication<br>
-function ensureAuthenticated(req, res, next) {<br>
-  if (req.isAuthenticated()) { return next(); }<br>
-  res.redirect(&#39;/&#39;)<br>
-}<br>
-```</p>
-
-<h2>Passport</h2>
-
-<p>Now, move the main authentication code to a separate file.</p>
-
-<p>Create a new file called <em>authentication.js</em> and add the following code:</p>
-
-<p>```javascript<br>
-// authentication</p>
-
-<p>var passport = require(&#39;passport&#39;)<br>
-var GoogleStrategy = require(&#39;passport-google&#39;).Strategy;<br>
-var config = require(&#39;./config&#39;);<br>
-var user = require(&#39;./models/user&#39;);</p>
-
-<p>// passport settings<br>
-passport.serializeUser(function(user, done) {<br>
-  console.log(&#39;serializeUser: &#39; + user.id)<br>
-  done(null, user.id);<br>
-});<br>
-passport.deserializeUser(function(id, done) {<br>
-  user.findOne({_id : id}, function(err, user) {<br>
-    console.log(user)<br>
-    if(!err) done(null, user);<br>
-    else done(err, null)<br>
-  });<br>
-});</p>
-
-<p>passport.use(new GoogleStrategy({<br>
-  returnURL: config.google.returnURL,<br>
-  realm: config.google.realm<br>
-},<br>
-  function(identifier, profile, done) {<br>
-    console.log(profile.emails[0].value)<br>
-    process.nextTick(function() {<br>
-      var query = user.findOne({&#39;email&#39;: profile.emails[0].value});<br>
-      query.exec(function(err, oldUser) {<br>
-        if(oldUser) {<br>
-          console.log(&quot;Found registered user: &quot; + oldUser.name + &quot; is logged in!&quot;);<br>
-          done(null, oldUser);<br>
-        } else {<br>
-          var newUser = new user();<br>
-          newUser.name = profile.displayName;<br>
-          newUser.email = profile.emails[0].value;<br>
-          console.log(newUser);<br>
-          newUser.save(function(err){<br>
-            if(err){<br>
-              throw err;<br>
-            }<br>
-            console.log(&quot;New user, &quot; + newUser.name + &quot;, was created&quot;);<br>
-            done(null, newUser);<br>
-          });<br>
-        }<br>
-      });<br>
-    });<br>
-  }<br>
-));</p>
-
-<p>module.exports = passport;<br>
-```</p>
-
-<p>Then back in <em>app.js</em>, make sure to import that module back in by adding it as a dependency:</p>
-
-<p><code>javascript<br>
-var passport = require(&#39;./authentication&#39;);<br>
-</code></p>
-
-<p>Fire up the server, and test your app out. If it all went well, everything should still work properly.</p>
-
-<p>Finally, let&#39;s update the styles.</p>
-
-<h2>Styles</h2>
-
-<p>First, add in a <a href="http://getbootstrap.com/">Bootstrap</a> stylesheet to the <em>layout.jade</em> file:</p>
-
-<p><code>html<br>
-link(rel=&#39;stylesheet&#39;, href=&#39;http://mjhea0.github.com//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css&#39;)<br>
-</code></p>
-
-<h3>index.jade</h3>
-
-<p>```html<br>
-extends layout</p>
-
-<p>block content<br>
-    h1 Search Login<br>
-    .lead Please login to search<br>
-    br<br>
-    form(METHOD=&quot;LINK&quot;, ACTION=&quot;/auth/google&quot;)<br>
-        input(type=&quot;submit&quot;, value=&quot;Login with Google&quot;, class=&#39;btn btn-large btn-primary&#39;)</p>
-<div class="highlight"><pre><code class="text">script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;)
-script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;)
-script(src=&quot;/javascripts/main.js&quot;)
-</code></pre>
-</div>
-
-<p>```</p>
-
-<h3>search.jade</h3>
-
-<p>```html<br>
-extends layout</p>
-
-<p>block content<br>
-    h1 Search SF Jobs<br>
-    .lead Welcome, #{user}<br>
-    form(METHOD=&quot;LINK&quot;, ACTION=&quot;logout&quot;)<br>
-        input(type=&quot;submit&quot;, value=&quot;Logout&quot;, class=&#39;btn btn-sm btn-primary&#39;)<br>
-    br<br>
-    br<br>
-    input#search(type=&quot;search&quot;, placeholder=&quot;search...&quot;)<br>
-    br<br>
-    br<br>
-    ul#results<br>
-    include template.html</p>
-<div class="highlight"><pre><code class="text">script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;)
-script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;)
-script(src=&quot;/javascripts/main.js&quot;)
-</code></pre>
-</div>
-
-<p>```</p>
-
-<p>Wait? How did we capture the user&#39;s name? Go back and look at the <code>/searching</code> route.</p>
-
-<p>Looks a little better. :)</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/part4.png" alt="part-4"></p>
-
-<p>Alright, next time we&#39;ll expand the app&#39;s functionality to allow users to save jobs they may be interested in applying to at a later date. Until then, check out the latest code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>. Cheers!</p>
 ]]></content>
   </entry>
   
