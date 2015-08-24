@@ -4,7 +4,7 @@
   <title><![CDATA[Michael Herman]]></title>
   <link href="http://mjhea0.github.com/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-08-23T14:22:50-06:00</updated>
+  <updated>2015-08-24T06:25:55-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,913 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    
+    <title type="html"><![CDATA[Node, Express, Swig, and MongoDB - getting started with CRUD]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/08/24/node-express-swig-mongo-primer/"/>
+    
+    <updated>2015-08-24T08:11:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/08/24/node-express-swig-mongo-primer</id>
+    
+    <content type="html"><![CDATA[<p><strong>Let&#39;s create a basic CRUD app using Node, Express, Swig, and MongoDB.</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mjhea0.github.com/images/node-express.png" style="max-width: 100%; border:0;" alt="mean stack authentication">
+</div>
+
+<p><br></p>
+
+<blockquote>
+<p>This tutorial utilizes <a href="http://nodejs.org/">Node</a> v0.12.5, <a href="http://expressjs.com/">Express</a> v4.13.1, <a href="http://paularmstrong.github.io/swig/">Swig</a> and <a href="http://mongoosejs.com/">Mongoose</a> v4.1.3.</p>
+</blockquote>
+
+<h2>Getting started</h2>
+
+<p>Start by downloading the <a href="http://expressjs.com/starter/generator.html">Express application generator</a> (if you don&#39;t already have it) to create a basic Express project:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install express-generator -g
+</span></code></pre></td></tr></table></div></figure>
+
+<blockquote>
+<p>The <code>-g</code> flag indicates that you want to install the package globally, on your entire system.</p>
+</blockquote>
+
+<p>Navigate to a convenient directory, like your &quot;Desktop&quot; or &quot;Documents&quot;, then create the boilerplate:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>express node-express-swig-mongo
+</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>node-express-swig-mongo
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Check out the project structure:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>├── app.js
+</span><span class='line'>├── bin
+</span><span class='line'>│   └── www
+</span><span class='line'>├── package.json
+</span><span class='line'>├── public
+</span><span class='line'>│   ├── images
+</span><span class='line'>│   ├── javascripts
+</span><span class='line'>│   └── stylesheets
+</span><span class='line'>│       └── style.css
+</span><span class='line'>├── routes
+</span><span class='line'>│   ├── index.js
+</span><span class='line'>│   └── users.js
+</span><span class='line'>└── views
+</span><span class='line'>    ├── error.jade
+</span><span class='line'>    ├── index.jade
+</span><span class='line'>    └── layout.jade
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Don&#39;t worry about the files and folders for now. Just know that we have created a boilerplate that can be used for a number of Node/Express applications. This took care of the heavy lifting, adding common files, folders, and scripts generally associated with all apps.</p>
+
+<p>Notice the <em>package.json</em> file. This stores your project&#39;s dependencies, which we still need to install:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Now let&#39;s install Mongoose and Swig:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install mongoose swig --save
+</span></code></pre></td></tr></table></div></figure>
+
+<blockquote>
+<p>The <code>--save</code> flag adds the dependencies and their versions to the <em>package.json</em> file. Take a look.</p>
+</blockquote>
+
+<h2>Sanity check</h2>
+
+<p>Let&#39;s test our setup by running the app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm start
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser and you should see the &quot;Welcome to Express&quot; text. Once done, kill the server by pressing CTRL-C.</p>
+
+<h2>Nodemon</h2>
+
+<p>Before moving on, let&#39;s setup <a href="http://nodemon.io/">Nodemon</a> so that you can run your app and watch for code changes without having to manually restart the server. Check out the link above to learn more.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install supervisor -g
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Let&#39;s test again:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>nodemon
+</span></code></pre></td></tr></table></div></figure>
+
+<p>In your terminal you should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>23 Aug 16:31:02 - <span class="o">[</span>nodemon<span class="o">]</span> v1.4.1
+</span><span class='line'>23 Aug 16:31:02 - <span class="o">[</span>nodemon<span class="o">]</span> to restart at any <span class="nb">time</span>, enter <span class="sb">`</span>rs<span class="sb">`</span>
+</span><span class='line'>23 Aug 16:31:02 - <span class="o">[</span>nodemon<span class="o">]</span> watching: *.*
+</span><span class='line'>23 Aug 16:31:02 - <span class="o">[</span>nodemon<span class="o">]</span> starting <span class="sb">`</span>node ./bin/www<span class="sb">`</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Essentially, Nodemon is watching for code changes, and if they do occur, then it will refresh the local server for you so you don&#39;t have to constantly kill the server then start it back up. It saves a lot of time and keystrokes.</p>
+
+<p>Awesome. With the setup done, let&#39;s build something!</p>
+
+<h2>Routes</h2>
+
+<p>Grab your favorite text editor (such as <a href="http://www.sublimetext.com/">Sublime</a> or <a href="https://atom.io/">Atom</a>), and then open the main file, <em>app.js</em>, which houses much of the business logic. Take a look at the routes:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">);</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/users&#39;</span><span class="p">,</span> <span class="nx">users</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Understanding how routes work as well as how to trace all the files associated with an individual route is an important skill to learn. You&#39;ll be able to approach most applications and understand how they work just by starting with the routes.</p>
+
+<p>Let&#39;s look at this route:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/users&#39;</span><span class="p">,</span> <span class="nx">users</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Here, we know that this route is associated with the <code>/users</code> endpoint. What&#39;s an endpoint? Simply navigate to <a href="http://localhost:3000/users">http://localhost:3000/users</a>.</p>
+
+<p>The end user navigates to that endpoint and expects <em>something</em> to happen. That could mean some HTML is rendered or perhaps JSON is returned. That&#39;s not important at this point. For now, let&#39;s look at how Node handles the logic for &quot;handling routes&quot;.</p>
+
+<p>Also, within that route, you can see the variable <code>users</code>. Where is in this file? It&#39;s at the top, and it loads in another file within our app:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/users&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Open that file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* GET users listing. */</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;respond with a resource&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p><strong>What&#39;s happening here?</strong> Essentially when that endpoint is hit, it responds by sending text in the form of a response to the end user - &quot;respond with a resource&quot;. Now, of course you don&#39;t always have to send text. You could respond with a template or view like a Jade or Swig template file that gets rendered into HTML. We&#39;ll look at how this works in just a minute when we add our own routes.</p>
+
+<p><strong>Make sure you understand everything in this section before moving on.</strong></p>
+
+<h3>Add a new route</h3>
+
+<p>Let&#39;s now add a new route that renders a HTML form to the end user.</p>
+
+<p>Start by adding the route handler in the <em>app.js</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">&#39;/api&#39;</span><span class="p">,</span> <span class="nx">api</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<blockquote>
+<p>Remember this simply means <code>app.use(&#39;/ENDPOINT&#39;, VARIABLE_NAME);</code>,</p>
+</blockquote>
+
+<p>Use the <code>api</code> variable to require a JS file within our routes folder.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">api</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/api&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Take a look in the terminal. You should see an error, indicating Node can&#39;t find the <code>./routes/api</code> module. We need to create it!</p>
+
+<p>Create a new file called <em>api.js</em> in the &quot;routes&quot; directory. Add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/superheros&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;Just a test&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<blockquote>
+<p>Do you remember what this code <code>res.send(&#39;Just a test&#39;);</code> will do? If not, review the previous section.</p>
+</blockquote>
+
+<p>Navigate to <a href="http://localhost:3000/api/superheros">http://localhost:3000/api/superheros</a>. You should see the text &quot;Just a test&quot; on the page.</p>
+
+<h2>Swig</h2>
+
+<p>Swig is a templating language, which compiles down to HTML, making it easy to separate logic from markup. For more on Swig, check out the <a href="http://mherman.org/blog/2015/08/23/primer-on-swig-templating/#.VdpL_VNViko">Primer on Swig Templating</a>.</p>
+
+<p>Take a quick look at the <em>layout.jade</em>, <em>index.jade</em>, and <em>error.jade</em> files within the &quot;views&quot; folder. Right now these files are using <a href="http://jade-lang.com/">Jade</a> templating. Let&#39;s update these files to remove Jade and add Swig. First, remove the <em>.jade</em> extension from each file and add a <em>.html</em> extension. Now we can update the actual syntax&#8230;</p>
+
+<p><strong><em>layout.html</em></strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE html&gt;</span>
+</span><span class='line'><span class="nt">&lt;html&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;head&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;title&gt;</span>{{ title }}<span class="nt">&lt;/title&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;/css/main.css&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;body&gt;</span>
+</span><span class='line'>    {% block content %}
+</span><span class='line'>    {% endblock %}
+</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src=</span><span class="s">&quot;//code.jquery.com/jquery-2.1.4.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src=</span><span class="s">&quot;/js/main.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
+</span><span class='line'><span class="nt">&lt;/html&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p><strong><em>index.html</em></strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends &#39;layout.html&#39; %}
+</span><span class='line'>
+</span><span class='line'>{% block title %}{% endblock %}
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>{% block content %}
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;h1&gt;</span>{{ title }}<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;p&gt;</span>Welcome to {{ title }}<span class="nt">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>
+</span><span class='line'>{% endblock %}
+</span></code></pre></td></tr></table></div></figure>
+
+<p><strong><em>error.html</em></strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends &#39;layout.html&#39; %}
+</span><span class='line'>
+</span><span class='line'>{% block title %}{% endblock %}
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>{% block content %}
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;h1&gt;</span>{{ message }}<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;h2&gt;</span>{{ error.status }}<span class="nt">&lt;/h2&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;pre&gt;</span>{{ error.stack }}<span class="nt">&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>
+</span><span class='line'>{% endblock %}
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Finally, update <em>app.js</em> by requiring the following dependency at the top of the file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">swig</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;swig&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Then set Swig as the template engine by replacing <code>app.set(&#39;view engine&#39;, &#39;jade&#39;);</code> with-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">swig</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">swig</span><span class="p">.</span><span class="nx">Swig</span><span class="p">();</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">engine</span><span class="p">(</span><span class="s1">&#39;html&#39;</span><span class="p">,</span> <span class="nx">swig</span><span class="p">.</span><span class="nx">renderFile</span><span class="p">);</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;view engine&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Jump back to the &quot;views&quot;, and take a look at <em>layout.html</em> and <em>index.html</em>. There&#39;s a relationship between those two files. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
+
+<p>Do you see the <code>block</code> keyword?</p>
+
+<p>What really happens when the <em>index</em> file is rendered is that it first renders the base template because of the <code>extends</code> keyword. So, the <em>layout</em> template then gets rendered, which eventually pulls in the child template, overwriting the <code>block</code> keyword with:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;h1&gt;</span><span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;p&gt;</span>Welcome to <span class="nt">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Hope that makes sense. If not, check out <a href="http://mherman.org/blog/2015/08/23/primer-on-swig-templating/#template-inheritence">this</a> resource for more info on template inheritance.</p>
+
+<h3>Setup <em>api.html</em></h3>
+
+<p>Create a new file called <em>api.html</em> in the &quot;views&quot; directory, and then add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends &#39;layout.html&#39; %}
+</span><span class='line'>
+</span><span class='line'>{% block title %}{% endblock %}
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>{% block content %}
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;h1&gt;</span>{{ title }}<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;p&gt;</span>Welcome to {{ title }}<span class="nt">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>
+</span><span class='line'>{% endblock %}
+</span></code></pre></td></tr></table></div></figure>
+
+<p>The same thing is happening here with inheritance. If you&#39;re unfamiliar with Swig syntax, <code>{{ title }}</code> is essentially a variable, which we can pass in from <code>./routes/api.js</code>.</p>
+
+<p>Update <code>./routes/api.js</code> by changing-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;Just a test&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>-to-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;api&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Superhero API&#39;</span> <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>This just says, &quot;When a user hits the <code>/api/superheros</code> endpoint, render the <em>api.html</em> file and pass in <code>Superhero API</code> as the title.&quot;</p>
+
+<blockquote>
+<p>Keep in mind that all Swig files are converted to HTML since browsers can&#39;t read the Swig templating syntax.</p>
+</blockquote>
+
+<p>Ready to test? Simple refresh <a href="http://localhost:3000/api/superheros">http://localhost:3000/api/superheros</a>.</p>
+
+<p>Did it work? If yes, move on. If not, go back through this section and review.</p>
+
+<h3>Update <em>api.html</em></h3>
+
+<p>So, let&#39;s update the template to display a form:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends &#39;layout.html&#39; %}
+</span><span class='line'>
+</span><span class='line'>{% block title %}{% endblock %}
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>{% block content %}
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;h1&gt;</span>{{ title }}<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;br&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;form</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span> <span class="na">action=</span><span class="s">&quot;/api/superheros&quot;</span> <span class="na">class=</span><span class="s">&quot;form-inline&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;label&gt;</span>Superhero name<span class="nt">&lt;/label&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">required</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-default&quot;</span><span class="nt">&gt;</span>Save<span class="nt">&lt;/button&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/form&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>
+</span><span class='line'>{% endblock %}
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Refresh your browser. Do you see the form? Try clicking save. What happens? Well, you just tried to send a POST request to the <code>/api/superheros</code> endpoint, which does not exist - so you should see a 404 error. Let&#39;s set up the route handler.</p>
+
+<h2>POST requests (part 1)</h2>
+
+<p>Open <em>api.js</em> to add the logic for this new route:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/superheros&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;api&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Superhero API&#39;</span> <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/superheros&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/api/superheros&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Test this out again. Now, when you submit the form, we have the <code>/api/superheros</code> endpoint setup, which then grabs the text from the input box via <code>req.body.name</code>. Make sure the text is consoled in your terminal.</p>
+
+<p>Okay. So, we are handling the routes and rendering the right template, but we still need to setup Mongoose to save the data from our form before we can finish with the POST request.</p>
+
+<h2>Mongoose</h2>
+
+<p><a href="http://mongoosejs.com/">Mongoose</a> is used for interacting with MongoDB. Start with defining the Schema, which then maps to a collection in Mongo.</p>
+
+<p>Create a file called <em>database.js</em> in your app&#39;s root directory, then add the following code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Schema</span>   <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Superhero</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Schema</span><span class="p">(</span>
+</span><span class='line'>  <span class="p">{</span><span class="nx">name</span> <span class="o">:</span> <span class="nb">String</span><span class="p">}</span>
+</span><span class='line'><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;superheros&#39;</span><span class="p">,</span> <span class="nx">Superhero</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s1">&#39;mongodb://localhost/node-superhero&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Here, we required/included the Mongoose library along with a reference to the <code>Schema()</code> method. As said, you always start with defining the schema, then we linked it to collection called &quot;superheros&quot;. Finally, we opened a connection to an instance of our local MongoDB.</p>
+
+<blockquote>
+<p>If you don&#39;t have the MongoDB server running. Do so now. Open a new terminal window, and run the command <code>sudo mongod</code>. If you need to set up MongoDB, follow the Installation steps <a href="http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/">here</a>.</p>
+</blockquote>
+
+<p>Next, open <em>app.js</em> and require the Mongoose config at the very top of the file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// mongoose config</span>
+</span><span class='line'><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./database&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>With Mongoose setup, we need to update <em>api.js</em> to create (via POST) and read (via GET) data from the Mongo collection.</p>
+
+<h2>GET requests (all resources)</h2>
+
+<p>Open <em>api.js</em>. Require Mongoose as well as the <code>superheros</code> model, which we already created:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Superhero</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;superheros&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Now, update the function handling GET requests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/superheros&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">Superhero</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">superheros</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">superheros</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+</span><span class='line'>      <span class="s1">&#39;api&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">title</span> <span class="o">:</span> <span class="s1">&#39;Superhero API&#39;</span><span class="p">,</span> <span class="nx">superheros</span> <span class="o">:</span> <span class="nx">superheros</span><span class="p">}</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p><code>Superhero.find()</code> grabs all superheros from the Mongo collection, which we assign to the variable <code>superheros</code>. We can now use that variable in the Swig template.</p>
+
+<h3>Update <em>api.html</em> to display superheros</h3>
+
+<p>Let&#39;s add a loop to iterate through the superheros and then display the <code>name</code> key from the collection.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends &#39;layout.html&#39; %}
+</span><span class='line'>
+</span><span class='line'>{% block title %}{% endblock %}
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>{% block content %}
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;h1&gt;</span>{{ title }}<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;br&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;form</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span> <span class="na">action=</span><span class="s">&quot;/api/superheros&quot;</span> <span class="na">class=</span><span class="s">&quot;form-inline&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;label&gt;</span>Superhero name<span class="nt">&lt;/label&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">required</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-default&quot;</span><span class="nt">&gt;</span>Save<span class="nt">&lt;/button&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/form&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;hr&gt;&lt;br&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;h2&gt;</span>All Superheros<span class="nt">&lt;/h2&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;ul&gt;</span>
+</span><span class='line'>    {% for superhero in superheros %}
+</span><span class='line'>      <span class="nt">&lt;li&gt;</span>{{superhero.name}}<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    {% endfor %}
+</span><span class='line'>    <span class="nt">&lt;/ul&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>
+</span><span class='line'>{% endblock %}
+</span></code></pre></td></tr></table></div></figure>
+
+<blockquote>
+<p>Do you remember where we set the <code>name</code> key? Check out the database schema in <em>database.js</em>.</p>
+</blockquote>
+
+<p>Before this will actually work - e.g., display superheros - we first need to add the logic to insert data into the Mongo collection.</p>
+
+<h2>POST requests (part 2)</h2>
+
+<p>Back in <em>api.js</em>, update the function for handling POST requests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/superheros&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">new</span> <span class="nx">Superhero</span><span class="p">({</span><span class="nx">name</span> <span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">})</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">superhero</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">superhero</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/api/superheros&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>This simply saves a new superhero, which again is grabbed from the form via <code>req.body.name</code>.</p>
+
+<h2>Sanity Check</h2>
+
+<p>Refresh you app. Add some superheros. If you&#39;ve done everything correctly, the superheros should be displayed beneath the form.</p>
+
+<p>What about updates? And deletions? First, let&#39;s display a single superhero.</p>
+
+<h2>GET requests (single resource)</h2>
+
+<p>Update the list item in the HTML file like so to give each item a unique URL.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;superhero/&quot;</span><span class="err">&lt;/</span><span class="na">a</span><span class="nt">&gt;</span><span class="nt">&lt;/li&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Now, let&#39;s add a new route handler to <em>app.js</em> to display a single superhero:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/superhero/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">};</span>
+</span><span class='line'>  <span class="nx">Superhero</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">superhero</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">superhero</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+</span><span class='line'>      <span class="s1">&#39;superhero&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">title</span> <span class="o">:</span> <span class="s1">&#39;Superhero API - &#39;</span> <span class="o">+</span> <span class="nx">superhero</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">superhero</span> <span class="o">:</span> <span class="nx">superhero</span><span class="p">}</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>What&#39;s next? A new template. <em>superhero.html</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends &#39;layout.html&#39; %}
+</span><span class='line'>
+</span><span class='line'>{% block title %}{% endblock %}
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>{% block content %}
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;h1&gt;</span>{{ title }}<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;br&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;form</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span> <span class="na">action=</span><span class="s">&quot;/api/superhero/{{superhero.id}}?_method=PUT&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;label&gt;</span>Superhero name<span class="nt">&lt;/label&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">class=</span><span class="s">&quot;form-control&quot;</span> <span class="na">value=</span><span class="s">&quot;{{superhero.name}}&quot;</span> <span class="na">required</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-default&quot;</span><span class="nt">&gt;</span>Update<span class="nt">&lt;/button&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/form&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;br&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;form</span> <span class="na">method=</span><span class="s">&quot;post&quot;</span> <span class="na">action=</span><span class="s">&quot;/api/superhero/{{superhero.id}}?_method=DELETE&quot;</span> <span class="na">class=</span><span class="s">&quot;form-inline&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">class=</span><span class="s">&quot;btn btn-default&quot;</span><span class="nt">&gt;</span>Delete<span class="nt">&lt;/button&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/form&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>
+</span><span class='line'>{% endblock %}
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Test this out.</p>
+
+<h2>PUT requests</h2>
+
+<p>Since most browsers do not handle PUT or DELETE requests, we need to use the <a href="https://github.com/expressjs/method-override">method-override</a> middleware to handle such requests.</p>
+
+<p>Install via NPM:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install method-override --save
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Add the requirement to <em>app.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">methodOverride</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;method-override&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Then define the middleware just below the view engine setup in <em>app.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">methodOverride</span><span class="p">(</span><span class="s1">&#39;_method&#39;</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Finally, add the route handler to <em>api.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/superhero/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">};</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">update</span> <span class="o">=</span> <span class="p">{</span><span class="nx">name</span> <span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">};</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span><span class="k">new</span><span class="o">:</span> <span class="kc">true</span><span class="p">};</span>
+</span><span class='line'>  <span class="nx">Superhero</span><span class="p">.</span><span class="nx">findOneAndUpdate</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">update</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">superhero</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">superhero</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+</span><span class='line'>      <span class="s1">&#39;superhero&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">title</span> <span class="o">:</span> <span class="s1">&#39;Superhero API - &#39;</span> <span class="o">+</span> <span class="nx">superhero</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">superhero</span> <span class="o">:</span> <span class="nx">superhero</span><span class="p">}</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Here, we are simply searching Mongo for the correct superhero via the Mongo ID and then updating the superhero name, which comes from the form, <code>req.body.name</code>. By setting <code>new</code> to <code>true</code>, we&#39;re able to grab the updated superhero information after the changes are made in Mongo. Try removing this option. What happens?</p>
+
+<h2>DELETE requests</h2>
+
+<p>With the button already set up in the template, we just need to add the route handler to <em>api.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/superhero/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;_id&quot;</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">};</span>
+</span><span class='line'>  <span class="nx">Superhero</span><span class="p">.</span><span class="nx">findOneAndRemove</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">superhero</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">superhero</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/api/superheros&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Again, we&#39;re querying the database by the Mongo ID and then removing it. Simple, right?</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#39;s it. Post your questions below. Grab the code from the <a href="https://github.com/mjhea0/node-express-swig-mongo">repository</a>. Cheers!</p>
+]]></content>
+    
+  </entry>
   
   <entry>
     
@@ -4937,21 +5844,6 @@
 <li><a href="https://www.npmjs.com/package/passport-local-mongoose">Passport-local-mongoose</a>: v1.0.0</li>
 </ul>
 
-<h2>Contents</h2>
-
-<ol>
-<li>Project Setup</li>
-<li>Edit app.js</li>
-<li>Mongoose</li>
-<li>Add Routes</li>
-<li>Test</li>
-<li>Views</li>
-<li>Test Redux</li>
-<li>Unit Tests</li>
-<li>Error Handling</li>
-<li>Conclusion</li>
-</ol>
-
 <h2>Project Setup</h2>
 
 <p>Start by installing the Express generator, which we&#39;ll use to generate a basic project boilerplate:</p>
@@ -5948,7 +6840,7 @@
 
 <p>So the end user navigates to that endpoint and expects <em>something</em> to happen. That could mean some HTML is rendered or perhaps JSON is returned. That&#39;s not important at this point. For now, let&#39;s look at how Node handles that logic for &quot;handling routes&quot;.</p>
 
-<p>Also, within that route, you can see the variable <code>users</code>. Where is that in this file? It&#39;s at the top, and it loads in another file within our app:</p>
+<p>Also, within that route, you can see the variable <code>users</code>. Where is this file this file? It&#39;s at the top, and it loads in another file within our app:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/users&#39;</span><span class="p">);</span>
@@ -6034,7 +6926,7 @@
 
 <p>Jade is a templating language, which compiles down to HTML. It makes it easy to separate logic from markup.</p>
 
-<p>Take a quick look at the <em>layout.jade</em> and <em>index.jade</em> files with the &quot;views&quot; folder. There&#39;s a relationship between those two files. It&#39;s called inheritance. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
+<p>Take a quick look at the <em>layout.jade</em> and <em>index.jade</em> files within the &quot;views&quot; folder. There&#39;s a relationship between those two files. It&#39;s called inheritance. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
 
 <p>Do you see the <code>block</code> keyword?</p>
 
@@ -6086,7 +6978,7 @@
 
 <p>Ready to test? Simple refresh <a href="http://localhost:3000/form">http://localhost:3000/form</a>.</p>
 
-<p>Did it work? If yes, move on. If not, go back through this section and review. Look in you terminal as well to see the error(s). If you&#39;re having problems, don&#39;t beat yourself up. It&#39;s all part of learning!</p>
+<p>Did it work? If yes, move on. If not, go back through this section and review. Look in your terminal as well to see the error(s). If you&#39;re having problems, don&#39;t beat yourself up. It&#39;s all part of learning!</p>
 
 <h3>Update <em>form.jade</em></h3>
 
@@ -6170,7 +7062,7 @@
 
 <h2>Setup Mongoose</h2>
 
-<p><a href="http://mongoosejs.com/">Mongoose</a> is awesome. Start with defining the Schema, which the maps to a collection in Mongo. It utilizes OOP.</p>
+<p><a href="http://mongoosejs.com/">Mongoose</a> is awesome. Start with defining the Schema, which then maps to a collection in Mongo. It utilizes OOP.</p>
 
 <p>Create a file called <em>database.js</em> in your app&#39;s root directory, then add the following code:</p>
 
@@ -12344,106 +13236,6 @@ Finally, you can look in Mongo, just to be sure. Open a new window in your termi
 <p>That&#39;s it. Give me some feedback. In the coming weeks, I&#39;ll be deploying an app into production. Stay tuned.</p>
 
 <p>Grab the code from the repo <a href="https://github.com/mjhea0/meteor-in-action">here</a></p>
-]]></content>
-    
-  </entry>
-  
-  <entry>
-    
-    <title type="html"><![CDATA[So you want be an Entrepreneur?]]></title>
-    <link href="http://mjhea0.github.com/blog/2014/01/23/so-you-want-be-an-entrepreneur/"/>
-    
-    <updated>2014-01-23T08:23:00-07:00</updated>
-    <id>http://mjhea0.github.com/blog/2014/01/23/so-you-want-be-an-entrepreneur</id>
-    
-    <content type="html"><![CDATA[<p>Welcome!</p>
-
-<h3>Contents</h3>
-
-<ol>
-<li>Introduction</li>
-<li>Focus</li>
-<li>Validation</li>
-<li>Constraints</li>
-<li>Measure</li>
-<li>Sustainable Growth</li>
-<li>Fail</li>
-<li>Conclusion</li>
-</ol>
-
-<p><br></p>
-
-<h2>Intro</h2>
-
-<p>Okay. So you’re a newly proclaimed entrepreneur, e.g. - someone who will do everything in their power to be sure their company succeeds. You have a breakthrough product idea but you are not completely sure how to go about running the business side of launching said product. You know you want to be as efficient and as quick as possible in building a following and getting your product out there, yet you only have so much time and money. So how do you do it?</p>
-
-<p>Work tirelessly to create your product and launch it as soon as possible? Not exactly. In fact, you want to do the opposite: Work in reverse. It might seem counterintuitive, but trust me, you will thank me in the end. By using the tools and methods below, the process will become clear.</p>
-
-<h2>Focus</h2>
-
-<p>First things first, make sure to start off with simplicity in mind. You want to keep this process <a href="http://theleanstartup.com/">lean</a>. Try to eliminate the need for your team to <a href="http://mherman.org/blog/2013/08/02/multitasking-vs-batching/">multitask</a> too often. You don’t want anyone spreading themselves too thin and not doing their absolute best on a project. Keep it simple. Get things done one at a time and don’t move on to a new project until your current one is done. You can use a whiteboard or spreadsheets or a project management tool like <a href="https://asana.com">Asana</a> or <a href="http://www.getharvest.com/">Harvest</a> to keep track of projects in the brainstorm, in progress, or completed phases. Keep it organized. A benefit to this way of working is that every team member takes part in every aspect of working through a project and everyone gets to learn to think critically about a feature in the brainstorm column.</p>
-
-<p>Will it be validated? If the answer is NO, don’t bother building it! Save the time, money, and stress. <em>Channel those resources into projects that will be validated</em>.</p>
-
-<h2>Validation</h2>
-
-<p>Now, you need to make sure your idea is valid, that what you have to offer is something people need and something that people want. But how do you know if that’s what you have? Test it. In business, especially in the world of startups, everything is an experiment and everything is a test. You’ve just become an entrepreneur, and congratulations, you’re also now a scientist.</p>
-
-<p>You first want to determine what risks are involved with launching your product, service or idea - <a href="http://starterfinancialmodel.com">monetary risk</a>, time risk, etc. - and then determine the profit you’ll acquire from each sale.  When your benefits (profit) outweigh costs (risk), the company should grow. After determining your risks and profits and looking at how they balance out, decide if this idea will be “the one”.</p>
-
-<p>Fortunately, when testing your profit (benefit-cost), you don’t need a huge number of customers to do so. Ten customers will provide the information you need so you don’t have to worry about thousands of customers in order to determine your potential test rate. That said, data changes, as well as your product and customers. What works now may not work in six weeks. Continue to source data for analysis to see if you are growing. Amazon&#39;s <a href="https://www.mturk.com/mturk/welcome">Mechanical Turk</a> is perfect for such testing at a low cost.</p>
-
-<h2>Constraints</h2>
-
-<p>How do you operate with limited financial, time, or labor resources? It just means you have to work smart. For example, rather than talking in circles with your team about the minute details of your product, look more at the testing. See if the product is even going to sell before you use those minimal resources to build it. Learn before you build and grow and do it quickly, especially if you have a small amount of time to get things done. Launch a landing page, watch the analytics, make changes, and launch again. Talk to your customers as much as you can, run <a href="http://mherman.org/blog/2012/11/16/the-benefits-of-performing-a-cohort-analysis-in-determining-engagement-over-time/#.Ut2aNmTn8y4">cohort analyses</a> if you have enough data, and hold focus groups. Take advantage of every opportunity you have to test your product.</p>
-
-<p>Learn as much as you can directly from the source, your customers.</p>
-
-<p>Now all that information might seem abstract and you want the step-by-step process of growing your business, so here we go:</p>
-
-<ol>
-<li><p>First, determine and create the hype about your product. The product doesn’t have to be ready to launch by any means, though. That might seem counter-intuitive because wouldn’t you want to sell something that’s been created rather than selling just an idea? No. <em>You want to create a product you know is going to be successful - one that brings in sales - rather than wasting time making a product that fails.</em></p></li>
-<li><p>In order to measure the demand for your idea, create a simple online landing page with <a href="http://launchrock.co/">LaunchRock</a>. Include your product idea, why it would be ideal to purchase this product. Which problems are you trying to solve? And how awesome this product is. Don’t hold back, you’re trying to sell something. After creating the landing page use web analytics (great <a href="http://blog.intlock.com/tracking-real-funnels-mixpanel-vs-kissmetrics-vs-google-analytics/">tools</a> are available for this) to see how many visits to the site you are getting and then take it one step further and look at how many people are interested in purchasing your product, those who try to move onto the second page of your site after they register for the mailing list). If there’s high interest, great! If it’s not what you expected, you can modify the product or throw in the towel completely.</p></li>
-<li><p>Now that you’ve tested and retested the validity of your product, it’s time to start building it (since, after all, you told your customer base that it existed). Again, you want to be focus on developing rapidly: Don’t build anything unnecessary. Focus on your key differentiators and/or disruptors. Build what’s useful, iteratively. And don’t leave anything to chance!</p></li>
-<li><p>If you make a change, test it. A great way to test a change is to run a double blind study (commonly known as an A/B test). Gather people to test, giving half the original product (A), and the other have the updated product (B) - and observe! See which product gets a better response and go with it. Pay attention to what people do (body language, facial expressions and the like) rather than what they say as people may not be as honest as you’d like them to be.</p></li>
-</ol>
-
-<h2>Measure</h2>
-
-<p>It’s built! It’s launched! Is it successful?</p>
-
-<p>Your reports need to be able to show you if something went wrong, either what went wrong or who you can talk to in order to figure that out, learn from it, and improve the issue. Next, reports need to be able to convince others so they must be accurate. This means use your clients and test subjects as actual data points. Don’t massage the data to make it look nice in order give you the results you want - you&#39;re only hurting yourself. Once your report gets too complicated, there’s more room for error and it becomes less convincing and less accurate. Lastly, it needs to be available to and easily understood by everyone so that they can learn from the data as well.</p>
-
-<h2>Sustainable growth</h2>
-
-<p>We are now going to look at how to sustain growth within your company and more specifically, what type of business model you are working with in order to grow:</p>
-
-<ol>
-<li>Is your company going to grow solely by word of mouth, where each customer will then bring in new customers due to satisfaction with your product?</li>
-<li>Will the profit from your customers help pay for advertising to increase sales and eventually fund your company?</li>
-<li>Or will customers continue to purchase your product for long periods of time, increasing the lifetime value of each customer?</li>
-</ol>
-
-<p>Each of these mechanisms provides a means for sustainable growth where the acquisition of new customers stems from the actions of prior customers. Sustainable growth is the best way for a company, especially startups, to flourish. Again, <a href="http://blog.intlock.com/tracking-real-funnels-mixpanel-vs-kissmetrics-vs-google-analytics/">cohort analysis</a> is imperative here.</p>
-
-<h2>Fail</h2>
-
-<p>One important thing to remember in this venture is that you won’t get everything right the first time or second or third … and that’s ok. That’s not your job. You want to empower your employees without applying too much pressure, which is very hard to do. Really, to empower with minimal pressure is to admit to yourself, your team and everyone around you, that mistakes will be made. Just be sure to learn from them. Failure in business is expected - and encouraged. (How else are you going to learn?)</p>
-
-<p>Messing something up gives you a chance to learn and grow your company by improving, learning, and building your intuition for what will and won&#39;t work. It’s almost to your benefit to mess up now and again.</p>
-
-<hr>
-
-<h4>So that’s it. If you take anything from this post let it be this:</h4>
-
-<ol>
-<li>Keep everything simple;</li>
-<li>Always test, build, and measure;</li>
-<li>Test as much as you can in order to validate that with what you’re working on; and</li>
-<li>Allow yourself to make mistakes and learn from them.</li>
-</ol>
-
-<p>*<em>Now go be an entrepreneur. *</em></p>
 ]]></content>
     
   </entry>

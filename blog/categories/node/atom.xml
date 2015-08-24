@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-08-23T14:22:50-06:00</updated>
+  <updated>2015-08-24T06:25:55-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,671 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Node, Express, Swig, and MongoDB - getting started with CRUD]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/08/24/node-express-swig-mongo-primer/"/>
+    <updated>2015-08-24T08:11:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/08/24/node-express-swig-mongo-primer</id>
+    <content type="html"><![CDATA[<p><strong>Let&#39;s create a basic CRUD app using Node, Express, Swig, and MongoDB.</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mjhea0.github.com/images/node-express.png" style="max-width: 100%; border:0;" alt="mean stack authentication">
+</div>
+
+<p><br></p>
+
+<blockquote>
+<p>This tutorial utilizes <a href="http://nodejs.org/">Node</a> v0.12.5, <a href="http://expressjs.com/">Express</a> v4.13.1, <a href="http://paularmstrong.github.io/swig/">Swig</a> and <a href="http://mongoosejs.com/">Mongoose</a> v4.1.3.</p>
+</blockquote>
+
+<h2>Getting started</h2>
+
+<p>Start by downloading the <a href="http://expressjs.com/starter/generator.html">Express application generator</a> (if you don&#39;t already have it) to create a basic Express project:</p>
+
+<p><code>sh<br>
+$ npm install express-generator -g<br>
+</code></p>
+
+<blockquote>
+<p>The <code>-g</code> flag indicates that you want to install the package globally, on your entire system.</p>
+</blockquote>
+
+<p>Navigate to a convenient directory, like your &quot;Desktop&quot; or &quot;Documents&quot;, then create the boilerplate:</p>
+
+<p><code>sh<br>
+$ express node-express-swig-mongo<br>
+$ cd node-express-swig-mongo<br>
+</code></p>
+
+<p>Check out the project structure:</p>
+
+<p><code>sh<br>
+├── app.js<br>
+├── bin<br>
+│   └── www<br>
+├── package.json<br>
+├── public<br>
+│   ├── images<br>
+│   ├── javascripts<br>
+│   └── stylesheets<br>
+│       └── style.css<br>
+├── routes<br>
+│   ├── index.js<br>
+│   └── users.js<br>
+└── views<br>
+    ├── error.jade<br>
+    ├── index.jade<br>
+    └── layout.jade<br>
+</code></p>
+
+<p>Don&#39;t worry about the files and folders for now. Just know that we have created a boilerplate that can be used for a number of Node/Express applications. This took care of the heavy lifting, adding common files, folders, and scripts generally associated with all apps.</p>
+
+<p>Notice the <em>package.json</em> file. This stores your project&#39;s dependencies, which we still need to install:</p>
+
+<p><code>sh<br>
+$ npm install<br>
+</code></p>
+
+<p>Now let&#39;s install Mongoose and Swig:</p>
+
+<p><code>sh<br>
+$ npm install mongoose swig --save<br>
+</code></p>
+
+<blockquote>
+<p>The <code>--save</code> flag adds the dependencies and their versions to the <em>package.json</em> file. Take a look.</p>
+</blockquote>
+
+<h2>Sanity check</h2>
+
+<p>Let&#39;s test our setup by running the app:</p>
+
+<p><code>sh<br>
+$ npm start<br>
+</code></p>
+
+<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser and you should see the &quot;Welcome to Express&quot; text. Once done, kill the server by pressing CTRL-C.</p>
+
+<h2>Nodemon</h2>
+
+<p>Before moving on, let&#39;s setup <a href="http://nodemon.io/">Nodemon</a> so that you can run your app and watch for code changes without having to manually restart the server. Check out the link above to learn more.</p>
+
+<p><code>sh<br>
+$ npm install supervisor -g<br>
+</code></p>
+
+<p>Let&#39;s test again:</p>
+
+<p><code>sh<br>
+$ nodemon<br>
+</code></p>
+
+<p>In your terminal you should see:</p>
+
+<p><code>sh<br>
+23 Aug 16:31:02 - [nodemon] v1.4.1<br>
+23 Aug 16:31:02 - [nodemon] to restart at any time, enter `rs`<br>
+23 Aug 16:31:02 - [nodemon] watching: *.*<br>
+23 Aug 16:31:02 - [nodemon] starting `node ./bin/www`<br>
+</code></p>
+
+<p>Essentially, Nodemon is watching for code changes, and if they do occur, then it will refresh the local server for you so you don&#39;t have to constantly kill the server then start it back up. It saves a lot of time and keystrokes.</p>
+
+<p>Awesome. With the setup done, let&#39;s build something!</p>
+
+<h2>Routes</h2>
+
+<p>Grab your favorite text editor (such as <a href="http://www.sublimetext.com/">Sublime</a> or <a href="https://atom.io/">Atom</a>), and then open the main file, <em>app.js</em>, which houses much of the business logic. Take a look at the routes:</p>
+
+<p><code>javascript<br>
+app.use(&#39;/&#39;, routes);<br>
+app.use(&#39;/users&#39;, users);<br>
+</code></p>
+
+<p>Understanding how routes work as well as how to trace all the files associated with an individual route is an important skill to learn. You&#39;ll be able to approach most applications and understand how they work just by starting with the routes.</p>
+
+<p>Let&#39;s look at this route:</p>
+
+<p><code>javascript<br>
+app.use(&#39;/users&#39;, users)<br>
+</code></p>
+
+<p>Here, we know that this route is associated with the <code>/users</code> endpoint. What&#39;s an endpoint? Simply navigate to <a href="http://localhost:3000/users">http://localhost:3000/users</a>.</p>
+
+<p>The end user navigates to that endpoint and expects <em>something</em> to happen. That could mean some HTML is rendered or perhaps JSON is returned. That&#39;s not important at this point. For now, let&#39;s look at how Node handles the logic for &quot;handling routes&quot;.</p>
+
+<p>Also, within that route, you can see the variable <code>users</code>. Where is in this file? It&#39;s at the top, and it loads in another file within our app:</p>
+
+<p><code>javascript<br>
+var users = require(&#39;./routes/users&#39;);<br>
+</code></p>
+
+<p>Open that file:</p>
+
+<p>```javascript<br>
+var express = require(&#39;express&#39;);<br>
+var router = express.Router();</p>
+
+<p>/* GET users listing. */<br>
+router.get(&#39;/&#39;, function(req, res) {<br>
+  res.send(&#39;respond with a resource&#39;);<br>
+});</p>
+
+<p>module.exports = router;<br>
+```</p>
+
+<p><strong>What&#39;s happening here?</strong> Essentially when that endpoint is hit, it responds by sending text in the form of a response to the end user - &quot;respond with a resource&quot;. Now, of course you don&#39;t always have to send text. You could respond with a template or view like a Jade or Swig template file that gets rendered into HTML. We&#39;ll look at how this works in just a minute when we add our own routes.</p>
+
+<p><strong>Make sure you understand everything in this section before moving on.</strong></p>
+
+<h3>Add a new route</h3>
+
+<p>Let&#39;s now add a new route that renders a HTML form to the end user.</p>
+
+<p>Start by adding the route handler in the <em>app.js</em> file:</p>
+
+<p><code>javascript<br>
+app.use(&#39;/api&#39;, api);<br>
+</code></p>
+
+<blockquote>
+<p>Remember this simply means <code>app.use(&#39;/ENDPOINT&#39;, VARIABLE_NAME);</code>,</p>
+</blockquote>
+
+<p>Use the <code>api</code> variable to require a JS file within our routes folder.</p>
+
+<p><code>javascript<br>
+var api = require(&#39;./routes/api&#39;);<br>
+</code></p>
+
+<p>Take a look in the terminal. You should see an error, indicating Node can&#39;t find the <code>./routes/api</code> module. We need to create it!</p>
+
+<p>Create a new file called <em>api.js</em> in the &quot;routes&quot; directory. Add the following code:</p>
+
+<p>```javascript<br>
+var express = require(&#39;express&#39;);<br>
+var router = express.Router();</p>
+
+<p>router.get(&#39;/superheros&#39;, function(req, res) {<br>
+  res.send(&#39;Just a test&#39;);<br>
+});</p>
+
+<p>module.exports = router;<br>
+```</p>
+
+<blockquote>
+<p>Do you remember what this code <code>res.send(&#39;Just a test&#39;);</code> will do? If not, review the previous section.</p>
+</blockquote>
+
+<p>Navigate to <a href="http://localhost:3000/api/superheros">http://localhost:3000/api/superheros</a>. You should see the text &quot;Just a test&quot; on the page.</p>
+
+<h2>Swig</h2>
+
+<p>Swig is a templating language, which compiles down to HTML, making it easy to separate logic from markup. For more on Swig, check out the <a href="http://mherman.org/blog/2015/08/23/primer-on-swig-templating/#.VdpL_VNViko">Primer on Swig Templating</a>.</p>
+
+<p>Take a quick look at the <em>layout.jade</em>, <em>index.jade</em>, and <em>error.jade</em> files within the &quot;views&quot; folder. Right now these files are using <a href="http://jade-lang.com/">Jade</a> templating. Let&#39;s update these files to remove Jade and add Swig. First, remove the <em>.jade</em> extension from each file and add a <em>.html</em> extension. Now we can update the actual syntax...</p>
+
+<p><strong><em>layout.html</em></strong></p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+  &lt;head&gt;<br>
+    &lt;meta charset=&quot;utf-8&quot;&gt;<br>
+    &lt;title&gt;{{ title }}&lt;/title&gt;<br>
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;http://mjhea0.github.com//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css&quot;&gt;<br>
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;http://mjhea0.github.com/css/main.css&quot;&gt;<br>
+  &lt;/head&gt;<br>
+  &lt;body&gt;<br>
+    {% block content %}<br>
+    {% endblock %}<br>
+    &lt;script type=&quot;text/javascript&quot; src=&quot;http://mjhea0.github.com//code.jquery.com/jquery-2.1.4.min.js&quot;&gt;&lt;/script&gt;<br>
+    &lt;script src=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js&quot;&gt;&lt;/script&gt;<br>
+    &lt;script type=&quot;text/javascript&quot; src=&quot;http://mjhea0.github.com/js/main.js&quot;&gt;&lt;/script&gt;<br>
+  &lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p><strong><em>index.html</em></strong></p>
+
+<p><br>
+```html<br>
+{% extends &#39;layout.html&#39; %}</p>
+
+<p>{% block title %}{% endblock %}</p>
+
+<p>{% block content %}</p>
+
+<p><div class="container"></p>
+<div class="highlight"><pre><code class="text">&lt;h1&gt;{{ title }}&lt;/h1&gt;
+&lt;p&gt;Welcome to {{ title }}&lt;/p&gt;
+</code></pre>
+</div>
+
+<p></div></p>
+
+<p>{% endblock %}<br>
+```<br>
+</p>
+
+<p><strong><em>error.html</em></strong></p>
+
+<p><br>
+```html<br>
+{% extends &#39;layout.html&#39; %}</p>
+
+<p>{% block title %}{% endblock %}</p>
+
+<p>{% block content %}</p>
+
+<p><div class="container"></p>
+<div class="highlight"><pre><code class="text">&lt;h1&gt;{{ message }}&lt;/h1&gt;
+&lt;h2&gt;{{ error.status }}&lt;/h2&gt;
+&lt;pre&gt;{{ error.stack }}&lt;/pre&gt;
+</code></pre>
+</div>
+
+<p></div></p>
+
+<p>{% endblock %}<br>
+```<br>
+</p>
+
+<p>Finally, update <em>app.js</em> by requiring the following dependency at the top of the file:</p>
+
+<p><code>javascript<br>
+var swig = require(&#39;swig&#39;);<br>
+</code></p>
+
+<p>Then set Swig as the template engine by replacing <code>app.set(&#39;view engine&#39;, &#39;jade&#39;);</code> with-</p>
+
+<p><code>javascript<br>
+var swig = new swig.Swig();<br>
+app.engine(&#39;html&#39;, swig.renderFile);<br>
+app.set(&#39;view engine&#39;, &#39;html&#39;);<br>
+</code></p>
+
+<p>Jump back to the &quot;views&quot;, and take a look at <em>layout.html</em> and <em>index.html</em>. There&#39;s a relationship between those two files. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
+
+<p>Do you see the <code>block</code> keyword?</p>
+
+<p>What really happens when the <em>index</em> file is rendered is that it first renders the base template because of the <code>extends</code> keyword. So, the <em>layout</em> template then gets rendered, which eventually pulls in the child template, overwriting the <code>block</code> keyword with:</p>
+
+<p>```html<br>
+<div class="container"></p>
+
+<p><h1></h1><br>
+  <p>Welcome to </p></p>
+
+<p></div><br>
+```</p>
+
+<p>Hope that makes sense. If not, check out <a href="http://mherman.org/blog/2015/08/23/primer-on-swig-templating/#template-inheritence">this</a> resource for more info on template inheritance.</p>
+
+<h3>Setup <em>api.html</em></h3>
+
+<p>Create a new file called <em>api.html</em> in the &quot;views&quot; directory, and then add the following code:</p>
+
+<p><br>
+```html<br>
+{% extends &#39;layout.html&#39; %}</p>
+
+<p>{% block title %}{% endblock %}</p>
+
+<p>{% block content %}</p>
+
+<p><div class="container"></p>
+<div class="highlight"><pre><code class="text">&lt;h1&gt;{{ title }}&lt;/h1&gt;
+&lt;p&gt;Welcome to {{ title }}&lt;/p&gt;
+</code></pre>
+</div>
+
+<p></div></p>
+
+<p>{% endblock %}<br>
+```<br>
+</p>
+
+<p>The same thing is happening here with inheritance. If you&#39;re unfamiliar with Swig syntax, <code>{{ title }}</code> is essentially a variable, which we can pass in from <code>./routes/api.js</code>.</p>
+
+<p>Update <code>./routes/api.js</code> by changing-</p>
+
+<p><code>javascript<br>
+res.send(&#39;Just a test&#39;);<br>
+</code></p>
+
+<p>-to-</p>
+
+<p><code>javascript<br>
+res.render(&#39;api&#39;, { title: &#39;Superhero API&#39; });<br>
+</code></p>
+
+<p>This just says, &quot;When a user hits the <code>/api/superheros</code> endpoint, render the <em>api.html</em> file and pass in <code>Superhero API</code> as the title.&quot;</p>
+
+<blockquote>
+<p>Keep in mind that all Swig files are converted to HTML since browsers can&#39;t read the Swig templating syntax.</p>
+</blockquote>
+
+<p>Ready to test? Simple refresh <a href="http://localhost:3000/api/superheros">http://localhost:3000/api/superheros</a>.</p>
+
+<p>Did it work? If yes, move on. If not, go back through this section and review.</p>
+
+<h3>Update <em>api.html</em></h3>
+
+<p>So, let&#39;s update the template to display a form:</p>
+
+<p><br>
+```html<br>
+{% extends &#39;layout.html&#39; %}</p>
+
+<p>{% block title %}{% endblock %}</p>
+
+<p>{% block content %}</p>
+
+<p><div class="container"></p>
+<div class="highlight"><pre><code class="text">&lt;h1&gt;{{ title }}&lt;/h1&gt;
+
+&lt;br&gt;
+
+&lt;form method=&quot;post&quot; action=&quot;/api/superheros&quot; class=&quot;form-inline&quot;&gt;
+  &lt;div class=&quot;form-group&quot;&gt;
+    &lt;label&gt;Superhero name&lt;/label&gt;
+    &lt;input type=&quot;text&quot; name=&quot;name&quot; class=&quot;form-control&quot; required&gt;
+  &lt;/div&gt;
+  &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot;&gt;Save&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+</div>
+
+<p></div></p>
+
+<p>{% endblock %}<br>
+```<br>
+</p>
+
+<p>Refresh your browser. Do you see the form? Try clicking save. What happens? Well, you just tried to send a POST request to the <code>/api/superheros</code> endpoint, which does not exist - so you should see a 404 error. Let&#39;s set up the route handler.</p>
+
+<h2>POST requests (part 1)</h2>
+
+<p>Open <em>api.js</em> to add the logic for this new route:</p>
+
+<p>```javascript<br>
+var express = require(&#39;express&#39;);<br>
+var router = express.Router();</p>
+
+<p>router.get(&#39;/superheros&#39;, function(req, res) {<br>
+  res.render(&#39;api&#39;, { title: &#39;Superhero API&#39; });<br>
+});</p>
+
+<p>router.post(&#39;/superheros&#39;, function(req, res) {<br>
+  console.log(req.body.name);<br>
+  res.redirect(&#39;/api/superheros&#39;);<br>
+});</p>
+
+<p>module.exports = router;<br>
+```</p>
+
+<p>Test this out again. Now, when you submit the form, we have the <code>/api/superheros</code> endpoint setup, which then grabs the text from the input box via <code>req.body.name</code>. Make sure the text is consoled in your terminal.</p>
+
+<p>Okay. So, we are handling the routes and rendering the right template, but we still need to setup Mongoose to save the data from our form before we can finish with the POST request.</p>
+
+<h2>Mongoose</h2>
+
+<p><a href="http://mongoosejs.com/">Mongoose</a> is used for interacting with MongoDB. Start with defining the Schema, which then maps to a collection in Mongo.</p>
+
+<p>Create a file called <em>database.js</em> in your app&#39;s root directory, then add the following code:</p>
+
+<p>```javascript<br>
+var mongoose = require(&#39;mongoose&#39;);<br>
+var Schema   = mongoose.Schema;</p>
+
+<p>var Superhero = new Schema(<br>
+  {name : String}<br>
+);</p>
+
+<p>mongoose.model(&#39;superheros&#39;, Superhero);</p>
+
+<p>mongoose.connect(&#39;mongodb://localhost/node-superhero&#39;);<br>
+```</p>
+
+<p>Here, we required/included the Mongoose library along with a reference to the <code>Schema()</code> method. As said, you always start with defining the schema, then we linked it to collection called &quot;superheros&quot;. Finally, we opened a connection to an instance of our local MongoDB.</p>
+
+<blockquote>
+<p>If you don&#39;t have the MongoDB server running. Do so now. Open a new terminal window, and run the command <code>sudo mongod</code>. If you need to set up MongoDB, follow the Installation steps <a href="http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/">here</a>.</p>
+</blockquote>
+
+<p>Next, open <em>app.js</em> and require the Mongoose config at the very top of the file:</p>
+
+<p><code>javascript<br>
+// mongoose config<br>
+require(&#39;./database&#39;);<br>
+</code></p>
+
+<p>With Mongoose setup, we need to update <em>api.js</em> to create (via POST) and read (via GET) data from the Mongo collection.</p>
+
+<h2>GET requests (all resources)</h2>
+
+<p>Open <em>api.js</em>. Require Mongoose as well as the <code>superheros</code> model, which we already created:</p>
+
+<p><code>javascript<br>
+var mongoose = require(&#39;mongoose&#39;);<br>
+var Superhero = mongoose.model(&#39;superheros&#39;);<br>
+</code></p>
+
+<p>Now, update the function handling GET requests:</p>
+
+<p><code>javascript<br>
+router.get(&#39;/superheros&#39;, function(req, res) {<br>
+  Superhero.find(function(err, superheros){<br>
+    console.log(superheros)<br>
+    res.render(<br>
+      &#39;api&#39;,<br>
+      {title : &#39;Superhero API&#39;, superheros : superheros}<br>
+    );<br>
+  });<br>
+});<br>
+</code></p>
+
+<p><code>Superhero.find()</code> grabs all superheros from the Mongo collection, which we assign to the variable <code>superheros</code>. We can now use that variable in the Swig template.</p>
+
+<h3>Update <em>api.html</em> to display superheros</h3>
+
+<p>Let&#39;s add a loop to iterate through the superheros and then display the <code>name</code> key from the collection.</p>
+
+<p><br>
+```html<br>
+{% extends &#39;layout.html&#39; %}</p>
+
+<p>{% block title %}{% endblock %}</p>
+
+<p>{% block content %}</p>
+
+<p><div class="container"></p>
+<div class="highlight"><pre><code class="text">&lt;h1&gt;{{ title }}&lt;/h1&gt;
+
+&lt;br&gt;
+
+&lt;form method=&quot;post&quot; action=&quot;/api/superheros&quot; class=&quot;form-inline&quot;&gt;
+  &lt;div class=&quot;form-group&quot;&gt;
+    &lt;label&gt;Superhero name&lt;/label&gt;
+    &lt;input type=&quot;text&quot; name=&quot;name&quot; class=&quot;form-control&quot; required&gt;
+  &lt;/div&gt;
+  &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot;&gt;Save&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;hr&gt;&lt;br&gt;
+
+&lt;h2&gt;All Superheros&lt;/h2&gt;
+
+&lt;ul&gt;
+{% for superhero in superheros %}
+  &lt;li&gt;{{superhero.name}}&lt;/li&gt;
+{% endfor %}
+&lt;/ul&gt;
+</code></pre>
+</div>
+
+<p></div></p>
+
+<p>{% endblock %}<br>
+```<br>
+</p>
+
+<blockquote>
+<p>Do you remember where we set the <code>name</code> key? Check out the database schema in <em>database.js</em>.</p>
+</blockquote>
+
+<p>Before this will actually work - e.g., display superheros - we first need to add the logic to insert data into the Mongo collection.</p>
+
+<h2>POST requests (part 2)</h2>
+
+<p>Back in <em>api.js</em>, update the function for handling POST requests:</p>
+
+<p><code>javascript<br>
+router.post(&#39;/superheros&#39;, function(req, res) {<br>
+  new Superhero({name : req.body.name})<br>
+  .save(function(err, superhero) {<br>
+    console.log(superhero)<br>
+    res.redirect(&#39;/api/superheros&#39;);<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>This simply saves a new superhero, which again is grabbed from the form via <code>req.body.name</code>.</p>
+
+<h2>Sanity Check</h2>
+
+<p>Refresh you app. Add some superheros. If you&#39;ve done everything correctly, the superheros should be displayed beneath the form.</p>
+
+<p>What about updates? And deletions? First, let&#39;s display a single superhero.</p>
+
+<h2>GET requests (single resource)</h2>
+
+<p>Update the list item in the HTML file like so to give each item a unique URL.</p>
+
+<p><code>html<br>
+&lt;li&gt;&lt;a href=&quot;superhero/&quot;&lt;/a&gt;&lt;/li&gt;<br>
+</code></p>
+
+<p>Now, let&#39;s add a new route handler to <em>app.js</em> to display a single superhero:</p>
+
+<p><code>javascript<br>
+router.get(&#39;/superhero/:id&#39;, function(req, res) {<br>
+  var query = {&quot;_id&quot;: req.params.id};<br>
+  Superhero.findOne(query, function(err, superhero){<br>
+    console.log(superhero)<br>
+    res.render(<br>
+      &#39;superhero&#39;,<br>
+      {title : &#39;Superhero API - &#39; + superhero.name, superhero : superhero}<br>
+    );<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>What&#39;s next? A new template. <em>superhero.html</em>:</p>
+
+<p><br>
+```html<br>
+{% extends &#39;layout.html&#39; %}</p>
+
+<p>{% block title %}{% endblock %}</p>
+
+<p>{% block content %}</p>
+
+<p><div class="container"></p>
+<div class="highlight"><pre><code class="text">&lt;h1&gt;{{ title }}&lt;/h1&gt;
+
+&lt;br&gt;
+
+&lt;form method=&quot;post&quot; action=&quot;/api/superhero/{{superhero.id}}?_method=PUT&quot;&gt;
+  &lt;div class=&quot;form-group&quot;&gt;
+    &lt;label&gt;Superhero name&lt;/label&gt;
+    &lt;input type=&quot;text&quot; name=&quot;name&quot; class=&quot;form-control&quot; value=&quot;{{superhero.name}}&quot; required&gt;
+  &lt;/div&gt;
+  &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot;&gt;Update&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;br&gt;
+
+&lt;form method=&quot;post&quot; action=&quot;/api/superhero/{{superhero.id}}?_method=DELETE&quot; class=&quot;form-inline&quot;&gt;
+  &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot;&gt;Delete&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+</div>
+
+<p></div></p>
+
+<p>{% endblock %}<br>
+```<br>
+</p>
+
+<p>Test this out.</p>
+
+<h2>PUT requests</h2>
+
+<p>Since most browsers do not handle PUT or DELETE requests, we need to use the <a href="https://github.com/expressjs/method-override">method-override</a> middleware to handle such requests.</p>
+
+<p>Install via NPM:</p>
+
+<p><code>sh<br>
+$ npm install method-override --save<br>
+</code></p>
+
+<p>Add the requirement to <em>app.js</em>:</p>
+
+<p><code>javascript<br>
+var methodOverride = require(&#39;method-override&#39;);<br>
+</code></p>
+
+<p>Then define the middleware just below the view engine setup in <em>app.js</em>:</p>
+
+<p><code>javascript<br>
+app.use(methodOverride(&#39;_method&#39;))<br>
+</code></p>
+
+<p>Finally, add the route handler to <em>api.js</em>:</p>
+
+<p><code>javascript<br>
+router.put(&#39;/superhero/:id&#39;, function(req, res) {<br>
+  var query = {&quot;_id&quot;: req.params.id};<br>
+  var update = {name : req.body.name};<br>
+  var options = {new: true};<br>
+  Superhero.findOneAndUpdate(query, update, options, function(err, superhero){<br>
+    console.log(superhero)<br>
+    res.render(<br>
+      &#39;superhero&#39;,<br>
+      {title : &#39;Superhero API - &#39; + superhero.name, superhero : superhero}<br>
+    );<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Here, we are simply searching Mongo for the correct superhero via the Mongo ID and then updating the superhero name, which comes from the form, <code>req.body.name</code>. By setting <code>new</code> to <code>true</code>, we&#39;re able to grab the updated superhero information after the changes are made in Mongo. Try removing this option. What happens?</p>
+
+<h2>DELETE requests</h2>
+
+<p>With the button already set up in the template, we just need to add the route handler to <em>api.js</em>:</p>
+
+<p><code>javascript<br>
+router.delete(&#39;/superhero/:id&#39;, function(req, res) {<br>
+  var query = {&quot;_id&quot;: req.params.id};<br>
+  Superhero.findOneAndRemove(query, function(err, superhero){<br>
+    console.log(superhero)<br>
+    res.redirect(&#39;/api/superheros&#39;);<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Again, we&#39;re querying the database by the Mongo ID and then removing it. Simple, right?</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#39;s it. Post your questions below. Grab the code from the <a href="https://github.com/mjhea0/node-express-swig-mongo">repository</a>. Cheers!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Primer on Swig Templating]]></title>
@@ -1010,21 +1675,6 @@ myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
 <li><a href="https://www.npmjs.com/package/passport-local-mongoose">Passport-local-mongoose</a>: v1.0.0</li>
 </ul>
 
-<h2>Contents</h2>
-
-<ol>
-<li>Project Setup</li>
-<li>Edit app.js</li>
-<li>Mongoose</li>
-<li>Add Routes</li>
-<li>Test</li>
-<li>Views</li>
-<li>Test Redux</li>
-<li>Unit Tests</li>
-<li>Error Handling</li>
-<li>Conclusion</li>
-</ol>
-
 <h2>Project Setup</h2>
 
 <p>Start by installing the Express generator, which we&#39;ll use to generate a basic project boilerplate:</p>
@@ -1699,7 +2349,7 @@ app.use(&#39;/users&#39;, users)<br>
 
 <p>So the end user navigates to that endpoint and expects <em>something</em> to happen. That could mean some HTML is rendered or perhaps JSON is returned. That&#39;s not important at this point. For now, let&#39;s look at how Node handles that logic for &quot;handling routes&quot;.</p>
 
-<p>Also, within that route, you can see the variable <code>users</code>. Where is that in this file? It&#39;s at the top, and it loads in another file within our app:</p>
+<p>Also, within that route, you can see the variable <code>users</code>. Where is this file this file? It&#39;s at the top, and it loads in another file within our app:</p>
 
 <p><code>javascript<br>
 var users = require(&#39;./routes/users&#39;);<br>
@@ -1769,7 +2419,7 @@ router.get(&#39;/&#39;, function(req, res) {<br>
 
 <p>Jade is a templating language, which compiles down to HTML. It makes it easy to separate logic from markup.</p>
 
-<p>Take a quick look at the <em>layout.jade</em> and <em>index.jade</em> files with the &quot;views&quot; folder. There&#39;s a relationship between those two files. It&#39;s called inheritance. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
+<p>Take a quick look at the <em>layout.jade</em> and <em>index.jade</em> files within the &quot;views&quot; folder. There&#39;s a relationship between those two files. It&#39;s called inheritance. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
 
 <p>Do you see the <code>block</code> keyword?</p>
 
@@ -1816,7 +2466,7 @@ res.render(&#39;form&#39;, { title: &#39;My funky form&#39; });<br>
 
 <p>Ready to test? Simple refresh <a href="http://localhost:3000/form">http://localhost:3000/form</a>.</p>
 
-<p>Did it work? If yes, move on. If not, go back through this section and review. Look in you terminal as well to see the error(s). If you&#39;re having problems, don&#39;t beat yourself up. It&#39;s all part of learning!</p>
+<p>Did it work? If yes, move on. If not, go back through this section and review. Look in your terminal as well to see the error(s). If you&#39;re having problems, don&#39;t beat yourself up. It&#39;s all part of learning!</p>
 
 <h3>Update <em>form.jade</em></h3>
 
@@ -1877,7 +2527,7 @@ router.post(&#39;/&#39;, function(req, res) {<br>
 
 <h2>Setup Mongoose</h2>
 
-<p><a href="http://mongoosejs.com/">Mongoose</a> is awesome. Start with defining the Schema, which the maps to a collection in Mongo. It utilizes OOP.</p>
+<p><a href="http://mongoosejs.com/">Mongoose</a> is awesome. Start with defining the Schema, which then maps to a collection in Mongo. It utilizes OOP.</p>
 
 <p>Create a file called <em>database.js</em> in your app&#39;s root directory, then add the following code:</p>
 
@@ -1985,427 +2635,6 @@ router.post(&#39;/&#39;, function(req, res) {<br>
 <h2>Conclusion</h2>
 
 <p>That&#39;s it. Grab the code from the <a href="https://github.com/mjhea0/node-form-refresh">repository</a>. Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Handling AJAX Calls With Node.js and Express (part 5)]]></title>
-    <link href="http://mjhea0.github.com/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5/"/>
-    <updated>2014-04-15T20:34:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5</id>
-    <content type="html"><![CDATA[<p>Articles in the series:</p>
-
-<ul>
-<li>Part 1: <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">Scraping Craigslist</a></li>
-<li>Part 2: <a href="http://mherman.org/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Adding Handlebars</a></li>
-<li>Part 3: <a href="http://mherman.org/blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/">User Authentication with Passport and MongoDB</a></li>
-<li>Part 4: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Refactoring, Adding styles</a></li>
-<li>Part 5: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5">Saving Jobs</a> <strong>&lt;&lt; CURRENT</strong></li>
-</ul>
-
-<p>Last <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">time</a> we refactored our code to make it more modular as well as added some styles. This time we&#39;ll add our next feature: <em>The ability to save jobs so that users can apply to them later.</em></p>
-
-<h2>User Workflow</h2>
-
-<p>From an end user&#39;s perspective, after logging in and then searching for jobs, one can simply click a button next to each job to save the job to a new Mongo collection. That job is then removed from the list of jobs retrieved from the search. Let&#39;s start with that.</p>
-
-<h3>What do we need to do?</h3>
-
-<ol>
-<li>Add a &quot;save&quot; button next to each job.</li>
-<li>Develop the necessary code to &quot;grab&quot; the job when the button is clicked, sending it to the server side.</li>
-<li>Create a new collection in the database.</li>
-<li>Insert the data in the newly created Mongo collection.</li>
-<li>Use jQuery to remove the job from the DOM and alert the user that job has been added.</li>
-</ol>
-
-<p>Let&#39;s get started.</p>
-
-<h2>Add a save button</h2>
-
-<p>Start by adding the &quot;save&quot; button to the Handlebars template:</p>
-
-<p><br>
-<code>html<br>
-&lt;script id=&quot;search-results&quot; type=&quot;text/x-handlebars-template&quot;&gt;<br>
-    {{#each resultsArray}}<br>
-      &lt;li&gt;<br>
-        &lt;button type=&quot;button&quot; class=&quot;btn btn-primary btn-xs save-btn&quot;&gt;Save&lt;/button&gt;<br>
-        &lt;a href={{about}}&gt;{{title}}&lt;/a&gt;&lt;br&gt;{{desc}}&gt;<br>
-      &lt;/li&gt;<br>
-    {{/each}}<br>
-    &lt;br&gt;<br>
-    &lt;/ul&gt;<br>
-&lt;/script&gt;<br>
-</code><br>
-</p>
-
-<p>Moving right along ...</p>
-
-<h2>Client Side Javascript</h2>
-
-<p>Next, let&#39;s add an event handler to <em>main.js</em> that captures the button when clicked:</p>
-
-<p><code>javascript<br>
-$(&#39;.save-btn&#39;).on(&#39;click&#39;, function() {<br>
-  console.log(&quot;whee!&quot;)<br>
-});<br>
-</code></p>
-
-<p>Your file should now look like this:</p>
-
-<p>```javascript<br>
-$(function(){<br>
-  var source = $(&quot;#search-results&quot;).html();<br>
-  var dataTemplate = Handlebars.compile(source);<br>
-  $results = $(&#39;#results&#39;)</p>
-
-<p>$(&#39;#search&#39;).on(&#39;keyup&#39;, function(e){<br>
-    if(e.keyCode === 13) {<br>
-      var parameters = { search: $(this).val() };<br>
-      $.get(&#39;/searching&#39;, parameters, function(data){<br>
-        if (data instanceof Array) {<br>
-          $results.html(dataTemplate({resultsArray:data}));<br>
-        } else {<br>
-          $results.html(data);<br>
-        };<br>
-      });<br>
-    };<br>
-  });<br>
-  $(&#39;.save-btn&#39;).on(&#39;click&#39;, function() {<br>
-    console.log(&quot;whee!&quot;)<br>
-  });<br>
-});<br>
-```</p>
-
-<p>Do a quick sanity check. Fire up the server. Login. Search for some jobs. You should see the &quot;save&quot; button next to each job. Open up your Javascript console so you can see the console log when it fires. Now try to click a button.</p>
-
-<p>Nothing. Right? What&#39;s going on? We have the right selector. The event is a click. It should be working.</p>
-
-<p>The problem is fairly simple: On the initial loading of the DOM, those selectors - <code>.save-btn</code> - are not present. In fact, they only become present after we append all the jobs to the DOM. Since the selectors are not present to begin with though, our event handler in its current state won&#39;t find them. Fortunately, this is an easy fix.</p>
-
-<p>We can simply attach a listener to a parent element, then once the event is fired, it will search for the child selector, <code>.save-btn</code>. It will obviously only find that selector once it exists in the DOM.</p>
-
-<p>This is called event delegation. If interested, check <a href="https://learn.jquery.com/events/event-delegation/">this</a> article out for more info.</p>
-
-<p>Update the code:</p>
-
-<p><code>javascript<br>
-$(&#39;#results&#39;).on(&#39;click&#39;, &#39;.save-btn&#39;, function() {<br>
-  console.log(&quot;whee!&quot;)<br>
-});<br>
-</code></p>
-
-<p>So, the listener is set to the <code>#results</code> selector, which when fired (by the button click), searches the DOM for the child selector, <code>.save-btn</code>. Test it out. It should work.</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/delegated-events.png" alt="delegated-events"></p>
-
-<p>Next, instead of just outputting the text &quot;whee!&quot;, we need to grab the job title and URL by replacing the current console log with:</p>
-
-<p><code>javascript<br>
-var jobTitle = $(this).next(&#39;a&#39;).text()<br>
-var jobURL = $(this).next(&#39;a&#39;).attr(&#39;href&#39;)<br>
-console.log(jobTitle, jobURL)<br>
-</code></p>
-
-<p>Notice the <code>this</code> keyword? It&#39;s extremely powerful yet it can be difficult to use. In this case, it refers to the DOM element that the event handler is triggered on.</p>
-
-<p>Don&#39;t believe me? Test it out: update the <code>console.log()</code> to <code>console.log($(this))</code>. Test it out.</p>
-
-<p>To learn more about <code>this</code>, check out the jQuery <a href="https://learn.jquery.com/javascript-101/this-keyword/">docs</a> and Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this">docs</a>.</p>
-
-<p>Now what happens when you click the save button?</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/this-keyword.png" alt="this-keyword"></p>
-
-<p>Finally, we need to pass the data to the server.</p>
-
-<p><code>javascript<br>
-var parameters = { title: jobTitle, url: jobURL };<br>
-console.log(parameters)<br>
-$.get( &#39;/save&#39;, parameters, function(data) {<br>
-  console.log(&quot;whee!&quot;)<br>
-});<br>
-</code></p>
-
-<p>You should remember how to do this, and understand what&#39;s happening here. If not, review <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/#.U1AdiuZdWYU">Part 1</a> of this series.</p>
-
-<h2>Server Side Javascript</h2>
-
-<p>On the server side, we need to setup a <code>/save</code> route. Again, if you have questions on this, check out <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/#.U1AdiuZdWYU">Part 1</a>.</p>
-
-<p>Update <code>app.js</code>:</p>
-
-<p><code>javascript<br>
-app.get(&#39;/save&#39;, ensureAuthenticated, routes.save)<br>
-</code></p>
-
-<p>Now update the routes file, <code>index.js</code>:</p>
-
-<p><code>javascript<br>
-exports.save = function(req, res){<br>
-  var title = req.query.title;<br>
-  var url = req.query.url;<br>
-  console.log(title, url);<br>
-};<br>
-</code></p>
-
-<p>Test this out. You should see:</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/back-end.png" alt="backend"></p>
-
-<h2>Update Mongo</h2>
-
-<p>Now that we have the data in our possession, let&#39;s add it to the database.</p>
-
-<h3>Add a new schema</h3>
-
-<p>Create a new file in the &quot;models&quot; directory called <em>job.js</em>, then add the following code to the file:</p>
-
-<p>```javascript<br>
-var mongoose = require(&#39;mongoose&#39;);<br>
-var config = require(&#39;../config&#39;);</p>
-
-<p>console.log(config);</p>
-
-<p>// create a job model<br>
-var userSchema = new mongoose.Schema({<br>
-  title: String,<br>
-  url: String,<br>
-});</p>
-
-<p>module.exports = mongoose.model(&#39;Job&#39;, jobSchema);<br>
-```</p>
-
-<h3>Insert Data</h3>
-
-<p>With the schema set up, we can now add our data to the Mongo collection. Within your routes, add the following code to the <code>/save</code> route:</p>
-
-<p><code>javascript<br>
-exports.save = function(req, res){<br>
-  var title = req.query.title;<br>
-  var url = req.query.url;<br>
-  console.log(title, url);<br>
-  var newJob = new job();<br>
-  newJob.title = title;<br>
-  newJob.url = url;<br>
-  console.log(newJob);<br>
-  newJob.save(function(err){<br>
-    if(err){<br>
-      throw err;<br>
-    }<br>
-    console.log(&quot;New job, &quot; + newJob.title + &quot;, was added to mongo&quot;);<br>
-  });<br>
-};<br>
-</code></p>
-
-<p>Here, we are simply creating a new record assigned to the variable <code>newJob</code>, then adding the appropriate data, and finally saving the job to our job collection within Mongo.</p>
-
-<p>Make sure to require the config and Mongoose schema files:</p>
-
-<p><code>javascript<br>
-var config = require(&#39;../config&#39;);<br>
-var job = require(&#39;../models/job&#39;);<br>
-</code></p>
-
-<p>Test it out!</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/save_job_to_mongo.png" alt="save_job_to_mongo"></p>
-
-<p>Now check out the results in Mongo:</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/saved_job_mongo.png" alt="saved_job_mongo"></p>
-
-<p>Before moving on, let&#39;s add a line of code to search the Mongo collection to see if a job exists, then within a conditional we can setup logic for only adding a job if it doesn&#39;t already exist in the collection:</p>
-
-<p><code>javascript<br>
-exports.save = function(req, res){<br>
-  var title = req.query.title;<br>
-  var url = req.query.url;<br>
-  console.log(title, url);<br>
-  var newJob = new job();<br>
-  job.findOne({&#39;title&#39;: title}, function (err, job) {<br>
-    if (job) {<br>
-      console.log(&#39;Job already in database.&#39;);<br>
-    } else {<br>
-      newJob.title = title;<br>
-      newJob.url = url;<br>
-      console.log(newJob);<br>
-      newJob.save(function(err){<br>
-        if(err){<br>
-          throw err;<br>
-        }<br>
-        console.log(&quot;New job, &quot; + newJob.title + &quot;, was added to mongo&quot;);<br>
-      });<br>
-    };<br>
-  });<br>
-};<br>
-</code></p>
-
-<p>So, we search the database for the job - <code>job.findOne({&#39;title&#39;: title}</code> - then if it&#39;s found we output a message to the console - <code>console.log(&#39;Job already in database.&#39;);</code>. And if it&#39;s not found, we obviously add the data to the database. We should alert the user if a job is already in the database in a more direct way than just a message to the console. After all, how many users browse the Internet with their console open? We&#39;ll address that in a bit. Right now, let&#39;s finish with Mongo first.</p>
-
-<h3>One to Many Relationship</h3>
-
-<p>We need set up a one to many relationship (one user, many jobs) using <a href="http://docs.mongodb.org/manual/tutorial/model-referenced-one-to-many-relationships-between-documents/">document references</a> within Mongo to associate a job to a user. This takes literally two lines of code.</p>
-
-<p>Update the jobs schema:</p>
-
-<p>```<br>
-var user = require(&#39;../models/user&#39;);</p>
-
-<p>var jobSchema = new mongoose.Schema({<br>
-  title: String,<br>
-  url: String,<br>
-  user: {type: mongoose.Schema.Types.ObjectId, ref: user}<br>
-});<br>
-```</p>
-
-<p>Then updated <em>index.js</em> so that when you add a job it includes the currently logged in user:</p>
-
-<p><code><br>
-newJob.title = title;<br>
-newJob.url = url;<br>
-newJob.user = req.user._id<br>
-console.log(newJob);<br>
-newJob.save(function(err){<br>
-  if(err){<br>
-    throw err;<br>
-  }<br>
-</code></p>
-
-<p>Test this out, then check out the object in Mongo:</p>
-
-<p><code>javascript<br>
-{ &quot;user&quot; : ObjectId(&quot;534cb94fd4b72d7618000001&quot;), &quot;url&quot; : &quot;http://sfbay.craigslist.org/sfc/eng/4423216760.html&quot;, &quot;title&quot; : &quot;Principal Web Engineer&quot;, &quot;_id&quot; : ObjectId(&quot;5351f3a1cc6813119e000001&quot;), &quot;__v&quot; : 0 }<br>
-</code></p>
-
-<p>The object now includes the user id.</p>
-
-<h2>Client Side Javascript Redux</h2>
-
-<p>Okay. Back on the client side, we need to do three things before we&#39;re finally done:</p>
-
-<ol>
-<li>Remove the job the user saved</li>
-<li>Display messages from the server side, indicating whether the job was added to the database or not</li>
-<li>Display all saved jobs to the user</li>
-</ol>
-
-<h3>Remove job from the DOM</h3>
-
-<p>Add the following line of code to <em>main.js</em> right before we send the data to the server side:</p>
-
-<p><code>javascript<br>
-$(this).parent().remove()<br>
-</code></p>
-
-<p>Updated code:</p>
-
-<p><code>javascript<br>
-$(&#39;#results&#39;).on(&#39;click&#39;, &#39;.save-btn&#39;, function() {<br>
-  var jobTitle = $(this).next(&#39;a&#39;).text()<br>
-  var jobURL = $(this).next(&#39;a&#39;).attr(&#39;href&#39;)<br>
-  var parameters = { title: jobTitle, url: jobURL };<br>
-  console.log(parameters)<br>
-  $(this).parent().remove()<br>
-  $.get( &#39;/save&#39;, parameters, function(data) {<br>
-    console.log(&#39;test&#39;,data)<br>
-  });<br>
-});<br>
-</code></p>
-
-<h3>Display Messages</h3>
-
-<p>First, within <em>index.js</em> update the following two lines of code.</p>
-
-<p>From:</p>
-
-<p><code>javascript<br>
-console.log(&#39;Job already in database.&#39;);<br>
-console.log(&quot;New job, &quot; + newJob.title + &quot;, was added to mongo&quot;);<br>
-</code></p>
-
-<p>To:</p>
-
-<p><code>javascript<br>
-res.send(&#39;Job already in database.&#39;);<br>
-res.send(&quot;New job, &quot; + newJob.title + &quot;, was added to mongo&quot;);<br>
-</code></p>
-
-<p>Updated function:</p>
-
-<p><code>javascript<br>
-exports.save = function(req, res){<br>
-  var title = req.query.title;<br>
-  var url = req.query.url;<br>
-  console.log(title, url);<br>
-  var newJob = new job();<br>
-  job.findOne({&#39;title&#39;: title}, function (err, job) {<br>
-    if (job) {<br>
-      res.send(&#39;Job already in database.&#39;);<br>
-    } else {<br>
-      newJob.title = title;<br>
-      newJob.url = url;<br>
-      console.log(newJob);<br>
-      newJob.save(function(err){<br>
-        if(err){<br>
-          throw err;<br>
-        }<br>
-        res.send(&quot;New job, &quot; + newJob.title + &quot;, was added to mongo&quot;);<br>
-      });<br>
-    };<br>
-  });<br>
-};<br>
-</code></p>
-
-<p>The <code>res.send()</code> method is used to send a response back to the client side. You can read more <a href="http://expressjs.com/4x/api.html#res.send">here</a>. Now, we need to capture that reponse and append the actual message to the DOM.</p>
-
-<p>First, add a new element, <code>p#alert</code>, to <em>search.jade</em> where you want the message to go:</p>
-
-<p>```html<br>
-extends layout</p>
-
-<p>block content<br>
-    h1 Search SF Jobs<br>
-    .lead Welcome, #{user}<br>
-    form(METHOD=&quot;LINK&quot;, ACTION=&quot;logout&quot;)<br>
-        input(type=&quot;submit&quot;, value=&quot;Logout&quot;, class=&#39;btn btn-sm btn-primary&#39;)<br>
-    br<br>
-    br<br>
-    p#alert<br>
-    input#search(type=&quot;search&quot;, placeholder=&quot;search...&quot;)<br>
-    br<br>
-    br<br>
-    ul#results<br>
-    include template.html</p>
-<div class="highlight"><pre><code class="text">script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;)
-script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;)
-script(src=&quot;/javascripts/main.js&quot;)
-</code></pre>
-</div>
-
-<p>```</p>
-
-<p>Next update <em>main.js</em>:</p>
-
-<p><code>javascript<br>
-$.get( &#39;/save&#39;, parameters, function(data) {<br>
-  $(&#39;#alert&#39;).html(data)<br>
-  console.log(data)<br>
-});<br>
-</code></p>
-
-<p><code>$(&#39;#alert&#39;).html(data)</code> adds the message to the DOM between the <code>&lt;p&gt;</code> tags that have the id &quot;results&quot;.</p>
-
-<p>Check it out live.</p>
-
-<h3>Display saved jobs</h3>
-
-<p>This is actually a fairly large task, so we&#39;ll tackle this in the next part, along with re-organizing the entire search page and adding some more styles.</p>
-
-<p>You can grab the code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>.</p>
-
-<p>See you next time!</p>
 ]]></content>
   </entry>
   
