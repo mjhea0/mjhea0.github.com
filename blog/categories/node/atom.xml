@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-08-31T23:30:09-06:00</updated>
+  <updated>2015-09-10T23:23:11-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,395 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Testing Node.js with Mocha and Chai]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/09/10/testing-node-js-with-mocha-and-chai/"/>
+    <updated>2015-09-10T10:52:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/09/10/testing-node-js-with-mocha-and-chai</id>
+    <content type="html"><![CDATA[<p><strong>This post serves as an introduction to testing a Node.js RESTful API with <a href="http://mochajs.org/">Mocha</a> (v2.3.1). a JavaScript testing framework.</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mjhea0.github.com/images/mocha-chaijs.png" style="max-width: 100%; border:0;" alt="mocha and chai.js">
+</div>
+
+<h2>Why Test?</h2>
+
+<p>Before diving in it&#39;s important that you understand <em>why</em> tests are necessary. Grab the Node/Express sample CRUD application from the <a href="https://github.com/mjhea0/testing-node-framework-comparison/releases/tag/v1">repository</a>, and then manually go through the app and test each of the CRUD functions via cURL (or <a href="http://httpie.org/">HTTPie</a> or <a href="https://www.getpostman.com/">Postman</a>):</p>
+
+<ol>
+<li>Add new blobs</li>
+<li>View all blobs</li>
+<li>View a single blob</li>
+<li>Update a single blob</li>
+<li>Delete a single blob</li>
+</ol>
+
+<p>This is a tedious process. What if you had to go through this same manual process <em>every</em> single time a new feature got added to the application? That would not only be a massive misuse of time - but unreliable as well. Hence the need for setting up a testing framework for automating the testing of the application, so you can run hundreds of tests in a matter of seconds.</p>
+
+<p>With that, install Mocha:</p>
+
+<p><code>sh<br>
+$ npm install -g mocha@2.3.1<br>
+</code></p>
+
+<blockquote>
+<p>We installed this globally so we&#39;ll be able to run <code>mocha</code> from the terminal.</p>
+</blockquote>
+
+<h2>Structure</h2>
+
+<p>To set up the basic tests, create a new folder called &quot;test&quot; in the project root, then within that folder add a file called <em>test-server.js</em>. Your file/folder structure should now look like:</p>
+
+<p><code>sh<br>
+├── package.json<br>
+├── server<br>
+│   ├── app.js<br>
+│   ├── models<br>
+│   │   └── blob.js<br>
+│   └── routes<br>
+│       └── index.js<br>
+└── test<br>
+    └── test-server.js<br>
+</code></p>
+
+<p>Now add the following code to the new file:</p>
+
+<p><code>javascript<br>
+describe(&#39;Blobs&#39;, function() {<br>
+  it(&#39;should list ALL blobs on /blobs GET&#39;);<br>
+  it(&#39;should list a SINGLE blob on /blob/&lt;id&gt; GET&#39;);<br>
+  it(&#39;should add a SINGLE blob on /blobs POST&#39;);<br>
+  it(&#39;should update a SINGLE blob on /blob/&lt;id&gt; PUT&#39;);<br>
+  it(&#39;should delete a SINGLE blob on /blob/&lt;id&gt; DELETE&#39;);<br>
+});<br>
+</code></p>
+
+<p>Although this is just boilerplate, pay attention to the <code>describe()</code> block and <code>it()</code> statements. <code>describe()</code> is used for grouping tests in a logical manner. Meanwhile, the <code>it()</code> statements contain each individual test case, which generally (err, <em>should</em>) test a single feature or edge case.</p>
+
+<h2>Logic</h2>
+
+<p>To add the necessary logic, we&#39;ll utilize <a href="http://chaijs.com/">Chai</a> (v3.2.0), an assertion library, and <a href="http://chaijs.com/plugins/chai-http">chai-http</a> (v 1.0.0), for making the actual HTTP requests and then testing the responses.</p>
+
+<p>Install them both now:</p>
+
+<p><code>sh<br>
+$ npm install chai@3.2.0 chai-http@1.0.0 --save-dev<br>
+</code></p>
+
+<p>Then update <em>test-server.js</em>, like so:</p>
+
+<p>```javascript<br>
+var chai = require(&#39;chai&#39;);<br>
+var chaiHttp = require(&#39;chai-http&#39;);<br>
+var server = require(&#39;../server/app&#39;);<br>
+var should = chai.should();</p>
+
+<p>chai.use(chaiHttp);</p>
+
+<p>describe(&#39;Blobs&#39;, function() {<br>
+  it(&#39;should list ALL blobs on /blobs GET&#39;);<br>
+  it(&#39;should list a SINGLE blob on /blob/<id> GET&#39;);<br>
+  it(&#39;should add a SINGLE blob on /blobs POST&#39;);<br>
+  it(&#39;should update a SINGLE blob on /blob/<id> PUT&#39;);<br>
+  it(&#39;should delete a SINGLE blob on /blob/<id> DELETE&#39;);<br>
+});<br>
+```</p>
+
+<p>Here, we required the new packages, <code>chai</code> and <code>chai-http</code>, and our <em>app.js</em> file in order to make requests to the app. We also used the <code>should</code> assertion library so we can utilize <a href="http://chaijs.com/api/bdd/">BDD-style assertions</a>.</p>
+
+<blockquote>
+<p>One of the powerful aspects of Chai is that it allows you to choose the type of assertion style you&#39;d like to use. Check out the <a href="http://chaijs.com/guide/styles/">Assertion Style Guide</a> for more info. Also, aside for the assertion libraries included with Chai, there are a number of other libraries available via <a href="https://github.com/mochajs/mocha/wiki#assertion-libraries">NPM</a> and <a href="https://github.com/search?utf8=%E2%9C%93&amp;q=chai+assertion&amp;type=Repositories&amp;ref=searchresults">Github</a>.</p>
+</blockquote>
+
+<p>Now we can write our tests...</p>
+
+<h2>Test - GET (all)</h2>
+
+<p>Update the first <code>it()</code> statement:</p>
+
+<p><code>javascript<br>
+it(&#39;should list ALL blobs on /blobs GET&#39;, function(done) {<br>
+  chai.request(server)<br>
+    .get(&#39;/blobs&#39;)<br>
+    .end(function(err, res){<br>
+      res.should.have.status(200);<br>
+      done();<br>
+    });<br>
+});<br>
+</code></p>
+
+<p>So, we passed an anonymous function with a single argument of <code>done</code> (a function) to the <code>it()</code> statement. This argument ends the test case when called - e.g., <code>done()</code>. The test itself is simple: We made a GET request to the <code>/blobs</code> endpoint and then asserted that the response contained a 200 HTTP status code.</p>
+
+<p>Simple, right?</p>
+
+<p>To test, simply run <code>mocha</code>; and if all went well, you should see:</p>
+
+<p>```sh<br>
+$ mocha</p>
+
+<p>Blobs<br>
+Connected to Database!<br>
+GET /blobs 200 19.621 ms - 2<br>
+    ✓ should list ALL blobs on /blobs GET (43ms)<br>
+    - should list a SINGLE blob on /blob/<id> GET<br>
+    - should add a SINGLE blob on /blobs POST<br>
+    - should update a SINGLE blob on /blob/<id> PUT<br>
+    - should delete a SINGLE blob on /blob/<id> DELETE</p>
+
+<p>1 passing (72ms)<br>
+  4 pending<br>
+```</p>
+
+<p>Since testing the status code alone isn&#39;t very significant, let&#39;s add some more assertions:</p>
+
+<p><code>javascript<br>
+it(&#39;should list ALL blobs on /blobs GET&#39;, function(done) {<br>
+  chai.request(server)<br>
+    .get(&#39;/blobs&#39;)<br>
+    .end(function(err, res){<br>
+      res.should.have.status(200);<br>
+      res.should.be.json;<br>
+      res.body.should.be.a(&#39;array&#39;);<br>
+      done();<br>
+    });<br>
+});<br>
+</code></p>
+
+<p>This should be straightforward, since these assertions read like plain English. Run the test suite again. It passes, right? This test still isn&#39;t complete, since we&#39;re not testing any of the <em>actual</em> data being returned. We&#39;ll get to that shortly.</p>
+
+<p>How about testing a POST request...</p>
+
+<h2>Test - POST</h2>
+
+<p>Based on the code within <em>index.js</em>, when a new &quot;blob&quot; is successfully added, we should see the following response:</p>
+
+<p><code>sh<br>
+{<br>
+  &quot;SUCCESS&quot;: {<br>
+    &quot;__v&quot;: 0,<br>
+    &quot;name&quot;: &quot;name&quot;,<br>
+    &quot;lastName&quot;: &quot;lastname&quot;,<br>
+    &quot;_id&quot;: &quot;some-unique-id&quot;<br>
+  }<br>
+}<br>
+</code></p>
+
+<blockquote>
+<p>Need proof? Test this out by logging <code>{&#39;SUCCESS&#39;: newBlob}</code> to the console, and then run a manual test to see what gets logged.</p>
+</blockquote>
+
+<p>With that, think about how you would write/structure your assertions to test this...</p>
+
+<p><code>javascript<br>
+it(&#39;should add a SINGLE blob on /blobs POST&#39;, function(done) {<br>
+  chai.request(server)<br>
+    .post(&#39;/blobs&#39;)<br>
+    .send({&#39;name&#39;: &#39;Java&#39;, &#39;lastName&#39;: &#39;Script&#39;})<br>
+    .end(function(err, res){<br>
+      res.should.have.status(200);<br>
+      res.should.be.json;<br>
+      res.body.should.be.a(&#39;object&#39;);<br>
+      res.body.should.have.property(&#39;SUCCESS&#39;);<br>
+      res.body.SUCCESS.should.be.a(&#39;object&#39;);<br>
+      res.body.SUCCESS.should.have.property(&#39;name&#39;);<br>
+      res.body.SUCCESS.should.have.property(&#39;lastName&#39;);<br>
+      res.body.SUCCESS.should.have.property(&#39;_id&#39;);<br>
+      res.body.SUCCESS.name.should.equal(&#39;Java&#39;);<br>
+      res.body.SUCCESS.lastName.should.equal(&#39;Script&#39;);<br>
+      done();<br>
+    });<br>
+});<br>
+</code></p>
+
+<p>Need help understanding what&#39;s happening here? Add <code>console.log(res.body)</code> just before the first assert. Run the test to see the data contained within the response body. The test we wrote tests the actual structure and data from the response body, broken down by each individual key/value pair.</p>
+
+<h2>Hooks</h2>
+
+<p>Up to this point we have been using the main database for testing purposes, which is not ideal since we&#39;re polluting the database with test data. Instead, let&#39;s utilize a test database and add a dummy blob to it to assert against. To do this, we can use the <code>beforeEach()</code> and <code>afterEach()</code> <a href="http://mochajs.org/#hooks">hooks</a> - which, as the names suggest, add and remove a dummy document to the database before and after each test case is ran.</p>
+
+<p>This sounds a bit difficult, but with Mocha it&#39;s super easy!</p>
+
+<p>Start by adding a configuration file called <em>_config.js</em> to the &quot;server&quot; folder in order to specify a different database URI for testing purposes:</p>
+
+<p>```javascript<br>
+var config = {};</p>
+
+<p>config.mongoURI = {<br>
+  development: &#39;mongodb://localhost/node-testing&#39;,<br>
+  test: &#39;mongodb://localhost/node-test&#39;<br>
+};</p>
+
+<p>module.exports = config;<br>
+```</p>
+
+<p>Next, update <em>app.js</em> to utilize the test database when the environment variable <code>app.settings.env</code> evaluates to <code>test</code>. (The default is <code>development</code>.)</p>
+
+<p>```javascript<br>
+// *** config file *** //<br>
+var config = require(&#39;./_config&#39;);</p>
+
+<p>// *** mongoose *** ///<br>
+mongoose.connect(config.mongoURI[app.settings.env], function(err, res) {<br>
+  if(err) {<br>
+    console.log(&#39;Error connecting to the database. &#39; + err);<br>
+  } else {<br>
+    console.log(&#39;Connected to Database: &#39; + config.mongoURI[app.settings.env]);<br>
+  }<br>
+});<br>
+```</p>
+
+<p>Finally, update the requirements and add the hooks to the testing script:</p>
+
+<p>```javascript<br>
+process.env.NODE_ENV = &#39;test&#39;;</p>
+
+<p>var chai = require(&#39;chai&#39;);<br>
+var chaiHttp = require(&#39;chai-http&#39;);<br>
+var mongoose = require(&quot;mongoose&quot;);</p>
+
+<p>var server = require(&#39;../server/app&#39;);<br>
+var Blob = require(&quot;../server/models/blob&quot;);</p>
+
+<p>var should = chai.should();<br>
+chai.use(chaiHttp);</p>
+
+<p>describe(&#39;Blobs&#39;, function() {</p>
+
+<p>Blob.collection.drop();</p>
+
+<p>beforeEach(function(done){<br>
+    var newBlob = new Blob({<br>
+      name: &#39;Bat&#39;,<br>
+      lastName: &#39;man&#39;<br>
+    });<br>
+    newBlob.save(function(err) {<br>
+      done();<br>
+    });<br>
+  });<br>
+  afterEach(function(done){<br>
+    Blob.collection.drop();<br>
+    done();<br>
+  });</p>
+
+<p>...snip...<br>
+```</p>
+
+<p>Now, before each test case, the database is cleared and a new blob is added; then, after each test, the database is cleared before the next test case is ran.</p>
+
+<p>Run the tests again to ensure they still pass.</p>
+
+<h2>Test - GET (all)</h2>
+
+<p>With the hooks set up, let&#39;s refactor the first test to assert that the blob from the <code>beforeEach()</code> is part of the collection:</p>
+
+<p><code>javascript<br>
+it(&#39;should list ALL blobs on /blobs GET&#39;, function(done) {<br>
+  chai.request(server)<br>
+    .get(&#39;/blobs&#39;)<br>
+    .end(function(err, res){<br>
+      res.should.have.status(200);<br>
+      res.should.be.json;<br>
+      res.body.should.be.a(&#39;array&#39;);<br>
+      res.body[0].should.have.property(&#39;_id&#39;);<br>
+      res.body[0].should.have.property(&#39;name&#39;);<br>
+      res.body[0].should.have.property(&#39;lastName&#39;);<br>
+      res.body[0].name.should.equal(&#39;Bat&#39;);<br>
+      res.body[0].lastName.should.equal(&#39;man&#39;);<br>
+      done();<br>
+    });<br>
+});<br>
+</code></p>
+
+<p>Let&#39;s look at the final three tests...</p>
+
+<h2>Test - GET (single)</h2>
+
+<p><code>javascript<br>
+it(&#39;should list a SINGLE blob on /blob/&lt;id&gt; GET&#39;, function(done) {<br>
+    var newBlob = new Blob({<br>
+      name: &#39;Super&#39;,<br>
+      lastName: &#39;man&#39;<br>
+    });<br>
+    newBlob.save(function(err, data) {<br>
+      chai.request(server)<br>
+        .get(&#39;/blob/&#39;+data.id)<br>
+        .end(function(err, res){<br>
+          res.should.have.status(200);<br>
+          res.should.be.json;<br>
+          res.body.should.be.a(&#39;object&#39;);<br>
+          res.body.should.have.property(&#39;_id&#39;);<br>
+          res.body.should.have.property(&#39;name&#39;);<br>
+          res.body.should.have.property(&#39;lastName&#39;);<br>
+          res.body.name.should.equal(&#39;Super&#39;);<br>
+          res.body.lastName.should.equal(&#39;man&#39;);<br>
+          res.body._id.should.equal(data.id);<br>
+          done();<br>
+        });<br>
+    });<br>
+});<br>
+</code></p>
+
+<p>In this test case, we first added a new blob, and then used the newly created <code>_id</code> to make the request and then test the subsequent response.</p>
+
+<h2>Test - PUT</h2>
+
+<p><code>javascript<br>
+it(&#39;should update a SINGLE blob on /blob/&lt;id&gt; PUT&#39;, function(done) {<br>
+  chai.request(server)<br>
+    .get(&#39;/blobs&#39;)<br>
+    .end(function(err, res){<br>
+      chai.request(server)<br>
+        .put(&#39;/blob/&#39;+res.body[0]._id)<br>
+        .send({&#39;name&#39;: &#39;Spider&#39;})<br>
+        .end(function(error, response){<br>
+          response.should.have.status(200);<br>
+          response.should.be.json;<br>
+          response.body.should.be.a(&#39;object&#39;);<br>
+          response.body.should.have.property(&#39;UPDATED&#39;);<br>
+          response.body.UPDATED.should.be.a(&#39;object&#39;);<br>
+          response.body.UPDATED.should.have.property(&#39;name&#39;);<br>
+          response.body.UPDATED.should.have.property(&#39;_id&#39;);<br>
+          response.body.UPDATED.name.should.equal(&#39;Spider&#39;);<br>
+          done();<br>
+      });<br>
+    });<br>
+});<br>
+</code></p>
+
+<p>Here, we hit the <code>/blobs</code> endpoint with a GET request to grab the blob added from the <code>beforeEach()</code> hook, then we simply added the <code>_id</code> to the URL for the PUT request and updated the name to <code>Spider</code>.</p>
+
+<h2>Test - DELETE</h2>
+
+<p>Finally...</p>
+
+<p><code>javascript<br>
+it(&#39;should delete a SINGLE blob on /blob/&lt;id&gt; DELETE&#39;, function(done) {<br>
+  chai.request(server)<br>
+    .get(&#39;/blobs&#39;)<br>
+    .end(function(err, res){<br>
+      chai.request(server)<br>
+        .delete(&#39;/blob/&#39;+res.body[0]._id)<br>
+        .end(function(error, response){<br>
+          response.should.have.status(200);<br>
+          response.should.be.json;<br>
+          response.body.should.be.a(&#39;object&#39;);<br>
+          response.body.should.have.property(&#39;REMOVED&#39;);<br>
+          response.body.REMOVED.should.be.a(&#39;object&#39;);<br>
+          response.body.REMOVED.should.have.property(&#39;name&#39;);<br>
+          response.body.REMOVED.should.have.property(&#39;_id&#39;);<br>
+          response.body.REMOVED.name.should.equal(&#39;Bat&#39;);<br>
+          done();<br>
+      });<br>
+    });<br>
+});<br>
+</code></p>
+
+<h2>Conclusion</h2>
+
+<p>Hopefully you can now see just how easy it is to test your code with Mocha and Chai. Keep practicing on your own, incorporating a true <a href="https://mochajs.org/#bdd">BDD</a> approach into your workflow. Grab the final code for this tutorial from the <a href="https://github.com/mjhea0/node-mocha-chai-tutorial">repository</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Node, Express, Swig, and MongoDB - getting started with CRUD]]></title>
@@ -2212,439 +2601,6 @@ h4= info<br>
 <h2>Conclusion</h2>
 
 <p>That&#39;s it. Grab the code from the <a href="https://github.com/mjhea0/passport-local-express4">repository</a>. Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Node, Express, and MongoDB - a primer]]></title>
-    <link href="http://mjhea0.github.com/blog/2014/12/31/node-and-mongoose-a-primer/"/>
-    <updated>2014-12-31T02:28:00-07:00</updated>
-    <id>http://mjhea0.github.com/blog/2014/12/31/node-and-mongoose-a-primer</id>
-    <content type="html"><![CDATA[<p>Welcome. Using Node, Express, and Mongoose, let&#39;s create an interactive form.</p>
-
-<blockquote>
-<p>Before you start, make sure you have <a href="http://nodejs.org/download/">Node</a> installed for your specific operating system. This tutorial also uses <a href="http://expressjs.com/">Express</a> v4.9.0 and <a href="http://mongoosejs.com/">Mongoose</a> v3.8.21.</p>
-</blockquote>
-
-<h2>Project Setup</h2>
-
-<p>Start by installing the Express generator, which will be used to create a basic project for us:</p>
-
-<p><code>sh<br>
-$ npm install -g express-generator@4<br>
-</code></p>
-
-<blockquote>
-<p>The <code>-g</code> flag means that we&#39;re installing this on our entire system.</p>
-</blockquote>
-
-<p>Navigate to a convenient directory, like your &quot;Desktop&quot; or &quot;Documents&quot;, then create your app:</p>
-
-<p><code>sh<br>
-$ express node-mongoose-form<br>
-</code></p>
-
-<p>Check out the project structure:</p>
-
-<p><code><br>
-├── app.js<br>
-├── bin<br>
-│   └── www<br>
-├── package.json<br>
-├── public<br>
-│   ├── images<br>
-│   ├── javascripts<br>
-│   └── stylesheets<br>
-│       └── style.css<br>
-├── routes<br>
-│   ├── index.js<br>
-│   └── users.js<br>
-└── views<br>
-    ├── error.jade<br>
-    ├── index.jade<br>
-    └── layout.jade<br>
-</code></p>
-
-<p>Don&#39;t worry about the files and folders for now. Just know that we have created a boilerplate that could be used for a number of Node applications. This took care of the heavy lifting, adding common files and functions associated with all apps.</p>
-
-<p>Notice the <em>package.json</em> file. This stores your project&#39;s dependencies, which we still need to install:</p>
-
-<p><code>sh<br>
-$ cd node-mongoose-form<br>
-$ npm install<br>
-</code></p>
-
-<p>Now let&#39;s install one last dependency:</p>
-
-<p><code>sh<br>
-$ npm install mongoose --save<br>
-</code></p>
-
-<blockquote>
-<p>The <code>--save</code> flag adds the dependencies and their versions to the <em>package.json</em> file. Take a look.</p>
-</blockquote>
-
-<h2>Sanity check</h2>
-
-<p>Let&#39;s test our setup by running the app:</p>
-
-<p><code>sh<br>
-$ npm start<br>
-</code></p>
-
-<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser and you should see the &quot;Welcome to Express&quot; text.</p>
-
-<h3>Supervisor</h3>
-
-<p>I highly recommend setting up <a href="https://github.com/isaacs/node-supervisor">Supervisor</a> so that you can run your app and watch for code changes. Check out the above link to learn more.</p>
-
-<p><code>sh<br>
-$ npm install supervisor -g<br>
-</code></p>
-
-<p>Kill the server by pressing CTRL-C.</p>
-
-<p>Once installed, let&#39;s update the <em>package.json</em> file to utilize Supervisor to run our program.</p>
-
-<p>Simply change this-</p>
-
-<p><code>javascript<br>
-&quot;scripts&quot;: {<br>
-  &quot;start&quot;: &quot;node ./bin/www&quot;<br>
-},<br>
-</code></p>
-
-<p>To this:</p>
-
-<p><code>javascript<br>
-&quot;scripts&quot;: {<br>
-  &quot;start&quot;: &quot;supervisor ./bin/www&quot;<br>
-},<br>
-</code></p>
-
-<p>Let&#39;s test again:</p>
-
-<p><code>sh<br>
-$ npm start<br>
-</code></p>
-
-<p>In your terminal you should see:</p>
-
-<p><code>sh<br>
-Watching directory &#39;node-mongoose-form&#39; for changes.<br>
-</code></p>
-
-<p>If you see that, you know it&#39;s working right. Essentially, Supervisor is watching that directory for code changes, and if they do occur, then it will refresh your app for you so you don&#39;t have to constantly kill the server then start it back up. It saves a lot of time and keystrokes.</p>
-
-<p>Awesome. With the setup out of the way, let&#39;s get our hands dirty and actually build something!</p>
-
-<h2>Routes</h2>
-
-<p>Grab your favorite text editor, and then open the main file, <em>app.js</em>, which houses all of the business logic. Take a look at the routes:</p>
-
-<p><code>javascript<br>
-app.use(&#39;/&#39;, routes);<br>
-app.use(&#39;/users&#39;, users);<br>
-</code></p>
-
-<p>Understanding how routes work as well as how to trace all the files associated with an individual route is an important skill to learn. You&#39;ll be able to approach most applications and understand how they work just by starting with the routes.</p>
-
-<p>Let&#39;s look at this route:</p>
-
-<p><code>javascript<br>
-app.use(&#39;/users&#39;, users)<br>
-</code></p>
-
-<p>Here, we know that this route is associated with the <code>/users</code> endpoint. What&#39;s an endpoint? Simply navigate to <a href="http://localhost:3000/users">http://localhost:3000/users</a>.</p>
-
-<p>So the end user navigates to that endpoint and expects <em>something</em> to happen. That could mean some HTML is rendered or perhaps JSON is returned. That&#39;s not important at this point. For now, let&#39;s look at how Node handles that logic for &quot;handling routes&quot;.</p>
-
-<p>Also, within that route, you can see the variable <code>users</code>. Where is this file this file? It&#39;s at the top, and it loads in another file within our app:</p>
-
-<p><code>javascript<br>
-var users = require(&#39;./routes/users&#39;);<br>
-</code></p>
-
-<p>Open that file:</p>
-
-<p>```javascript<br>
-var express = require(&#39;express&#39;);<br>
-var router = express.Router();</p>
-
-<p>/* GET users listing. */<br>
-router.get(&#39;/&#39;, function(req, res) {<br>
-  res.send(&#39;respond with a resource&#39;);<br>
-});</p>
-
-<p>module.exports = router;<br>
-```</p>
-
-<p>What&#39;s happening here? We won&#39;t touch everything but essentially when that endpoint is hit it responds by sending text in the form of a response to the end user - &quot;respond with a resource&quot;. Now, of course you don&#39;t always have to send text. You could respond with a template or view like a Jade file that gets rendered into HTML. We&#39;ll look at how this works in just a minute when we add our own routes.</p>
-
-<p><strong>Make sure you understand everything in this section before moving on. This is very important</strong>.</p>
-
-<h3>Add a new route</h3>
-
-<p>Let&#39;s now add a new route that renders an HTML form to the end user.</p>
-
-<p>Start by adding the route handler in the <em>app.js</em> file:</p>
-
-<p><code>javascript<br>
-app.use(&#39;/form&#39;, form);<br>
-</code></p>
-
-<blockquote>
-<p>Remember this simply means <code>app.use(&#39;/ENDPOINT&#39;, VARIABLE_NAME);</code>,</p>
-</blockquote>
-
-<p>Use the <code>form</code> variable to require a JS file within our routes folder.</p>
-
-<p><code>javascript<br>
-var form = require(&#39;./routes/form&#39;);<br>
-</code></p>
-
-<p>Take a look in the terminal. You should see an error, indicating Node can&#39;t find that &#39;./routes/form&#39; module. We need to create it!</p>
-
-<p>Create that JS file/module by saving an empty file called <em>form.js</em> to the &quot;routes&quot; directory. Add the following code:</p>
-
-<p>```javascript<br>
-var express = require(&#39;express&#39;);<br>
-var router = express.Router();</p>
-
-<p>/* GET form. */<br>
-router.get(&#39;/&#39;, function(req, res) {<br>
-  res.send(&#39;My funky form&#39;);<br>
-});</p>
-
-<p>module.exports = router;<br>
-```</p>
-
-<blockquote>
-<p>Remember what this code <code>res.send(&#39;My funky form&#39;);</code> should do? If not, review the previous section.</p>
-</blockquote>
-
-<p>Navigate to <a href="http://localhost:3000/form">http://localhost:3000/form</a>. You should see the text &quot;&#39;My funky form&quot; on the page. Sweet.</p>
-
-<h2>Jade</h2>
-
-<p>Jade is a templating language, which compiles down to HTML. It makes it easy to separate logic from markup.</p>
-
-<p>Take a quick look at the <em>layout.jade</em> and <em>index.jade</em> files within the &quot;views&quot; folder. There&#39;s a relationship between those two files. It&#39;s called inheritance. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
-
-<p>Do you see the <code>block</code> keyword?</p>
-
-<p>What really happens when the <em>index</em> file is rendered is that it first inherits the base template because of the <code>extends</code> keywords. So, the <em>layout</em> template then gets rendered, which eventually pulls in the child template, overwriting the <code>block</code> keyword with:</p>
-
-<p><code>html<br>
-h1= title<br>
-  p Welcome to #{title}<br>
-</code></p>
-
-<p>Hope that makes sense. If not, check out <a href="http://www.learnjade.com/tour/template-inheritance/">this</a> resource for more info.</p>
-
-<h3>Setup <em>form.jade</em></h3>
-
-<p>Create a new file called &quot;form.jade&quot; in the &quot;views&quot; directory, and then add the following code:</p>
-
-<p>```html<br>
-extends layout</p>
-
-<p>block content<br>
-  h1= title<br>
-  p Welcome to #{title}<br>
-```</p>
-
-<p>The same thing is happening here with inheritance. If you&#39;re unfamiliar with Jade syntax, <code>title</code> is essentially a variable, which we can pass in from <code>./routes/form.js</code>.</p>
-
-<p>Update <code>./routes/form.js</code> by changing-</p>
-
-<p><code>javascript<br>
-res.send(&#39;My funky form&#39;);<br>
-</code></p>
-
-<p>To:</p>
-
-<p><code>javascript<br>
-res.render(&#39;form&#39;, { title: &#39;My funky form&#39; });<br>
-</code></p>
-
-<p>This just says, &quot;When a user hits the <code>/form</code> endpoint, render the <em>form.jade</em> file and pass in <code>My funky form</code> as the title.&quot;</p>
-
-<blockquote>
-<p>Keep in mind that all Jade files are converted to HTML. Browsers can&#39;t read the Jade syntax, so it must be in HTML by the time the end user sees it.</p>
-</blockquote>
-
-<p>Ready to test? Simple refresh <a href="http://localhost:3000/form">http://localhost:3000/form</a>.</p>
-
-<p>Did it work? If yes, move on. If not, go back through this section and review. Look in your terminal as well to see the error(s). If you&#39;re having problems, don&#39;t beat yourself up. It&#39;s all part of learning!</p>
-
-<h3>Update <em>form.jade</em></h3>
-
-<p>So, let&#39;s update the Jade syntax to load a form.</p>
-
-<p>```html<br>
-extends layout</p>
-
-<p>block content<br>
-  //- passed into layout.jade when form.jade is rendered<br>
-  block content<br>
-    h1= title<br>
-    form(method=&quot;post&quot; action=&quot;/create&quot;)<br>
-      label(for=&quot;comment&quot;) Got something to say:<br>
-      input(type=&quot;text&quot;, name=&quot;comment&quot;, value=comment)<br>
-      input(type=&quot;submit&quot;, value=&quot;Save&quot;)<br>
-```</p>
-
-<p>I&#39;m not going to touch on all the Jade syntax, but essentially, we have just a basic HTML form to submit comments.</p>
-
-<p>Refresh your browser. Do you see the form? Try clicking save. What happens? Well, you just tried to send a POST request to the <code>/create</code> endpoint, which does not exist. Let&#39;s set it up.</p>
-
-<h2>Add route handler for <code>/create</code></h2>
-
-<p>Open <em>app.js</em> and add a new route:</p>
-
-<p><code>javascript<br>
-app.use(&#39;/create&#39;, form);<br>
-</code></p>
-
-<blockquote>
-<p>Notice how we&#39;re using the same <code>form</code> variable. What does this mean?</p>
-</blockquote>
-
-<p>Open <em>form.js</em> to add the logic for this new route:</p>
-
-<p>```javascript<br>
-var express = require(&#39;express&#39;);<br>
-var router = express.Router();</p>
-
-<p>/* GET form. */<br>
-router.get(&#39;/&#39;, function(req, res) {<br>
-  res.render(&#39;form&#39;, { title: &#39;My funky form&#39; });<br>
-});</p>
-
-<p>/* POST form. */<br>
-router.post(&#39;/&#39;, function(req, res) {<br>
-  console.log(req.body.comment);<br>
-  res.redirect(&#39;form&#39;);<br>
-});</p>
-
-<p>module.exports = router;<br>
-```</p>
-
-<p>1Test this out again. Now, when you submit the form, we have the <code>/create</code> endpoint setup, which then grabs the text from the input box via <code>req.body.comment</code>. Make sure the text is consoled to your terminal.</p>
-
-<p>Okay. So, we are handling the routes, rendering the right template, let&#39;s now setup Mongoose to save the data from our form.</p>
-
-<h2>Setup Mongoose</h2>
-
-<p><a href="http://mongoosejs.com/">Mongoose</a> is awesome. Start with defining the Schema, which then maps to a collection in Mongo. It utilizes OOP.</p>
-
-<p>Create a file called <em>database.js</em> in your app&#39;s root directory, then add the following code:</p>
-
-<p>```javascript<br>
-var mongoose = require(&#39;mongoose&#39;);<br>
-var Schema   = mongoose.Schema;</p>
-
-<p>var Comment = new Schema({<br>
-    title : String,<br>
-});</p>
-
-<p>mongoose.model(&#39;comments&#39;, Comment);</p>
-
-<p>mongoose.connect(&#39;mongodb://localhost/node-comment&#39;);<br>
-```</p>
-
-<p>Here, we required/included the Mongoose library along with a reference to the <code>Schema()</code> method. As said, you always start with defining the schema, then we linked it to collection called &quot;comments&quot;. Finally, we opened a connection to an instance of our local MongoDB.</p>
-
-<blockquote>
-<p>If you don&#39;t have the MongoDB server running. Do so now. Open a new terminal window, and run the command <code>sudo mongod</code>.</p>
-</blockquote>
-
-<p>Next, open <em>app.js</em> and require the Mongoose config at the very top of the file:</p>
-
-<p><code>javascript<br>
-// mongoose config<br>
-require(&#39;./database&#39;);<br>
-</code></p>
-
-<p>With Mongoose setup, we need to update <em>form.js</em> to create (via POST) and read (via GET) data from the Mongo collection.</p>
-
-<h2>Handling form GET requests</h2>
-
-<p>Open <em>form.js</em>. Require Mongoose as well as the <code>comments</code> model, which we already created:</p>
-
-<p><code>javascript<br>
-var mongoose = require(&#39;mongoose&#39;);<br>
-var Comment = mongoose.model(&#39;comments&#39;);<br>
-</code></p>
-
-<p>Now, update the function handling GET requests:</p>
-
-<p><code>javascript<br>
-/* GET form. */<br>
-router.get(&#39;/&#39;, function(req, res) {<br>
-  Comment.find(function(err, comments){<br>
-    console.log(comments)<br>
-    res.render(<br>
-      &#39;form&#39;,<br>
-      {title : &#39;My funky form&#39;, comments : comments}<br>
-    );<br>
-  });<br>
-});<br>
-</code></p>
-
-<p><code>Comment.find()</code> grabs all comments from the Mongo collection, which we assign to the variable <code>comments</code>. We can now use that variable in our Jade file.</p>
-
-<h2>Update <em>form.jade</em> to display comments</h2>
-
-<p>Let&#39;s add a loop to iterate through the comments and then display the <code>title</code> key from the collection.</p>
-
-<p>```html<br>
-extends layout</p>
-
-<p>block content<br>
-  //- passed into layout.jade when form.jade is rendered<br>
-  block content<br>
-    h1= title<br>
-    form(method=&quot;post&quot; action=&quot;/create&quot;)<br>
-      label(for=&quot;comment&quot;) Got something to say:<br>
-      input(type=&quot;text&quot;, name=&quot;comment&quot;, value=comment)<br>
-      input(type=&quot;submit&quot;, value=&quot;Save&quot;)<br>
-    br<br>
-    - for comment in comments<br>
-      p= comment.title<br>
-```</p>
-
-<blockquote>
-<p>Do you remember where we set the <code>title</code> key? Check out the database schema in <em>database.js</em>.</p>
-</blockquote>
-
-<p>Before this will actually work - e.g., display comments - we first need to add the logic to insert data into the Mongo collection.</p>
-
-<h2>Handling form POST requests</h2>
-
-<p>Back in <em>form.js</em>, update the function handling POST requests:</p>
-
-<p><code>javascript<br>
-/* POST form. */<br>
-router.post(&#39;/&#39;, function(req, res) {<br>
-  new Comment({title : req.body.comment})<br>
-  .save(function(err, comment) {<br>
-    console.log(comment)<br>
-    res.redirect(&#39;form&#39;);<br>
-  });<br>
-});<br>
-</code></p>
-
-<p>The simply saves a new comment, which again is grabbed from the form via <code>req.body.comment</code>.</p>
-
-<h2>Sanity Check</h2>
-
-<p>Refresh you app. Add some comments. If you&#39;ve done everything correctly, the comments should be displayed beneath the form.</p>
-
-<h2>Conclusion</h2>
-
-<p>That&#39;s it. Grab the code from the <a href="https://github.com/mjhea0/node-form-refresh">repository</a>. Cheers!</p>
 ]]></content>
   </entry>
   
