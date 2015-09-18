@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="In the first tutorial, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data to a &hellip;">
+  <meta name="description" content="In the first tutorial, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data in a &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -117,7 +117,10 @@
 
 
 <div class="side-content"></div>
-<div class="entry-content"><p><em>In the first <a href="http://mherman.org/blog/2012/11/05/scraping-web-pages-with-scrapy/">tutorial</a>, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data to a CSV file. This tutorial continues from where we left off, adding to the existing code, in order to build a recursive crawler to scrape multiple pages. Make sure you read the first tutorial first.</em></p>
+<div class="entry-content"><p>In the first <a href="http://mherman.org/blog/2012/11/05/scraping-web-pages-with-scrapy/">tutorial</a>, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data in a CSV file. <strong>This tutorial continues from where we left off, adding to the existing code, in order to build a recursive crawler to scrape multiple pages.</strong></p>
+
+<p><strong>Updates:</strong><br>
+- 09/18/2015 – Updated the Scrapy scripts</p>
 
 <blockquote>
 <p>Check out the accompanying <a href="http://www.youtube.com/watch?v=P-_TpZ54Vcw">video</a>!</p>
@@ -125,21 +128,21 @@
 
 <h2>CrawlSpider</h2>
 
-<p>Last time, we created a new Scrapy project, updated the Item Class, and then wrote the spider to pull jobs from a single page. This time, we just need to do some basic changes to add the ability to follow links and scrape more than one page. The first change is that this spider will inherit CrawlSpider and not BaseSpider.</p>
+<p>Last time, we created a new <a href="http://scrapy.org/">Scrapy</a>  (v0.16.5) project, updated the <code>Item</code> Class, and then wrote the spider to pull jobs from a single page. This time, we just need to do some basic changes to add the ability to follow links and scrape more than one page. The first change is that this spider will inherit from CrawlSpider and not BaseSpider.</p>
 
 <h2>Rules</h2>
 
-<p>We need to add in some Rules objects to define how the crawler follows the links. We will be using the following <a href="https://scrapy.readthedocs.org/en/latest/topics/spiders.html?highlight=crawlspider#crawling-rules">rules</a>:</p>
+<p>We need to add in some <code>Rules</code> objects to define how the crawler follows the links. We will be using the following <a href="https://scrapy.readthedocs.org/en/0.16/topics/spiders.html#crawling-rules">rules</a>:</p>
 
 <ul>
-<li>*SgmlLinkExtractor: *defines how you want the spider to follow the links
+<li><strong>SgmlLinkExtractor</strong>: defines how you want the spider to follow the links
 
 <ul>
-<li><em>allow:</em> defines the link href</li>
-<li>*restrict_xpaths: *restricts the link to a certain Xpath</li>
+<li>allow: defines the link href</li>
+<li>restrict_xpaths: restricts the link to a certain Xpath</li>
 </ul></li>
-<li><em>callback: *calls the parsing function after each page is scraped</em></li>
-<li>*follow: *instructs whether to continue following the links as long as they exist</li>
+<li><strong>callback</strong>: calls the parsing function after each page is scraped</li>
+<li><strong>follow</strong>: instructs whether to continue following the links as long as they exist</li>
 </ul>
 
 <blockquote>
@@ -182,20 +185,20 @@
 </span><span class='line'><span class="k">class</span> <span class="nc">MySpider</span><span class="p">(</span><span class="n">CrawlSpider</span><span class="p">):</span>
 </span><span class='line'>    <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;craigs&quot;</span>
 </span><span class='line'>    <span class="n">allowed_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;sfbay.craigslist.org&quot;</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;http://sfbay.craigslist.org/npo/&quot;</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;http://sfbay.craigslist.org/search/npo&quot;</span><span class="p">]</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="n">rules</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rule</span> <span class="p">(</span><span class="n">SgmlLinkExtractor</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="p">(</span><span class="s">&quot;index\d00\.html&quot;</span><span class="p">,</span> <span class="p">),</span><span class="n">restrict_xpaths</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;//p[@class=&quot;nextpage&quot;]&#39;</span><span class="p">,))</span>
-</span><span class='line'>    <span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="s">&quot;parse_items&quot;</span><span class="p">,</span> <span class="n">follow</span><span class="o">=</span> <span class="bp">True</span><span class="p">),</span>
+</span><span class='line'>    <span class="n">rules</span> <span class="o">=</span> <span class="p">(</span>
+</span><span class='line'>        <span class="n">Rule</span><span class="p">(</span><span class="n">SgmlLinkExtractor</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="p">(),</span> <span class="n">restrict_xpaths</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;//a[@class=&quot;button next&quot;]&#39;</span><span class="p">,)),</span> <span class="n">callback</span><span class="o">=</span><span class="s">&quot;parse_items&quot;</span><span class="p">,</span> <span class="n">follow</span><span class="o">=</span> <span class="bp">True</span><span class="p">),</span>
 </span><span class='line'>    <span class="p">)</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="k">def</span> <span class="nf">parse_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
 </span><span class='line'>        <span class="n">hxs</span> <span class="o">=</span> <span class="n">HtmlXPathSelector</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">titles</span> <span class="o">=</span> <span class="n">hxs</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&#39;//span[@class=&quot;pl&quot;]&#39;</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">titles</span> <span class="o">=</span> <span class="n">hxs</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s">&#39;//span[@class=&quot;pl&quot;]&#39;</span><span class="p">)</span>
 </span><span class='line'>        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span class='line'>        <span class="k">for</span> <span class="n">titles</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">:</span>
 </span><span class='line'>            <span class="n">item</span> <span class="o">=</span> <span class="n">CraigslistSampleItem</span><span class="p">()</span>
-</span><span class='line'>            <span class="n">item</span> <span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/text()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
-</span><span class='line'>            <span class="n">item</span> <span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/@href&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">item</span><span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s">&quot;a/text()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">item</span><span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s">&quot;a/@href&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
 </span><span class='line'>            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 </span><span class='line'>        <span class="k">return</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure>
@@ -203,12 +206,12 @@
 <p>Now run the following command to release the spider and save the scraped data to a CSV file:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>scrapy crawl craigs -o items.csv -t csv
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>scrapy crawl craigs -o items.csv -t csv
 </span></code></pre></td></tr></table></div></figure>
 
 <h2>Conclusion</h2>
 
-<p><em>In essence, this spider started crawling at http://sfbay.craigslist.org/npo/ and then followed the &quot;next 100 postings&quot; link at the bottom, scraping the next page, until there where no more links to crawl. Again, this can be used to create some powerful crawlers, so use with caution and set delays to throttle the crawling speed if necessary.</em></p>
+<p><em>In essence, this spider started crawling at http://sfbay.craigslist.org/search/npo/ and then followed the &quot;next 100 postings&quot; link at the bottom, scraping the next page, until there where no more links to crawl. Again, this can be used to create some powerful crawlers, so use with caution and set delays to throttle the crawling speed if necessary.</em></p>
 
 <p>You can find the source code on <a href="https://github.com/mjhea0/Scrapy-Samples">Github</a>.</p>
 </div>

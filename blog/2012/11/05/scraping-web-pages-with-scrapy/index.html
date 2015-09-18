@@ -9,7 +9,7 @@
   <meta name="author" content="Michael Herman">
 
   
-  <meta name="description" content="This is a simple tutorial on how to write a crawler using Scrapy (BaseSpider) to scrape and parse Craigslist Nonprofit jobs in San Francisco and &hellip;">
+  <meta name="description" content="This is a simple tutorial on how to write a crawler using Scrapy to scrape and parse Craigslist Nonprofit jobs in San Francisco and store the data to &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -117,7 +117,12 @@
 
 
 <div class="side-content"></div>
-<div class="entry-content"><p><em>This is a simple tutorial on how to write a crawler using Scrapy (BaseSpider) to scrape and parse Craigslist Nonprofit jobs in San Francisco and store the data to a CSV file. If you don&#39;t have any experience with Scrapy, start by reading this <a href="http://doc.scrapy.org/en/latest/intro/tutorial.html">tutorial</a>. Also, I assume that you are familiar with Xpath; if not, please read the Xpath basic <a href="http://w3schools.com/xpath/">tutorial</a> on w3schools. Enjoy!</em></p>
+<div class="entry-content"><p><strong>This is a simple tutorial on how to write a crawler using <a href="http://scrapy.org/">Scrapy</a> to scrape and parse Craigslist Nonprofit jobs in San Francisco and store the data to a CSV file.</strong></p>
+
+<p>If you don&#39;t have any experience with Scrapy, start by reading this <a href="http://doc.scrapy.org/en/0.16/intro/tutorial.html">tutorial</a>. Also, I assume that you are familiar with Xpath; if not, please read the Xpath basic <a href="http://w3schools.com/xpath/">tutorial</a> on w3schools. Enjoy!</p>
+
+<p><strong>Updates:</strong><br>
+- 09/18/2015 – Updated the Scrapy scripts</p>
 
 <blockquote>
 <p>Be sure to check out the accompanying <a href="http://www.youtube.com/watch?v=1EFnX1UkXVU">video</a>!</p>
@@ -125,32 +130,28 @@
 
 <h2>Installation</h2>
 
-<p>Start by <a href="http://scrapy.org/">downloading</a> and installing Scrapy and all its dependencies. Refer to this <a href="http://www.youtube.com/watch?v=eEK2kmmvIdw">video</a>, if you need help.</p>
+<p>Start by <a href="http://scrapy.org/">downloading</a> and installing Scrapy (v0.16.5) and all its dependencies. Refer to this <a href="http://www.youtube.com/watch?v=eEK2kmmvIdw">video</a>, if you need help.</p>
 
-<h2>Create Project</h2>
+<h2>Create a Project</h2>
 
 <p>Once installed, open your terminal and create a Scrapy project by navigating to the directory you&#39;d like to store your project in and then running the following command:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">scrapy</span> <span class="n">startproject</span> <span class="n">craigslist_sample</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">scrapy</span> <span class="n">startproject</span> <span class="n">craigslist_sample</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p><strong>Item Class:</strong> Open the items.py within the ~craigslist_sample\craigslist_sample directory. Edit the items.py file to define the fields that you want contained with the Item. Since we want the post title and subsequent URL, the Item class looks like this:</p>
+<p><strong>Item Class:</strong> Open the <em>items.py</em> file within the &quot;craigslist_sample&quot; directory. Edit the file to define the fields that you want contained within the <code>Item</code>. Since we want the post title and subsequent URL, the <code>Item</code> class looks like this:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Define here the models for your scraped items</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">from</span> <span class="nn">scrapy.item</span> <span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Field</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">scrapy.item</span> <span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Field</span>
 </span><span class='line'>
 </span><span class='line'><span class="k">class</span> <span class="nc">CraigslistSampleItem</span><span class="p">(</span><span class="n">Item</span><span class="p">):</span>
-</span><span class='line'>  <span class="n">title</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
-</span><span class='line'>  <span class="n">link</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">title</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">link</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p><strong>The Spider:</strong> The spider defines the initial URL (http://sfbay.craigslist.org/npo/), how to follow links/pagination (if necessary), and how to extract and parse the fields defined above. The spider must define these attributes:</p>
@@ -179,14 +180,16 @@
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
+<span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">scrapy.spider</span> <span class="kn">import</span> <span class="n">BaseSpider</span>
 </span><span class='line'><span class="kn">from</span> <span class="nn">scrapy.selector</span> <span class="kn">import</span> <span class="n">HtmlXPathSelector</span>
 </span><span class='line'><span class="kn">from</span> <span class="nn">craigslist_sample.items</span> <span class="kn">import</span> <span class="n">CraigslistSampleItem</span>
 </span><span class='line'>
+</span><span class='line'>
 </span><span class='line'><span class="k">class</span> <span class="nc">MySpider</span><span class="p">(</span><span class="n">BaseSpider</span><span class="p">):</span>
 </span><span class='line'>    <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;craig&quot;</span>
 </span><span class='line'>    <span class="n">allowed_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;craigslist.org&quot;</span><span class="p">]</span>
-</span><span class='line'>    <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;http://sfbay.craigslist.org/npo/&quot;</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;http://sfbay.craigslist.org/search/npo&quot;</span><span class="p">]</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
 </span><span class='line'>        <span class="n">hxs</span> <span class="o">=</span> <span class="n">HtmlXPathSelector</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
@@ -197,24 +200,26 @@
 </span><span class='line'>            <span class="k">print</span> <span class="n">title</span><span class="p">,</span> <span class="n">link</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Save this in the ~\craigslist<em>sample\craigslist\</em>sample\spiders directory as test.py.</p>
+<p>Save this in the &quot;spiders&quot; directory as <em>test.py</em>.</p>
 
 <h2>Test</h2>
 
 <p>Now you are ready for a trial run of the scraper. So, while in the root directory of your Scrapy project, run the following command to output the scraped data to the screen:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>scrapy crawl craig
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>scrapy crawl craig
 </span></code></pre></td></tr></table></div></figure>
 
-<p><strong>Dicts:</strong> The Item objects defined above are simply custom dicts. Use the standard dict syntax to return the extracted data inside the Item objects:</p>
+<p><strong>Dicts:</strong> The <code>Item</code> objects defined above are simply custom dicts. Use the standard dict syntax to return the extracted data inside the Item objects:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
+<span class='line-number'>4</span>
 </pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">item</span> <span class="o">=</span> <span class="n">CraigslistSampleItem</span><span class="p">()</span>
-</span><span class='line'><span class="n">item</span> <span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/text()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
-</span><span class='line'><span class="n">item</span> <span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/@href&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'><span class="n">item</span><span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/text()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'><span class="n">item</span><span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/@href&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'><span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <h2>Release!</h2>
@@ -245,20 +250,20 @@
 </span><span class='line'><span class="kn">from</span> <span class="nn">craigslist_sample.items</span> <span class="kn">import</span> <span class="n">CraigslistSampleItem</span>
 </span><span class='line'>
 </span><span class='line'><span class="k">class</span> <span class="nc">MySpider</span><span class="p">(</span><span class="n">BaseSpider</span><span class="p">):</span>
-</span><span class='line'>  <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;craig&quot;</span>
-</span><span class='line'>  <span class="n">allowed_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;craigslist.org&quot;</span><span class="p">]</span>
-</span><span class='line'>  <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;http://sfbay.craigslist.org/npo/&quot;</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;craig&quot;</span>
+</span><span class='line'>    <span class="n">allowed_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;craigslist.org&quot;</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;http://sfbay.craigslist.org/search/npo&quot;</span><span class="p">]</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
-</span><span class='line'>      <span class="n">hxs</span> <span class="o">=</span> <span class="n">HtmlXPathSelector</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-</span><span class='line'>      <span class="n">titles</span> <span class="o">=</span> <span class="n">hxs</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;//span[@class=&#39;pl&#39;]&quot;</span><span class="p">)</span>
-</span><span class='line'>      <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span class='line'>      <span class="k">for</span> <span class="n">titles</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">:</span>
-</span><span class='line'>          <span class="n">item</span> <span class="o">=</span> <span class="n">CraigslistSampleItem</span><span class="p">()</span>
-</span><span class='line'>          <span class="n">item</span> <span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/text()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
-</span><span class='line'>          <span class="n">item</span> <span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/@href&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
-</span><span class='line'>          <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-</span><span class='line'>      <span class="k">return</span> <span class="n">items</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">hxs</span> <span class="o">=</span> <span class="n">HtmlXPathSelector</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">titles</span> <span class="o">=</span> <span class="n">hxs</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s">&quot;//span[@class=&#39;pl&#39;]&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">titles</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">item</span> <span class="o">=</span> <span class="n">CraigslistSampleItem</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">item</span><span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/text()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">item</span><span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/@href&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+</span><span class='line'>            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">items</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <h2>Store the data</h2>
@@ -266,14 +271,14 @@
 <p>The scraped data can now be <a href="http://doc.scrapy.org/en/0.16/topics/feed-exports.html#topics-feed-exports">stored</a> in these formats- JSON, CSV, and XML (among others). Run the following command to save the data in CSV:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>scrapy crawl craig -o items.csv -t csv
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>scrapy crawl craig -o items.csv -t csv
 </span></code></pre></td></tr></table></div></figure>
 
 <p>You should now have a CSV file in your directory called items.csv full of data:</p>
 
 <p><img src="http://www.backwardsteps.com/uploads/2012-11-05_1411.png" alt="csv"></p>
 
-<p><em>Although this is relatively simple tutorial, there are still powerful things you can do by just customizing this basic script. Just remember to not overload the server on the website you are crawling. Scrapy allows you to set <a href="https://scrapy.readthedocs.org/en/latest/topics/settings.html?highlight=delay#download-delay">delays</a> to throttle the crawling speed.</em></p>
+<p><em>Although this is relatively simple tutorial, there are still powerful things you can do by just customizing this basic script. Just remember to not overload the server on the website you are crawling. Scrapy allows you to set <a href="https://scrapy.readthedocs.org/en/0.16/topics/settings.html">delays</a> to throttle the crawling speed.</em></p>
 
 <h2>Next time</h2>
 
