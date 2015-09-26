@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-09-26T13:52:21-06:00</updated>
+  <updated>2015-09-26T13:59:34-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,547 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Social Authentication in Node.js with Passport]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/09/26/social-authentication-in-node-dot-js-with-passport/"/>
+    <updated>2015-09-26T13:37:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/09/26/social-authentication-in-node-dot-js-with-passport</id>
+    <content type="html"><![CDATA[<p><a href="https://github.com/jaredhanson/passport">Passport</a> is a library that provides a mechanism for easily setting up an authentication/registration system with support for <a href="https://github.com/jaredhanson/passport#strategies">several frameworks and auth providers</a>. <strong>In this tutorial, we’ll demonstrate in detail how to integrate this library into a Node.JS/Express 4 application to provide user authentication through LinkedIn, Github, and Twitter using OAuth 2.0.</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mjhea0.github.com/images/passport-social-auth.png" style="max-width: 100%; border:0;" alt="passport social auth">
+</div>
+
+<p>We will be using:</p>
+
+<ul>
+<li>NodeJS v<a href="https://nodejs.org/docs/v4.1.1/api/all.html">4.1.1</a></li>
+<li>ExpressJS v<a href="http://expressjs.com/4x/api.html">4.13.1</a></li>
+<li>Mongoose v<a href="http://mongoosejs.com/docs/guide.html">4.1.8</a></li>
+<li>Passport Strategies:
+
+<ul>
+<li>passport: v<a href="https://github.com/jaredhanson/passport">0.3.0</a></li>
+<li>passport-linkedin: v<a href="https://github.com/jaredhanson/passport-linkedin">1.0.0</a></li>
+<li>passport-github2: v<a href="https://github.com/cfsghost/passport-github">0.1.9</a></li>
+<li>passport-twitter: v<a href="https://github.com/jaredhanson/passport-twitter">1.0.3</a></li>
+</ul></li>
+</ul>
+
+<blockquote>
+<p>For all dependencies, please view the <em>package.json</em> file in the <a href="https://github.com/mjhea0/passport-social-auth">repo</a>.</p>
+</blockquote>
+
+<h2>OAuth 2.0?</h2>
+
+<p><a href="http://oauth.net/2/">OAuth 2.0</a> is the successor of the OAuth protocol (<a href="https://en.wikipedia.org/wiki/OAuth">open standard for authorization</a>), which enables third-party applications, such as the one we&#39;ll be building, access to an HTTP service without having to share secure credentials.</p>
+
+<h2>Project Setup</h2>
+
+<p>Let&#39;s get started!</p>
+
+<h3>Boilerplate</h3>
+
+<p>Start by downloading the project structure from the <a href="https://github.com/mjhea0/passport-social-auth/releases/tag/v1">Github repo</a>.</p>
+
+<p>You should have:</p>
+
+<p><code>sh<br>
+├── client<br>
+│   └── public<br>
+│       ├── css<br>
+│       │   └── main.css<br>
+│       └── js<br>
+│           └── main.js<br>
+├── package.json<br>
+└── server<br>
+    ├── app.js<br>
+    ├── bin<br>
+    │   └── www<br>
+    ├── routes<br>
+    │   └── index.js<br>
+    └── views<br>
+        ├── error.html<br>
+        ├── index.html<br>
+        └── layout.html<br>
+</code></p>
+
+<h2>Passport</h2>
+
+<p>Install Passport as well as the specific <a href="https://github.com/jaredhanson/passport#search-all-strategies">Passport Strategies</a>:</p>
+
+<p><code>sh<br>
+$ npm install passport@0.3.0 --save<br>
+$ npm install passport-github2@0.1.9 passport-linkedin@1.0.0 passport-twitter@1.0.3 --save<br>
+</code></p>
+
+<p>Create an &quot;auth&quot; directory in the &quot;server&quot; and add the following files:</p>
+
+<p><code>sh<br>
+└── auth<br>
+  ├── github.js<br>
+  ├── linkedin.js<br>
+  └── twitter.js<br>
+</code></p>
+
+<p>Add the Passport dependency to <em>app.js</em>:</p>
+
+<p><code>javascript<br>
+var passport = require(&#39;passport&#39;);<br>
+</code></p>
+
+<p>Install the <a href="https://github.com/expressjs/session">express session</a> middleware:</p>
+
+<p><code>sh<br>
+$ npm install express-session@1.11.3 --save<br>
+</code></p>
+
+<p>And add it as a dependency:</p>
+
+<p><code>javascript<br>
+var session = require(&#39;express-session&#39;);<br>
+</code></p>
+
+<p>Then add the required middleware:</p>
+
+<p><code>javascript<br>
+app.use(session({<br>
+  secret: &#39;keyboard cat&#39;,<br>
+  resave: true,<br>
+  saveUninitialized: true<br>
+}));<br>
+app.use(passport.initialize());<br>
+app.use(passport.session());<br>
+</code></p>
+
+<h3>Configuration</h3>
+
+<p>Add a <em>_config.js</em> file to the &quot;server&quot; and add the following:</p>
+
+<p>```javascript<br>
+var ids = {<br>
+  github: {<br>
+    clientID: &#39;get<em>your</em>own&#39;,<br>
+    clientSecret: &#39;get<em>your</em>own&#39;,<br>
+    callbackURL: &quot;http://127.0.0.1:3000/auth/github/callback&quot;<br>
+  },<br>
+  linkedin: {<br>
+    clientID: &#39;get<em>your</em>own&#39;,<br>
+    clientSecret: &#39;get<em>your</em>own&#39;,<br>
+    callbackURL: &quot;http://127.0.0.1:3000/auth/linkedin/callback&quot;<br>
+  },<br>
+  twitter: {<br>
+    consumerKey: &#39;get<em>your</em>own&#39;,<br>
+    consumerSecret: &#39;get<em>your</em>own&#39;,<br>
+    callbackURL: &quot;http://127.0.0.1:3000/auth/twitter/callback&quot;<br>
+  }<br>
+};</p>
+
+<p>module.exports = ids;<br>
+```</p>
+
+<p>Make sure to add this file to your <em>.gitignore</em> since this will contain sensitive info.</p>
+
+<h3>MongoDB and Mongoose</h3>
+
+<p>Install <a href="http://mongoosejs.com/">Mongoose</a>:</p>
+
+<p><code>sh<br>
+$ npm install mongoose@4.1.8 --save<br>
+</code></p>
+
+<p>Require the dependency in <em>app.js</em>:</p>
+
+<p><code>javascript<br>
+var mongoose = require(&#39;mongoose&#39;);<br>
+</code></p>
+
+<p>Then establish the connection to MongoDB within <em>app.js</em>:</p>
+
+<p><code>javascript<br>
+// *** mongoose *** //<br>
+mongoose.connect(&#39;mongodb://localhost/passport-social-auth&#39;);<br>
+</code></p>
+
+<p>Add a Mongoose Schema to a new file called <em>user.js</em> in a new folder, within &quot;server&quot;, called &quot;models&quot;:</p>
+
+<p>```javascript<br>
+var mongoose = require(&#39;mongoose&#39;);<br>
+var Schema = mongoose.Schema;</p>
+
+<p>// create User Schema<br>
+var User = new Schema({<br>
+  name: String,<br>
+  someID: String<br>
+});</p>
+
+<p>module.exports = mongoose.model(&#39;users&#39;, User);<br>
+```</p>
+
+<h3>Serialize and Deserialize</h3>
+
+<p>Passport needs to serialize and deserialize user instances from a session store to support login sessions. To add this funcionality, create an <em>init.js</em> file within the &quot;auth&quot; directory, and then add the following code:</p>
+
+<p>```javascript<br>
+var passport = require(&#39;passport&#39;);</p>
+
+<p>module.exports = function() {</p>
+
+<p>passport.serializeUser(function(user, done) {<br>
+    done(null, user.id);<br>
+  });</p>
+
+<p>passport.deserializeUser(function(id, done) {<br>
+    User.findById(id, function (err, user) {<br>
+      done(err, user);<br>
+    });<br>
+  });</p>
+
+<p>};<br>
+```</p>
+
+<h3>Routes and Views</h3>
+
+<p>Before we test, add the following route-</p>
+
+<p><code>javascript<br>
+router.get(&#39;/login&#39;, function(req, res, next) {<br>
+  res.send(&#39;Go back and register!&#39;);<br>
+});<br>
+</code></p>
+
+<p>-and update the <em>index.html</em> file:</p>
+
+<p><br>
+```html<br>
+{% extends &#39;layout.html&#39; %}</p>
+
+<p>{% block title %}{% endblock %}</p>
+
+<p>{% block content %}</p>
+
+<p><div class="container"></p>
+<div class="highlight"><pre><code class="text">&lt;h1&gt;{{ title }}&lt;/h1&gt;
+&lt;p&gt;Welcome! Please Login.&lt;/p&gt;
+&lt;hr&gt;&lt;br&gt;
+&lt;a href=&quot;http://mjhea0.github.com/auth/linkedin&quot; class=&quot;btn btn-default&quot;&gt;LinkedIn&lt;/a&gt;
+&lt;a href=&quot;http://mjhea0.github.com/auth/github&quot; class=&quot;btn btn-default&quot;&gt;Github&lt;/a&gt;
+&lt;a href=&quot;http://mjhea0.github.com/auth/twitter&quot; class=&quot;btn btn-default&quot;&gt;Twitter&lt;/a&gt;
+</code></pre>
+</div>
+
+<p></div></p>
+
+<p>{% endblock %}<br>
+```<br>
+</p>
+
+<h3>Sanity Check</h3>
+
+<p>Test this code to make sure all is well:</p>
+
+<p><code>sh<br>
+$ npm start<br>
+</code></p>
+
+<p>Once done, kill the server, and then commit your code and push to Github.</p>
+
+<blockquote>
+<p>Need the updated code? Grab it <a href="https://github.com/mjhea0/passport-social-auth/releases/tag/v2">here</a>.</p>
+</blockquote>
+
+<h2>LinkedIn Auth</h2>
+
+<blockquote>
+<p><a href="https://github.com/jaredhanson/passport-linkedin">https://github.com/jaredhanson/passport-linkedin</a></p>
+</blockquote>
+
+<p>For almost all of the strategies, you will need to-</p>
+
+<ol>
+<li>Create an app through the auth provider</li>
+<li>Update the config file with the required IDs and keys as well as a callback URL</li>
+<li>Configure the Passport strategy</li>
+<li>Add the required routes</li>
+<li>Update the view</li>
+</ol>
+
+<h3>Create an App</h3>
+
+<p>Navigate to <a href="https://www.linkedin.com/developer/apps/">LinkedIn Developers</a> to register a new application. Just enter dummy info, make sure to add the callback - <a href="http://127.0.0.1:3000/auth/linkedin/callback">http://127.0.0.1:3000/auth/linkedin/callback</a> - and update the config within the app:</p>
+
+<p><code>javascript<br>
+linkedin: {<br>
+ clientID: &#39;ADD YOUR ID HERE&#39;,<br>
+ clientSecret: &#39;ADD YOUR SECRET HERE&#39;,<br>
+ callbackURL: &quot;http://127.0.0.1:3000/auth/linkedin/callback&quot;<br>
+},<br>
+</code></p>
+
+<h3>Configure Strategy</h3>
+
+<blockquote>
+<p><a href="https://github.com/jaredhanson/passport-linkedin#usage">https://github.com/jaredhanson/passport-linkedin#usage</a></p>
+</blockquote>
+
+<p>Add the following code to <em>linkedin.js</em>:</p>
+
+<p>```javascript<br>
+var passport = require(&#39;passport&#39;);<br>
+var LinkedInStrategy = require(&#39;passport-linkedin&#39;);</p>
+
+<p>var User = require(&#39;../models/user&#39;);<br>
+var config = require(&#39;../_config&#39;);<br>
+var init = require(&#39;./init&#39;);</p>
+
+<p>passport.use(new LinkedInStrategy({<br>
+    consumerKey: config.linkedin.clientID,<br>
+    consumerSecret: config.linkedin.clientSecret,<br>
+    callbackURL: config.linkedin.callbackURL<br>
+  },<br>
+  // linkedin sends back the tokens and progile info<br>
+  function(token, tokenSecret, profile, done) {</p>
+<div class="highlight"><pre><code class="text">var searchQuery = {
+  name: profile.displayName
+};
+
+var updates = {
+  name: profile.displayName,
+  someID: profile.id
+};
+
+var options = {
+  upsert: true
+};
+
+// update the user if s/he exists or add a new user
+User.findOneAndUpdate(searchQuery, updates, options, function(err, user) {
+  if(err) {
+    return done(err);
+  } else {
+    return done(null, user);
+  }
+});
+</code></pre>
+</div>
+
+<p>}</p>
+
+<p>));</p>
+
+<p>// serialize user into the session<br>
+init();</p>
+
+<p>module.exports = passport;<br>
+```</p>
+
+<p>Aside for the Passport magic, you can see that we&#39;re either updating the user, if the user is found, or creating a new user, if a user is not found.</p>
+
+<h3>Add Routes</h3>
+
+<blockquote>
+<p><a href="https://github.com/jaredhanson/passport-linkedin#authenticate-requests">https://github.com/jaredhanson/passport-linkedin#authenticate-requests</a></p>
+</blockquote>
+
+<p>Update the routes with:</p>
+
+<p>```javascript<br>
+router.get(&#39;/auth/linkedin&#39;, passportLinkedIn.authenticate(&#39;linkedin&#39;));</p>
+
+<p>router.get(&#39;/auth/linkedin/callback&#39;,<br>
+  passportLinkedIn.authenticate(&#39;linkedin&#39;, { failureRedirect: &#39;/login&#39; }),<br>
+  function(req, res) {<br>
+    // Successful authentication<br>
+    res.json(req.user);<br>
+  });<br>
+```</p>
+
+<p>Add in the dependency as well:</p>
+
+<p><code>javascript<br>
+var passportLinkedIn = require(&#39;../auth/linkedin&#39;);<br>
+</code></p>
+
+<h3>Sanity Check</h3>
+
+<p>Test this out. <em>Be sure to use <a href="http://127.0.0.1:3000/">http://127.0.0.1:3000/</a> rather than <a href="http://localhost:3000/">http://localhost:3000/</a>.</em></p>
+
+<p>Now, let&#39;s just duplicate that workflow for the remaining providers...</p>
+
+<h2>Github Auth</h2>
+
+<blockquote>
+<p><a href="https://github.com/cfsghost/passport-github">https://github.com/cfsghost/passport-github</a></p>
+</blockquote>
+
+<h3>Create an App</h3>
+
+<p>Again, create an app, adding in the correct callback URL, and add the given client ID and Secret Key to the <em>_config.js</em> file.</p>
+
+<h3>Configure Strategy</h3>
+
+<blockquote>
+<p><a href="https://github.com/cfsghost/passport-github#configure-strategy">https://github.com/cfsghost/passport-github#configure-strategy</a></p>
+</blockquote>
+
+<p>```javascript<br>
+var passport = require(&#39;passport&#39;);<br>
+var GitHubStrategy = require(&#39;passport-github2&#39;).Strategy;</p>
+
+<p>var User = require(&#39;../models/user&#39;);<br>
+var config = require(&#39;../_config&#39;);<br>
+var init = require(&#39;./init&#39;);</p>
+
+<p>passport.use(new GitHubStrategy({<br>
+  clientID: config.github.clientID,<br>
+  clientSecret: config.github.clientSecret,<br>
+  callbackURL: config.github.callbackURL<br>
+  },<br>
+  function(accessToken, refreshToken, profile, done) {</p>
+<div class="highlight"><pre><code class="text">var searchQuery = {
+  name: profile.displayName
+};
+
+var updates = {
+  name: profile.displayName,
+  someID: profile.id
+};
+
+var options = {
+  upsert: true
+};
+
+// update the user if s/he exists or add a new user
+User.findOneAndUpdate(searchQuery, updates, options, function(err, user) {
+  if(err) {
+    return done(err);
+  } else {
+    return done(null, user);
+  }
+});
+</code></pre>
+</div>
+
+<p>}</p>
+
+<p>));</p>
+
+<p>// serialize user into the session<br>
+init();</p>
+
+<p>module.exports = passport;<br>
+```</p>
+
+<h3>Add Routes</h3>
+
+<blockquote>
+<p><a href="https://github.com/cfsghost/passport-github#authenticate-requests">https://github.com/cfsghost/passport-github#authenticate-requests</a></p>
+</blockquote>
+
+<p>```javascript<br>
+var passportGithub = require(&#39;../auth/github&#39;);</p>
+
+<p>router.get(&#39;/auth/github&#39;, passportGithub.authenticate(&#39;github&#39;, { scope: [ &#39;user:email&#39; ] }));</p>
+
+<p>router.get(&#39;/auth/github/callback&#39;,<br>
+  passportGithub.authenticate(&#39;github&#39;, { failureRedirect: &#39;/login&#39; }),<br>
+  function(req, res) {<br>
+    // Successful authentication<br>
+    res.json(req.user);<br>
+  });<br>
+```</p>
+
+<h2>Twitter Auth</h2>
+
+<blockquote>
+<p><a href="https://github.com/jaredhanson/passport-twitter">https://github.com/jaredhanson/passport-twitter</a></p>
+</blockquote>
+
+<h3>Create an App</h3>
+
+<p>Create an app on the <a href="https://apps.twitter.com/">Twitter Developer page</a>, and grab the Consumer Key and Secret.</p>
+
+<h3>Configure Strategy</h3>
+
+<blockquote>
+<p><a href="https://github.com/jaredhanson/passport-twitter#configure-strategy">https://github.com/jaredhanson/passport-twitter#configure-strategy</a></p>
+</blockquote>
+
+<p>```javascript<br>
+var passport = require(&#39;passport&#39;);<br>
+var TwitterStrategy = require(&#39;passport-twitter&#39;).Strategy;</p>
+
+<p>var User = require(&#39;../models/user&#39;);<br>
+var config = require(&#39;../_config&#39;);<br>
+var init = require(&#39;./init&#39;);</p>
+
+<p>passport.use(new TwitterStrategy({<br>
+    consumerKey: config.twitter.consumerKey,<br>
+    consumerSecret: config.twitter.consumerSecret,<br>
+    callbackURL: config.twitter.callbackURL<br>
+  },<br>
+  function(accessToken, refreshToken, profile, done) {</p>
+<div class="highlight"><pre><code class="text">var searchQuery = {
+  name: profile.displayName
+};
+
+var updates = {
+  name: profile.displayName,
+  someID: profile.id
+};
+
+var options = {
+  upsert: true
+};
+
+// update the user if s/he exists or add a new user
+User.findOneAndUpdate(searchQuery, updates, options, function(err, user) {
+  if(err) {
+    return done(err);
+  } else {
+    return done(null, user);
+  }
+});
+</code></pre>
+</div>
+
+<p>}</p>
+
+<p>));</p>
+
+<p>// serialize user into the session<br>
+init();</p>
+
+<p>module.exports = passport;<br>
+```</p>
+
+<h3>Add Routes</h3>
+
+<blockquote>
+<p><a href="https://github.com/jaredhanson/passport-twitter#authenticate-requests">https://github.com/jaredhanson/passport-twitter#authenticate-requests</a></p>
+</blockquote>
+
+<p>```javascript<br>
+var passportTwitter = require(&#39;../auth/twitter&#39;);</p>
+
+<p>router.get(&#39;/auth/twitter&#39;, passportTwitter.authenticate(&#39;twitter&#39;));</p>
+
+<p>router.get(&#39;/auth/twitter/callback&#39;,<br>
+  passportTwitter.authenticate(&#39;twitter&#39;, { failureRedirect: &#39;/login&#39; }),<br>
+  function(req, res) {<br>
+    // Successful authentication<br>
+    res.json(req.user);<br>
+  });<br>
+```</p>
+
+<h2>Conclusion</h2>
+
+<p>Try adding some additional <a href="https://github.com/jaredhanson/passport#strategies">strategies</a>, comment below if you have questions, and grab the final code from the <a href="https://github.com/mjhea0/passport-social-auth">repo</a>.</p>
+
+<p>Thanks for reading!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Testing Node.js with Mocha and Chai]]></title>
@@ -2059,557 +2600,6 @@ myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
 </blockquote>
 
 <p>Grab the final code from the <a href="https://github.com/mjhea0/mean-auth">repo</a>. Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[User Authentication with Passport and Express 4]]></title>
-    <link href="http://mjhea0.github.com/blog/2015/01/31/local-authentication-with-passport-and-express-4/"/>
-    <updated>2015-01-31T07:07:00-07:00</updated>
-    <id>http://mjhea0.github.com/blog/2015/01/31/local-authentication-with-passport-and-express-4</id>
-    <content type="html"><![CDATA[<p>This post demonstrate how to add user authentication to Node/Express with Passport.js.</p>
-
-<blockquote>
-<p>If you&#39;re interested in social authentication via Passport, please check out <a href="http://mherman.org/blog/2013/11/10/social-authentication-with-passport-dot-js/">this</a> blog post. Looking for an Express 3 authentication tutorial? Check out this <a href="http://mherman.org/blog/2013/11/11/user-authentication-with-passport-dot-js/">post</a>.</p>
-</blockquote>
-
-<p>Before you start, make sure you have <a href="http://nodejs.org/download/">Node</a> installed for your specific operating system. This tutorial also uses the following tools/technologies:</p>
-
-<ul>
-<li><a href="https://www.npmjs.com/package/express">Express</a> v4.11.1</li>
-<li><a href="https://www.npmjs.com/package/mongoose">Mongoose</a> v3.8.22</li>
-<li><a href="https://www.npmjs.com/package/passport">Passport</a> v0.2.1</li>
-<li><a href="https://www.npmjs.com/package/passport-local">Passport-local</a>: v1.0.0</li>
-<li><a href="https://www.npmjs.com/package/passport-local-mongoose">Passport-local-mongoose</a>: v1.0.0</li>
-</ul>
-
-<h2>Project Setup</h2>
-
-<p>Start by installing the Express generator, which we&#39;ll use to generate a basic project boilerplate:</p>
-
-<p><code>sh<br>
-$ npm install -g express-generator@4<br>
-</code></p>
-
-<blockquote>
-<p>The <code>-g</code> flag means that we&#39;re installing this globally, on our entire system.</p>
-</blockquote>
-
-<p>Navigate to a convenient directory, like your &quot;Desktop&quot; or &quot;Documents&quot;, then create your app:</p>
-
-<p><code>sh<br>
-$ express passport-local-express4<br>
-</code></p>
-
-<p>Check out the project structure:</p>
-
-<p><code><br>
-├── app.js<br>
-├── bin<br>
-│   └── www<br>
-├── package.json<br>
-├── public<br>
-│   ├── images<br>
-│   ├── javascripts<br>
-│   └── stylesheets<br>
-│       └── style.css<br>
-├── routes<br>
-│   ├── index.js<br>
-│   └── users.js<br>
-└── views<br>
-    ├── error.jade<br>
-    ├── index.jade<br>
-    └── layout.jade<br>
-</code></p>
-
-<p>This took care of the heavy lifting, adding common files and functions associated with all apps.</p>
-
-<h3>Install/Update Dependencies</h3>
-
-<p>Update the <em>package.json</em> file to reference the correct dependencies:</p>
-
-<p><code>json<br>
-{<br>
-  &quot;name&quot;: &quot;passport-local-express4&quot;,<br>
-  &quot;version&quot;: &quot;0.0.0&quot;,<br>
-  &quot;private&quot;: true,<br>
-  &quot;scripts&quot;: {<br>
-    &quot;start&quot;: &quot;node ./bin/www&quot;<br>
-  },<br>
-  &quot;repository&quot;: {<br>
-    &quot;type&quot;: &quot;git&quot;,<br>
-    &quot;url&quot;: &quot;git@github.com:mjhea0/passport-local-express4.git&quot;<br>
-  },<br>
-  &quot;author&quot;: &quot;Michael Herman &lt;michael@mherman.org&gt;&quot;,<br>
-  &quot;license&quot;: &quot;MIT&quot;,<br>
-  &quot;dependencies&quot;: {<br>
-    &quot;body-parser&quot;: &quot;^1.10.2&quot;,<br>
-    &quot;chai&quot;: &quot;~1.8.1&quot;,<br>
-    &quot;cookie-parser&quot;: &quot;^1.3.3&quot;,<br>
-    &quot;express&quot;: &quot;^4.11.1&quot;,<br>
-    &quot;express-session&quot;: &quot;^1.10.1&quot;,<br>
-    &quot;jade&quot;: &quot;^1.9.1&quot;,<br>
-    &quot;mocha&quot;: &quot;~1.14.0&quot;,<br>
-    &quot;mongoose&quot;: &quot;^3.8.22&quot;,<br>
-    &quot;morgan&quot;: &quot;^1.5.1&quot;,<br>
-    &quot;passport&quot;: &quot;^0.2.1&quot;,<br>
-    &quot;passport-local&quot;: &quot;^1.0.0&quot;,<br>
-    &quot;passport-local-mongoose&quot;: &quot;^1.0.0&quot;,<br>
-    &quot;should&quot;: &quot;~2.1.0&quot;,<br>
-    &quot;serve-favicon&quot;: &quot;^2.2.0&quot;,<br>
-    &quot;debug&quot;: &quot;^2.1.1&quot;<br>
-  }<br>
-}<br>
-</code></p>
-
-<p>Now install the dependencies:</p>
-
-<p><code>sh<br>
-$ cd express-local-express4<br>
-$ npm install<br>
-</code></p>
-
-<h3>Sanity Check</h3>
-
-<p>Let&#39;s test our setup by running the app:</p>
-
-<p><code>sh<br>
-$ node ./bin/www<br>
-</code></p>
-
-<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser and you should see the &quot;Welcome to Express&quot; text staring back.</p>
-
-<h3>Setup MongoDB</h3>
-
-<p>Install:</p>
-
-<p><code>sh<br>
-$ npm install -g mongodb<br>
-</code></p>
-
-<p>Then, in a new terminal window, start the MongoDB daemon:</p>
-
-<p><code>sh<br>
-$ sudo mongod<br>
-</code></p>
-
-<h2>Edit <em>app.js</em></h2>
-
-<h3>Update the Requirements</h3>
-
-<p>Add the following requirements:</p>
-
-<p><code>javascript<br>
-var mongoose = require(&#39;mongoose&#39;);<br>
-var passport = require(&#39;passport&#39;);<br>
-var LocalStrategy = require(&#39;passport-local&#39;).Strategy;<br>
-</code></p>
-
-<h3>Update <em>app.js</em></h3>
-
-<p>Update all of <em>app.js</em> with the following code (check the comments for a brief explanation):</p>
-
-<p>```javascript<br>
-// dependencies<br>
-var express = require(&#39;express&#39;);<br>
-var path = require(&#39;path&#39;);<br>
-var favicon = require(&#39;serve-favicon&#39;);<br>
-var logger = require(&#39;morgan&#39;);<br>
-var cookieParser = require(&#39;cookie-parser&#39;);<br>
-var bodyParser = require(&#39;body-parser&#39;);<br>
-var mongoose = require(&#39;mongoose&#39;);<br>
-var passport = require(&#39;passport&#39;);<br>
-var LocalStrategy = require(&#39;passport-local&#39;).Strategy;</p>
-
-<p>var routes = require(&#39;./routes/index&#39;);<br>
-var users = require(&#39;./routes/users&#39;);</p>
-
-<p>var app = express();</p>
-
-<p>// view engine setup<br>
-app.set(&#39;views&#39;, path.join(__dirname, &#39;views&#39;));<br>
-app.set(&#39;view engine&#39;, &#39;jade&#39;);</p>
-
-<p>// uncomment after placing your favicon in /public<br>
-//app.use(favicon(<strong>dirname + &#39;/public/favicon.ico&#39;));<br>
-app.use(logger(&#39;dev&#39;));<br>
-app.use(bodyParser.json());<br>
-app.use(bodyParser.urlencoded({ extended: false }));<br>
-app.use(cookieParser());<br>
-app.use(require(&#39;express-session&#39;)({<br>
-    secret: &#39;keyboard cat&#39;,<br>
-    resave: false,<br>
-    saveUninitialized: false<br>
-}));<br>
-app.use(passport.initialize());<br>
-app.use(passport.session());<br>
-app.use(express.static(path.join(</strong>dirname, &#39;public&#39;)));</p>
-
-<p>app.use(&#39;/&#39;, routes);</p>
-
-<p>// passport config<br>
-var Account = require(&#39;./models/account&#39;);<br>
-passport.use(new LocalStrategy(Account.authenticate()));<br>
-passport.serializeUser(Account.serializeUser());<br>
-passport.deserializeUser(Account.deserializeUser());</p>
-
-<p>// mongoose<br>
-mongoose.connect(&#39;mongodb://localhost/passport<em>local</em>mongoose_express4&#39;);</p>
-
-<p>// catch 404 and forward to error handler<br>
-app.use(function(req, res, next) {<br>
-    var err = new Error(&#39;Not Found&#39;);<br>
-    err.status = 404;<br>
-    next(err);<br>
-});</p>
-
-<p>// error handlers</p>
-
-<p>// development error handler<br>
-// will print stacktrace<br>
-if (app.get(&#39;env&#39;) === &#39;development&#39;) {<br>
-    app.use(function(err, req, res, next) {<br>
-        res.status(err.status || 500);<br>
-        res.render(&#39;error&#39;, {<br>
-            message: err.message,<br>
-            error: err<br>
-        });<br>
-    });<br>
-}</p>
-
-<p>// production error handler<br>
-// no stacktraces leaked to user<br>
-app.use(function(err, req, res, next) {<br>
-    res.status(err.status || 500);<br>
-    res.render(&#39;error&#39;, {<br>
-        message: err.message,<br>
-        error: {}<br>
-    });<br>
-});</p>
-
-<p>module.exports = app;<br>
-```</p>
-
-<h2>Mongoose</h2>
-
-<p>Let&#39;s get the Mongoose up and running. Add a new file called <em>account.js</em> to a new directory called &quot;models&quot; with the following code:</p>
-
-<p>```javascript<br>
-var mongoose = require(&#39;mongoose&#39;);<br>
-var Schema = mongoose.Schema;<br>
-var passportLocalMongoose = require(&#39;passport-local-mongoose&#39;);</p>
-
-<p>var Account = new Schema({<br>
-    username: String,<br>
-    password: String<br>
-});</p>
-
-<p>Account.plugin(passportLocalMongoose);</p>
-
-<p>module.exports = mongoose.model(&#39;Account&#39;, Account);<br>
-```</p>
-
-<p>You may be wondering about password security, specifically salting/hashing the password. Fortunately, the <a href="https://github.com/saintedlama/passport-local-mongoose">passport-local-mongoose</a> package automatically takes care of salting and hashing the password for us. More on this further down.</p>
-
-<h3>Sanity Check</h3>
-
-<p>Again, test the app:</p>
-
-<p><code>sh<br>
-$ node ./bin/www<br>
-</code></p>
-
-<p>Make sure you still see the same &quot;Welcome to Express&quot; text.</p>
-
-<h2>Add Routes</h2>
-
-<p>Within the &quot;routes&quot; folder, add the following code to the <em>index.js</em> file:</p>
-
-<p>```javascript<br>
-var express = require(&#39;express&#39;);<br>
-var passport = require(&#39;passport&#39;);<br>
-var Account = require(&#39;../models/account&#39;);<br>
-var router = express.Router();</p>
-
-<p>router.get(&#39;/&#39;, function (req, res) {<br>
-    res.render(&#39;index&#39;, { user : req.user });<br>
-});</p>
-
-<p>router.get(&#39;/register&#39;, function(req, res) {<br>
-    res.render(&#39;register&#39;, { });<br>
-});</p>
-
-<p>router.post(&#39;/register&#39;, function(req, res) {<br>
-    Account.register(new Account({ username : req.body.username }), req.body.password, function(err, account) {<br>
-        if (err) {<br>
-            return res.render(&#39;register&#39;, { account : account });<br>
-        }</p>
-<div class="highlight"><pre><code class="text">    passport.authenticate(&#39;local&#39;)(req, res, function () {
-        res.redirect(&#39;/&#39;);
-    });
-});
-</code></pre>
-</div>
-
-<p>});</p>
-
-<p>router.get(&#39;/login&#39;, function(req, res) {<br>
-    res.render(&#39;login&#39;, { user : req.user });<br>
-});</p>
-
-<p>router.post(&#39;/login&#39;, passport.authenticate(&#39;local&#39;), function(req, res) {<br>
-    res.redirect(&#39;/&#39;);<br>
-});</p>
-
-<p>router.get(&#39;/logout&#39;, function(req, res) {<br>
-    req.logout();<br>
-    res.redirect(&#39;/&#39;);<br>
-});</p>
-
-<p>router.get(&#39;/ping&#39;, function(req, res){<br>
-    res.status(200).send(&quot;pong!&quot;);<br>
-});</p>
-
-<p>module.exports = router;<br>
-```</p>
-
-<h2>Test</h2>
-
-<p>Fire up the server. Navigate to <a href="http://localhost:3000/ping">http://localhost:3000/ping</a>. Make sure you do not get any errors and that you see the word &quot;pong!&quot;.</p>
-
-<h2>Views</h2>
-
-<h3><em>layout.jade</em></h3>
-
-<p>Update:</p>
-
-<p>```<br>
-doctype html<br>
-html<br>
-  head<br>
-    title= title<br>
-    meta(name=&#39;viewport&#39;, content=&#39;width=device-width, initial-scale=1.0&#39;)<br>
-    link(href=&#39;http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css&#39;, rel=&#39;stylesheet&#39;, media=&#39;screen&#39;)<br>
-    link(rel=&#39;stylesheet&#39;, href=&#39;http://mjhea0.github.com/stylesheets/style.css&#39;)<br>
-  body<br>
-    block content</p>
-
-<p>script(src=&#39;http://code.jquery.com/jquery.js&#39;)<br>
-  script(src=&#39;http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js&#39;)<br>
-```</p>
-
-<h3>index.jade</h3>
-
-<p>Update:</p>
-
-<p>```jade<br>
-extends layout</p>
-
-<p>block content<br>
-  if (!user)<br>
-    a(href=&quot;/login&quot;) Login<br>
-    br<br>
-    a(href=&quot;/register&quot;) Register<br>
-  if (user)<br>
-    p You are currently logged in as #{user.username}<br>
-    a(href=&quot;/logout&quot;) Logout<br>
-```</p>
-
-<h3>login.jade</h3>
-
-<p>Add a new file called <em>login.jade</em> to the views:</p>
-
-<p>```jade<br>
-extends layout</p>
-
-<p>block content<br>
-  .container<br>
-    h1 Login Page<br>
-    p.lead Say something worthwhile here.<br>
-    br<br>
-    form(role=&#39;form&#39;, action=&quot;/login&quot;,method=&quot;post&quot;, style=&#39;max-width: 300px;&#39;)<br>
-      .form-group<br>
-          input.form-control(type=&#39;text&#39;, name=&quot;username&quot;, placeholder=&#39;Enter Username&#39;)<br>
-      .form-group<br>
-        input.form-control(type=&#39;password&#39;, name=&quot;password&quot;, placeholder=&#39;Password&#39;)<br>
-      button.btn.btn-default(type=&#39;submit&#39;) Submit<br>
-      &nbsp;<br>
-      a(href=&#39;/&#39;)<br>
-        button.btn.btn-primary(type=&quot;button&quot;) Cancel<br>
-```</p>
-
-<h3>register.jade</h3>
-
-<p>Add another file called <em>register.jade</em> to the views:</p>
-
-<p>```javascript<br>
-extends layout</p>
-
-<p>block content<br>
-  .container<br>
-    h1 Register Page<br>
-    p.lead Say something worthwhile here.<br>
-    br<br>
-    form(role=&#39;form&#39;, action=&quot;/register&quot;,method=&quot;post&quot;, style=&#39;max-width: 300px;&#39;)<br>
-      .form-group<br>
-          input.form-control(type=&#39;text&#39;, name=&quot;username&quot;, placeholder=&#39;Enter Username&#39;)<br>
-      .form-group<br>
-        input.form-control(type=&#39;password&#39;, name=&quot;password&quot;, placeholder=&#39;Password&#39;)<br>
-      button.btn.btn-default(type=&#39;submit&#39;) Submit<br>
-      &nbsp;<br>
-      a(href=&#39;/&#39;)<br>
-        button.btn.btn-primary(type=&quot;button&quot;) Cancel<br>
-```</p>
-
-<h2>Test redux</h2>
-
-<p>Fire up the server and test! Register, and then login.</p>
-
-<p>Remember how I said that we&#39;d look at salting and hashing a password again? Well, let&#39;s check our Mongo database to ensure that it&#39;s working.</p>
-
-<p>When I tested the user registration, I used &quot;michael&quot; for both my username and password.</p>
-
-<p>Let&#39;s see what this looks like in the database:</p>
-
-<p><code>sh<br>
-$ mongo<br>
-MongoDB shell version: 2.4.6<br>
-connecting to: test<br>
-&gt; use passport_local_mongoose_express4<br>
-switched to db passport_local_mongoose_express4<br>
-&gt; db.accounts.find()<br>
-{ &quot;salt&quot; : &quot;9ffd63f2bcce58bf79691cacfaae678f690dd73ef778445bf79f97c41934189b&quot;, &quot;hash&quot; : &quot;17eabe62d459acdb4f3d8eaab7369a1e989c6150e231d1e87a7cf1c31dfc7eafc0616732a6db8f08c413dcbec06c95d512cef55503a1fe9a7ed5dc15ecf5cf67c114af5a659c79bb47039082a3af933e1c32dd2519b8be11596a775e1d262fd53437927e0fd948b76e738f342904a598e6c533445351c9b3d629aa118adfbe0646a80539e816c06248e353b1787dbd8c646a2ed018bbf5e58fb6a6cc1f32c6ea61b3e52230cfdf75a9f4b7ba20b3d3ae3b86f5816f5df9c48f9d1bb4a9c42e30bf646c3810d050847c1905e5a95f53c81078090e42ba58799187a61b047376def48fb640a4f48eca4c7f35610eafc2c770e61172b11c7e98c36281983de56414fa95e0708c9a6458a903baaf3818a3e4675b39418b358f51f45aca792e606f692e0a7d3667d111d00d0f521257d3486cbcff250dc7d9859ab80f9d56a3d272fb0ebb2e7dd969c0749361153c6bde62ad50b3d47233424034b959c78225db000cc1416aa0d555016f1b666d2da709e69c5030ee39753597a1d06ec0a4e001e22bff37947c1b993794d21667dc6c65e4116dd5ca216a161aa9026063e0b12e1165ffa5c827a6803df6765766cc55bcca122cd4d9f572353a988f90200ffc4a610d9eca83df01d6f30af78f9ec476fc974bc1d3a5fd2759a56486795bd7d993462a8d2f9b9c42d3197cd7b9855f17eaac4073a4d843d56b5c9a75b86cc1bb8b27ec&quot;, &quot;username&quot; : &quot;michael&quot;, &quot;_id&quot; : ObjectId(&quot;54c7bbbfaf54064909921a36&quot;), &quot;__v&quot; : 0 }<br>
-&gt;<br>
-</code></p>
-
-<p>So, you can see that we have a document with five keys:</p>
-
-<ul>
-<li><code>username</code> is as we expected - &quot;michael&quot;</li>
-<li><code>_id</code> pertains to the unique id associated with that document.</li>
-<li><code>__v</code> is the <a href="http://mongoosejs.com/docs/guide.html#versionKey">version #</a> for that specific documents.</li>
-<li>Finally, instead of a password key we have both a salt and a hash key. For more on how these are generated, please refer to the <a href="https://github.com/saintedlama/passport-local-mongoose#hash-algorithm">passport-local-mongoose</a> documentation.</li>
-</ul>
-
-<h2>Unit/Integration tests</h2>
-
-<p>First, update the <code>scripts</code> object in <em>package.json</em>:</p>
-
-<p><code>json<br>
-&quot;scripts&quot;: {<br>
-  &quot;start&quot;: &quot;node ./bin/www&quot;,<br>
-  &quot;test&quot;: &quot;make test&quot;<br>
- },<br>
-</code></p>
-
-<p>Now add a Makefile to the root and include the following code:</p>
-
-<p>```<br>
-test:<br>
-    @./node_modules/.bin/mocha</p>
-
-<p>.PHONY: test<br>
-```</p>
-
-<blockquote>
-<p>Take note of the spacing on the second line. This <strong>must</strong> be a tab or you will see an error.</p>
-</blockquote>
-
-<p>Create a new folder called &quot;test&quot;, and then run <code>make test</code> from the command line. If all is well, you should see - <code>0 passing (1ms)</code>. Now we just need to add some tests...</p>
-
-<h3>Add tests</h3>
-
-<p>Add a new file called <em>test.user.js</em> to the &quot;test folder:</p>
-
-<p>```javascript<br>
-var should = require(&quot;should&quot;);<br>
-var mongoose = require(&#39;mongoose&#39;);<br>
-var Account = require(&quot;../models/account.js&quot;);<br>
-var db;</p>
-
-<p>describe(&#39;Account&#39;, function() {</p>
-<div class="highlight"><pre><code class="text">before(function(done) {
-    db = mongoose.connect(&#39;mongodb://localhost/test&#39;);
-        done();
-});
-
-after(function(done) {
-    mongoose.connection.close();
-    done();
-});
-
-beforeEach(function(done) {
-    var account = new Account({
-        username: &#39;12345&#39;,
-        password: &#39;testy&#39;
-    });
-
-    account.save(function(error) {
-        if (error) console.log(&#39;error&#39; + error.message);
-        else console.log(&#39;no error&#39;);
-        done();
-    });
-});
-
-it(&#39;find a user by username&#39;, function(done) {
-    Account.findOne({ username: &#39;12345&#39; }, function(err, account) {
-        account.username.should.eql(&#39;12345&#39;);
-        console.log(&quot;   username: &quot;, account.username);
-        done();
-    });
-});
-
-afterEach(function(done) {
-    Account.remove({}, function() {
-        done();
-    });
- });
-</code></pre>
-</div>
-
-<p>});<br>
-```</p>
-
-<p>Now run <code>make tests</code>. You should see that it passed - <code>1 passing (43ms)</code>.</p>
-
-<h2>Error handling</h2>
-
-<p>Right now we have some poorly handled errors that are confusing to the end user. For example, try to register a name that already exists, or login with a username that doesn&#39;t exist. This can and <em>should</em> be handled better.</p>
-
-<h3>Registration</h3>
-
-<p>First, update the <code>/register</code> route so an error is thrown, which gets sent to Jade template, if a user tries to register a username that already exists:</p>
-
-<p>```javascript<br>
-router.post(&#39;/register&#39;, function(req, res) {<br>
-    Account.register(new Account({ username : req.body.username }), req.body.password, function(err, account) {<br>
-        if (err) {<br>
-          return res.render(&quot;register&quot;, {info: &quot;Sorry. That username already exists. Try again.&quot;});<br>
-        }</p>
-<div class="highlight"><pre><code class="text">    passport.authenticate(&#39;local&#39;)(req, res, function () {
-        res.redirect(&#39;/&#39;);
-    });
-});
-</code></pre>
-</div>
-
-<p>});<br>
-```</p>
-
-<p>Then add the following code to the bottom of the &quot;register.jade&quot; template:</p>
-
-<p><code>jade<br>
-br<br>
-h4= info<br>
-</code></p>
-
-<p>Test this out.</p>
-
-<p>Next, if you try to login with a username and password combo that does not exist, the user is redirected to a page with just the word &quot;Unauthorized&quot; on it. This is confusing and unhelpful. See if you can fix this on your own. Cheers!</p>
-
-<h2>Conclusion</h2>
-
-<p>That&#39;s it. Grab the code from the <a href="https://github.com/mjhea0/passport-local-express4">repository</a>. Cheers!</p>
 ]]></content>
   </entry>
   
