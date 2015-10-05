@@ -4,7 +4,7 @@
   <title><![CDATA[Category: sublime | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/sublime/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-10-02T08:00:54-06:00</updated>
+  <updated>2015-10-05T08:35:58-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -21,6 +21,10 @@
     <content type="html"><![CDATA[<p><strong>Today we&#39;re going to build a CRUD todo single page application with Node, Express, Angular, and PostgreSQL.</strong></p>
 
 <p><img src="https://raw.githubusercontent.com/mjhea0/node-postgres-todo/master/_blog/node-todo-postges.jpg" alt="node todo app"></p>
+
+<p><em>Updated on October 5th, 2015</em> - Refactored connection handling to fix <a href="https://github.com/mjhea0/node-postgres-todo/issues/3">this issue</a>. For more, view the <a href="https://github.com/mjhea0/node-postgres-todo/pull/4">pull request</a>.</p>
+
+<p>https://github.com/mjhea0/node-postgres-todo/pull/4</p>
 
 <blockquote>
 <p>Technologies/Tools used - <a href="http://nodejs.org/">Node</a> v0.10.36, <a href="https://www.npmjs.com/package/express">Express</a> v4.11.1, <a href="https://angularjs.org/">Angular</a> v1.3.12.</p>
@@ -123,7 +127,7 @@ Indexes:<br>
 var express = require(&#39;express&#39;);<br>
 var router = express.Router();<br>
 var pg = require(&#39;pg&#39;);<br>
-var connectionString = process.env.DATABASE_URL || &#39;postgres://localhost:5432/todo&#39;;<br>
+var connectionString = require(path.join(__dirname, &#39;../&#39;, &#39;../&#39;, &#39;config&#39;));<br>
 </code></p>
 
 <p>Now, let’s add each endpoint.</p>
@@ -175,6 +179,12 @@ var data = {text: req.body.text, complete: false};
 
 // Get a Postgres client from the connection pool
 pg.connect(connectionString, function(err, client, done) {
+    // Handle connection errors
+    if(err) {
+      done();
+      console.log(err);
+      return res.status(500).json({ success: false, data: err});
+    }
 
     // SQL Query &gt; Insert Data
     client.query(&quot;INSERT INTO items(text, complete) values($1, $2)&quot;, [data.text, data.complete]);
@@ -189,14 +199,10 @@ pg.connect(connectionString, function(err, client, done) {
 
     // After all data is returned, close connection and return results
     query.on(&#39;end&#39;, function() {
-        client.end();
+        done();
         return res.json(results);
     });
 
-    // Handle Errors
-    if(err) {
-      console.log(err);
-    }
 
 });
 </code></pre>
@@ -229,6 +235,12 @@ router.get(&#39;/api/v1/todos&#39;, function(req, res) {</p>
 
 // Get a Postgres client from the connection pool
 pg.connect(connectionString, function(err, client, done) {
+    // Handle connection errors
+    if(err) {
+      done();
+      console.log(err);
+      return res.status(500).json({ success: false, data: err});
+    }
 
     // SQL Query &gt; Select Data
     var query = client.query(&quot;SELECT * FROM items ORDER BY id ASC;&quot;);
@@ -240,14 +252,9 @@ pg.connect(connectionString, function(err, client, done) {
 
     // After all data is returned, close connection and return results
     query.on(&#39;end&#39;, function() {
-        client.end();
+        done();
         return res.json(results);
     });
-
-    // Handle Errors
-    if(err) {
-      console.log(err);
-    }
 
 });
 </code></pre>
@@ -292,6 +299,12 @@ var data = {text: req.body.text, complete: req.body.complete};
 
 // Get a Postgres client from the connection pool
 pg.connect(connectionString, function(err, client, done) {
+    // Handle connection errors
+    if(err) {
+      done();
+      console.log(err);
+      return res.status(500).send(json({ success: false, data: err}));
+    }
 
     // SQL Query &gt; Update Data
     client.query(&quot;UPDATE items SET text=($1), complete=($2) WHERE id=($3)&quot;, [data.text, data.complete, id]);
@@ -306,15 +319,9 @@ pg.connect(connectionString, function(err, client, done) {
 
     // After all data is returned, close connection and return results
     query.on(&#39;end&#39;, function() {
-        client.end();
+        done();
         return res.json(results);
     });
-
-    // Handle Errors
-    if(err) {
-      console.log(err);
-    }
-
 });
 </code></pre>
 </div>
@@ -362,6 +369,12 @@ var id = req.params.todo_id;
 
 // Get a Postgres client from the connection pool
 pg.connect(connectionString, function(err, client, done) {
+    // Handle connection errors
+    if(err) {
+      done();
+      console.log(err);
+      return res.status(500).json({ success: false, data: err});
+    }
 
     // SQL Query &gt; Delete Data
     client.query(&quot;DELETE FROM items WHERE id=($1)&quot;, [id]);
@@ -376,15 +389,9 @@ pg.connect(connectionString, function(err, client, done) {
 
     // After all data is returned, close connection and return results
     query.on(&#39;end&#39;, function() {
-        client.end();
+        done();
         return res.json(results);
     });
-
-    // Handle Errors
-    if(err) {
-      console.log(err);
-    }
-
 });
 </code></pre>
 </div>

@@ -4,7 +4,7 @@
   <title><![CDATA[Michael Herman]]></title>
   <link href="http://mjhea0.github.com/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-10-02T08:00:54-06:00</updated>
+  <updated>2015-10-05T08:35:58-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -5751,6 +5751,10 @@
 
 <p><img src="https://raw.githubusercontent.com/mjhea0/node-postgres-todo/master/_blog/node-todo-postges.jpg" alt="node todo app"></p>
 
+<p><em>Updated on October 5th, 2015</em> - Refactored connection handling to fix <a href="https://github.com/mjhea0/node-postgres-todo/issues/3">this issue</a>. For more, view the <a href="https://github.com/mjhea0/node-postgres-todo/pull/4">pull request</a>.</p>
+
+<p>https://github.com/mjhea0/node-postgres-todo/pull/4</p>
+
 <blockquote>
 <p>Technologies/Tools used - <a href="http://nodejs.org/">Node</a> v0.10.36, <a href="https://www.npmjs.com/package/express">Express</a> v4.11.1, <a href="https://angularjs.org/">Angular</a> v1.3.12.</p>
 </blockquote>
@@ -5874,7 +5878,7 @@
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
 </span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
 </span><span class='line'><span class="kd">var</span> <span class="nx">pg</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;pg&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">connectionString</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DATABASE_URL</span> <span class="o">||</span> <span class="s1">&#39;postgres://localhost:5432/todo&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">connectionString</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;../&#39;</span><span class="p">,</span> <span class="s1">&#39;../&#39;</span><span class="p">,</span> <span class="s1">&#39;config&#39;</span><span class="p">));</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>Now, let’s add each endpoint.</p>
@@ -5951,6 +5955,8 @@
 <span class='line-number'>32</span>
 <span class='line-number'>33</span>
 <span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="p">[];</span>
@@ -5960,6 +5966,12 @@
 </span><span class='line'>
 </span><span class='line'>    <span class="c1">// Get a Postgres client from the connection pool</span>
 </span><span class='line'>    <span class="nx">pg</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">client</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// Handle connection errors</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span> <span class="nx">success</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">err</span><span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="c1">// SQL Query &gt; Insert Data</span>
 </span><span class='line'>        <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;INSERT INTO items(text, complete) values($1, $2)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">complete</span><span class="p">]);</span>
@@ -5974,14 +5986,10 @@
 </span><span class='line'>
 </span><span class='line'>        <span class="c1">// After all data is returned, close connection and return results</span>
 </span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">();</span>
 </span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
 </span><span class='line'>        <span class="p">});</span>
 </span><span class='line'>
-</span><span class='line'>        <span class="c1">// Handle Errors</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="p">});</span>
 </span><span class='line'><span class="p">});</span>
@@ -6038,12 +6046,19 @@
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
+<span class='line-number'>30</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/todos&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="p">[];</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="c1">// Get a Postgres client from the connection pool</span>
 </span><span class='line'>    <span class="nx">pg</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">client</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// Handle connection errors</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span> <span class="nx">success</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">err</span><span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="c1">// SQL Query &gt; Select Data</span>
 </span><span class='line'>        <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM items ORDER BY id ASC;&quot;</span><span class="p">);</span>
@@ -6055,14 +6070,9 @@
 </span><span class='line'>
 </span><span class='line'>        <span class="c1">// After all data is returned, close connection and return results</span>
 </span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">();</span>
 </span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
 </span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Handle Errors</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="p">});</span>
 </span><span class='line'>
@@ -6159,6 +6169,12 @@
 </span><span class='line'>
 </span><span class='line'>    <span class="c1">// Get a Postgres client from the connection pool</span>
 </span><span class='line'>    <span class="nx">pg</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">client</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// Handle connection errors</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="nx">json</span><span class="p">({</span> <span class="nx">success</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">err</span><span class="p">}));</span>
+</span><span class='line'>        <span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="c1">// SQL Query &gt; Update Data</span>
 </span><span class='line'>        <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;UPDATE items SET text=($1), complete=($2) WHERE id=($3)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="nx">data</span><span class="p">.</span><span class="nx">complete</span><span class="p">,</span> <span class="nx">id</span><span class="p">]);</span>
@@ -6173,15 +6189,9 @@
 </span><span class='line'>
 </span><span class='line'>        <span class="c1">// After all data is returned, close connection and return results</span>
 </span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">();</span>
 </span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
 </span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Handle Errors</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
 </span><span class='line'>    <span class="p">});</span>
 </span><span class='line'>
 </span><span class='line'><span class="p">});</span>
@@ -6279,6 +6289,12 @@
 </span><span class='line'>
 </span><span class='line'>    <span class="c1">// Get a Postgres client from the connection pool</span>
 </span><span class='line'>    <span class="nx">pg</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">client</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// Handle connection errors</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span> <span class="nx">success</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">err</span><span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="c1">// SQL Query &gt; Delete Data</span>
 </span><span class='line'>        <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;DELETE FROM items WHERE id=($1)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">id</span><span class="p">]);</span>
@@ -6293,15 +6309,9 @@
 </span><span class='line'>
 </span><span class='line'>        <span class="c1">// After all data is returned, close connection and return results</span>
 </span><span class='line'>        <span class="nx">query</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>            <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+</span><span class='line'>            <span class="nx">done</span><span class="p">();</span>
 </span><span class='line'>            <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
 </span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1">// Handle Errors</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>
 </span><span class='line'>    <span class="p">});</span>
 </span><span class='line'>
 </span><span class='line'><span class="p">});</span>
