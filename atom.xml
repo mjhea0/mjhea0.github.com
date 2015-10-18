@@ -4,7 +4,7 @@
   <title><![CDATA[Michael Herman]]></title>
   <link href="http://mjhea0.github.com/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-10-05T08:35:58-06:00</updated>
+  <updated>2015-10-18T12:35:46-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -5379,7 +5379,9 @@
 
 <p><br></p>
 
-<p><em>Updated on May 13th, 2015</em> - Upgraded to the latest versions of Docker (1.6.1), boot2docker (1.6.1), and Docker Compose (1.2.0)</p>
+<p><strong>Updates</strong>:<br>
+  - <em>October 18th, 2015</em> - Upgraded to the latest versions of Docker (1.8.3), Docker Compose (1.4.2), and NodeJS (4.1.1). Added Docker Machine (0.4.1).<br>
+  - <em>May 13th, 2015</em> - Upgraded to the latest versions of Docker (1.6.1), boot2docker (1.6.1), and Docker Compose (1.2.0)</p>
 
 <blockquote>
 <p>This tutorial is ported from <a href="https://realpython.com/blog/python/docker-in-action-fitter-happier-more-productive/">Docker in Action - Fitter, Happier, More Productive</a>.</p>
@@ -5388,12 +5390,12 @@
 <p>We&#39;ll be using the following tools, technologies, and services in this post:</p>
 
 <ol>
-<li><a href="http://nodejs.org/">NodeJS</a> v0.12.0</li>
-<li><a href="http://expressjs.com/">Express</a> v3.4.8</li>
-<li><a href="http://redis.io/">Redis</a> v2.8.19</li>
-<li><a href="https://www.docker.com/">Docker</a> v1.6.1</li>
-<li><a href="http://boot2docker.io/">boot2docker</a> v1.6.1</li>
-<li><a href="https://docs.docker.com/compose/">Docker Compose</a> v1.2.0</li>
+<li><a href="http://nodejs.org/">NodeJS</a> v4.1.1</li>
+<li><a href="http://expressjs.com/">Express</a> v4.13.3</li>
+<li><a href="http://redis.io/">Redis</a> v2.2.5</li>
+<li><a href="https://www.docker.com/">Docker</a> v1.8.3</li>
+<li><a href="https://docs.docker.com/compose/">Docker Compose</a> v1.4.2</li>
+<li><a href="https://docs.docker.com/machine/">Docker Machine</a> v0.4.1</li>
 <li><a href="https://hub.docker.com/">Docker Hub</a></li>
 <li><a href="https://circleci.com/">CircleCI</a></li>
 <li><a href="https://www.digitalocean.com/">Digital Ocean</a></li>
@@ -5434,21 +5436,135 @@
 
 <h3>Get Docker</h3>
 
-<p>Follow the download instructions from the guide <a href="https://docs.docker.com/installation/mac/">Installing Docker on Mac OS X</a> to install both Docker and the official boot2docker package. <a href="http://boot2docker.io/">boot2docker</a> is a <em>lightweight</em> Linux distribution designed specifically to run Docker for Windows and Mac OS X users. In essence, it starts a small VM that’s configured to run Docker containers.</p>
+<p>Follow the download instructions from the guide <a href="https://docs.docker.com/installation/mac/">Installing Docker on Mac OS X</a> to install the Docker client along with-<br>
+  - <a href="https://docs.docker.com/machine/">Docker Machine</a> for creating Docker hosts both locally and in the cloud<br>
+  - <a href="https://docs.docker.com/compose/">Docker Compose</a> for orchestrating a multi-container application into a single app</p>
 
-<p>Once installed, run the following commands in your project directory to start boot2docker:</p>
+<p>Once installed, let&#39;s run a quick sanity check to ensure Docker is installed correctly. Start by creating a Docker VM by running &quot;Docker Quickstart Terminal&quot; application. If all went well, you should see something similar to in your terminal:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>boot2docker init
-</span><span class='line'><span class="nv">$ </span>boot2docker up
-</span><span class='line'><span class="nv">$ </span><span class="k">$(</span>boot2docker shellinit<span class="k">)</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>bash --login <span class="s1">&#39;/Applications/Docker/Docker Quickstart Terminal.app/Contents/Resources/Scripts/start.sh&#39;</span>
+</span><span class='line'>➜  ~  bash --login <span class="s1">&#39;/Applications/Docker/Docker Quickstart Terminal.app/Contents/Resources/Scripts/start.sh&#39;</span>
+</span><span class='line'>Creating Machine default...
+</span><span class='line'>Creating CA: /Users/michaelherman/.docker/machine/certs/ca.pem
+</span><span class='line'>Creating client certificate: /Users/michaelherman/.docker/machine/certs/cert.pem
+</span><span class='line'>Creating VirtualBox VM...
+</span><span class='line'>Creating SSH key...
+</span><span class='line'>Starting VirtualBox VM...
+</span><span class='line'>Starting VM...
+</span><span class='line'>To see how to connect Docker to this machine, run: docker-machine env default
+</span><span class='line'>Starting machine default...
+</span><span class='line'>Started machines may have new IP addresses. You may need to re-run the <span class="sb">`</span>docker-machine env<span class="sb">`</span> command.
+</span><span class='line'>Setting environment variables <span class="k">for </span>machine default...
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>                        <span class="c">##         .</span>
+</span><span class='line'>                  <span class="c">## ## ##        ==</span>
+</span><span class='line'>               <span class="c">## ## ## ## ##    ===</span>
+</span><span class='line'>           /<span class="s2">&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;</span><span class="err">&quot;</span><span class="se">\_</span>__/ <span class="o">===</span>
+</span><span class='line'>      ~~~ <span class="o">{</span>~~ ~~~~ ~~~ ~~~~ ~~~ ~ /  <span class="o">===</span>- ~~~
+</span><span class='line'>           <span class="se">\_</span>_____ o           __/
+</span><span class='line'>             <span class="se">\ </span>   <span class="se">\ </span>        __/
+</span><span class='line'>              <span class="se">\_</span>___<span class="se">\_</span>______/
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>docker is configured to use the default machine with IP 192.168.99.100
+</span><span class='line'>For <span class="nb">help </span>getting started, check out the docs at https://docs.docker.com
 </span></code></pre></td></tr></table></div></figure>
+
+<p>Now let&#39;s create a new container:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker run hello-world
+</span></code></pre></td></tr></table></div></figure>
+
+<p>You should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>Unable to find image <span class="s1">&#39;hello-world:latest&#39;</span> locally
+</span><span class='line'>latest: Pulling from library/hello-world
+</span><span class='line'>b901d36b6f2f: Pull <span class="nb">complete</span>
+</span><span class='line'>0a6ba66e537a: Pull <span class="nb">complete</span>
+</span><span class='line'>Digest: sha256:517f03be3f8169d84711c9ffb2b3235a4d27c1eb4ad147f6248c8040adb93113
+</span><span class='line'>Status: Downloaded newer image <span class="k">for </span>hello-world:latest
+</span><span class='line'>
+</span><span class='line'>Hello from Docker.
+</span><span class='line'>This message shows that your installation appears to be working correctly.
+</span><span class='line'>
+</span><span class='line'>To generate this message, Docker took the following steps:
+</span><span class='line'> 1. The Docker client contacted the Docker daemon.
+</span><span class='line'> 2. The Docker daemon pulled the <span class="s2">&quot;hello-world&quot;</span> image from the Docker Hub.
+</span><span class='line'> 3. The Docker daemon created a new container from that image which runs the
+</span><span class='line'>    executable that produces the output you are currently reading.
+</span><span class='line'> 4. The Docker daemon streamed that output to the Docker client, which sent it
+</span><span class='line'>    to your terminal.
+</span><span class='line'>
+</span><span class='line'>To try something more ambitious, you can run an Ubuntu container with:
+</span><span class='line'> <span class="nv">$ </span>docker run -it ubuntu bash
+</span><span class='line'>
+</span><span class='line'>Share images, automate workflows, and more with a free Docker Hub account:
+</span><span class='line'> https://hub.docker.com
+</span><span class='line'>
+</span><span class='line'>For more examples and ideas, visit:
+</span><span class='line'> https://docs.docker.com/userguide/
+</span></code></pre></td></tr></table></div></figure>
+
+<p>With that, let&#39;s create our Node Project&#8230;</p>
 
 <h3>Get the Project</h3>
 
-<p>Grab the base code from the <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/base">repo</a>, and add it to your project directory:</p>
+<p>Grab the base code from the <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/v2">repo</a>, and add it to your project directory:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -5464,14 +5580,46 @@
 </span><span class='line'>        └── test.js
 </span></code></pre></td></tr></table></div></figure>
 
-<h3>Compose Up!</h3>
+<h3>Docker Machine</h3>
 
-<p><a href="https://github.com/docker/compose">Docker Compose</a> (Previously known as fig) is an orchestration framework that handles the building and running of multiple services, making it easy to link multiple services together running in different containers. Follow the installation instructions <a href="http://docs.docker.com/compose/install/#install-compose">here</a>, and then test it out to make sure all is well:</p>
+<p>Within your project directory, start Docker Machine:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-machine create -d virtualbox dev;
+</span></code></pre></td></tr></table></div></figure>
+
+<p>This command, <code>created</code>, setup a new &quot;Machine&quot; (called <code>dev</code>) for local Docker development. Now we just need to point Docker at this specific Machine:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nb">eval</span> <span class="s2">&quot;$(docker-machine env dev)&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>You now should have two Machines running:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose --version
-</span><span class='line'>docker-compose 1.2.0
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-machine  ls
+</span><span class='line'>NAME      ACTIVE   DRIVER       STATE     URL                         SWARM
+</span><span class='line'>default            virtualbox   Running   tcp://192.168.99.100:2376
+</span><span class='line'>dev       *        virtualbox   Running   tcp://192.168.99.102:2376
+</span></code></pre></td></tr></table></div></figure>
+
+<blockquote>
+<p>Make sure the <code>dev</code> is the active Machine.</p>
+</blockquote>
+
+<h3>Compose Up!</h3>
+
+<p><a href="https://github.com/docker/compose">Docker Compose</a> (Previously known as fig) is an orchestration framework that handles the building and running of multiple services, making it easy to link multiple services together running in different containers.</p>
+
+<p>Make sure Compose is set up correctly:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose -v
+</span><span class='line'>docker-compose version: 1.4.2
 </span></code></pre></td></tr></table></div></figure>
 
 <p>Now we just need to define the services - web (NodeJS) and persistence (Redis) in a configuration file called  <em>docker-compose.yml</em>:</p>
@@ -5491,7 +5639,7 @@
 </pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">web</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">build</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">./app</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">volumes</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="s">&quot;app:/src/app&quot;</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="s">&quot;./app:/src/app&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">ports</span><span class="p-Indicator">:</span>
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="s">&quot;80:3000&quot;</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">links</span><span class="p-Indicator">:</span>
@@ -5505,13 +5653,15 @@
 <p>Here we add the services that make up our basic stack:</p>
 
 <ol>
-<li><strong>web</strong>: First, we build the image based on the instructions in the <em>app/Dockerfile</em> - where we setup our Node environment, create a volume, install the required dependencies, and fire up the app running on port 3000. Then we forward that port in the container to port 80 on the host environment - e.g., the boot2docker VM.</li>
+<li><strong>web</strong>: First, we build the image based on the instructions in the <em>app/Dockerfile</em> - where we setup our Node environment, create a volume, install the required dependencies, and fire up the app running on port 3000. Then we forward that port in the container to port 80 on the host environment - e.g., the Docker VM.</li>
 <li><strong>redis</strong>: Next, the Redis service is built from the <a href="https://registry.hub.docker.com/_/redis/">image</a> on Docker Hub. Port 6379 is exposed and forwarded.</li>
 </ol>
 
 <h3>Profit</h3>
 
-<p>Run <code>docker-compose up</code> to build new images for the NodeJS/Express app and Redis services and then run both processes in new containers. Open your browser and navigate to the IP address associated the boot2docker VM (<code>boot2docker ip</code>). You should see the text, &quot;You have viewed this page 1 times!&quot; in your browser. Refresh. The page counter should increment.</p>
+<p>Run <code>docker-compose up</code> to build new images for the NodeJS/Express app and Redis services and then run both processes in new containers. Grab a cup of coffee. Or go for a long walk. This will take a while the first time you run it. Subsequent builds run much quicker since Docker <a href="https://docs.docker.com/articles/dockerfile_best-practices/#build-cache">caches</a> the results from the first build.</p>
+
+<p>Open your browser and navigate to the IP address associated with the Docker VM (<code>docker-machine ip dev</code>). You should see the text, &quot;You have viewed this page 1 times!&quot; in your browser. Refresh. The page counter should increment.</p>
 
 <p>Once done, kill the processes (Ctrl-C). Commit your changes locally, and then push to Github.</p>
 
@@ -5521,7 +5671,7 @@
 
 <p>We set up our local environment, detailing the basic process of building an <em>image</em> from a <em>Dockerfile</em> and then creating an instance of the image called a <em>container</em>. We then tied everything together with Docker Compose to build and connect different containers for both the NodeJS/Express app and Redis process.</p>
 
-<p>Need the updated code? Grab it from the <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/compose">repo</a>.</p>
+<p>Need the updated code? Grab it from the <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/v2b">repo</a>.</p>
 
 <p>Next, let’s talk about Continuous Integration&#8230;</p>
 
@@ -5573,11 +5723,11 @@
 </span><span class='line'>
 </span><span class='line'><span class="l-Scalar-Plain">dependencies</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">override</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">curl -L https://github.com/docker/compose/releases/download/1.1.0/docker-compose-`uname -s`-`uname -m` &gt; /usr/local/bin/docker-compose chmod +x /usr/local/bin/docker-compose</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">sudo pip install --upgrade docker-compose==1.3.3</span>
 </span><span class='line'>
 </span><span class='line'><span class="l-Scalar-Plain">test</span><span class="p-Indicator">:</span>
 </span><span class='line'>  <span class="l-Scalar-Plain">override</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">sudo pip install --upgrade docker-compose</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">docker-compose run -d --no-deps web</span>
 </span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">cd app; mocha</span>
 </span></code></pre></td></tr></table></div></figure>
 
@@ -5591,16 +5741,16 @@
 
 <h3>Docker Hub (redux)</h3>
 
-<p>Right now, each push to Github will create a new build. That&#39;s not what we want. Instead, we want CircleCI to run tests against the master branch then <em>after</em> they pass(and only after they pass), a new build should trigger on Docker Hub.</p>
+<p>Right now, each push to Github will create a new build. That&#39;s not what we want. Instead, we want CircleCI to run tests against the master branch then <em>after</em> they pass (and only after they pass), a new build should trigger on Docker Hub.</p>
 
 <p>Open your repository on Docker Hub, and make the following updates:</p>
 
 <ol>
-<li>Under <em>Settings</em> click <em>Automated Build</em>.</li>
-<li>Uncheck the Active box: “When active we will build when new pushes occur”. Save the changes.</li>
-<li>Then once again under <em>Settings</em> click <em>Build Triggers</em>.</li>
-<li>Change the status to on.</li>
-<li>Copy the example curl command – i.e., <code>$ curl --data &quot;build=true&quot; -X POST https://registry.hub.docker.com/u/mjhea0/node-docker-workflow/trigger/84957124-2b85-410d-b602-b48193853b66/</code>.</li>
+<li>Click <em>Build Settings</em>.</li>
+<li>Uncheck the <em>Activate Auto-build</em> box: &quot;When activated, your image will build automatically when your source code repo is pushed.&quot;. Save the changes.</li>
+<li>Then once again under <em>Build Settings</em> scroll down to <em>Build Triggers</em>.</li>
+<li>Active the <em>Trigger Status</em>.</li>
+<li>Copy the curl command that &quot;Trigger all tags/branches for this automated build&quot; – i.e., <code>curl -H &quot;Content-Type: application/json&quot; --data &#39;{&quot;build&quot;: true}&#39; -X POST https://registry.hub.docker.com/u/mjhea0/node-docker-workflow/trigger/e80163ce-9f98-40ba-8498-c84538917fbc/</code>.</li>
 </ol>
 
 <h3>CircleCI (redux)</h3>
@@ -5626,7 +5776,7 @@
 </span><span class='line'>      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">$DEPLOY</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>This simple fires the <code>$DEPLOY</code> variable after our tests pass on the master branch.</p>
+<p>This simply fires the <code>$DEPLOY</code> variable after our tests pass on the master branch.</p>
 
 <p>Now, let&#39;s test!</p>
 
@@ -5637,20 +5787,21 @@
 <ol>
 <li>Create a new branch</li>
 <li>Make changes locally</li>
+<li>Push changes to Github</li>
 <li>Issue a pull request</li>
-<li>Manually merge once the tests pass</li>
+<li>Manually merge into Master once the tests pass</li>
 <li>Once the second round passes, a new build is triggered on Docker Hub</li>
 </ol>
 
-<p>What&#39;s left? Deployment! Grab the updated <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/circle">code</a>, if necessary.</p>
+<p>What&#39;s left? Deployment! Grab the updated <a href="https://github.com/mjhea0/node-docker-workflow/releases/tag/v2c">code</a>, if necessary.</p>
 
 <h2>Deployment</h2>
 
 <p>Let&#39;s get our app running on <a href="https://www.digitalocean.com/">Digital Ocean</a>.</p>
 
-<p>After you&#39;ve signed up, create a new Droplet, choose “Applications” and then select the Docker Application.</p>
+<p>After you&#39;ve signed up and <a href="https://www.digitalocean.com/community/tutorials/how-to-use-ssh-keys-with-digitalocean-droplets">set up an SSH key</a>, create a new $5 Droplet, choose &quot;Applications&quot; and then select the Docker Application.</p>
 
-<p>Once setup, SSH into the server as the ‘root’ user:</p>
+<p>Once setup, SSH into the server as the &#39;root&#39; user:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ssh root@&lt;some_ip_address&gt;
@@ -5663,7 +5814,7 @@
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git clone https://github.com/mjhea0/node-docker-workflow.git
-</span><span class='line'><span class="nv">$ </span>curl -L https://github.com/docker/compose/releases/download/1.1.0/docker-compose-<span class="sb">`</span>uname -s<span class="sb">`</span>-<span class="sb">`</span>uname -m<span class="sb">`</span> &gt; /usr/local/bin/docker-compose
+</span><span class='line'><span class="nv">$ </span>curl -L https://github.com/docker/compose/releases/download/1.4.2/docker-compose-<span class="sb">`</span>uname -s<span class="sb">`</span>-<span class="sb">`</span>uname -m<span class="sb">`</span> &gt; /usr/local/bin/docker-compose
 </span><span class='line'><span class="nv">$ </span>chmod +x /usr/local/bin/docker-compose
 </span><span class='line'><span class="nv">$ </span>docker-compose up -d
 </span></code></pre></td></tr></table></div></figure>
