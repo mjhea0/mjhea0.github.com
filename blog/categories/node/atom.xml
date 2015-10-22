@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-10-19T13:05:20-06:00</updated>
+  <updated>2015-10-22T08:15:06-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,282 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Node, Postgres, and Sequelize]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/10/22/node-postgres-sequelize/"/>
+    <updated>2015-10-22T10:52:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/10/22/node-postgres-sequelize</id>
+    <content type="html"><![CDATA[<p><strong>Let&#39;s build a CRUD app with Node (v4.1.1), Express (v4.13.1), Sequelize (v3.12.2), and PostgreSQL (9.4.4).</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mjhea0.github.com/images/node-sequelize.png" style="max-width: 100%; border:0;" alt="node sequelize">
+</div>
+
+<blockquote>
+<p>This a follow-up to <a href="http://mherman.org/blog/2015/02/12/postgresql-and-nodejs/#.ViVUDxNViko">PostgreSQL and NodeJS</a>.</p>
+</blockquote>
+
+<h2>Getting Started</h2>
+
+<p>Grab the initial boilerplate and install the dependencies:</p>
+
+<p><code>sh<br>
+$ git clone git@github.com:mjhea0/node-postgres-sequelize.git<br>
+$ git checkout tags/v1<br>
+$ npm install<br>
+</code></p>
+
+<p>Now run a quick sanity check:</p>
+
+<p><code>sh<br>
+$ gulp<br>
+</code></p>
+
+<p>If all went well, a new browser window should have opened to <a href="http://localhost:5000/">http://localhost:5000/</a> and you should see the &quot;Welcome to Express.&quot; text.</p>
+
+<h2>Sequelize</h2>
+
+<p>With Postgres listening on port 5432, we can make a connection to it using the <a href="http://docs.sequelizejs.com/en/latest/">Sequelize</a> library, <em>an Object Relational Mapper (ORM), written in JavaScript, which supports MySQL, PostgreSQL, SQLite, and MariaDB</em>.</p>
+
+<blockquote>
+<p>Need to set up Postgres? On a Mac? Check out <a href="http://postgresapp.com/">Postgres.app</a>.</p>
+</blockquote>
+
+<p>Install Sequelize, <a href="https://www.npmjs.com/package/pg">pg</a> (for making the database connection), and <a href="https://www.npmjs.com/package/pg-hstore">pg-hstore</a> (for serializing and deserializing JSON into the <a href="http://www.postgresql.org/docs/9.0/static/hstore.html">Postgres hstore key/value pair format</a>):</p>
+
+<p><code>sh<br>
+$ npm install sequelize@3.12.2 pg@4.4.3 pg-hstore@2.3.2 --save<br>
+</code></p>
+
+<h3>Init</h3>
+
+<p>Now, create a &quot;models&quot; directory within &quot;server&quot; along with an <em>index.js</em> file. Here, we need to establish a connection to the Postgres database, grab all the future models (files) from the current directory, add them to the <code>db</code> object, and apply any relations between each model (if any). So, add the following to <em>index.js</em>:</p>
+
+<p>```javascript<br>
+var fs = require(&quot;fs&quot;);<br>
+var path = require(&quot;path&quot;);<br>
+var Sequelize = require(&quot;sequelize&quot;);<br>
+var db = {};<br>
+var config = require(&#39;../_config.js&#39;);</p>
+
+<p>// create db connection<br>
+var sequelize = new Sequelize(config.DB<em>NAME, config.DB</em>USERNAME, config.DB_PASSWORD, {<br>
+  dialect: &#39;postgres&#39;,<br>
+  port: &#39;5432&#39;,<br>
+  host: &#39;localhost&#39;<br>
+});</p>
+
+<p>// read in all models<br>
+fs<br>
+  .readdirSync(<strong>dirname)<br>
+  .filter(function(file) {<br>
+    return (file.indexOf(&quot;.&quot;) !== 0) &amp;&amp; (file !== &quot;index.js&quot;);<br>
+  })<br>
+  .forEach(function(file) {<br>
+    var model = sequelize.import(path.join(</strong>dirname, file));<br>
+    db[model.name] = model;<br>
+  });</p>
+
+<p>// define relationships between models<br>
+Object.keys(db).forEach(function(modelName) {<br>
+  if (&quot;associate&quot; in db[modelName]) {<br>
+    db[modelName].associate(db);<br>
+  }<br>
+});</p>
+
+<p>db.sequelize = sequelize;<br>
+db.Sequelize = Sequelize;</p>
+
+<p>module.exports = db;<br>
+```</p>
+
+<p>Be sure to also add a <em>_config.js</em> file to the &quot;server&quot; directory:</p>
+
+<p>```javascript<br>
+var config = {};</p>
+
+<p>// database settings<br>
+config.DB<em>NAME = &#39;UPDATE</em>ME&#39;;<br>
+config.DB<em>USERNAME = &#39;UPDATE</em>ME&#39;;<br>
+config.DB<em>PASSWORD = &#39;UPDATE</em>ME&#39;;</p>
+
+<p>module.exports = config;<br>
+```</p>
+
+<p>Make sure to update those database settings!</p>
+
+<h3>Models</h3>
+
+<p>Now let&#39;s define a model. Since we&#39;re working with todos, add a <em>todo.js</em> file to the &quot;models&quot; directory:</p>
+
+<p><code>javascript<br>
+module.exports = function(sequelize, DataTypes) {<br>
+  var Todo = sequelize.define(&#39;Todo&#39;, {<br>
+    title: DataTypes.STRING,<br>
+    complete: {<br>
+      type: DataTypes.BOOLEAN,<br>
+      defaultValue: false<br>
+    }<br>
+  });<br>
+  return Todo;<br>
+};<br>
+</code></p>
+
+<h3>Sync</h3>
+
+<p>To sync the models in order to create the tables in Postgres, add the following code to <em>app.js</em>:</p>
+
+<p><code>javascript<br>
+// *** create pg tables from models *** //<br>
+var db = require(&#39;./models/index.js&#39;);<br>
+db.sequelize.sync();<br>
+</code></p>
+
+<h2>CRUD</h2>
+
+<p>With Sequelize set up and the model defined, we can now set up our RESTful routing structure, starting with a basic GET request...</p>
+
+<h3>GET all todos</h3>
+
+<p><code>javascript<br>
+// get all todos<br>
+router.get(&#39;/todos&#39;, function(req, res) {<br>
+  models.Todo.findAll({}).then(function(todos) {<br>
+    res.json(todos);<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>When you hit that route you should see an empty array since we have not added any todos. Let&#39;s do that now.</p>
+
+<h3>POST</h3>
+
+<p><code>javascript<br>
+// add new todo<br>
+router.post(&#39;/todos&#39;, function(req, res) {<br>
+  models.Todo.create({<br>
+    title: req.body.title,<br>
+  }).then(function(todo) {<br>
+    res.json(todo);<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Now let&#39;s test:</p>
+
+<p><code>sh<br>
+$ curl --data &quot;title=test&quot; http://127.0.0.1:3000/todos<br>
+$ curl --data &quot;title=test2&quot; http://127.0.0.1:3000/todos<br>
+</code></p>
+
+<p>Then if you go back and hit <a href="http://127.0.0.1:3000/todos">http://127.0.0.1:3000/todos</a> in our browser, you should see:</p>
+
+<p><code>json<br>
+[<br>
+  {<br>
+    id: 1,<br>
+    title: &quot;test&quot;,<br>
+    complete: false,<br>
+    createdAt: &quot;2015-10-21T13:05:43.512Z&quot;,<br>
+    updatedAt: &quot;2015-10-21T13:05:43.512Z&quot;<br>
+  },<br>
+  {<br>
+    id: 2,<br>
+    title: &quot;test2&quot;,<br>
+    complete: false,<br>
+    createdAt: &quot;2015-10-21T13:18:30.528Z&quot;,<br>
+    updatedAt: &quot;2015-10-21T13:18:30.528Z&quot;<br>
+  }<br>
+]<br>
+</code></p>
+
+<h3>GET single todo</h3>
+
+<p>How about getting a single todo?</p>
+
+<p><code>javascript<br>
+// get single todo<br>
+router.get(&#39;/todo/:id&#39;, function(req, res) {<br>
+  models.Todo.find({<br>
+    where: {<br>
+      id: req.params.id<br>
+    }<br>
+  }).then(function(todo) {<br>
+    res.json(todo);<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Navigate to <a href="http://localhost:3000/todo/1">http://localhost:3000/todo/1</a> in your browser. You should the single todo.</p>
+
+<h3>PUT</h3>
+
+<p>Need to update a todo?</p>
+
+<p><code>javascript<br>
+// update single todo<br>
+router.put(&#39;/todo/:id&#39;, function(req, res) {<br>
+  models.Todo.find({<br>
+    where: {<br>
+      id: req.params.id<br>
+    }<br>
+  }).then(function(todo) {<br>
+    if(todo){<br>
+      todo.updateAttributes({<br>
+        title: &#39;a very different title now&#39;<br>
+      }).success(function(todo) {<br>
+        res.send(todo);<br>
+      });<br>
+    }<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>And now for a test, of course:</p>
+
+<p><code>sh<br>
+$ curl -X PUT --data &quot;complete=true&quot; http://127.0.0.1:3000/todo/2<br>
+</code></p>
+
+<h3>DELETE</h3>
+
+<p>Want to delete a todo?</p>
+
+<p><code>javascript<br>
+// delete a single todo<br>
+router.delete(&#39;/todo/:id&#39;, function(req, res) {<br>
+  models.Todo.destroy({<br>
+    where: {<br>
+      id: req.params.id<br>
+    }<br>
+  }).then(function(todo) {<br>
+    res.json(todo);<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Test:</p>
+
+<p><code>sh<br>
+$ curl -X DELETE http://127.0.0.1:3000/todo/1<br>
+</code></p>
+
+<p>Again, navigate to <a href="http://localhost:3000/todos">http://localhost:3000/todos</a> in your browser. You should now only see one todo.</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#39;s it for the basic server-side code. We still need to look at handling-</p>
+
+<ol>
+<li><a href="http://docs.sequelizejs.com/en/latest/docs/associations/">Model relations/associations</a>,</li>
+<li>Authentication, and</li>
+<li><a href="http://docs.sequelizejs.com/en/latest/docs/migrations/">Migrations</a></li>
+</ol>
+
+<p>Grab the code from the <a href="https://github.com/mjhea0/node-postgres-sequelize">Github repo</a>. Comment below with questions. Cheers!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Social Authentication in Node.js with Passport]]></title>
@@ -1971,636 +2247,6 @@ app.get(&#39;/logic&#39;, function(req, res) {<br>
 <h2>Conclusion</h2>
 
 <p>Check the <a href="http://paularmstrong.github.io/swig/">documentation</a> for more info. Add your questions below. Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Handling User Authentication with the MEAN Stack]]></title>
-    <link href="http://mjhea0.github.com/blog/2015/07/02/handling-user-authentication-with-the-mean-stack/"/>
-    <updated>2015-07-02T07:04:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2015/07/02/handling-user-authentication-with-the-mean-stack</id>
-    <content type="html"><![CDATA[<div style="text-align:center;">
-  <img src="http://mjhea0.github.com/images/mean-auth.png" style="max-width: 100%; border:0;" alt="mean stack authentication">
-</div>
-
-<p><br></p>
-
-<p><strong>This post provides a solution to the question, &quot;How do I handle user authentication with the MEAN Stack - MongoDB, ExpressJS, AngularJS, NodeJS?&quot;.</strong></p>
-
-<blockquote>
-<p>Much of this post is ported from <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">Handling User Authentication with Angular and Flask</a>.</p>
-</blockquote>
-
-<p>Keep in mind that this solution posed in this tutorial is not the <em>only</em> solution to the question at hand, and it may not even be the <em>right</em> solution for your situation. Regardless of the solution you implement, it is important to note that since end users have full control of the browser as well as access to the front-end code, sensitive data living in your server-side API must be secure. In other words, make certain that you implement an authentication strategy on the server-side to protect sensitive API endpoints.</p>
-
-<p>That said, we need to enable the following workflow:</p>
-
-<ol>
-<li>When the client accesses the main route, an index page is served, at which point Angular takes over.</li>
-<li>The Angular app immediately &quot;asks&quot; the server if a user is logged in.</li>
-<li>Assuming the server indicates that a user is not logged in, the client is immediately asked to log in.</li>
-<li>Once logged in, the Angular app then tracks the user&#39;s login status.</li>
-</ol>
-
-<blockquote>
-<p>This tutorial uses <a href="http://docs.mongodb.org/v2.6/">MongoDB</a> v2.6.7, <a href="http://expressjs.com/4x/api.html">ExpressJS</a> v4.9.8, <a href="https://code.angularjs.org/1.3.15/docs/guide">AngularJS</a> v1.3.15, <a href="https://nodejs.org/">NodeJS</a> v0.12.2, and <a href="https://github.com/jaredhanson/passport-local">Passport-Local</a> v1.0.0. For a full list of dependencies, please view the <em><a href="https://github.com/mjhea0/mean-auth/blob/master/package.json">package.json</a></em> file.</p>
-</blockquote>
-
-<h2>Getting Started</h2>
-
-<p>First, grab the boilerplate code from the <a href="https://github.com/mjhea0/mean-auth/releases/tag/v1">project repo</a>, install the requirements, and then test out the app:</p>
-
-<p><code>sh<br>
-$ npm start<br>
-</code></p>
-
-<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see a simple welcome message - &quot;Yo!&quot;. Once you&#39;re finishing admiring the page, kill the server, and glance over the code within the project folder:</p>
-
-<p><code>sh<br>
-├── client<br>
-│   ├── index.html<br>
-│   ├── main.js<br>
-│   └── partials<br>
-│       └── home.html<br>
-├── package.json<br>
-└── server<br>
-    ├── app.js<br>
-    ├── models<br>
-    │   └── user.js<br>
-    ├── routes<br>
-    │   └── api.js<br>
-    └── server.js<br>
-</code></p>
-
-<p>Nothing too spectacular. You can see that the back-end code resides in the &quot;server&quot; folder, while the front-end code lives in the &quot;client&quot; folder. Explore the files and folder within each.</p>
-
-<h2>Login API</h2>
-
-<p>Let&#39;s start with the back-end API. This is already built out, for your convenience. Why? The focus is mainly on the client-side. If you&#39;re looking for a back-end tutorial for setting up Passport with NodeJS, ExpressJS, and MongoDB take a look at this <a href="http://mherman.org/blog/2015/01/31/local-authentication-with-passport-and-express-4/#.VZCK9xNViko">tutorial</a>.</p>
-
-<h3>User Registration</h3>
-
-<p>Open the &quot;routes&quot; folder and find the following code:</p>
-
-<p><code>javascript<br>
-router.post(&#39;/register&#39;, function(req, res) {<br>
-  User.register(new User({ username: req.body.username }), req.body.password, function(err, account) {<br>
-    if (err) {<br>
-      return res.status(500).json({err: err});<br>
-    }<br>
-    passport.authenticate(&#39;local&#39;)(req, res, function () {<br>
-      return res.status(200).json({status: &#39;Registration successful!&#39;});<br>
-    });<br>
-  });<br>
-});<br>
-</code></p>
-
-<p>Here, we grab the values from the payload sent with the POST request (from the client-side), create a new <code>User</code> instance, and then attempt to add the instance to the database. If this succeeds a user is added, of course, and then we return a JSON response with a <code>status</code> of &quot;success&quot;. If it fails, an &quot;error&quot; response is sent.</p>
-
-<p>Let&#39;s test this via curl. Fire up the server and then run the following command:</p>
-
-<p><code>sh<br>
-$ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST \<br>
--d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; http://localhost:3000/user/register<br>
-</code></p>
-
-<p>You should see a success message:</p>
-
-<p><code>sh<br>
-{&quot;status&quot;:&quot;Registration successful!&quot;}<br>
-</code></p>
-
-<p>Try it again, with the exact same username and password, and you should see an error:</p>
-
-<p><code>sh<br>
-{&quot;err&quot;:{&quot;name&quot;:&quot;BadRequestError&quot;,&quot;message&quot;:&quot;User already exists with username test@test.com&quot;}}<br>
-</code></p>
-
-<p>On to the login...</p>
-
-<h3>User Login</h3>
-
-<p><code>javascript<br>
-router.post(&#39;/login&#39;, function(req, res, next) {<br>
-  passport.authenticate(&#39;local&#39;, function(err, user, info) {<br>
-    if (err) {<br>
-      return res.status(500).json({err: err});<br>
-    }<br>
-    if (!user) {<br>
-      return res.status(401).json({err: info});<br>
-    }<br>
-    req.logIn(user, function(err) {<br>
-      if (err) {<br>
-        return res.status(500).json({err: &#39;Could not log in user&#39;});<br>
-      }<br>
-      res.status(200).json({status: &#39;Login successful!&#39;});<br>
-    });<br>
-  })(req, res, next);<br>
-});<br>
-</code></p>
-
-<p>This utilizes Passport&#39;s <a href="https://github.com/jaredhanson/passport-local">local strategy</a> to verify the username/email as well as the password. The appropriate response is then returned.</p>
-
-<p>With the server running, test again with curl-</p>
-
-<p><code>sh<br>
-curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST \<br>
--d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; http://localhost:3000/user/login<br>
-</code></p>
-
-<p>-and you should see:</p>
-
-<p><code>sh<br>
-{&quot;message&quot;:&quot;Login successful!&quot;}<br>
-</code></p>
-
-<p>Test again with curl, sending the wrong password, and you should see:</p>
-
-<p><code>sh<br>
-{&quot;err&quot;:{&quot;status&quot;:&quot;Incorrect password&quot;}}<br>
-</code></p>
-
-<p>Perfect!</p>
-
-<h3>User Logout</h3>
-
-<p>Finally, take a look at the logout:</p>
-
-<p><code>javascript<br>
-router.get(&#39;/logout&#39;, function(req, res) {<br>
-  req.logout();<br>
-  res.status(200).json({status: &#39;Bye!&#39;});<br>
-});<br>
-</code></p>
-
-<p>This should be straightforward, and you can probably guess what the response will look like - but let&#39;s test it  again:</p>
-
-<p><code>javascript<br>
-$ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X GET \<br>
-http://localhost:3000/user/logout<br>
-</code></p>
-
-<p>You should see:</p>
-
-<p><code>sh<br>
-{&quot;status&quot;:&quot;Bye!&quot;}<br>
-</code></p>
-
-<p>On to the client-side!</p>
-
-<h2>Angular App</h2>
-
-<p>Before diving in, remember that since end users have full access to the power of the browser as well as <a href="https://developer.chrome.com/devtools">DevTools</a> and the client-side code, it&#39;s vital that you not only restrict access to sensitive endpoints on the server-side - but that you also do not store sensitive data on the client-side. Keep this in mind as you add auth functionality to your own MEAN application stack.</p>
-
-<h3>Client-side Routing</h3>
-
-<p>Let&#39;s add the remainder of the client-side routes to the <em>main.js</em> file:</p>
-
-<p><code>javascript<br>
-myApp.config(function ($routeProvider) {<br>
-  $routeProvider<br>
-    .when(&#39;/&#39;, {templateUrl: &#39;partials/home.html&#39;})<br>
-    .when(&#39;/login&#39;, {templateUrl: &#39;partials/login.html&#39;, controller: &#39;loginController&#39;})<br>
-    .when(&#39;/logout&#39;, {controller: &#39;logoutController&#39;})<br>
-    .when(&#39;/register&#39;, {templateUrl: &#39;partials/register.html&#39;, controller: &#39;registerController&#39;})<br>
-    .when(&#39;/one&#39;, {template: &#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;})<br>
-    .when(&#39;/two&#39;, {template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;})<br>
-    .otherwise({redirectTo: &#39;/&#39;});<br>
-});<br>
-</code></p>
-
-<p>Here, we created five new routes. Before we add the subsequent templates and controllers, let&#39;s create a <a href="https://docs.angularjs.org/guide/services">service</a> to handle authentication.</p>
-
-<h3>Authentication Service</h3>
-
-<p>Start by adding the basic structure of the service to a new file called <em>services.js</em> in the &quot;client&quot; directory:</p>
-
-<p>```javascript<br>
-angular.module(&#39;myApp&#39;).factory(&#39;AuthService&#39;,<br>
-  [&#39;$q&#39;, &#39;$timeout&#39;, &#39;$http&#39;,<br>
-  function ($q, $timeout, $http) {</p>
-<div class="highlight"><pre><code class="text">// create user variable
-var user = null;
-
-// return available functions for use in controllers
-return ({
-  isLoggedIn: isLoggedIn,
-  getUserStatus: getUserStatus,
-  login: login,
-  logout: logout,
-  register: register
-});
-</code></pre>
-</div>
-
-<p>}]);<br>
-```</p>
-
-<p>Here, we simply defined the service name, <code>AuthService</code>, and then injected the dependencies that we will be using - <code>$q</code>, <code>$timeout</code>, <code>$http</code> - and then returned the functions, which we still need to write, for use outside the service.</p>
-
-<p>Make sure to add the script to the <em>index.html</em> file:</p>
-
-<p><code>html<br>
-&lt;script src=&quot;./services.js&quot;&gt;&lt;/script&gt;<br>
-</code></p>
-
-<p>Let&#39;s create each function...</p>
-
-<p><strong><code>isLoggedIn()</code></strong></p>
-
-<p><code>javascript<br>
-function isLoggedIn() {<br>
-  if(user) {<br>
-    return true;<br>
-  } else {<br>
-    return false;<br>
-  }<br>
-}<br>
-</code></p>
-
-<p>This function returns <code>true</code> if <code>user</code> evaluates to <code>true</code> - a user is logged in - otherwise it returns false.</p>
-
-<p><strong><code>getUserStatus()</code></strong></p>
-
-<p><code>javascript<br>
-function getUserStatus() {<br>
-  return user;<br>
-}<br>
-</code></p>
-
-<p><strong><code>login()</code></strong></p>
-
-<p>```javascript<br>
-function login(username, password) {</p>
-
-<p>// create a new instance of deferred<br>
-  var deferred = $q.defer();</p>
-
-<p>// send a post request to the server<br>
-  $http.post(&#39;/user/login&#39;, {username: username, password: password})<br>
-    // handle success<br>
-    .success(function (data, status) {<br>
-      if(status === 200 &amp;&amp; data.status){<br>
-        user = true;<br>
-        deferred.resolve();<br>
-      } else {<br>
-        user = false;<br>
-        deferred.reject();<br>
-      }<br>
-    })<br>
-    // handle error<br>
-    .error(function (data) {<br>
-      user = false;<br>
-      deferred.reject();<br>
-    });</p>
-
-<p>// return promise object<br>
-  return deferred.promise;</p>
-
-<p>}<br>
-```</p>
-
-<p>Here, we used the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$q">$q</a> service to set up a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a>, which we&#39;ll access in a future controller. We also utilized the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$http">$http</a> service to send an AJAX request to the <code>/api/login</code> endpoint that we already set up in our back-end Node/Express app.</p>
-
-<p>Based on the returned response, we either <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">resolve</a> or <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">reject</a> and set the value of <code>user</code> to <code>true</code> or <code>false</code>.</p>
-
-<p><strong><code>logout()</code></strong></p>
-
-<p>```javascript<br>
-function logout() {</p>
-
-<p>// create a new instance of deferred<br>
-  var deferred = $q.defer();</p>
-
-<p>// send a get request to the server<br>
-  $http.get(&#39;/user/logout&#39;)<br>
-    // handle success<br>
-    .success(function (data) {<br>
-      user = false;<br>
-      deferred.resolve();<br>
-    })<br>
-    // handle error<br>
-    .error(function (data) {<br>
-      user = false;<br>
-      deferred.reject();<br>
-    });</p>
-
-<p>// return promise object<br>
-  return deferred.promise;</p>
-
-<p>}<br>
-```</p>
-
-<p>Here, we followed the same formula as the <code>login()</code> function, except we sent a GET request rather than a POST and to be safe we just went ahead and handled the error the same as the success.</p>
-
-<p><strong><code>register()</code></strong></p>
-
-<p>```javascript<br>
-function register(username, password) {</p>
-
-<p>// create a new instance of deferred<br>
-  var deferred = $q.defer();</p>
-
-<p>// send a post request to the server<br>
-  $http.post(&#39;/user/register&#39;, {username: username, password: password})<br>
-    // handle success<br>
-    .success(function (data, status) {<br>
-      if(status === 200 &amp;&amp; data.status){<br>
-        deferred.resolve();<br>
-      } else {<br>
-        deferred.reject();<br>
-      }<br>
-    })<br>
-    // handle error<br>
-    .error(function (data) {<br>
-      deferred.reject();<br>
-    });</p>
-
-<p>// return promise object<br>
-  return deferred.promise;</p>
-
-<p>}<br>
-```</p>
-
-<p>Again, we followed a similar formula to the <code>logout()</code> function. Can you tell what&#39;s happening?</p>
-
-<p>That&#39;s it for the service. Keep in mind that we still have not &quot;used&quot; this service. In order to do that we just need to inject it into the necessary components in the Angular app. In our case, that will be the controllers, which we&#39;ll build next.</p>
-
-<h3>Templates and Controllers</h3>
-
-<p>Looking back at our routes, we need to setup two partials/templates and three controllers:</p>
-
-<p><code>javascript<br>
-.when(&#39;/login&#39;, {templateUrl: &#39;partials/login.html&#39;, controller: &#39;loginController&#39;})<br>
-.when(&#39;/logout&#39;, {controller: &#39;logoutController&#39;})<br>
-.when(&#39;/register&#39;, {templateUrl: &#39;partials/register.html&#39;, controller: &#39;registerController&#39;})<br>
-</code></p>
-
-<p><strong>Login</strong></p>
-
-<p>First, add the following HTML to a new file called <em>login.html</em>:</p>
-
-<p><code>html<br>
-&lt;div class=&quot;col-md-4&quot;&gt;<br>
-  &lt;h1&gt;Login&lt;/h2&gt;<br>
-  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;&lt;/div&gt;<br>
-  &lt;form class=&quot;form&quot; ng-submit=&quot;login()&quot;&gt;<br>
-    &lt;div class=&quot;form-group&quot;&gt;<br>
-      &lt;label&gt;Username&lt;/label&gt;<br>
-      &lt;input type=&quot;text&quot; class=&quot;form-control&quot; name=&quot;username&quot; ng-model=&quot;loginForm.username&quot; required&gt;<br>
-    &lt;/div&gt;<br>
-    &lt;div class=&quot;form-group&quot;&gt;<br>
-      &lt;label&gt;Password&lt;/label&gt;<br>
-        &lt;input type=&quot;password&quot; class=&quot;form-control&quot; name=&quot;password&quot; ng-model=&quot;loginForm.password&quot; required&gt;<br>
-      &lt;/div&gt;<br>
-      &lt;div&gt;<br>
-        &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot; ng-disabled=&quot;disabled&quot;&gt;Login&lt;/button&gt;<br>
-      &lt;/div&gt;<br>
-  &lt;/form&gt;<br>
-&lt;/div&gt;<br>
-</code></p>
-
-<p>Add this file to the &quot;partials&quot; directory.</p>
-
-<p>Take note of the form. We used the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngModel">ng-model</a> directive on each of the inputs so that we can capture those values in the controller. Also, when the form is submitted, the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngSubmit">ng-submit</a> directive handles the event by firing the <code>login()</code> function.</p>
-
-<p>Next, within the &quot;client&quot; folder, add a new file called <em>controllers.js</em>. Yes, this will hold all of our Angular app&#39;s controllers. Don&#39;t forget to add the script to the <em>index.html</em> file:</p>
-
-<p><code>html<br>
-&lt;script src=&quot;./controllers.js&quot;&gt;&lt;/script&gt;<br>
-</code></p>
-
-<p>Now, let&#39;s add the first controller:</p>
-
-<p>```javascript<br>
-angular.module(&#39;myApp&#39;).controller(&#39;loginController&#39;,<br>
-  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
-  function ($scope, $location, AuthService) {</p>
-<div class="highlight"><pre><code class="text">console.log(AuthService.getUserStatus());
-
-$scope.login = function () {
-
-  // initial values
-  $scope.error = false;
-  $scope.disabled = true;
-
-  // call login from service
-  AuthService.login($scope.loginForm.username, $scope.loginForm.password)
-    // handle success
-    .then(function () {
-      $location.path(&#39;/&#39;);
-      $scope.disabled = false;
-      $scope.loginForm = {};
-    })
-    // handle error
-    .catch(function () {
-      $scope.error = true;
-      $scope.errorMessage = &quot;Invalid username and/or password&quot;;
-      $scope.disabled = false;
-      $scope.loginForm = {};
-    });
-
-};
-</code></pre>
-</div>
-
-<p>}]);<br>
-```</p>
-
-<p>So, when the <code>login()</code> function is fired, we set some initial values and then call <code>login()</code> from the <code>AuthService</code>, passing the user inputed email and password as arguments. The subsequent success or error is then handled and the DOM/view/template is updated appropriately.</p>
-
-<p>Did you notice how we logged the return value of <code>AuthService.getUserStatus()</code> to the console? This is to ensure that the value is correct based on whether a user is logged in or out - <code>true</code> or <code>false</code>, respectively.</p>
-
-<p>Ready to test the first round-trip - client =&gt; server =&gt; client?</p>
-
-<p>Fire up the server and navigate to <a href="http://localhost:3000/#/login">http://localhost:3000/#/login</a> in your browser. First, try logging in with the user credentials used to register earlier - e.g, <code>test@test.com</code> and <code>test</code>, respectively. If all went well, you should be redirected to the main URL. Next, try to log in using invalid credentials. You should see the error message flash, &quot;Invalid username and/or password&quot;.</p>
-
-<p><strong>Logout</strong></p>
-
-<p>Add the controller:</p>
-
-<p>```javascript<br>
-angular.module(&#39;myApp&#39;).controller(&#39;logoutController&#39;,<br>
-  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
-  function ($scope, $location, AuthService) {</p>
-<div class="highlight"><pre><code class="text">$scope.logout = function () {
-
-  console.log(AuthService.getUserStatus());
-
-  // call logout from service
-  AuthService.logout()
-    .then(function () {
-      $location.path(&#39;/login&#39;);
-    });
-
-};
-</code></pre>
-</div>
-
-<p>}]);<br>
-```</p>
-
-<p>Here, we called <code>AuthService.logout()</code> and then redirected the user to the <code>/login</code> route after the promise is resolved.</p>
-
-<p>Add a button to <em>home.html</em>:</p>
-
-<p><code>html<br>
-&lt;div ng-controller=&quot;logoutController&quot;&gt;<br>
-  &lt;a ng-click=&#39;logout()&#39; class=&quot;btn btn-default&quot;&gt;Logout&lt;/a&gt;<br>
-&lt;/div&gt;<br>
-</code></p>
-
-<p>And then test it out again.</p>
-
-<p><strong>Register</strong></p>
-
-<p>Add a new new file called <em>register.html</em> to the &quot;partials&quot; folder and add the following HTML:</p>
-
-<p><code>html<br>
-&lt;div class=&quot;col-md-4&quot;&gt;<br>
-  &lt;h1&gt;Register&lt;/h2&gt;<br>
-  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;&lt;/div&gt;<br>
-  &lt;form class=&quot;form&quot; ng-submit=&quot;register()&quot;&gt;<br>
-    &lt;div class=&quot;form-group&quot;&gt;<br>
-      &lt;label&gt;Username&lt;/label&gt;<br>
-      &lt;input type=&quot;text&quot; class=&quot;form-control&quot; name=&quot;username&quot; ng-model=&quot;registerForm.username&quot; required&gt;<br>
-    &lt;/div&gt;<br>
-    &lt;div class=&quot;form-group&quot;&gt;<br>
-      &lt;label&gt;Password&lt;/label&gt;<br>
-        &lt;input type=&quot;password&quot; class=&quot;form-control&quot; name=&quot;password&quot; ng-model=&quot;registerForm.password&quot; required&gt;<br>
-      &lt;/div&gt;<br>
-      &lt;div&gt;<br>
-        &lt;button type=&quot;submit&quot; class=&quot;btn btn-default&quot; ng-disabled=&quot;disabled&quot;&gt;Register&lt;/button&gt;<br>
-      &lt;/div&gt;<br>
-  &lt;/form&gt;<br>
-&lt;/div&gt;<br>
-</code></p>
-
-<p>Next, add the controller:</p>
-
-<p>```javascript<br>
-angular.module(&#39;myApp&#39;).controller(&#39;registerController&#39;,<br>
-  [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
-  function ($scope, $location, AuthService) {</p>
-<div class="highlight"><pre><code class="text">console.log(AuthService.getUserStatus());
-
-$scope.register = function () {
-
-  // initial values
-  $scope.error = false;
-  $scope.disabled = true;
-
-  // call register from service
-  AuthService.register($scope.registerForm.username, $scope.registerForm.password)
-    // handle success
-    .then(function () {
-      $location.path(&#39;/login&#39;);
-      $scope.disabled = false;
-      $scope.registerForm = {};
-    })
-    // handle error
-    .catch(function () {
-      $scope.error = true;
-      $scope.errorMessage = &quot;Something went wrong!&quot;;
-      $scope.disabled = false;
-      $scope.registerForm = {};
-    });
-
-};
-</code></pre>
-</div>
-
-<p>}]);<br>
-```</p>
-
-<p>You&#39;ve seen this before, so let&#39;s move right on to testing.</p>
-
-<p>Fire up the server and register a new user at <a href="http://localhost:3000/#/register">http://localhost:3000/#/register</a>. Make sure to test logging in with that new user as well.</p>
-
-<p>Well, that&#39;s it for the templates and controllers. We now need to add in functionality to check if a user is logged in on each and every change of route.</p>
-
-<h3>Route Changes</h3>
-
-<p>Start by adding the following code to <em>main.js</em>:</p>
-
-<p><code>javascript<br>
-myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
-  $rootScope.$on(&#39;$routeChangeStart&#39;, function (event, next, current) {<br>
-    if (AuthService.isLoggedIn() === false) {<br>
-      $location.path(&#39;/login&#39;);<br>
-    }<br>
-  });<br>
-});<br>
-</code></p>
-
-<p>The <a href="https://code.angularjs.org/1.3.15/docs/api/ngRoute/service/$route">$routeChangeStart</a> event happens before the actual route change occurs. So, whenever a route is accessed, before the view is served, we ensure that the user is logged in. Test this out!</p>
-
-<h2>Route Restriction</h2>
-
-<p>Right now all client-side routes require a user to be logged in. What if you want certain routes restricted and other routes open?</p>
-
-<p>You can add the following code to each route handler, replacing <code>true</code> with <code>false</code> for routes that you do not want to restrict:</p>
-
-<p><code>javascript<br>
-access: {restricted: true}<br>
-</code></p>
-
-<p>For example:</p>
-
-<p><code>javascript<br>
-myApp.config(function ($routeProvider) {<br>
-  $routeProvider<br>
-    .when(&#39;/&#39;, {templateUrl: &#39;partials/home.html&#39;})<br>
-    .when(&#39;/login&#39;, {<br>
-      templateUrl: &#39;partials/login.html&#39;,<br>
-      controller: &#39;loginController&#39;,<br>
-      access: {restricted: false}<br>
-    })<br>
-    .when(&#39;/logout&#39;, {<br>
-      controller: &#39;logoutController&#39;,<br>
-      access: {restricted: true}<br>
-    })<br>
-    .when(&#39;/register&#39;, {<br>
-      templateUrl: &#39;partials/register.html&#39;,<br>
-      controller: &#39;registerController&#39;,<br>
-      access: {restricted: true}<br>
-    })<br>
-    .when(&#39;/one&#39;, {<br>
-      template: &#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;,<br>
-      access: {restricted: true}<br>
-    })<br>
-    .when(&#39;/two&#39;, {<br>
-      template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;,<br>
-      access: {restricted: false}<br>
-    })<br>
-    .otherwise({redirectTo: &#39;/&#39;});<br>
-});<br>
-</code></p>
-
-<p>Now just update the <code>$routeChangeStart</code> code in <em>main.js</em>:</p>
-
-<p><code>javascript<br>
-myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
-  $rootScope.$on(&#39;$routeChangeStart&#39;, function (event, next, current) {<br>
-    if (next.access.restricted &amp;&amp; AuthService.isLoggedIn() === false) {<br>
-      $location.path(&#39;/login&#39;);<br>
-      $route.reload();<br>
-    }<br>
-  });<br>
-});<br>
-</code></p>
-
-<p>Test it out!</p>
-
-<h2>Conclusion</h2>
-
-<p>That&#39;s it. One thing you should note is that the Angular app can be used with various frameworks as long as the endpoints are set up correctly in the AJAX requests. So, you can easily take the Angular portion and add it to your Django or Pyramid or NodeJS app. Try it!</p>
-
-<blockquote>
-<p>Check out a Python/Flask app with Angular Auth <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">here</a></p>
-</blockquote>
-
-<p>Grab the final code from the <a href="https://github.com/mjhea0/mean-auth">repo</a>. Cheers!</p>
 ]]></content>
   </entry>
   

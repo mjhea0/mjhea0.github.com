@@ -4,7 +4,7 @@
   <title><![CDATA[Michael Herman]]></title>
   <link href="http://mjhea0.github.com/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-10-19T13:05:20-06:00</updated>
+  <updated>2015-10-22T08:15:06-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,403 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    
+    <title type="html"><![CDATA[Node, Postgres, and Sequelize]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/10/22/node-postgres-sequelize/"/>
+    
+    <updated>2015-10-22T10:52:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/10/22/node-postgres-sequelize</id>
+    
+    <content type="html"><![CDATA[<p><strong>Let&#39;s build a CRUD app with Node (v4.1.1), Express (v4.13.1), Sequelize (v3.12.2), and PostgreSQL (9.4.4).</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mjhea0.github.com/images/node-sequelize.png" style="max-width: 100%; border:0;" alt="node sequelize">
+</div>
+
+<blockquote>
+<p>This a follow-up to <a href="http://mherman.org/blog/2015/02/12/postgresql-and-nodejs/#.ViVUDxNViko">PostgreSQL and NodeJS</a>.</p>
+</blockquote>
+
+<h2>Getting Started</h2>
+
+<p>Grab the initial boilerplate and install the dependencies:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git clone git@github.com:mjhea0/node-postgres-sequelize.git
+</span><span class='line'><span class="nv">$ </span>git checkout tags/v1
+</span><span class='line'><span class="nv">$ </span>npm install
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Now run a quick sanity check:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>gulp
+</span></code></pre></td></tr></table></div></figure>
+
+<p>If all went well, a new browser window should have opened to <a href="http://localhost:5000/">http://localhost:5000/</a> and you should see the &quot;Welcome to Express.&quot; text.</p>
+
+<h2>Sequelize</h2>
+
+<p>With Postgres listening on port 5432, we can make a connection to it using the <a href="http://docs.sequelizejs.com/en/latest/">Sequelize</a> library, <em>an Object Relational Mapper (ORM), written in JavaScript, which supports MySQL, PostgreSQL, SQLite, and MariaDB</em>.</p>
+
+<blockquote>
+<p>Need to set up Postgres? On a Mac? Check out <a href="http://postgresapp.com/">Postgres.app</a>.</p>
+</blockquote>
+
+<p>Install Sequelize, <a href="https://www.npmjs.com/package/pg">pg</a> (for making the database connection), and <a href="https://www.npmjs.com/package/pg-hstore">pg-hstore</a> (for serializing and deserializing JSON into the <a href="http://www.postgresql.org/docs/9.0/static/hstore.html">Postgres hstore key/value pair format</a>):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install sequelize@3.12.2 pg@4.4.3 pg-hstore@2.3.2 --save
+</span></code></pre></td></tr></table></div></figure>
+
+<h3>Init</h3>
+
+<p>Now, create a &quot;models&quot; directory within &quot;server&quot; along with an <em>index.js</em> file. Here, we need to establish a connection to the Postgres database, grab all the future models (files) from the current directory, add them to the <code>db</code> object, and apply any relations between each model (if any). So, add the following to <em>index.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;fs&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Sequelize</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;sequelize&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../_config.js&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// create db connection</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">sequelize</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sequelize</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">DB_NAME</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">DB_USERNAME</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">DB_PASSWORD</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">dialect</span><span class="o">:</span> <span class="s1">&#39;postgres&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">port</span><span class="o">:</span> <span class="s1">&#39;5432&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">host</span><span class="o">:</span> <span class="s1">&#39;localhost&#39;</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// read in all models</span>
+</span><span class='line'><span class="nx">fs</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">readdirSync</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">file</span> <span class="o">!==</span> <span class="s2">&quot;index.js&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">model</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="nx">file</span><span class="p">));</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">[</span><span class="nx">model</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// define relationships between models</span>
+</span><span class='line'><span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">db</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">modelName</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;associate&quot;</span> <span class="k">in</span> <span class="nx">db</span><span class="p">[</span><span class="nx">modelName</span><span class="p">])</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">[</span><span class="nx">modelName</span><span class="p">].</span><span class="nx">associate</span><span class="p">(</span><span class="nx">db</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">sequelize</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">;</span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">Sequelize</span> <span class="o">=</span> <span class="nx">Sequelize</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">db</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Be sure to also add a <em>_config.js</em> file to the &quot;server&quot; directory:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// database settings</span>
+</span><span class='line'><span class="nx">config</span><span class="p">.</span><span class="nx">DB_NAME</span> <span class="o">=</span> <span class="s1">&#39;UPDATE_ME&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="nx">config</span><span class="p">.</span><span class="nx">DB_USERNAME</span> <span class="o">=</span> <span class="s1">&#39;UPDATE_ME&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="nx">config</span><span class="p">.</span><span class="nx">DB_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;UPDATE_ME&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Make sure to update those database settings!</p>
+
+<h3>Models</h3>
+
+<p>Now let&#39;s define a model. Since we&#39;re working with todos, add a <em>todo.js</em> file to the &quot;models&quot; directory:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">sequelize</span><span class="p">,</span> <span class="nx">DataTypes</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">Todo</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="s1">&#39;Todo&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">STRING</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">complete</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">type</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">BOOLEAN</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">defaultValue</span><span class="o">:</span> <span class="kc">false</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">Todo</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h3>Sync</h3>
+
+<p>To sync the models in order to create the tables in Postgres, add the following code to <em>app.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// *** create pg tables from models *** //</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./models/index.js&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">sequelize</span><span class="p">.</span><span class="nx">sync</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2>CRUD</h2>
+
+<p>With Sequelize set up and the model defined, we can now set up our RESTful routing structure, starting with a basic GET request&#8230;</p>
+
+<h3>GET all todos</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// get all todos</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/todos&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">models</span><span class="p">.</span><span class="nx">Todo</span><span class="p">.</span><span class="nx">findAll</span><span class="p">({}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todos</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">todos</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>When you hit that route you should see an empty array since we have not added any todos. Let&#39;s do that now.</p>
+
+<h3>POST</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// add new todo</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/todos&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">models</span><span class="p">.</span><span class="nx">Todo</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">todo</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Now let&#39;s test:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;title=test&quot;</span> http://127.0.0.1:3000/todos
+</span><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;title=test2&quot;</span> http://127.0.0.1:3000/todos
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Then if you go back and hit <a href="http://127.0.0.1:3000/todos">http://127.0.0.1:3000/todos</a> in our browser, you should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">[</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="err">id:</span> <span class="err">1,</span>
+</span><span class='line'>    <span class="err">title:</span> <span class="nt">&quot;test&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">complete:</span> <span class="err">false,</span>
+</span><span class='line'>    <span class="err">createdAt:</span> <span class="nt">&quot;2015-10-21T13:05:43.512Z&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">updatedAt:</span> <span class="nt">&quot;2015-10-21T13:05:43.512Z&quot;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="err">id:</span> <span class="err">2,</span>
+</span><span class='line'>    <span class="err">title:</span> <span class="nt">&quot;test2&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">complete:</span> <span class="err">false,</span>
+</span><span class='line'>    <span class="err">createdAt:</span> <span class="nt">&quot;2015-10-21T13:18:30.528Z&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">updatedAt:</span> <span class="nt">&quot;2015-10-21T13:18:30.528Z&quot;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h3>GET single todo</h3>
+
+<p>How about getting a single todo?</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// get single todo</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/todo/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">models</span><span class="p">.</span><span class="nx">Todo</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">where</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">id</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">todo</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Navigate to <a href="http://localhost:3000/todo/1">http://localhost:3000/todo/1</a> in your browser. You should the single todo.</p>
+
+<h3>PUT</h3>
+
+<p>Need to update a todo?</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// update single todo</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/todo/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">models</span><span class="p">.</span><span class="nx">Todo</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">where</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">id</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">todo</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">todo</span><span class="p">.</span><span class="nx">updateAttributes</span><span class="p">({</span>
+</span><span class='line'>        <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;a very different title now&#39;</span>
+</span><span class='line'>      <span class="p">}).</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">todo</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>And now for a test, of course:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -X PUT --data <span class="s2">&quot;complete=true&quot;</span> http://127.0.0.1:3000/todo/2
+</span></code></pre></td></tr></table></div></figure>
+
+<h3>DELETE</h3>
+
+<p>Want to delete a todo?</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// delete a single todo</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/todo/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">models</span><span class="p">.</span><span class="nx">Todo</span><span class="p">.</span><span class="nx">destroy</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">where</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">id</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">todo</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Test:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -X DELETE http://127.0.0.1:3000/todo/1
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Again, navigate to <a href="http://localhost:3000/todos">http://localhost:3000/todos</a> in your browser. You should now only see one todo.</p>
+
+<h2>Conclusion</h2>
+
+<p>That&#39;s it for the basic server-side code. We still need to look at handling-</p>
+
+<ol>
+<li><a href="http://docs.sequelizejs.com/en/latest/docs/associations/">Model relations/associations</a>,</li>
+<li>Authentication, and</li>
+<li><a href="http://docs.sequelizejs.com/en/latest/docs/migrations/">Migrations</a></li>
+</ol>
+
+<p>Grab the code from the <a href="https://github.com/mjhea0/node-postgres-sequelize">Github repo</a>. Comment below with questions. Cheers!</p>
+]]></content>
+    
+  </entry>
   
   <entry>
     
@@ -12234,802 +12631,6 @@ A binding consists of two items, the binding name and value, separated by a colo
 <p>Thanks to <a href="http://www.meetup.com/Node-js-Denver-Boulder/members/74687302/">John Rosendahl</a> for help with writing the intro.</p>
 
 <p>Pull requests are welcomed/encouraged/needed. Enjoy!</p>
-]]></content>
-    
-  </entry>
-  
-  <entry>
-    
-    <title type="html"><![CDATA[Node Twitter Sentiment]]></title>
-    <link href="http://mjhea0.github.com/blog/2014/02/19/node-twitter-sentiment/"/>
-    
-    <updated>2014-02-19T10:33:00-07:00</updated>
-    <id>http://mjhea0.github.com/blog/2014/02/19/node-twitter-sentiment</id>
-    
-    <content type="html"><![CDATA[<p>In this tutorial we&#39;ll be building an app to pull in real-time Tweets using a Twitter client library for Node called <a href="https://github.com/ttezel/twit">Twit</a> along with <a href="http://nodejs.org/">NodeJS</a>, <a href="http://expressjs.com/">Express</a>, and <a href="https://www.npmjs.org/package/Sentimental">Sentimental</a> (for sentiment analysis).</p>
-
-<p>This is for the <strong><a href="http://www.meetup.com/Node-js-Denver-Boulder/">Node-js-Denver-Boulder Meetup</a></strong> &lt;3 Cheers!</p>
-
-<p><strong>You can grab the example code <a href="https://github.com/mjhea0/node-twitter-sentiment">here</a>.</strong></p>
-
-<blockquote>
-<p><strong>Requirements</strong>: This tutorial starts where this intro <a href="https://github.com/mjhea0/node-getting-started">tutorial</a>, Getting Started with Node, ends. If you&#39;ve never set up a Node/Express application before, please start with the intro tutorial. Thanks.</p>
-</blockquote>
-
-<p><img src="https://raw.github.com/mjhea0/node-twitter-sentiment/master/twit-decision.png" alt="twit-decision"></p>
-
-<h2>Project Setup</h2>
-
-<p>As you know, Node uses Javascript for both the client and server side. Because of this, the project structure is even more important to not only separate out different concerns (client vs server) but also for your own understanding - e.g., so you can distinguish between client and server side code.</p>
-
-<p>Let&#39;s get to it.</p>
-
-<h3>1. Setup basic project structure with Express</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>express twit-decision
-</span></code></pre></td></tr></table></div></figure>
-
-<h3>2. Install dependencies for Node, Express, and Jade:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd </span>twit-decision <span class="o">&amp;&amp;</span> npm install
-</span></code></pre></td></tr></table></div></figure>
-
-<h3>3. Your project structure should now look like this:</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>.
-</span><span class='line'>├── app.js
-</span><span class='line'>├── package.json
-</span><span class='line'>├── public
-</span><span class='line'>│   ├── images
-</span><span class='line'>│   ├── javascripts
-</span><span class='line'>│   └── stylesheets
-</span><span class='line'>│       └── style.css
-</span><span class='line'>├── routes
-</span><span class='line'>│   ├── index.js
-</span><span class='line'>│   └── user.js
-</span><span class='line'>└── views
-</span><span class='line'>    ├── index.jade
-</span><span class='line'>    └── layout.jade
-</span></code></pre></td></tr></table></div></figure>
-
-<h4>What&#39;s going on?</h4>
-
-<ul>
-<li>Server side code includes <em>app.js</em> (app configurations, middleware, and routing), the &quot;routes&quot; folder (controller/business logic), and the <em>views</em> folder (views, templates, partials)</li>
-<li>Meanwhile, client side code includes the &quot;public&quot; folder (images, Javascript files, and stylesheets)</li>
-</ul>
-
-<h3>4. Run the server</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node app
-</span></code></pre></td></tr></table></div></figure>
-
-<p>You should see the &quot;Welcome to Express&quot; Text.</p>
-
-<h2>Server Side Code</h2>
-
-<p>We&#39;ll start with the server side. Our server code will be responsible for serving up our main <code>index</code> page, which will display two input boxes where the end user can enter data for comparison. When the data is passed to the server, via jQuery and AJAX on the client end, the server connects to Twitter, pulls the live tweets, and processes sentiment. Finally, the server sends the results back to the client.</p>
-
-<h3>1. Install dependences</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install twit --save
-</span><span class='line'><span class="nv">$ </span>npm install Sentimental --save
-</span></code></pre></td></tr></table></div></figure>
-
-<h3>2. Updated <em>app.js</em> code</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// module dependencies</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">routes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
-</span><span class='line'>  <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// create express app</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// all environments</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">3000</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;views&#39;</span><span class="p">,</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;views&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;view engine&#39;</span><span class="p">,</span> <span class="s1">&#39;jade&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">favicon</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;dev&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">methodOverride</span><span class="p">());</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">router</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="kr">static</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;public&#39;</span><span class="p">)));</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// development only</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="s1">&#39;development&#39;</span> <span class="o">==</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;env&#39;</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">errorHandler</span><span class="p">());</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// routes</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">index</span><span class="p">);</span>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/ping&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">ping</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// create server</span>
-</span><span class='line'><span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">),</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Express server listening on port &#39;</span> <span class="o">+</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">));</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>You&#39;ve seen the majority of this code already, from the original <a href="https://github.com/mjhea0/node-getting-started">tutorial</a>, so I won&#39;t go into too much detail. Plus, it&#39;s heavily commented and, right now, it resembles a pretty standard Node/Express app.</p>
-
-<p>Let&#39;s setup our routes next.</p>
-
-<h3>3. Routes</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="s2">&quot;Twit-Decision&quot;</span><span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">ping</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;pong!&quot;</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Again, pretty straightforward here. We are serving up one page, <em>index</em>, while the second render parameter passes the title to the view. We also added a test route, called <em>ping</em>, which will just display ping on the page.</p>
-
-<p>Test it out. Navigate to <a href="http://localhost:3000/ping">http://localhost:3000/ping</a>. You should see &quot;pong!&quot; in the top left corner.</p>
-
-<h3>4. Views</h3>
-
-<p>Update <em>index.jade</em></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>doctype html
-</span><span class='line'>html
-</span><span class='line'>  head
-</span><span class='line'>    title= title
-</span><span class='line'>    meta(charset=&#39;utf-8&#39;)
-</span><span class='line'>    meta(name=&#39;viewport&#39;, content=&#39;width=device-width, initial-scale=1.0&#39;)
-</span><span class='line'>    meta(name=&#39;description&#39;, content=&#39;&#39;)
-</span><span class='line'>    meta(name=&#39;author&#39;, content=&#39;Michael Herman&#39;)
-</span><span class='line'>    link(href=&#39;http://netdna.bootstrapcdn.com/bootswatch/3.1.0/yeti/bootstrap.min.css&#39;, rel=&#39;stylesheet&#39;, media=&#39;screen&#39;)
-</span><span class='line'>    link(href=&#39;/stylesheets/main.css&#39;, rel=&#39;stylesheet&#39;, media=&#39;screen&#39;)
-</span><span class='line'>  body
-</span><span class='line'>    .container
-</span><span class='line'>      .jumbotron
-</span><span class='line'>        h1 Need to make a decision?
-</span><span class='line'>        p.lead Use Twitter sentiment analysis.
-</span><span class='line'>        br
-</span><span class='line'>        br
-</span><span class='line'>        .form-container
-</span><span class='line'>          form(action=&#39;&#39;, method=&#39;post&#39;)
-</span><span class='line'>            input#choice1.choice(type=&#39;text&#39;, data-choice=&#39;1&#39;, placeholder=&#39;Choice #1...&#39;, name=&#39;choice1&#39;)
-</span><span class='line'>            input#choice2.choice(type=&#39;text&#39;, data-choice=&#39;2&#39;, placeholder=&#39;Choice #2...&#39;, name=&#39;choice2&#39;)
-</span><span class='line'>            input#decision.btn.btn-success.btn-lg(type=&#39;submit&#39;, value=&#39;Decide!&#39;)
-</span><span class='line'>        br
-</span><span class='line'>        br
-</span><span class='line'>        .decision-container
-</span><span class='line'>          p#status
-</span><span class='line'>          p#decision-text
-</span><span class='line'>          p#score
-</span><span class='line'>          input#again.btn.btn-success.btn-lg(value=&#39;Again?&#39;)
-</span><span class='line'>    script(src=&#39;http://code.jquery.com/jquery-1.11.0.min.js&#39;)
-</span><span class='line'>    script(src=&#39;http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js&#39;)
-</span><span class='line'>    script(src=&#39;javascripts/main.js&#39;)
-</span></code></pre></td></tr></table></div></figure>
-
-<p>This is our only template that we need. It&#39;s the <em>index</em> page, used for markup, and coded using the <a href="http://jade-lang.com/">Jade Template Language</a>. If this is confusing, I suggest converting this code to HTML and comparing the differences.We have the typical meta tags a links to CSS sheets in the <code>&lt;head&gt;</code>. The <code>&lt;body&gt;</code> includes a form as well as a number of selectors for appending the results of the sentiment analysis. Most of the styling is done in Bootstrap.</p>
-
-<p>Let&#39;s quickly jump to the client side.</p>
-
-<h2>Client Side</h2>
-
-<h3>1. Styles</h3>
-
-<p>Add these custom styles to the <em>main.css</em> style within the &quot;stylesheets&quot; folder:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class='css'><span class='line'><span class="nc">.container</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">max-width</span><span class="o">:</span> <span class="m">1000px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">padding-top</span><span class="o">:</span> <span class="m">50px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">text-align</span><span class="o">:</span> <span class="k">center</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nc">.choice</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">width</span><span class="o">:</span><span class="m">100</span><span class="o">%</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">height</span><span class="o">:</span><span class="m">50px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">font-size</span><span class="o">:</span><span class="m">25px</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">padding</span><span class="o">:</span><span class="m">10px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nf">#decision-text</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">font-weight</span><span class="o">:</span><span class="k">bold</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">font-size</span><span class="o">:</span><span class="m">60px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nf">#decision</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">margin-top</span><span class="o">:</span><span class="m">10px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nf">#status</span><span class="o">,</span> <span class="nf">#score</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">font-size</span><span class="o">:</span><span class="m">25px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nc">.form-container</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">margin</span><span class="o">:</span> <span class="k">auto</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">max-width</span><span class="o">:</span> <span class="m">500px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="nc">.decision-container</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">margin</span><span class="o">:</span> <span class="k">auto</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">max-width</span><span class="o">:</span> <span class="m">500px</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>If you&#39;re curious, see how these CSS styles (values and properties) align up to the selectors in the jade template.</p>
-
-<h3>2. Client Side Javascript</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// highest # of choices (inputs) allowed</span>
-</span><span class='line'>  <span class="nb">window</span><span class="p">.</span><span class="nx">highestChoice</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// hide again button on page load</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">goDecide</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// prevent default browser behavior upon submit</span>
-</span><span class='line'>    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
-</span><span class='line'>    <span class="c1">// erase old values</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// hide decision text</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
-</span><span class='line'>    <span class="c1">// display processing text, update color to black in case of an error</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;black&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;Processing ...&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// create variable to see if any of the inputs are input</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">anyEmpty</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-</span><span class='line'>    <span class="c1">// array to hold inputs</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>    <span class="c1">// grab values, add to choices array</span>
-</span><span class='line'>    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">highestChoice</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="kd">var</span> <span class="nx">choiceValue</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice&quot;</span><span class="o">+</span><span class="nx">i</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">choiceValue</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">anyEmpty</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">choices</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">choiceValue</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">choiceValue</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="c1">// Handling *some* errors</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">anyEmpty</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice1&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="o">!=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice2&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// send values to server side for processing, wait for callback, getting AJAXy</span>
-</span><span class='line'>        <span class="nx">$</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/search&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">choices</span><span class="p">)},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">data</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>          <span class="c1">// append data to the DOM</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.form-container&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;and the winner is ...&quot;</span><span class="p">);</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;choice&#39;</span><span class="p">]);</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;... with a score of &#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">fadeIn</span><span class="p">();</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">fadeIn</span><span class="p">();</span>
-</span><span class='line'>          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// error code</span>
-</span><span class='line'>        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;Both choices are the same. Try again.&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="c1">// error code</span>
-</span><span class='line'>      <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;You must enter a value for both choices.&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// ----- MAIN ----- //</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// on click, run the goDecide function</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="nx">goDecide</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// on click new form is shown</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.form-container&quot;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
-</span><span class='line'>    <span class="c1">// erase old values</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice1&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice2&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// hide decision text</span>
-</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Now comes the fun part! Add a <em>main.js</em> file to your &quot;javascripts&quot; folder.</p>
-
-<p>Yes, there&#39;s a lot going on here. Fortunately, it&#39;s well documented.</p>
-
-<p>Start with the <code>// ----- MAIN ----- //</code> code. This essentially controls everything else. Nothing happens until the decision button is clicked. Once that happens the <code>goDecide()</code> function fires. This is where things get, well, interested.</p>
-
-<p>Go through it line by line, reading the comment, then code. Make sure you understand what each statement is doing.</p>
-
-<p>Notice how the magic starts happening when the data is grabbed from the inputs, added to an array, and then sent to the server side via AJAX. Notice the <code>/search</code> endpoint. We pass the stringified <code>choice</code> array to that endpoint, which needs to be setup on the server side, then what for the data to comeback before appending it to the DOM.</p>
-
-<p>Check out the rest of the code on your own. Follow the comments for assistance.</p>
-
-<h2>Back to the Server Side</h2>
-
-<p>So, we need to set up a new route, &#39;/search&#39;, on the server side to handle the data sent from the client side.</p>
-
-<h3>1. <em>app.js</em></h3>
-
-<p>First, add the route to <em>app.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/search&#39;</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">search</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h3>2. Update routes:</h3>
-
-<p>Then add the following code to <em>index.js</em> in the &quot;routes&quot; folder:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">search</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">// grab the request from the client</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">choices</span><span class="p">);</span>
-</span><span class='line'>  <span class="c1">// grab the current date</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">today</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
-</span><span class='line'>  <span class="c1">// establish the twitter config (grab your keys at dev.twitter.com)</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">twitter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">twit</span><span class="p">({</span>
-</span><span class='line'>    <span class="nx">consumer_key</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_key</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">consumer_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_secret</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">access_token</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">access_token_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token_secret</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="c1">// set highest score</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">highestScore</span> <span class="o">=</span> <span class="o">-</span><span class="kc">Infinity</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// set highest choice</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">highestChoice</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// create new array</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">array</span> <span class="o">=</span> <span class="p">[];</span>
-</span><span class='line'>  <span class="c1">// set score</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;----------&quot;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// iterate through the choices array from the request</span>
-</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="c1">// add choice to new array</span>
-</span><span class='line'>    <span class="nx">array</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>    <span class="c1">// grad 20 tweets from today</span>
-</span><span class='line'>    <span class="nx">twitter</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;search/tweets&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">q</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="o">+</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; since:&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getFullYear</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span>
-</span><span class='line'>      <span class="p">(</span><span class="nx">today</span><span class="p">.</span><span class="nx">getMonth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getDate</span><span class="p">(),</span> <span class="nx">count</span><span class="o">:</span><span class="mi">20</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="c1">// perform sentiment analysis</span>
-</span><span class='line'>        <span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;score:&quot;</span><span class="p">,</span> <span class="nx">score</span><span class="p">)</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;choice:&quot;</span><span class="p">,</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>        <span class="c1">//  determine winner</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="nx">highestScore</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">highestScore</span> <span class="o">=</span> <span class="nx">score</span><span class="p">;</span>
-</span><span class='line'>          <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-</span><span class='line'>          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;winner:&quot;</span><span class="p">,</span><span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">})(</span><span class="nx">i</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="c1">// send response back to the server side; why the need for the timeout?</span>
-</span><span class='line'>  <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="o">:</span> <span class="nx">highestScore</span><span class="p">,</span> <span class="s1">&#39;choice&#39;</span><span class="o">:</span> <span class="nx">highestChoice</span><span class="p">}))</span> <span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Again, I&#39;ve commented this heavily. So go through, line by line, and see what&#39;s happening.</p>
-
-<p>Points of note:</p>
-
-<ol>
-<li>Add your Twitter config keys to a new file called <em>config.js</em>. More on this in the next section.</li>
-<li>Why are we using a timeout? Try removing it. What happens? Why is this a bad practice?</li>
-</ol>
-
-<h3>3. Config</h3>
-
-<p>Open the <em>config_example.js</em> file. Save the file as <em>config.js</em>, then add your own <a href="http://dev.twitter.com">Twitter</a> keys. Add this as a dependency along with Twit and Sentimental to your <em>index.js</em> file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">twit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;twit&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sentimental</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;Sentimental&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./config&quot;</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h3>4. Twitter</h3>
-
-<p>Remember this line from your routes file, <em>index.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Well, we pass the pulled tweets as arguments into the <code>performAnalysis()</code> function.<br>
-performAnalysis<br>
-Let&#39;s add that function:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">tweetSet</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">//set a results variable</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>  <span class="c1">// iterate through the tweets, pulling the text, retweet count, and favorite count</span>
-</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">tweetSet</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">tweet</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="nx">retweets</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;retweet_count&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="nx">favorites</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;favorite_count&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="c1">// remove the hastag from the tweet text</span>
-</span><span class='line'>    <span class="nx">tweet</span> <span class="o">=</span> <span class="nx">tweet</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="c1">// perform sentiment on the text</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">sentimental</span><span class="p">.</span><span class="nx">analyze</span><span class="p">(</span><span class="nx">tweet</span><span class="p">)[</span><span class="s1">&#39;score&#39;</span><span class="p">];</span>
-</span><span class='line'>    <span class="c1">// calculate score</span>
-</span><span class='line'>    <span class="nx">results</span> <span class="o">+=</span> <span class="nx">score</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">retweets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">retweets</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">favorites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">favorites</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">retweets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">-=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">retweets</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">favorites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">results</span> <span class="o">-=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">favorites</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">results</span> <span class="o">+=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="c1">// return score</span>
-</span><span class='line'>  <span class="nx">results</span> <span class="o">=</span> <span class="nx">results</span> <span class="o">/</span> <span class="nx">tweetSet</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">results</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>After the tweets are passed in, the text is parsed and sentiment is analyzed. Finally a score is calculated and returned.</p>
-
-<p>Boom. That&#39;s it!</p>
-
-<p>Your project structure should now look like:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>.
-</span><span class='line'>├── app.js
-</span><span class='line'>├── config.js
-</span><span class='line'>├── package.json
-</span><span class='line'>├── public
-</span><span class='line'>│   ├── images
-</span><span class='line'>│   ├── javascripts
-</span><span class='line'>│   │   └── main.js
-</span><span class='line'>│   └── stylesheets
-</span><span class='line'>│       └── main.css
-</span><span class='line'>├── routes
-</span><span class='line'>│   └── index.js
-</span><span class='line'>└── views
-</span><span class='line'>    └── index.jade
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Test time!</p>
-
-<h2>Conclusion</h2>
-
-<p>Test this out a few times. Make sure it all works. Perhaps go through it iteratively, following along with the code for further understanding.</p>
-
-<p>Think about what you could add to make this app more fun/unique?</p>
-
-<ol>
-<li>Perhaps add a persistence layer, such as MongoDB, to retain the history of your searches to see sentiment over time.</li>
-<li>Ability to display actual tweets.</li>
-</ol>
 ]]></content>
     
   </entry>
