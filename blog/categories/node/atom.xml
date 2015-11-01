@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-11-01T05:50:05-07:00</updated>
+  <updated>2015-11-01T15:48:31-07:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,14 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[Migrations with Sequelize]]></title>
-    <link href="http://mjhea0.github.com/blog/2015/10/26/migrations-with-sequelize/"/>
-    <updated>2015-10-26T20:25:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2015/10/26/migrations-with-sequelize</id>
-    <content type="html"><![CDATA[]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[Node, Postgres, and Sequelize]]></title>
@@ -2090,6 +2082,358 @@ router.delete(&#39;/superhero/:id&#39;, function(req, res) {<br>
 <h2>Conclusion</h2>
 
 <p>That&#39;s it. Post your questions below. Grab the code from the <a href="https://github.com/mjhea0/node-express-swig-mongo">repository</a>. Cheers!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Primer on Swig Templating]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/08/23/primer-on-swig-templating/"/>
+    <updated>2015-08-23T14:10:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/08/23/primer-on-swig-templating</id>
+    <content type="html"><![CDATA[<p><strong>Let&#39;s look at the basics of <a href="http://paularmstrong.github.io/swig/">Swig</a>, &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.</strong></p>
+
+<p><hr><br></p>
+
+<p>First off, a templating engine creates web pages (or views) dynamically by combining variables and programming logic with HTML. Essentially, you can add placeholders (or tags) to your HTML that are replaced by <em>actual</em> code defined from your router or controller. In general, tags, for the majority of templating engines, fall within one of two categores-</p>
+
+<ol>
+<li><em>Variables/Output Tags</em> - surrounded by double curly brackets <code></code>, these output the results of a logic tag or a variable to the end user</li>
+<li><em>Logic Tags</em> - surrouded by <code>{% ... %}</code>, these handle programming logic, like loops and conditionals</li>
+</ol>
+
+<blockquote>
+<p>Before diving in, grab the basic project structure from <a href="https://github.com/mjhea0/swig-primer/releases/tag/v1">Github</a>, install the dependencies via NPM - <code>npm install</code> - and then run the server. Pay attention to where we initialize Swig and set it as the templating language in <em>app.js</em>:<br>
+    <code><br>
+    var swig = new swig.Swig();<br>
+    app.engine(&#39;html&#39;, swig.renderFile);<br>
+    app.set(&#39;view engine&#39;, &#39;html&#39;);<br>
+</code></p>
+</blockquote>
+
+<h2>Output Tags</h2>
+
+<p>Let&#39;s start with some basic examples...</p>
+
+<h3>Basics</h3>
+
+<p>First, we can pass variables from our route handlers/view functions directly to the templates.</p>
+
+<p>Update the <em>index.html</em> file:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{{title}}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p>Now, we can pass in a variable called <code>title</code> to the template from <em>app.js</em>:</p>
+
+<p><code>javascript<br>
+// *** main routes *** //<br>
+app.get(&#39;/&#39;, function(req, res) {<br>
+  res.render(&#39;index.html&#39;, {title: &#39;Swig Primer!&#39;});<br>
+});<br>
+</code></p>
+
+<p>Fire up the server and test this out. Nice. <strong>Try adding another variable to the template.</strong></p>
+
+<p><em>index.html</em>:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{{title}}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  &lt;p&gt;{{description}}&lt;/p&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p><em>app.js</em>:</p>
+
+<p><code>javascript<br>
+app.get(&#39;/&#39;, function(req, res) {<br>
+  var title = &#39;Swig Primer!&#39;<br>
+  var description = &#39;Swig is &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.&#39;<br>
+  res.render(&#39;index.html&#39;, {title: title, description: description});<br>
+});<br>
+</code></p>
+
+<p>Keep in mind that all variable outputs are <a href="http://paularmstrong.github.io/swig/docs/api/#SwigOpts">automtomatically escaped</a> except for function outputs:</p>
+
+<p><code>javascript<br>
+// *** main routes *** //<br>
+app.get(&#39;/&#39;, function(req, res) {<br>
+  var title = &#39;Swig Primer!&#39;<br>
+  var description = &#39;Swig is &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.&#39;<br>
+  function allthethings() {<br>
+    return &#39;&lt;span&gt;All the things!&lt;/span&gt;&#39;;<br>
+  }<br>
+  res.render(&#39;index.html&#39;, {<br>
+    title: title,<br>
+    description: description,<br>
+    allthethings: allthethings<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Don&#39;t forget to call the function in the template - <code>&lt;p&gt;&lt;/p&gt;</code></p>
+
+<blockquote>
+<p>Please see the official <a href="http://paularmstrong.github.io/swig/docs/#variables">documentation</a> for more info on output tags.</p>
+</blockquote>
+
+<h3>Filters</h3>
+
+<p>Filters, which are just simple methods, can be used to modify the output value. To illustrate some examples, add another route handler to <em>app.js</em>, like so:</p>
+
+<p><code>javascript<br>
+app.get(&#39;/filter&#39;, function(req, res) {<br>
+  res.render(&#39;filter.html&#39;, {<br>
+    title: &#39;Hello, World!&#39;,<br>
+    date: new Date(),<br>
+    nameArray: [&#39;This&#39;, &#39;is&#39;, &#39;just&#39;, &#39;an&#39;, &#39;example&#39;]<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Now just add a new template, <em>filter.html</em>, adding in a number of filters:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{{title}}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  &lt;h1&gt;{{title | upper}}&lt;/h1&gt;<br>
+  &lt;p&gt;{{date | date(&quot;Y-m-d&quot;)}}&lt;/p&gt;<br>
+  &lt;p&gt;{{nameArray | join(&#39; &#39;)}}&lt;/p&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<blockquote>
+<p>Check out all the available <a href="http://paularmstrong.github.io/swig/docs/filters/">filters</a>. You can also extend the functionality of Swig by adding your own <a href="http://paularmstrong.github.io/swig/docs/extending/">custom filters</a>!</p>
+</blockquote>
+
+<h2>Logic Tags</h2>
+
+<p>As the name suggests, <a href="http://paularmstrong.github.io/swig/docs/tags/">logic tags</a> let you use, well, logic in your templates.</p>
+
+<h3>IF statements</h3>
+
+<p>Here&#39;s a simple example...</p>
+
+<p><em>app.js</em>:</p>
+
+<p><code>javascript<br>
+app.get(&#39;/logic&#39;, function(req, res) {<br>
+  var title = &#39;Swig Logic!&#39;<br>
+  res.render(&#39;logic.html&#39;, {title: title});<br>
+});<br>
+</code></p>
+
+<p><em>logic.html</em>:</p>
+
+<p><code>html<br>
+<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% if title %}<br>
+    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  {% endif %}<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+<br>
+</code></p>
+
+<p><strong>Test out some more examples of <a href="http://paularmstrong.github.io/swig/docs/tags/#if">if</a>, <a href="http://paularmstrong.github.io/swig/docs/tags/#elif">elif</a>, and <a href="http://paularmstrong.github.io/swig/docs/tags/#else">else</a>.</strong></p>
+
+<h3>Loops</h3>
+
+<p><strong>How about a for loop?</strong></p>
+
+<p><em>app.js</em>:</p>
+
+<p><code>javascript<br>
+app.get(&#39;/logic&#39;, function(req, res) {<br>
+  var title = &#39;Swig Logic!&#39;<br>
+  var numberArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]<br>
+  res.render(&#39;logic.html&#39;, {title: title, numberArray: numberArray});<br>
+});<br>
+</code></p>
+
+<p><em>logic.html</em>:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% if title %}<br>
+    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  {% endif %}<br>
+  &lt;ul&gt;<br>
+    {% for num in numberArray %}<br>
+      &lt;li&gt;{{ num }}&lt;/li&gt;<br>
+    {% endfor %}<br>
+  &lt;/ul&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p><strong>Need to reverse the loop?</strong></p>
+
+<p>Simply add a filter:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% if title %}<br>
+    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  {% endif %}<br>
+  &lt;ul&gt;<br>
+    {% for num in numberArray | reverse %}<br>
+      &lt;li&gt;{{ num }}&lt;/li&gt;<br>
+    {% endfor %}<br>
+  &lt;/ul&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p><strong>What would a basic loop and filter look like?</strong></p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% if title %}<br>
+    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+  {% endif %}<br>
+  &lt;ul&gt;<br>
+    {% for num in numberArray %}<br>
+      {% if num % 2 === 0 %}<br>
+        &lt;li&gt;{{ num }}&lt;/li&gt;<br>
+      {% endif %}<br>
+    {% endfor %}<br>
+  &lt;/ul&gt;<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<blockquote>
+<p>You could also write a custom filter for this if you needed to do the <em>same</em> filtering logic a number of times throughout your application.</p>
+</blockquote>
+
+<p>There&#39;s also a number of <a href="http://paularmstrong.github.io/swig/docs/tags/#for">helper methods</a> available with loops:</p>
+
+<ul>
+<li><code>loop.index</code> returns the current iteration of the loop (1-indexed)</li>
+<li><code>loop.index0</code> returns the current iteration of the loop (0-indexed)</li>
+<li><code>loop.revindex</code> returns the number of iterations from the end of the loop (1-indexed)</li>
+<li><code>loop.revindex0</code> returns the number of iterations from the end of the loop (0-indexed)</li>
+<li><code>loop.key</code> returns the key of the current item, if the iterator is an object; otherwise it will operate the same as <code>loop.index</code></li>
+<li><code>loop.first</code> returns true if the current object is the first in the object or array.</li>
+<li><code>loop.last</code> returns true if the current object is the last in the object or array.</li>
+</ul>
+
+<p>Try some of these out:</p>
+
+<p><br>
+<code>html<br>
+{% for num in numberArray | reverse %}<br>
+  {% if num % 2 === 0 %}<br>
+    &lt;li&gt;{{ num }} - {{loop.index}}&lt;/li&gt;<br>
+  {% endif %}<br>
+{% endfor %}<br>
+</code><br>
+</p>
+
+<h2>Template Inheritence</h2>
+
+<p>Logic tags can also be used to extend common code from a base template to child templates. You can use the <code>block</code> tag to accomplish this.</p>
+
+<p>Create a new HTML file called <em>layout.html</em>:</p>
+
+<p><br>
+<code>html<br>
+&lt;!DOCTYPE html&gt;<br>
+&lt;html&gt;<br>
+&lt;head&gt;<br>
+  &lt;title&gt;{{title}}&lt;/title&gt;<br>
+&lt;/head&gt;<br>
+&lt;body&gt;<br>
+  {% block content %}{% endblock %}<br>
+&lt;/body&gt;<br>
+&lt;/html&gt;<br>
+</code><br>
+</p>
+
+<p>Did you notice the <code>{% block content %}{% endblock %}</code> tags? These are like placeholders that child templates fill in.</p>
+
+<p>Add another new file called <em>test.html</em>:</p>
+
+<p><br>
+<code>html<br>
+{% extends &quot;layout.html&quot; %}<br>
+{% block content %}<br>
+  &lt;h3&gt; This is the start of a child template&lt;/h3&gt;<br>
+{% endblock %}<br>
+</code><br>
+</p>
+
+<p>Finally, add a route handler to <em>app.js</em>:</p>
+
+<p><br>
+<code>html<br>
+{% extends &quot;layout.html&quot; %}<br>
+{% block content %}<br>
+  &lt;h1&gt;This is the start of a child template&lt;/h1&gt;<br>
+  &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
+{% endblock %}<br>
+</code><br>
+</p>
+
+<p>So, the blocks -  <code>{% block content %}{% endblock %}</code> correspond to the block placeholders from the layout file, and since this file extends from the layout, the content defined here is placed in the corresponding placeholders in the layout.</p>
+
+<h2>Conclusion</h2>
+
+<p>Check the <a href="http://paularmstrong.github.io/swig/">documentation</a> for more info. Add your questions below. Cheers!</p>
 ]]></content>
   </entry>
   
