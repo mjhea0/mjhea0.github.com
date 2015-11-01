@@ -10,7 +10,7 @@
 
   
   <meta name="description" content="This article details how to build a basic CRUD app with Node, Express, Sequelize, and PostgreSQL.">
-  <meta name="keywords" content="node, express, angular, postgres">
+  <meta name="keywords" content="node, express, sequelize, postgres, migrations">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -123,6 +123,9 @@
   <img src="/images/node-sequelize.png" style="max-width: 100%; border:0;" alt="node sequelize">
 </div>
 
+<p><strong>Updates</strong>:<br>
+  - <em>November 1st, 2015</em> - Added Database Migrations</p>
+
 <blockquote>
 <p>This a follow-up to <a href="http://mherman.org/blog/2015/02/12/postgresql-and-nodejs/#.ViVUDxNViko">PostgreSQL and NodeJS</a>.</p>
 </blockquote>
@@ -161,9 +164,49 @@
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install sequelize@3.12.2 pg@4.4.3 pg-hstore@2.3.2 --save
 </span></code></pre></td></tr></table></div></figure>
 
+<h2>Migrations</h2>
+
+<p>The <a href="https://github.com/sequelize/cli">Sequelize CLI</a> is used to bootstrap a new project and handle <a href="https://en.wikipedia.org/wiki/Schema_migration">database migrations</a> directly from the terminal.</p>
+
+<blockquote>
+<p>Read more about the Sequelize CLI from the official <a href="http://docs.sequelizejs.com/en/latest/docs/migrations/">documentation</a>.</p>
+</blockquote>
+
 <h3>Init</h3>
 
-<p>Now, create a &quot;models&quot; directory within &quot;server&quot; along with an <em>index.js</em> file. Here, we need to establish a connection to the Postgres database, grab all the future models (files) from the current directory, add them to the <code>db</code> object, and apply any relations between each model (if any). So, add the following to <em>index.js</em>:</p>
+<p>Start by installing the package:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install sequelize-cli@2.1.0 --save
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Next, create a config file called <em>.sequelizerc</em> in your project root to specify the paths to specific files required by Sequelize:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="s1">&#39;config&#39;</span><span class="o">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s1">&#39;./server&#39;</span><span class="p">,</span> <span class="s1">&#39;config.json&#39;</span><span class="p">),</span>
+</span><span class='line'>  <span class="s1">&#39;migrations-path&#39;</span><span class="o">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s1">&#39;./server&#39;</span><span class="p">,</span> <span class="s1">&#39;migrations&#39;</span><span class="p">),</span>
+</span><span class='line'>  <span class="s1">&#39;models-path&#39;</span><span class="o">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s1">&#39;./server&#39;</span><span class="p">,</span> <span class="s1">&#39;models&#39;</span><span class="p">),</span>
+</span><span class='line'>  <span class="s1">&#39;seeders-path&#39;</span><span class="o">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s1">&#39;./server&#39;</span><span class="p">,</span> <span class="s1">&#39;seeders&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Now, run the init command to create the files (<em>config.json</em>) and folders (&quot;migrations&quot;, &quot;models&quot;, and &quot;seeders&quot;):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node_modules/.bin/sequelize init
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Take a look at the <em>index.js</em> file within the &quot;models&quot; directory:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -200,33 +243,37 @@
 <span class='line-number'>33</span>
 <span class='line-number'>34</span>
 <span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;fs&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">Sequelize</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;sequelize&quot;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="p">{};</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../_config.js&#39;</span><span class="p">);</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="c1">// create db connection</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">sequelize</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sequelize</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">DB_NAME</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">DB_USERNAME</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">DB_PASSWORD</span><span class="p">,</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">dialect</span><span class="o">:</span> <span class="s1">&#39;postgres&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">port</span><span class="o">:</span> <span class="s1">&#39;5432&#39;</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">host</span><span class="o">:</span> <span class="s1">&#39;localhost&#39;</span>
-</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">fs</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">path</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Sequelize</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;sequelize&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">basename</span>  <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">basename</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">filename</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">env</span>       <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">||</span> <span class="s1">&#39;development&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">config</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/../config.json&#39;</span><span class="p">)[</span><span class="nx">env</span><span class="p">];</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">db</span>        <span class="o">=</span> <span class="p">{};</span>
 </span><span class='line'>
-</span><span class='line'><span class="c1">// read in all models</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">use_env_variable</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">sequelize</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sequelize</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">[</span><span class="nx">config</span><span class="p">.</span><span class="nx">use_env_variable</span><span class="p">]);</span>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">sequelize</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sequelize</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="nx">config</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
 </span><span class='line'><span class="nx">fs</span>
 </span><span class='line'>  <span class="p">.</span><span class="nx">readdirSync</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">)</span>
 </span><span class='line'>  <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">file</span> <span class="o">!==</span> <span class="s2">&quot;index.js&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">file</span> <span class="o">!==</span> <span class="nx">basename</span><span class="p">);</span>
 </span><span class='line'>  <span class="p">})</span>
 </span><span class='line'>  <span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">model</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="nx">file</span><span class="p">));</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="o">!==</span> <span class="s1">&#39;.js&#39;</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">model</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">[</span><span class="s1">&#39;import&#39;</span><span class="p">](</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="nx">file</span><span class="p">));</span>
 </span><span class='line'>    <span class="nx">db</span><span class="p">[</span><span class="nx">model</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
 </span><span class='line'>  <span class="p">});</span>
 </span><span class='line'>
-</span><span class='line'><span class="c1">// define relationships between models</span>
 </span><span class='line'><span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">db</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">modelName</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;associate&quot;</span> <span class="k">in</span> <span class="nx">db</span><span class="p">[</span><span class="nx">modelName</span><span class="p">])</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">db</span><span class="p">[</span><span class="nx">modelName</span><span class="p">].</span><span class="nx">associate</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>    <span class="nx">db</span><span class="p">[</span><span class="nx">modelName</span><span class="p">].</span><span class="nx">associate</span><span class="p">(</span><span class="nx">db</span><span class="p">);</span>
 </span><span class='line'>  <span class="p">}</span>
 </span><span class='line'><span class="p">});</span>
@@ -237,33 +284,11 @@
 </span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">db</span><span class="p">;</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Be sure to also add a <em>_config.js</em> file to the &quot;server&quot; directory:</p>
+<p>Here, we establish a connection to the database, grab all the model files from the current directory, add them to the <code>db</code> object, and apply any relations between each model (if any).</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{};</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// database settings</span>
-</span><span class='line'><span class="nx">config</span><span class="p">.</span><span class="nx">DB_NAME</span> <span class="o">=</span> <span class="s1">&#39;UPDATE_ME&#39;</span><span class="p">;</span>
-</span><span class='line'><span class="nx">config</span><span class="p">.</span><span class="nx">DB_USERNAME</span> <span class="o">=</span> <span class="s1">&#39;UPDATE_ME&#39;</span><span class="p">;</span>
-</span><span class='line'><span class="nx">config</span><span class="p">.</span><span class="nx">DB_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;UPDATE_ME&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
+<h3>Config</h3>
 
-<p>Make sure to update those database settings!</p>
-
-<h3>Models</h3>
-
-<p>Now let&#39;s define a model. Since we&#39;re working with todos, add a <em>todo.js</em> file to the &quot;models&quot; directory:</p>
+<p>Be sure to also update the <em>config.js</em> file for your development, test, and production databases:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -275,33 +300,285 @@
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">sequelize</span><span class="p">,</span> <span class="nx">DataTypes</span><span class="p">)</span> <span class="p">{</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="s2">&quot;development&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;username&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;password&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;database&quot;</span><span class="o">:</span> <span class="s2">&quot;todos&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;host&quot;</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;port&quot;</span><span class="o">:</span> <span class="s2">&quot;5432&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;dialect&quot;</span><span class="o">:</span> <span class="s2">&quot;postgres&quot;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="s2">&quot;test&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;username&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;password&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;database&quot;</span><span class="o">:</span> <span class="s2">&quot;update_me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;host&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;dialect&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="s2">&quot;production&quot;</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;username&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;password&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;database&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;host&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;dialect&quot;</span><span class="o">:</span> <span class="s2">&quot;update me&quot;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<blockquote>
+<p>If you are just running this locally, using the basic development server, then just update the <code>development</code> config.</p>
+</blockquote>
+
+<p>Go ahead and create a database named &quot;todos&quot;.</p>
+
+<h3>Create Migration</h3>
+
+<p>Now let&#39;s create a model along with a migration. Since we&#39;re working with todos, run the following command:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node_modules/.bin/sequelize model:create --name Todo --attributes <span class="s2">&quot;title:string, complete:boolean,UserId:integer&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Take a look a the newly created model file, <em>todo.js</em> in the models directory:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">sequelize</span><span class="p">,</span> <span class="nx">DataTypes</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="kd">var</span> <span class="nx">Todo</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="s1">&#39;Todo&#39;</span><span class="p">,</span> <span class="p">{</span>
 </span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">STRING</span><span class="p">,</span>
-</span><span class='line'>    <span class="nx">complete</span><span class="o">:</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">type</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">BOOLEAN</span><span class="p">,</span>
-</span><span class='line'>      <span class="nx">defaultValue</span><span class="o">:</span> <span class="kc">false</span>
+</span><span class='line'>    <span class="nx">complete</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">BOOLEAN</span>
+</span><span class='line'>  <span class="p">},</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">classMethods</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">associate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">models</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// associations can be defined here</span>
+</span><span class='line'>      <span class="p">}</span>
 </span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>  <span class="p">});</span>
 </span><span class='line'>  <span class="k">return</span> <span class="nx">Todo</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<h3>Sync</h3>
+<p>The corresponding migration file can be found in the &quot;migrations&quot; folder. Take a look. Next, let&#39;s associate a user to a todo. First, we need to define a new migration:</p>
 
-<p>To sync the models in order to create the tables in Postgres, add the following code to <em>app.js</em>:</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node_modules/.bin/sequelize model:create --name User --attributes <span class="s2">&quot;email:string&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Now we need to set up the relationship between the two models&#8230;</p>
+
+<h3>Associations</h3>
+
+<p>To associate the models (one user can have many todos), make the following updates&#8230;</p>
+
+<p><strong>todo.js</strong>:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// *** create pg tables from models *** //</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./models/index.js&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">sequelize</span><span class="p">.</span><span class="nx">sync</span><span class="p">();</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">sequelize</span><span class="p">,</span> <span class="nx">DataTypes</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">Todo</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="s1">&#39;Todo&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">STRING</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">complete</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">BOOLEAN</span>
+</span><span class='line'>  <span class="p">},</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">classMethods</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">associate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">models</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">Todo</span><span class="p">.</span><span class="nx">belongsTo</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">User</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">Todo</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p><strong>user.js</strong>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">sequelize</span><span class="p">,</span> <span class="nx">DataTypes</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">User</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">email</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">STRING</span>
+</span><span class='line'>  <span class="p">},</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">classMethods</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">associate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">models</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">User</span><span class="p">.</span><span class="nx">hasMany</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">Todo</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">User</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h3>Sync</h3>
+
+<p>Finally, before we sync, let&#39;s add an additional attribute to the <code>complete</code> filed in the <em>todo.js</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">sequelize</span><span class="p">,</span> <span class="nx">DataTypes</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">Todo</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="s1">&#39;Todo&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">STRING</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">complete</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">type</span><span class="o">:</span> <span class="nx">DataTypes</span><span class="p">.</span><span class="nx">BOOLEAN</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">defaultValue</span><span class="o">:</span> <span class="kc">false</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">},</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">classMethods</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">associate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">models</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">Todo</span><span class="p">.</span><span class="nx">belongsTo</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">User</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">Todo</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Run the migration to create the tables:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>node_modules/.bin/sequelize db:migrate
+</span><span class='line'>
+</span><span class='line'>Sequelize <span class="o">[</span>Node: 4.1.1, CLI: 2.1.0, ORM: 3.12.2<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Loaded configuration file <span class="s2">&quot;server/config.json&quot;</span>.
+</span><span class='line'>Using environment <span class="s2">&quot;development&quot;</span>.
+</span><span class='line'>Using gulpfile ~/node_modules/sequelize-cli/lib/gulpfile.js
+</span><span class='line'>Starting <span class="s1">&#39;db:migrate&#39;</span>...
+</span><span class='line'><span class="o">==</span> 20151101052127-create-todo: <span class="nv">migrating</span> <span class="o">=======</span>
+</span><span class='line'><span class="o">==</span> 20151101052127-create-todo: migrated <span class="o">(</span>0.049s<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">==</span> 20151101052148-create-user: <span class="nv">migrating</span> <span class="o">=======</span>
+</span><span class='line'><span class="o">==</span> 20151101052148-create-user: migrated <span class="o">(</span>0.042s<span class="o">)</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <h2>CRUD</h2>
 
-<p>With Sequelize set up and the model defined, we can now set up our RESTful routing structure, starting with a basic GET request&#8230;</p>
+<p>With Sequelize set up and the models defined, we can now set up our RESTful routing structure for the todo resource. First, within <em>index.js</em> in the &quot;routes&quot; folder add the following requirement:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models/index&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Then add a route for creating a new user:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/users&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">models</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">email</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">email</span>
+</span><span class='line'>  <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">todo</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>To add a new user, run the server - <code>gulp</code> - and then run the following in a new terminal window:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;email=michael@mherman.org&quot;</span> http://127.0.0.1:3000/users
+</span></code></pre></td></tr></table></div></figure>
+
+<p>You should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="s2">&quot;michael@mherman.org&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;updatedAt&quot;</span><span class="p">:</span><span class="s2">&quot;2015-11-01T12:24:20.375Z&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;createdAt&quot;</span><span class="p">:</span><span class="s2">&quot;2015-11-01T12:24:20.375Z&quot;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Now we can add the todo routes&#8230;</p>
 
 <h3>GET all todos</h3>
 
@@ -331,10 +608,12 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
+<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// add new todo</span>
 </span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/todos&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">models</span><span class="p">.</span><span class="nx">Todo</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
 </span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">UserId</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">user_id</span>
 </span><span class='line'>  <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">todo</span><span class="p">);</span>
 </span><span class='line'>  <span class="p">});</span>
@@ -345,8 +624,8 @@
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;title=test&quot;</span> http://127.0.0.1:3000/todos
-</span><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;title=test2&quot;</span> http://127.0.0.1:3000/todos
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;title=test&amp;user_id=1&quot;</span> http://127.0.0.1:3000/todos
+</span><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;title=test2&amp;user_id=1&quot;</span> http://127.0.0.1:3000/todos
 </span></code></pre></td></tr></table></div></figure>
 
 <p>Then if you go back and hit <a href="http://127.0.0.1:3000/todos">http://127.0.0.1:3000/todos</a> in our browser, you should see:</p>
@@ -367,20 +646,24 @@
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
 </pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">[</span>
 </span><span class='line'>  <span class="p">{</span>
 </span><span class='line'>    <span class="err">id:</span> <span class="err">1,</span>
 </span><span class='line'>    <span class="err">title:</span> <span class="nt">&quot;test&quot;</span><span class="p">,</span>
 </span><span class='line'>    <span class="err">complete:</span> <span class="err">false,</span>
-</span><span class='line'>    <span class="err">createdAt:</span> <span class="nt">&quot;2015-10-21T13:05:43.512Z&quot;</span><span class="p">,</span>
-</span><span class='line'>    <span class="err">updatedAt:</span> <span class="nt">&quot;2015-10-21T13:05:43.512Z&quot;</span>
+</span><span class='line'>    <span class="err">createdAt:</span> <span class="nt">&quot;2015-11-01T12:31:56.451Z&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">updatedAt:</span> <span class="nt">&quot;2015-11-01T12:31:56.451Z&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">UserId:</span> <span class="err">1</span>
 </span><span class='line'>  <span class="p">},</span>
 </span><span class='line'>  <span class="p">{</span>
 </span><span class='line'>    <span class="err">id:</span> <span class="err">2,</span>
 </span><span class='line'>    <span class="err">title:</span> <span class="nt">&quot;test2&quot;</span><span class="p">,</span>
 </span><span class='line'>    <span class="err">complete:</span> <span class="err">false,</span>
-</span><span class='line'>    <span class="err">createdAt:</span> <span class="nt">&quot;2015-10-21T13:18:30.528Z&quot;</span><span class="p">,</span>
-</span><span class='line'>    <span class="err">updatedAt:</span> <span class="nt">&quot;2015-10-21T13:18:30.528Z&quot;</span>
+</span><span class='line'>    <span class="err">createdAt:</span> <span class="nt">&quot;2015-11-01T12:32:09.000Z&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">updatedAt:</span> <span class="nt">&quot;2015-11-01T12:32:09.000Z&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">UserId:</span> <span class="err">1</span>
 </span><span class='line'>  <span class="p">}</span>
 </span><span class='line'><span class="p">]</span>
 </span></code></pre></td></tr></table></div></figure>
@@ -433,6 +716,7 @@
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
+<span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// update single todo</span>
 </span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/todo/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">models</span><span class="p">.</span><span class="nx">Todo</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span>
@@ -442,8 +726,9 @@
 </span><span class='line'>  <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">todo</span><span class="p">){</span>
 </span><span class='line'>      <span class="nx">todo</span><span class="p">.</span><span class="nx">updateAttributes</span><span class="p">({</span>
-</span><span class='line'>        <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;a very different title now&#39;</span>
-</span><span class='line'>      <span class="p">}).</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">complete</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">complete</span>
+</span><span class='line'>      <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">todo</span><span class="p">);</span>
 </span><span class='line'>      <span class="p">});</span>
 </span><span class='line'>    <span class="p">}</span>
@@ -493,13 +778,7 @@
 
 <h2>Conclusion</h2>
 
-<p>That&#39;s it for the basic server-side code. We still need to look at handling-</p>
-
-<ol>
-<li><a href="http://docs.sequelizejs.com/en/latest/docs/associations/">Model relations/associations</a>,</li>
-<li>Authentication, and</li>
-<li><a href="http://docs.sequelizejs.com/en/latest/docs/migrations/">Migrations</a></li>
-</ol>
+<p>That&#39;s it for the basic server-side code. You now have a database, models, and migrations set up. Whenever you want to update the state of your database, just add additional migrations and then run them as necessary.</p>
 
 <p>Grab the code from the <a href="https://github.com/mjhea0/node-postgres-sequelize">Github repo</a>. Comment below with questions. Cheers!</p>
 </div>
@@ -565,6 +844,8 @@
           
             <a class="basic-alignment left" href="/blog/2015/09/26/social-authentication-in-node-dot-js-with-passport/" title="Previous Post: Social Authentication in Node.js with Passport">&laquo; Social Authentication in Node.js with Passport</a>
           
+          
+            <a class="basic-alignment right" href="/blog/2015/10/26/migrations-with-sequelize/" title="Next Post: Migrations with Sequelize">Migrations with Sequelize &raquo;</a>
           
         </p>
       </footer>

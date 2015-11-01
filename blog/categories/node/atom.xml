@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2015-10-26T20:20:39-06:00</updated>
+  <updated>2015-11-01T05:50:05-07:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,14 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Migrations with Sequelize]]></title>
+    <link href="http://mjhea0.github.com/blog/2015/10/26/migrations-with-sequelize/"/>
+    <updated>2015-10-26T20:25:00-06:00</updated>
+    <id>http://mjhea0.github.com/blog/2015/10/26/migrations-with-sequelize</id>
+    <content type="html"><![CDATA[]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Node, Postgres, and Sequelize]]></title>
@@ -23,6 +31,9 @@
 <div style="text-align:center;">
   <img src="http://mjhea0.github.com/images/node-sequelize.png" style="max-width: 100%; border:0;" alt="node sequelize">
 </div>
+
+<p><strong>Updates</strong>:<br>
+  - <em>November 1st, 2015</em> - Added Database Migrations</p>
 
 <blockquote>
 <p>This a follow-up to <a href="http://mherman.org/blog/2015/02/12/postgresql-and-nodejs/#.ViVUDxNViko">PostgreSQL and NodeJS</a>.</p>
@@ -60,38 +71,73 @@ $ gulp<br>
 $ npm install sequelize@3.12.2 pg@4.4.3 pg-hstore@2.3.2 --save<br>
 </code></p>
 
+<h2>Migrations</h2>
+
+<p>The <a href="https://github.com/sequelize/cli">Sequelize CLI</a> is used to bootstrap a new project and handle <a href="https://en.wikipedia.org/wiki/Schema_migration">database migrations</a> directly from the terminal.</p>
+
+<blockquote>
+<p>Read more about the Sequelize CLI from the official <a href="http://docs.sequelizejs.com/en/latest/docs/migrations/">documentation</a>.</p>
+</blockquote>
+
 <h3>Init</h3>
 
-<p>Now, create a &quot;models&quot; directory within &quot;server&quot; along with an <em>index.js</em> file. Here, we need to establish a connection to the Postgres database, grab all the future models (files) from the current directory, add them to the <code>db</code> object, and apply any relations between each model (if any). So, add the following to <em>index.js</em>:</p>
+<p>Start by installing the package:</p>
+
+<p><code>sh<br>
+$ npm install sequelize-cli@2.1.0 --save<br>
+</code></p>
+
+<p>Next, create a config file called <em>.sequelizerc</em> in your project root to specify the paths to specific files required by Sequelize:</p>
 
 <p>```javascript<br>
-var fs = require(&quot;fs&quot;);<br>
-var path = require(&quot;path&quot;);<br>
-var Sequelize = require(&quot;sequelize&quot;);<br>
-var db = {};<br>
-var config = require(&#39;../_config.js&#39;);</p>
+var path = require(&#39;path&#39;);</p>
 
-<p>// create db connection<br>
-var sequelize = new Sequelize(config.DB<em>NAME, config.DB</em>USERNAME, config.DB_PASSWORD, {<br>
-  dialect: &#39;postgres&#39;,<br>
-  port: &#39;5432&#39;,<br>
-  host: &#39;localhost&#39;<br>
-});</p>
+<p>module.exports = {<br>
+  &#39;config&#39;: path.resolve(&#39;./server&#39;, &#39;config.json&#39;),<br>
+  &#39;migrations-path&#39;: path.resolve(&#39;./server&#39;, &#39;migrations&#39;),<br>
+  &#39;models-path&#39;: path.resolve(&#39;./server&#39;, &#39;models&#39;),<br>
+  &#39;seeders-path&#39;: path.resolve(&#39;./server&#39;, &#39;seeders&#39;)<br>
+}<br>
+```</p>
 
-<p>// read in all models<br>
-fs<br>
-  .readdirSync(<strong>dirname)<br>
+<p>Now, run the init command to create the files (<em>config.json</em>) and folders (&quot;migrations&quot;, &quot;models&quot;, and &quot;seeders&quot;):</p>
+
+<p><code>sh<br>
+$ node_modules/.bin/sequelize init<br>
+</code></p>
+
+<p>Take a look at the <em>index.js</em> file within the &quot;models&quot; directory:</p>
+
+<p>```javascript<br>
+&#39;use strict&#39;;</p>
+
+<p>var fs        = require(&#39;fs&#39;);<br>
+var path      = require(&#39;path&#39;);<br>
+var Sequelize = require(&#39;sequelize&#39;);<br>
+var basename  = path.basename(module.filename);<br>
+var env       = process.env.NODE<em>ENV || &#39;development&#39;;<br>
+var config    = require(</em>_dirname + &#39;/../config.json&#39;)[env];<br>
+var db        = {};</p>
+
+<p>if (config.use<em>env</em>variable) {<br>
+  var sequelize = new Sequelize(process.env[config.use<em>env</em>variable]);<br>
+} else {<br>
+  var sequelize = new Sequelize(config.database, config.username, config.password, config);<br>
+}</p>
+
+<p>fs<br>
+  .readdirSync(__dirname)<br>
   .filter(function(file) {<br>
-    return (file.indexOf(&quot;.&quot;) !== 0) &amp;&amp; (file !== &quot;index.js&quot;);<br>
+    return (file.indexOf(&#39;.&#39;) !== 0) &amp;&amp; (file !== basename);<br>
   })<br>
   .forEach(function(file) {<br>
-    var model = sequelize.import(path.join(</strong>dirname, file));<br>
+    if (file.slice(-3) !== &#39;.js&#39;) return;<br>
+    var model = sequelize<a href="path.join(__dirname,%20file">&#39;import&#39;</a>);<br>
     db[model.name] = model;<br>
   });</p>
 
-<p>// define relationships between models<br>
-Object.keys(db).forEach(function(modelName) {<br>
-  if (&quot;associate&quot; in db[modelName]) {<br>
+<p>Object.keys(db).forEach(function(modelName) {<br>
+  if (db[modelName].associate) {<br>
     db[modelName].associate(db);<br>
   }<br>
 });</p>
@@ -102,26 +148,127 @@ db.Sequelize = Sequelize;</p>
 <p>module.exports = db;<br>
 ```</p>
 
-<p>Be sure to also add a <em>_config.js</em> file to the &quot;server&quot; directory:</p>
+<p>Here, we establish a connection to the database, grab all the model files from the current directory, add them to the <code>db</code> object, and apply any relations between each model (if any).</p>
 
-<p>```javascript<br>
-var config = {};</p>
+<h3>Config</h3>
 
-<p>// database settings<br>
-config.DB<em>NAME = &#39;UPDATE</em>ME&#39;;<br>
-config.DB<em>USERNAME = &#39;UPDATE</em>ME&#39;;<br>
-config.DB<em>PASSWORD = &#39;UPDATE</em>ME&#39;;</p>
-
-<p>module.exports = config;<br>
-```</p>
-
-<p>Make sure to update those database settings!</p>
-
-<h3>Models</h3>
-
-<p>Now let&#39;s define a model. Since we&#39;re working with todos, add a <em>todo.js</em> file to the &quot;models&quot; directory:</p>
+<p>Be sure to also update the <em>config.js</em> file for your development, test, and production databases:</p>
 
 <p><code>javascript<br>
+{<br>
+  &quot;development&quot;: {<br>
+    &quot;username&quot;: &quot;update me&quot;,<br>
+    &quot;password&quot;: &quot;update me&quot;,<br>
+    &quot;database&quot;: &quot;todos&quot;,<br>
+    &quot;host&quot;: &quot;127.0.0.1&quot;,<br>
+    &quot;port&quot;: &quot;5432&quot;,<br>
+    &quot;dialect&quot;: &quot;postgres&quot;<br>
+  },<br>
+  &quot;test&quot;: {<br>
+    &quot;username&quot;: &quot;update me&quot;,<br>
+    &quot;password&quot;: &quot;update me&quot;,<br>
+    &quot;database&quot;: &quot;update_me&quot;,<br>
+    &quot;host&quot;: &quot;update me&quot;,<br>
+    &quot;dialect&quot;: &quot;update me&quot;<br>
+  },<br>
+  &quot;production&quot;: {<br>
+    &quot;username&quot;: &quot;update me&quot;,<br>
+    &quot;password&quot;: &quot;update me&quot;,<br>
+    &quot;database&quot;: &quot;update me&quot;,<br>
+    &quot;host&quot;: &quot;update me&quot;,<br>
+    &quot;dialect&quot;: &quot;update me&quot;<br>
+  }<br>
+}<br>
+</code></p>
+
+<blockquote>
+<p>If you are just running this locally, using the basic development server, then just update the <code>development</code> config.</p>
+</blockquote>
+
+<p>Go ahead and create a database named &quot;todos&quot;.</p>
+
+<h3>Create Migration</h3>
+
+<p>Now let&#39;s create a model along with a migration. Since we&#39;re working with todos, run the following command:</p>
+
+<p><code>sh<br>
+$ node_modules/.bin/sequelize model:create --name Todo --attributes &quot;title:string, complete:boolean,UserId:integer&quot;<br>
+</code></p>
+
+<p>Take a look a the newly created model file, <em>todo.js</em> in the models directory:</p>
+
+<p><code>javascript<br>
+&#39;use strict&#39;;<br>
+module.exports = function(sequelize, DataTypes) {<br>
+  var Todo = sequelize.define(&#39;Todo&#39;, {<br>
+    title: DataTypes.STRING,<br>
+    complete: DataTypes.BOOLEAN<br>
+  }, {<br>
+    classMethods: {<br>
+      associate: function(models) {<br>
+        // associations can be defined here<br>
+      }<br>
+    }<br>
+  });<br>
+  return Todo;<br>
+};<br>
+</code></p>
+
+<p>The corresponding migration file can be found in the &quot;migrations&quot; folder. Take a look. Next, let&#39;s associate a user to a todo. First, we need to define a new migration:</p>
+
+<p><code>sh<br>
+$ node_modules/.bin/sequelize model:create --name User --attributes &quot;email:string&quot;<br>
+</code></p>
+
+<p>Now we need to set up the relationship between the two models...</p>
+
+<h3>Associations</h3>
+
+<p>To associate the models (one user can have many todos), make the following updates...</p>
+
+<p><strong>todo.js</strong>:</p>
+
+<p><code>javascript<br>
+&#39;use strict&#39;;<br>
+module.exports = function(sequelize, DataTypes) {<br>
+  var Todo = sequelize.define(&#39;Todo&#39;, {<br>
+    title: DataTypes.STRING,<br>
+    complete: DataTypes.BOOLEAN<br>
+  }, {<br>
+    classMethods: {<br>
+      associate: function(models) {<br>
+        Todo.belongsTo(models.User);<br>
+      }<br>
+    }<br>
+  });<br>
+  return Todo;<br>
+};<br>
+</code></p>
+
+<p><strong>user.js</strong>:</p>
+
+<p><code>javascript<br>
+&#39;use strict&#39;;<br>
+module.exports = function(sequelize, DataTypes) {<br>
+  var User = sequelize.define(&#39;User&#39;, {<br>
+    email: DataTypes.STRING<br>
+  }, {<br>
+    classMethods: {<br>
+      associate: function(models) {<br>
+        User.hasMany(models.Todo);<br>
+      }<br>
+    }<br>
+  });<br>
+  return User;<br>
+};<br>
+</code></p>
+
+<h3>Sync</h3>
+
+<p>Finally, before we sync, let&#39;s add an additional attribute to the <code>complete</code> filed in the <em>todo.js</em> file:</p>
+
+<p><code>javascript<br>
+&#39;use strict&#39;;<br>
 module.exports = function(sequelize, DataTypes) {<br>
   var Todo = sequelize.define(&#39;Todo&#39;, {<br>
     title: DataTypes.STRING,<br>
@@ -129,24 +276,74 @@ module.exports = function(sequelize, DataTypes) {<br>
       type: DataTypes.BOOLEAN,<br>
       defaultValue: false<br>
     }<br>
+  }, {<br>
+    classMethods: {<br>
+      associate: function(models) {<br>
+        Todo.belongsTo(models.User);<br>
+      }<br>
+    }<br>
   });<br>
   return Todo;<br>
 };<br>
 </code></p>
 
-<h3>Sync</h3>
+<p>Run the migration to create the tables:</p>
 
-<p>To sync the models in order to create the tables in Postgres, add the following code to <em>app.js</em>:</p>
+<p>```sh<br>
+$ node_modules/.bin/sequelize db:migrate</p>
 
-<p><code>javascript<br>
-// *** create pg tables from models *** //<br>
-var db = require(&#39;./models/index.js&#39;);<br>
-db.sequelize.sync();<br>
-</code></p>
+<p>Sequelize [Node: 4.1.1, CLI: 2.1.0, ORM: 3.12.2]</p>
+
+<p>Loaded configuration file &quot;server/config.json&quot;.<br>
+Using environment &quot;development&quot;.<br>
+Using gulpfile ~/node_modules/sequelize-cli/lib/gulpfile.js<br>
+Starting &#39;db:migrate&#39;...<br>
+== 20151101052127-create-todo: migrating =======<br>
+== 20151101052127-create-todo: migrated (0.049s)</p>
+
+<p>== 20151101052148-create-user: migrating =======<br>
+== 20151101052148-create-user: migrated (0.042s)</p>
+
+<p>```</p>
 
 <h2>CRUD</h2>
 
-<p>With Sequelize set up and the model defined, we can now set up our RESTful routing structure, starting with a basic GET request...</p>
+<p>With Sequelize set up and the models defined, we can now set up our RESTful routing structure for the todo resource. First, within <em>index.js</em> in the &quot;routes&quot; folder add the following requirement:</p>
+
+<p><code>javascript<br>
+var models = require(&#39;../models/index&#39;);<br>
+</code></p>
+
+<p>Then add a route for creating a new user:</p>
+
+<p><code>javascript<br>
+router.post(&#39;/users&#39;, function(req, res) {<br>
+  models.User.create({<br>
+    email: req.body.email<br>
+  }).then(function(user) {<br>
+    res.json(todo);<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>To add a new user, run the server - <code>gulp</code> - and then run the following in a new terminal window:</p>
+
+<p><code>sh<br>
+$ curl --data &quot;email=michael@mherman.org&quot; http://127.0.0.1:3000/users<br>
+</code></p>
+
+<p>You should see:</p>
+
+<p><code>json<br>
+{<br>
+  &quot;id&quot;:1,<br>
+  &quot;email&quot;:&quot;michael@mherman.org&quot;,<br>
+  &quot;updatedAt&quot;:&quot;2015-11-01T12:24:20.375Z&quot;,<br>
+  &quot;createdAt&quot;:&quot;2015-11-01T12:24:20.375Z&quot;<br>
+}<br>
+</code></p>
+
+<p>Now we can add the todo routes...</p>
 
 <h3>GET all todos</h3>
 
@@ -168,6 +365,7 @@ router.get(&#39;/todos&#39;, function(req, res) {<br>
 router.post(&#39;/todos&#39;, function(req, res) {<br>
   models.Todo.create({<br>
     title: req.body.title,<br>
+    UserId: req.body.user_id<br>
   }).then(function(todo) {<br>
     res.json(todo);<br>
   });<br>
@@ -177,8 +375,8 @@ router.post(&#39;/todos&#39;, function(req, res) {<br>
 <p>Now let&#39;s test:</p>
 
 <p><code>sh<br>
-$ curl --data &quot;title=test&quot; http://127.0.0.1:3000/todos<br>
-$ curl --data &quot;title=test2&quot; http://127.0.0.1:3000/todos<br>
+$ curl --data &quot;title=test&amp;user_id=1&quot; http://127.0.0.1:3000/todos<br>
+$ curl --data &quot;title=test2&amp;user_id=1&quot; http://127.0.0.1:3000/todos<br>
 </code></p>
 
 <p>Then if you go back and hit <a href="http://127.0.0.1:3000/todos">http://127.0.0.1:3000/todos</a> in our browser, you should see:</p>
@@ -189,15 +387,17 @@ $ curl --data &quot;title=test2&quot; http://127.0.0.1:3000/todos<br>
     id: 1,<br>
     title: &quot;test&quot;,<br>
     complete: false,<br>
-    createdAt: &quot;2015-10-21T13:05:43.512Z&quot;,<br>
-    updatedAt: &quot;2015-10-21T13:05:43.512Z&quot;<br>
+    createdAt: &quot;2015-11-01T12:31:56.451Z&quot;,<br>
+    updatedAt: &quot;2015-11-01T12:31:56.451Z&quot;,<br>
+    UserId: 1<br>
   },<br>
   {<br>
     id: 2,<br>
     title: &quot;test2&quot;,<br>
     complete: false,<br>
-    createdAt: &quot;2015-10-21T13:18:30.528Z&quot;,<br>
-    updatedAt: &quot;2015-10-21T13:18:30.528Z&quot;<br>
+    createdAt: &quot;2015-11-01T12:32:09.000Z&quot;,<br>
+    updatedAt: &quot;2015-11-01T12:32:09.000Z&quot;,<br>
+    UserId: 1<br>
   }<br>
 ]<br>
 </code></p>
@@ -235,8 +435,9 @@ router.put(&#39;/todo/:id&#39;, function(req, res) {<br>
   }).then(function(todo) {<br>
     if(todo){<br>
       todo.updateAttributes({<br>
-        title: &#39;a very different title now&#39;<br>
-      }).success(function(todo) {<br>
+        title: req.body.title,<br>
+        complete: req.body.complete<br>
+      }).then(function(todo) {<br>
         res.send(todo);<br>
       });<br>
     }<br>
@@ -277,13 +478,7 @@ $ curl -X DELETE http://127.0.0.1:3000/todo/1<br>
 
 <h2>Conclusion</h2>
 
-<p>That&#39;s it for the basic server-side code. We still need to look at handling-</p>
-
-<ol>
-<li><a href="http://docs.sequelizejs.com/en/latest/docs/associations/">Model relations/associations</a>,</li>
-<li>Authentication, and</li>
-<li><a href="http://docs.sequelizejs.com/en/latest/docs/migrations/">Migrations</a></li>
-</ol>
+<p>That&#39;s it for the basic server-side code. You now have a database, models, and migrations set up. Whenever you want to update the state of your database, just add additional migrations and then run them as necessary.</p>
 
 <p>Grab the code from the <a href="https://github.com/mjhea0/node-postgres-sequelize">Github repo</a>. Comment below with questions. Cheers!</p>
 ]]></content>
@@ -1895,358 +2090,6 @@ router.delete(&#39;/superhero/:id&#39;, function(req, res) {<br>
 <h2>Conclusion</h2>
 
 <p>That&#39;s it. Post your questions below. Grab the code from the <a href="https://github.com/mjhea0/node-express-swig-mongo">repository</a>. Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Primer on Swig Templating]]></title>
-    <link href="http://mjhea0.github.com/blog/2015/08/23/primer-on-swig-templating/"/>
-    <updated>2015-08-23T14:10:00-06:00</updated>
-    <id>http://mjhea0.github.com/blog/2015/08/23/primer-on-swig-templating</id>
-    <content type="html"><![CDATA[<p><strong>Let&#39;s look at the basics of <a href="http://paularmstrong.github.io/swig/">Swig</a>, &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.</strong></p>
-
-<p><hr><br></p>
-
-<p>First off, a templating engine creates web pages (or views) dynamically by combining variables and programming logic with HTML. Essentially, you can add placeholders (or tags) to your HTML that are replaced by <em>actual</em> code defined from your router or controller. In general, tags, for the majority of templating engines, fall within one of two categores-</p>
-
-<ol>
-<li><em>Variables/Output Tags</em> - surrounded by double curly brackets <code></code>, these output the results of a logic tag or a variable to the end user</li>
-<li><em>Logic Tags</em> - surrouded by <code>{% ... %}</code>, these handle programming logic, like loops and conditionals</li>
-</ol>
-
-<blockquote>
-<p>Before diving in, grab the basic project structure from <a href="https://github.com/mjhea0/swig-primer/releases/tag/v1">Github</a>, install the dependencies via NPM - <code>npm install</code> - and then run the server. Pay attention to where we initialize Swig and set it as the templating language in <em>app.js</em>:<br>
-    <code><br>
-    var swig = new swig.Swig();<br>
-    app.engine(&#39;html&#39;, swig.renderFile);<br>
-    app.set(&#39;view engine&#39;, &#39;html&#39;);<br>
-</code></p>
-</blockquote>
-
-<h2>Output Tags</h2>
-
-<p>Let&#39;s start with some basic examples...</p>
-
-<h3>Basics</h3>
-
-<p>First, we can pass variables from our route handlers/view functions directly to the templates.</p>
-
-<p>Update the <em>index.html</em> file:</p>
-
-<p><br>
-<code>html<br>
-&lt;!DOCTYPE html&gt;<br>
-&lt;html&gt;<br>
-&lt;head&gt;<br>
-  &lt;title&gt;{{title}}&lt;/title&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-  &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</code><br>
-</p>
-
-<p>Now, we can pass in a variable called <code>title</code> to the template from <em>app.js</em>:</p>
-
-<p><code>javascript<br>
-// *** main routes *** //<br>
-app.get(&#39;/&#39;, function(req, res) {<br>
-  res.render(&#39;index.html&#39;, {title: &#39;Swig Primer!&#39;});<br>
-});<br>
-</code></p>
-
-<p>Fire up the server and test this out. Nice. <strong>Try adding another variable to the template.</strong></p>
-
-<p><em>index.html</em>:</p>
-
-<p><br>
-<code>html<br>
-&lt;!DOCTYPE html&gt;<br>
-&lt;html&gt;<br>
-&lt;head&gt;<br>
-  &lt;title&gt;{{title}}&lt;/title&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-  &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
-  &lt;p&gt;{{description}}&lt;/p&gt;<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</code><br>
-</p>
-
-<p><em>app.js</em>:</p>
-
-<p><code>javascript<br>
-app.get(&#39;/&#39;, function(req, res) {<br>
-  var title = &#39;Swig Primer!&#39;<br>
-  var description = &#39;Swig is &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.&#39;<br>
-  res.render(&#39;index.html&#39;, {title: title, description: description});<br>
-});<br>
-</code></p>
-
-<p>Keep in mind that all variable outputs are <a href="http://paularmstrong.github.io/swig/docs/api/#SwigOpts">automtomatically escaped</a> except for function outputs:</p>
-
-<p><code>javascript<br>
-// *** main routes *** //<br>
-app.get(&#39;/&#39;, function(req, res) {<br>
-  var title = &#39;Swig Primer!&#39;<br>
-  var description = &#39;Swig is &quot;a simple, powerful, and extendable JavaScript Template Engine&quot; for NodeJS.&#39;<br>
-  function allthethings() {<br>
-    return &#39;&lt;span&gt;All the things!&lt;/span&gt;&#39;;<br>
-  }<br>
-  res.render(&#39;index.html&#39;, {<br>
-    title: title,<br>
-    description: description,<br>
-    allthethings: allthethings<br>
-  });<br>
-});<br>
-</code></p>
-
-<p>Don&#39;t forget to call the function in the template - <code>&lt;p&gt;&lt;/p&gt;</code></p>
-
-<blockquote>
-<p>Please see the official <a href="http://paularmstrong.github.io/swig/docs/#variables">documentation</a> for more info on output tags.</p>
-</blockquote>
-
-<h3>Filters</h3>
-
-<p>Filters, which are just simple methods, can be used to modify the output value. To illustrate some examples, add another route handler to <em>app.js</em>, like so:</p>
-
-<p><code>javascript<br>
-app.get(&#39;/filter&#39;, function(req, res) {<br>
-  res.render(&#39;filter.html&#39;, {<br>
-    title: &#39;Hello, World!&#39;,<br>
-    date: new Date(),<br>
-    nameArray: [&#39;This&#39;, &#39;is&#39;, &#39;just&#39;, &#39;an&#39;, &#39;example&#39;]<br>
-  });<br>
-});<br>
-</code></p>
-
-<p>Now just add a new template, <em>filter.html</em>, adding in a number of filters:</p>
-
-<p><br>
-<code>html<br>
-&lt;!DOCTYPE html&gt;<br>
-&lt;html&gt;<br>
-&lt;head&gt;<br>
-  &lt;title&gt;{{title}}&lt;/title&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-  &lt;h1&gt;{{title | upper}}&lt;/h1&gt;<br>
-  &lt;p&gt;{{date | date(&quot;Y-m-d&quot;)}}&lt;/p&gt;<br>
-  &lt;p&gt;{{nameArray | join(&#39; &#39;)}}&lt;/p&gt;<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</code><br>
-</p>
-
-<blockquote>
-<p>Check out all the available <a href="http://paularmstrong.github.io/swig/docs/filters/">filters</a>. You can also extend the functionality of Swig by adding your own <a href="http://paularmstrong.github.io/swig/docs/extending/">custom filters</a>!</p>
-</blockquote>
-
-<h2>Logic Tags</h2>
-
-<p>As the name suggests, <a href="http://paularmstrong.github.io/swig/docs/tags/">logic tags</a> let you use, well, logic in your templates.</p>
-
-<h3>IF statements</h3>
-
-<p>Here&#39;s a simple example...</p>
-
-<p><em>app.js</em>:</p>
-
-<p><code>javascript<br>
-app.get(&#39;/logic&#39;, function(req, res) {<br>
-  var title = &#39;Swig Logic!&#39;<br>
-  res.render(&#39;logic.html&#39;, {title: title});<br>
-});<br>
-</code></p>
-
-<p><em>logic.html</em>:</p>
-
-<p><code>html<br>
-<br>
-&lt;!DOCTYPE html&gt;<br>
-&lt;html&gt;<br>
-&lt;head&gt;<br>
-  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-  {% if title %}<br>
-    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
-  {% endif %}<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-<br>
-</code></p>
-
-<p><strong>Test out some more examples of <a href="http://paularmstrong.github.io/swig/docs/tags/#if">if</a>, <a href="http://paularmstrong.github.io/swig/docs/tags/#elif">elif</a>, and <a href="http://paularmstrong.github.io/swig/docs/tags/#else">else</a>.</strong></p>
-
-<h3>Loops</h3>
-
-<p><strong>How about a for loop?</strong></p>
-
-<p><em>app.js</em>:</p>
-
-<p><code>javascript<br>
-app.get(&#39;/logic&#39;, function(req, res) {<br>
-  var title = &#39;Swig Logic!&#39;<br>
-  var numberArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]<br>
-  res.render(&#39;logic.html&#39;, {title: title, numberArray: numberArray});<br>
-});<br>
-</code></p>
-
-<p><em>logic.html</em>:</p>
-
-<p><br>
-<code>html<br>
-&lt;!DOCTYPE html&gt;<br>
-&lt;html&gt;<br>
-&lt;head&gt;<br>
-  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-  {% if title %}<br>
-    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
-  {% endif %}<br>
-  &lt;ul&gt;<br>
-    {% for num in numberArray %}<br>
-      &lt;li&gt;{{ num }}&lt;/li&gt;<br>
-    {% endfor %}<br>
-  &lt;/ul&gt;<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</code><br>
-</p>
-
-<p><strong>Need to reverse the loop?</strong></p>
-
-<p>Simply add a filter:</p>
-
-<p><br>
-<code>html<br>
-&lt;!DOCTYPE html&gt;<br>
-&lt;html&gt;<br>
-&lt;head&gt;<br>
-  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-  {% if title %}<br>
-    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
-  {% endif %}<br>
-  &lt;ul&gt;<br>
-    {% for num in numberArray | reverse %}<br>
-      &lt;li&gt;{{ num }}&lt;/li&gt;<br>
-    {% endfor %}<br>
-  &lt;/ul&gt;<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</code><br>
-</p>
-
-<p><strong>What would a basic loop and filter look like?</strong></p>
-
-<p><br>
-<code>html<br>
-&lt;!DOCTYPE html&gt;<br>
-&lt;html&gt;<br>
-&lt;head&gt;<br>
-  &lt;title&gt;{% if title %}{{title}}{% endif %}&lt;/title&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-  {% if title %}<br>
-    &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
-  {% endif %}<br>
-  &lt;ul&gt;<br>
-    {% for num in numberArray %}<br>
-      {% if num % 2 === 0 %}<br>
-        &lt;li&gt;{{ num }}&lt;/li&gt;<br>
-      {% endif %}<br>
-    {% endfor %}<br>
-  &lt;/ul&gt;<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</code><br>
-</p>
-
-<blockquote>
-<p>You could also write a custom filter for this if you needed to do the <em>same</em> filtering logic a number of times throughout your application.</p>
-</blockquote>
-
-<p>There&#39;s also a number of <a href="http://paularmstrong.github.io/swig/docs/tags/#for">helper methods</a> available with loops:</p>
-
-<ul>
-<li><code>loop.index</code> returns the current iteration of the loop (1-indexed)</li>
-<li><code>loop.index0</code> returns the current iteration of the loop (0-indexed)</li>
-<li><code>loop.revindex</code> returns the number of iterations from the end of the loop (1-indexed)</li>
-<li><code>loop.revindex0</code> returns the number of iterations from the end of the loop (0-indexed)</li>
-<li><code>loop.key</code> returns the key of the current item, if the iterator is an object; otherwise it will operate the same as <code>loop.index</code></li>
-<li><code>loop.first</code> returns true if the current object is the first in the object or array.</li>
-<li><code>loop.last</code> returns true if the current object is the last in the object or array.</li>
-</ul>
-
-<p>Try some of these out:</p>
-
-<p><br>
-<code>html<br>
-{% for num in numberArray | reverse %}<br>
-  {% if num % 2 === 0 %}<br>
-    &lt;li&gt;{{ num }} - {{loop.index}}&lt;/li&gt;<br>
-  {% endif %}<br>
-{% endfor %}<br>
-</code><br>
-</p>
-
-<h2>Template Inheritence</h2>
-
-<p>Logic tags can also be used to extend common code from a base template to child templates. You can use the <code>block</code> tag to accomplish this.</p>
-
-<p>Create a new HTML file called <em>layout.html</em>:</p>
-
-<p><br>
-<code>html<br>
-&lt;!DOCTYPE html&gt;<br>
-&lt;html&gt;<br>
-&lt;head&gt;<br>
-  &lt;title&gt;{{title}}&lt;/title&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-  {% block content %}{% endblock %}<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</code><br>
-</p>
-
-<p>Did you notice the <code>{% block content %}{% endblock %}</code> tags? These are like placeholders that child templates fill in.</p>
-
-<p>Add another new file called <em>test.html</em>:</p>
-
-<p><br>
-<code>html<br>
-{% extends &quot;layout.html&quot; %}<br>
-{% block content %}<br>
-  &lt;h3&gt; This is the start of a child template&lt;/h3&gt;<br>
-{% endblock %}<br>
-</code><br>
-</p>
-
-<p>Finally, add a route handler to <em>app.js</em>:</p>
-
-<p><br>
-<code>html<br>
-{% extends &quot;layout.html&quot; %}<br>
-{% block content %}<br>
-  &lt;h1&gt;This is the start of a child template&lt;/h1&gt;<br>
-  &lt;h1&gt;{{title}}&lt;/h1&gt;<br>
-{% endblock %}<br>
-</code><br>
-</p>
-
-<p>So, the blocks -  <code>{% block content %}{% endblock %}</code> correspond to the block placeholders from the layout file, and since this file extends from the layout, the content defined here is placed in the corresponding placeholders in the layout.</p>
-
-<h2>Conclusion</h2>
-
-<p>Check the <a href="http://paularmstrong.github.io/swig/">documentation</a> for more info. Add your questions below. Cheers!</p>
 ]]></content>
   </entry>
   
