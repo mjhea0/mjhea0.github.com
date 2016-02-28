@@ -4,7 +4,7 @@
   <title><![CDATA[Category: angular | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/angular/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2016-02-24T02:10:29-07:00</updated>
+  <updated>2016-02-27T20:22:42-07:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -589,7 +589,10 @@ access: {restricted: true}<br>
 <p><code>javascript<br>
 myApp.config(function ($routeProvider) {<br>
   $routeProvider<br>
-    .when(&#39;/&#39;, {templateUrl: &#39;partials/home.html&#39;})<br>
+    .when(&#39;/&#39;, {<br>
+      templateUrl: &#39;partials/home.html&#39;,<br>
+      access: {restricted: false}<br>
+    })<br>
     .when(&#39;/login&#39;, {<br>
       templateUrl: &#39;partials/login.html&#39;,<br>
       controller: &#39;loginController&#39;,<br>
@@ -630,6 +633,50 @@ myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
 </code></p>
 
 <p>Test it out!</p>
+
+<h2>Persistant Login</h2>
+
+<p>Finally, what happens on a page refresh? Try it.</p>
+
+<p>The user is logged out, right? Why? Because the the controller and services are called again, setting the <code>user</code> variable to <code>null</code>. This is a problem since the user is still logged in on the server side.</p>
+
+<p>Fortunately, the fix is easy: Within the <code>$routeChangeStart</code> we just need to ALWAYS check if a user is logged in. Right now, it&#39;s checking if <code>isLoggedIn()</code> is <code>false</code>. Let&#39;s update that function in our service so that it checks the user status on the server side:</p>
+
+<p><code>javascript<br>
+function isLoggedIn() {<br>
+  $http.get(&#39;/user/status&#39;)<br>
+  // handle success<br>
+  .success(function (data) {<br>
+    if(data.status){<br>
+      user = true;<br>
+    } else {<br>
+      user = false;<br>
+    }<br>
+  })<br>
+  // handle error<br>
+  .error(function (data) {<br>
+    user = false;<br>
+  });<br>
+  if(user){<br>
+    return true;<br>
+  } else {<br>
+    return false;<br>
+  }<br>
+}<br>
+</code></p>
+
+<p>Then add the route handler:</p>
+
+<p><code>javascript<br>
+router.get(&#39;/status&#39;, function(req, res) {<br>
+  if (!req.isAuthenticated()) {<br>
+    return res.status(200).json({status: false});<br>
+  }<br>
+  res.status(200).json({status: true});<br>
+});<br>
+</code></p>
+
+<p>Try it out! If it works, refactor the <code>isLoggedIn()</code> into two functions.</p>
 
 <h2>Conclusion</h2>
 

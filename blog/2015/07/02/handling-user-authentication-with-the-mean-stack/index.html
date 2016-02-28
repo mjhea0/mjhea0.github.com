@@ -969,9 +969,15 @@
 <span class='line-number'>25</span>
 <span class='line-number'>26</span>
 <span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">myApp</span><span class="p">.</span><span class="nx">config</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$routeProvider</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">$routeProvider</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/home.html&#39;</span><span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/home.html&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">access</span><span class="o">:</span> <span class="p">{</span><span class="nx">restricted</span><span class="o">:</span> <span class="kc">false</span><span class="p">}</span>
+</span><span class='line'>    <span class="p">})</span>
 </span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="p">{</span>
 </span><span class='line'>      <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/login.html&#39;</span><span class="p">,</span>
 </span><span class='line'>      <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;loginController&#39;</span><span class="p">,</span>
@@ -1019,6 +1025,74 @@
 </span></code></pre></td></tr></table></div></figure>
 
 <p>Test it out!</p>
+
+<h2>Persistant Login</h2>
+
+<p>Finally, what happens on a page refresh? Try it.</p>
+
+<p>The user is logged out, right? Why? Because the the controller and services are called again, setting the <code>user</code> variable to <code>null</code>. This is a problem since the user is still logged in on the server side.</p>
+
+<p>Fortunately, the fix is easy: Within the <code>$routeChangeStart</code> we just need to ALWAYS check if a user is logged in. Right now, it&#39;s checking if <code>isLoggedIn()</code> is <code>false</code>. Let&#39;s update that function in our service so that it checks the user status on the server side:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">isLoggedIn</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">$http</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/user/status&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="c1">// handle success</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">status</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">user</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">user</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>  <span class="c1">// handle error</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">user</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Then add the route handler:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/status&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">req</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="kc">false</span><span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Try it out! If it works, refactor the <code>isLoggedIn()</code> into two functions.</p>
 
 <h2>Conclusion</h2>
 
