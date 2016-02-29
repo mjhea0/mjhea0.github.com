@@ -123,13 +123,16 @@
 
 <p><br></p>
 
-<p><strong>This post provides a solution to the question, &quot;How do I handle user authentication with the MEAN Stack - MongoDB, ExpressJS, AngularJS, NodeJS?&quot;.</strong></p>
+<p><strong>This post provides a solution to the question, &quot;How do I handle user authentication with the MEAN Stack - MongoDB, ExpressJS, AngularJS, and NodeJS?&quot;.</strong></p>
 
 <blockquote>
-<p>Much of this post is ported from <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">Handling User Authentication with Angular and Flask</a>.</p>
+<p>Much of this post is ported from <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">Handling User Authentication with Angular and Flask</a> from <a href="https://realpython.com">Real Python</a>.</p>
 </blockquote>
 
-<p>Keep in mind that this solution posed in this tutorial is not the <em>only</em> solution to the question at hand, and it may not even be the <em>right</em> solution for your situation. Regardless of the solution you implement, it is important to note that since end users have full control of the browser as well as access to the front-end code, sensitive data living in your server-side API must be secure. In other words, make certain that you implement an authentication strategy on the server-side to protect sensitive API endpoints.</p>
+<p><em>Updates:</em><br>
+- 02/28/2016: Updated to the latest versions of NodeJS, ExpressJS, MongoDB, and AngularJS; added a section on persistant logins.</p>
+
+<p>Keep in mind that this solution posed in this tutorial is not the <em>only</em> solution to the question at hand, and it may not even be the <em>right</em> solution for your situation. Regardless of the solution you implement, it is important to note that since end users have full control of the browser as well as access to the front-end code, sensitive data living in your server-side API must be secure. <em>In other words, make certain that you implement an authentication strategy on the server-side to protect sensitive API endpoints.</em></p>
 
 <p>That said, we need to enable the following workflow:</p>
 
@@ -141,7 +144,7 @@
 </ol>
 
 <blockquote>
-<p>This tutorial uses <a href="http://docs.mongodb.org/v2.6/">MongoDB</a> v2.6.7, <a href="http://expressjs.com/4x/api.html">ExpressJS</a> v4.9.8, <a href="https://code.angularjs.org/1.3.15/docs/guide">AngularJS</a> v1.3.15, <a href="https://nodejs.org/">NodeJS</a> v0.12.2, and <a href="https://github.com/jaredhanson/passport-local">Passport-Local</a> v1.0.0. For a full list of dependencies, please view the <em><a href="https://github.com/mjhea0/mean-auth/blob/master/package.json">package.json</a></em> file.</p>
+<p>This tutorial uses <a href="https://nodejs.org/">NodeJS</a> v4.3.1, <a href="http://expressjs.com/4x/api.html">ExpressJS</a> v4.13.4, <a href="https://docs.mongodb.org/v3.2/">MongoDB</a> v3.2.3, and <a href="https://code.angularjs.org/1.4.9/docs/guide">AngularJS</a> v1.4.9. For a full list of dependencies, please view the <em><a href="https://github.com/mjhea0/mean-auth/blob/master/package.json">package.json</a></em> file.</p>
 </blockquote>
 
 <h2>Getting Started</h2>
@@ -182,15 +185,15 @@
 </span><span class='line'>    └── server.js
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Nothing too spectacular. You can see that the back-end code resides in the &quot;server&quot; folder, while the front-end code lives in the &quot;client&quot; folder. Explore the files and folder within each.</p>
+<p>Nothing too spectacular. You can see that the back-end code resides in the &quot;server&quot; folder, while the front-end code lives in the &quot;client&quot; folder. Explore the files and folders within each.</p>
 
 <h2>Login API</h2>
 
-<p>Let&#39;s start with the back-end API. This is already built out, for your convenience. Why? The focus is mainly on the client-side. If you&#39;re looking for a back-end tutorial for setting up Passport with NodeJS, ExpressJS, and MongoDB take a look at this <a href="http://mherman.org/blog/2015/01/31/local-authentication-with-passport-and-express-4/#.VZCK9xNViko">tutorial</a>.</p>
+<p>Let&#39;s start with the back-end API. This is already built out, for your convenience. Why? The focus of this tutorial is mainly on the client-side. If you&#39;re looking for a back-end tutorial for setting up Passport with NodeJS, ExpressJS, and MongoDB take a look at this <a href="http://mherman.org/blog/2015/01/31/local-authentication-with-passport-and-express-4/#.VZCK9xNViko">tutorial</a>.</p>
 
 <h3>User Registration</h3>
 
-<p>Open the &quot;routes&quot; folder and find the following code:</p>
+<p>Open the &quot;routes&quot; folder and locate the following code:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -202,13 +205,23 @@
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/register&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">User</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="k">new</span> <span class="nx">User</span><span class="p">({</span> <span class="nx">username</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span> <span class="p">}),</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">account</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">User</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="k">new</span> <span class="nx">User</span><span class="p">({</span> <span class="nx">username</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span> <span class="p">}),</span>
+</span><span class='line'>    <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">account</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">err</span><span class="o">:</span> <span class="nx">err</span><span class="p">});</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>        <span class="nx">err</span><span class="o">:</span> <span class="nx">err</span>
+</span><span class='line'>      <span class="p">});</span>
 </span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>    <span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">)(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;Registration successful!&#39;</span><span class="p">});</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>        <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;Registration successful!&#39;</span>
+</span><span class='line'>      <span class="p">});</span>
 </span><span class='line'>    <span class="p">});</span>
 </span><span class='line'>  <span class="p">});</span>
 </span><span class='line'><span class="p">});</span>
@@ -216,24 +229,42 @@
 
 <p>Here, we grab the values from the payload sent with the POST request (from the client-side), create a new <code>User</code> instance, and then attempt to add the instance to the database. If this succeeds a user is added, of course, and then we return a JSON response with a <code>status</code> of &quot;success&quot;. If it fails, an &quot;error&quot; response is sent.</p>
 
-<p>Let&#39;s test this via curl. Fire up the server and then run the following command:</p>
+<p>Let&#39;s test this via curl. Fire up the server, and then run the following command:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -H <span class="s2">&quot;Accept: application/json&quot;</span> -H <span class="s2">&quot;Content-type: application/json&quot;</span> -X POST <span class="se">\</span>
-</span><span class='line'>-d <span class="s1">&#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39;</span> http://localhost:3000/user/register
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -H <span class="s2">&quot;Accept: application/json&quot;</span> -H <span class="se">\</span>
+</span><span class='line'><span class="s2">&quot;Content-type: application/json&quot;</span> -X POST <span class="se">\</span>
+</span><span class='line'>-d <span class="s1">&#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39;</span> <span class="se">\</span>
+</span><span class='line'>http://localhost:3000/user/register
 </span></code></pre></td></tr></table></div></figure>
 
 <p>You should see a success message:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span><span class="s2">&quot;status&quot;</span>:<span class="s2">&quot;Registration successful!&quot;</span><span class="o">}</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span>
+</span><span class='line'>  <span class="s2">&quot;status&quot;</span>: <span class="s2">&quot;Registration successful!&quot;</span>
+</span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>Try it again, with the exact same username and password, and you should see an error:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span><span class="s2">&quot;err&quot;</span>:<span class="o">{</span><span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;BadRequestError&quot;</span>,<span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;User already exists with username test@test.com&quot;</span><span class="o">}}</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span>
+</span><span class='line'>  <span class="s2">&quot;err&quot;</span>: <span class="o">{</span>
+</span><span class='line'>    <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;UserExistsError&quot;</span>,
+</span><span class='line'>    <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;A user with the given username is already registered&quot;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>On to the login&#8230;</p>
@@ -256,19 +287,31 @@
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">,</span> <span class="nx">info</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">err</span><span class="o">:</span> <span class="nx">err</span><span class="p">});</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
 </span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">401</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">err</span><span class="o">:</span> <span class="nx">info</span><span class="p">});</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">401</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>        <span class="nx">err</span><span class="o">:</span> <span class="nx">info</span>
+</span><span class='line'>      <span class="p">});</span>
 </span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>    <span class="nx">req</span><span class="p">.</span><span class="nx">logIn</span><span class="p">(</span><span class="nx">user</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">err</span><span class="o">:</span> <span class="s1">&#39;Could not log in user&#39;</span><span class="p">});</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>          <span class="nx">err</span><span class="o">:</span> <span class="s1">&#39;Could not log in user&#39;</span>
+</span><span class='line'>        <span class="p">});</span>
 </span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;Login successful!&#39;</span><span class="p">});</span>
+</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>        <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;Login successful!&#39;</span>
+</span><span class='line'>      <span class="p">});</span>
 </span><span class='line'>    <span class="p">});</span>
 </span><span class='line'>  <span class="p">})(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">);</span>
 </span><span class='line'><span class="p">});</span>
@@ -280,20 +323,38 @@
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>curl -H <span class="s2">&quot;Accept: application/json&quot;</span> -H <span class="s2">&quot;Content-type: application/json&quot;</span> -X POST <span class="se">\</span>
-</span><span class='line'>-d <span class="s1">&#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39;</span> http://localhost:3000/user/login
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>curl -H <span class="s2">&quot;Accept: application/json&quot;</span> -H <span class="se">\</span>
+</span><span class='line'><span class="s2">&quot;Content-type: application/json&quot;</span> -X POST <span class="se">\</span>
+</span><span class='line'>-d <span class="s1">&#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39;</span> <span class="se">\</span>
+</span><span class='line'>http://localhost:3000/user/login
 </span></code></pre></td></tr></table></div></figure>
 
 <p>-and you should see:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span><span class="s2">&quot;message&quot;</span>:<span class="s2">&quot;Login successful!&quot;</span><span class="o">}</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span>
+</span><span class='line'>  <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;Login successful!&quot;</span>
+</span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>Test again with curl, sending the wrong password, and you should see:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span><span class="s2">&quot;err&quot;</span>:<span class="o">{</span><span class="s2">&quot;status&quot;</span>:<span class="s2">&quot;Incorrect password&quot;</span><span class="o">}}</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span>
+</span><span class='line'>  <span class="s2">&quot;err&quot;</span>: <span class="o">{</span>
+</span><span class='line'>    <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;IncorrectPasswordError&quot;</span>,
+</span><span class='line'>    <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;Password or username are incorrect&quot;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>Perfect!</p>
@@ -306,24 +367,34 @@
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">req</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;Bye!&#39;</span><span class="p">});</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;Bye!&#39;</span>
+</span><span class='line'>  <span class="p">});</span>
 </span><span class='line'><span class="p">});</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>This should be straightforward, and you can probably guess what the response will look like - but let&#39;s test it  again:</p>
+<p>This should be straightforward, and you can probably guess what the response will look like - but let&#39;s test it again to be sure:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span> <span class="nx">curl</span> <span class="o">-</span><span class="nx">H</span> <span class="s2">&quot;Accept: application/json&quot;</span> <span class="o">-</span><span class="nx">H</span> <span class="s2">&quot;Content-type: application/json&quot;</span> <span class="o">-</span><span class="nx">X</span> <span class="nx">GET</span> <span class="o">\</span>
-</span><span class='line'><span class="nx">http</span><span class="o">:</span><span class="c1">//localhost:3000/user/logout</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -H <span class="s2">&quot;Accept: application/json&quot;</span> -H <span class="se">\</span>
+</span><span class='line'><span class="s2">&quot;Content-type: application/json&quot;</span> -X GET <span class="se">\</span>
+</span><span class='line'>http://localhost:3000/user/logout
 </span></code></pre></td></tr></table></div></figure>
 
 <p>You should see:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span><span class="s2">&quot;status&quot;</span>:<span class="s2">&quot;Bye!&quot;</span><span class="o">}</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span>
+</span><span class='line'>  <span class="s2">&quot;status&quot;</span>: <span class="s2">&quot;Bye!&quot;</span>
+</span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>On to the client-side!</p>
@@ -346,19 +417,51 @@
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">myApp</span><span class="p">.</span><span class="nx">config</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$routeProvider</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">$routeProvider</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/home.html&#39;</span><span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/login.html&#39;</span><span class="p">,</span> <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;loginController&#39;</span><span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;logoutController&#39;</span><span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/register&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/register.html&#39;</span><span class="p">,</span> <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;registerController&#39;</span><span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/one&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;</span><span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/two&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;</span><span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">otherwise</span><span class="p">({</span><span class="nx">redirectTo</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span><span class="p">});</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/home.html&#39;</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/login.html&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;loginController&#39;</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;logoutController&#39;</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/register&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/register.html&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;registerController&#39;</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/one&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/two&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">otherwise</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">redirectTo</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span>
+</span><span class='line'>    <span class="p">});</span>
 </span><span class='line'><span class="p">});</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Here, we created five new routes. Before we add the subsequent templates and controllers, let&#39;s create a <a href="https://docs.angularjs.org/guide/services">service</a> to handle authentication.</p>
+<p>Here, we created five new routes. Before we add the subsequent templates and controllers, let&#39;s create a <a href="https://code.angularjs.org/1.4.9/docs/guide/services">service</a> to handle authentication.</p>
 
 <h3>Authentication Service</h3>
 
@@ -380,6 +483,7 @@
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
+<span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;myApp&#39;</span><span class="p">).</span><span class="nx">factory</span><span class="p">(</span><span class="s1">&#39;AuthService&#39;</span><span class="p">,</span>
 </span><span class='line'>  <span class="p">[</span><span class="s1">&#39;$q&#39;</span><span class="p">,</span> <span class="s1">&#39;$timeout&#39;</span><span class="p">,</span> <span class="s1">&#39;$http&#39;</span><span class="p">,</span>
 </span><span class='line'>  <span class="kd">function</span> <span class="p">(</span><span class="nx">$q</span><span class="p">,</span> <span class="nx">$timeout</span><span class="p">,</span> <span class="nx">$http</span><span class="p">)</span> <span class="p">{</span>
@@ -387,7 +491,7 @@
 </span><span class='line'>    <span class="c1">// create user variable</span>
 </span><span class='line'>    <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="c1">// return available functions for use in controllers</span>
+</span><span class='line'>    <span class="c1">// return available functions for use in the controllers</span>
 </span><span class='line'>    <span class="k">return</span> <span class="p">({</span>
 </span><span class='line'>      <span class="nx">isLoggedIn</span><span class="o">:</span> <span class="nx">isLoggedIn</span><span class="p">,</span>
 </span><span class='line'>      <span class="nx">getUserStatus</span><span class="o">:</span> <span class="nx">getUserStatus</span><span class="p">,</span>
@@ -395,6 +499,7 @@
 </span><span class='line'>      <span class="nx">logout</span><span class="o">:</span> <span class="nx">logout</span><span class="p">,</span>
 </span><span class='line'>      <span class="nx">register</span><span class="o">:</span> <span class="nx">register</span>
 </span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
 </span><span class='line'><span class="p">}]);</span>
 </span></code></pre></td></tr></table></div></figure>
 
@@ -467,13 +572,15 @@
 <span class='line-number'>25</span>
 <span class='line-number'>26</span>
 <span class='line-number'>27</span>
+<span class='line-number'>28</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">login</span><span class="p">(</span><span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="c1">// create a new instance of deferred</span>
 </span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="c1">// send a post request to the server</span>
-</span><span class='line'>  <span class="nx">$http</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/user/login&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">username</span><span class="o">:</span> <span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="o">:</span> <span class="nx">password</span><span class="p">})</span>
+</span><span class='line'>  <span class="nx">$http</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/user/login&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">{</span><span class="nx">username</span><span class="o">:</span> <span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="o">:</span> <span class="nx">password</span><span class="p">})</span>
 </span><span class='line'>    <span class="c1">// handle success</span>
 </span><span class='line'>    <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">status</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">status</span> <span class="o">===</span> <span class="mi">200</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">status</span><span class="p">){</span>
@@ -496,9 +603,9 @@
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Here, we used the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$q">$q</a> service to set up a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a>, which we&#39;ll access in a future controller. We also utilized the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$http">$http</a> service to send an AJAX request to the <code>/api/login</code> endpoint that we already set up in our back-end Node/Express app.</p>
+<p>Here, we used the <a href="https://code.angularjs.org/1.4.9/docs/api/ng/service/$q">$q</a> service to set up a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a>, which we&#39;ll access in a future controller. We also utilized the <a href="https://code.angularjs.org/1.4.9/docs/api/ng/service/$http">$http</a> service to send an AJAX request to the <code>/user/login</code> endpoint that we already set up in our back-end Node/Express app.</p>
 
-<p>Based on the returned response, we either <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">resolve</a> or <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">reject</a> and set the value of <code>user</code> to <code>true</code> or <code>false</code>.</p>
+<p>Based on the returned response, we either <a href="https://code.angularjs.org/1.4.9/docs/api/ng/service/$q#usage">resolve</a> or <a href="https://code.angularjs.org/1.4.9/docs/api/ng/service/$q#usage">reject</a> and set the value of <code>user</code> to <code>true</code> or <code>false</code>, respectively.</p>
 
 <p><strong><code>logout()</code></strong></p>
 
@@ -576,13 +683,15 @@
 <span class='line-number'>22</span>
 <span class='line-number'>23</span>
 <span class='line-number'>24</span>
+<span class='line-number'>25</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">register</span><span class="p">(</span><span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="c1">// create a new instance of deferred</span>
 </span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="c1">// send a post request to the server</span>
-</span><span class='line'>  <span class="nx">$http</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/user/register&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">username</span><span class="o">:</span> <span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="o">:</span> <span class="nx">password</span><span class="p">})</span>
+</span><span class='line'>  <span class="nx">$http</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/user/register&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">{</span><span class="nx">username</span><span class="o">:</span> <span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="o">:</span> <span class="nx">password</span><span class="p">})</span>
 </span><span class='line'>    <span class="c1">// handle success</span>
 </span><span class='line'>    <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">status</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">status</span> <span class="o">===</span> <span class="mi">200</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">status</span><span class="p">){</span>
@@ -613,9 +722,25 @@
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/login.html&#39;</span><span class="p">,</span> <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;loginController&#39;</span><span class="p">})</span>
-</span><span class='line'><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;logoutController&#39;</span><span class="p">})</span>
-</span><span class='line'><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/register&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/register.html&#39;</span><span class="p">,</span> <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;registerController&#39;</span><span class="p">})</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/login.html&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;loginController&#39;</span>
+</span><span class='line'><span class="p">})</span>
+</span><span class='line'><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/logout&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;logoutController&#39;</span>
+</span><span class='line'><span class="p">})</span>
+</span><span class='line'><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/register&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/register.html&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">controller</span><span class="o">:</span> <span class="s1">&#39;registerController&#39;</span>
+</span><span class='line'><span class="p">})</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p><strong>Login</strong></p>
@@ -640,8 +765,8 @@
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;col-md-4&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;h1&gt;</span>Login<span class="nt">&lt;/h2&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">ng-show=</span><span class="s">&quot;error&quot;</span> <span class="na">class=</span><span class="s">&quot;alert alert-danger&quot;</span><span class="nt">&gt;</span><span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;h1&gt;</span>Login<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">ng-show=</span><span class="s">&quot;error&quot;</span> <span class="na">class=</span><span class="s">&quot;alert alert-danger&quot;</span><span class="nt">&gt;</span>{{errorMessage}}<span class="nt">&lt;/div&gt;</span>
 </span><span class='line'>  <span class="nt">&lt;form</span> <span class="na">class=</span><span class="s">&quot;form&quot;</span> <span class="na">ng-submit=</span><span class="s">&quot;login()&quot;</span><span class="nt">&gt;</span>
 </span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
 </span><span class='line'>      <span class="nt">&lt;label&gt;</span>Username<span class="nt">&lt;/label&gt;</span>
@@ -660,7 +785,7 @@
 
 <p>Add this file to the &quot;partials&quot; directory.</p>
 
-<p>Take note of the form. We used the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngModel">ng-model</a> directive on each of the inputs so that we can capture those values in the controller. Also, when the form is submitted, the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngSubmit">ng-submit</a> directive handles the event by firing the <code>login()</code> function.</p>
+<p>Take note of the form. We used the <a href="https://code.angularjs.org/1.4.9/docs/api/ng/directive/ngModel">ng-model</a> directive on each of the inputs so that we can capture those values in the controller. Also, when the form is submitted, the <a href="https://code.angularjs.org/1.4.9/docs/api/ng/directive/ngSubmit">ng-submit</a> directive handles the event by firing the <code>login()</code> function.</p>
 
 <p>Next, within the &quot;client&quot; folder, add a new file called <em>controllers.js</em>. Yes, this will hold all of our Angular app&#39;s controllers. Don&#39;t forget to add the script to the <em>index.html</em> file:</p>
 
@@ -699,13 +824,9 @@
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;myApp&#39;</span><span class="p">).</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;loginController&#39;</span><span class="p">,</span>
 </span><span class='line'>  <span class="p">[</span><span class="s1">&#39;$scope&#39;</span><span class="p">,</span> <span class="s1">&#39;$location&#39;</span><span class="p">,</span> <span class="s1">&#39;AuthService&#39;</span><span class="p">,</span>
 </span><span class='line'>  <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$location</span><span class="p">,</span> <span class="nx">AuthService</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">AuthService</span><span class="p">.</span><span class="nx">getUserStatus</span><span class="p">());</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="nx">$scope</span><span class="p">.</span><span class="nx">login</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 </span><span class='line'>
@@ -736,9 +857,7 @@
 
 <p>So, when the <code>login()</code> function is fired, we set some initial values and then call <code>login()</code> from the <code>AuthService</code>, passing the user inputed email and password as arguments. The subsequent success or error is then handled and the DOM/view/template is updated appropriately.</p>
 
-<p>Did you notice how we logged the return value of <code>AuthService.getUserStatus()</code> to the console? This is to ensure that the value is correct based on whether a user is logged in or out - <code>true</code> or <code>false</code>, respectively.</p>
-
-<p>Ready to test the first round-trip - client =&gt; server =&gt; client?</p>
+<p>Ready to test the first round-trip - <strong>client =&gt; server =&gt; client</strong>?</p>
 
 <p>Fire up the server and navigate to <a href="http://localhost:3000/#/login">http://localhost:3000/#/login</a> in your browser. First, try logging in with the user credentials used to register earlier - e.g, <code>test@test.com</code> and <code>test</code>, respectively. If all went well, you should be redirected to the main URL. Next, try to log in using invalid credentials. You should see the error message flash, &quot;Invalid username and/or password&quot;.</p>
 
@@ -761,15 +880,11 @@
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;myApp&#39;</span><span class="p">).</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;logoutController&#39;</span><span class="p">,</span>
 </span><span class='line'>  <span class="p">[</span><span class="s1">&#39;$scope&#39;</span><span class="p">,</span> <span class="s1">&#39;$location&#39;</span><span class="p">,</span> <span class="s1">&#39;AuthService&#39;</span><span class="p">,</span>
 </span><span class='line'>  <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$location</span><span class="p">,</span> <span class="nx">AuthService</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="nx">$scope</span><span class="p">.</span><span class="nx">logout</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">AuthService</span><span class="p">.</span><span class="nx">getUserStatus</span><span class="p">());</span>
 </span><span class='line'>
 </span><span class='line'>      <span class="c1">// call logout from service</span>
 </span><span class='line'>      <span class="nx">AuthService</span><span class="p">.</span><span class="nx">logout</span><span class="p">()</span>
@@ -818,8 +933,8 @@
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
 </pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;col-md-4&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;h1&gt;</span>Register<span class="nt">&lt;/h2&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">ng-show=</span><span class="s">&quot;error&quot;</span> <span class="na">class=</span><span class="s">&quot;alert alert-danger&quot;</span><span class="nt">&gt;</span><span class="nt">&lt;/div&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;h1&gt;</span>Register<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">ng-show=</span><span class="s">&quot;error&quot;</span> <span class="na">class=</span><span class="s">&quot;alert alert-danger&quot;</span><span class="nt">&gt;</span>{{errorMessage}}<span class="nt">&lt;/div&gt;</span>
 </span><span class='line'>  <span class="nt">&lt;form</span> <span class="na">class=</span><span class="s">&quot;form&quot;</span> <span class="na">ng-submit=</span><span class="s">&quot;register()&quot;</span><span class="nt">&gt;</span>
 </span><span class='line'>    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;form-group&quot;</span><span class="nt">&gt;</span>
 </span><span class='line'>      <span class="nt">&lt;label&gt;</span>Username<span class="nt">&lt;/label&gt;</span>
@@ -867,13 +982,9 @@
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;myApp&#39;</span><span class="p">).</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;registerController&#39;</span><span class="p">,</span>
 </span><span class='line'>  <span class="p">[</span><span class="s1">&#39;$scope&#39;</span><span class="p">,</span> <span class="s1">&#39;$location&#39;</span><span class="p">,</span> <span class="s1">&#39;AuthService&#39;</span><span class="p">,</span>
 </span><span class='line'>  <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$location</span><span class="p">,</span> <span class="nx">AuthService</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">AuthService</span><span class="p">.</span><span class="nx">getUserStatus</span><span class="p">());</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="nx">$scope</span><span class="p">.</span><span class="nx">register</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 </span><span class='line'>
@@ -919,8 +1030,10 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
+<span class='line-number'>8</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">myApp</span><span class="p">.</span><span class="nx">run</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$rootScope</span><span class="p">,</span> <span class="nx">$location</span><span class="p">,</span> <span class="nx">$route</span><span class="p">,</span> <span class="nx">AuthService</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$on</span><span class="p">(</span><span class="s1">&#39;$routeChangeStart&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">next</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$on</span><span class="p">(</span><span class="s1">&#39;$routeChangeStart&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="kd">function</span> <span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">next</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">AuthService</span><span class="p">.</span><span class="nx">isLoggedIn</span><span class="p">()</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>      <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">);</span>
 </span><span class='line'>    <span class="p">}</span>
@@ -928,7 +1041,7 @@
 </span><span class='line'><span class="p">});</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>The <a href="https://code.angularjs.org/1.3.15/docs/api/ngRoute/service/$route">$routeChangeStart</a> event happens before the actual route change occurs. So, whenever a route is accessed, before the view is served, we ensure that the user is logged in. Test this out!</p>
+<p>The <a href="https://code.angularjs.org/1.4.9/docs/api/ngRoute/service/$route">$routeChangeStart</a> event fires before the actual route change occurs. So, whenever a route is accessed, before the view is served, we ensure that the user is logged in. Test this out!</p>
 
 <h2>Route Restriction</h2>
 
@@ -972,11 +1085,13 @@
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
 <span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">myApp</span><span class="p">.</span><span class="nx">config</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$routeProvider</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">$routeProvider</span>
 </span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="p">{</span>
 </span><span class='line'>      <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/home.html&#39;</span><span class="p">,</span>
-</span><span class='line'>      <span class="nx">access</span><span class="o">:</span> <span class="p">{</span><span class="nx">restricted</span><span class="o">:</span> <span class="kc">false</span><span class="p">}</span>
+</span><span class='line'>      <span class="nx">access</span><span class="o">:</span> <span class="p">{</span><span class="nx">restricted</span><span class="o">:</span> <span class="kc">true</span><span class="p">}</span>
 </span><span class='line'>    <span class="p">})</span>
 </span><span class='line'>    <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="p">{</span>
 </span><span class='line'>      <span class="nx">templateUrl</span><span class="o">:</span> <span class="s1">&#39;partials/login.html&#39;</span><span class="p">,</span>
@@ -1000,7 +1115,9 @@
 </span><span class='line'>      <span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;</span><span class="p">,</span>
 </span><span class='line'>      <span class="nx">access</span><span class="o">:</span> <span class="p">{</span><span class="nx">restricted</span><span class="o">:</span> <span class="kc">false</span><span class="p">}</span>
 </span><span class='line'>    <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">otherwise</span><span class="p">({</span><span class="nx">redirectTo</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span><span class="p">});</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">otherwise</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">redirectTo</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span>
+</span><span class='line'>    <span class="p">});</span>
 </span><span class='line'><span class="p">});</span>
 </span></code></pre></td></tr></table></div></figure>
 
@@ -1014,8 +1131,10 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
+<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">myApp</span><span class="p">.</span><span class="nx">run</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$rootScope</span><span class="p">,</span> <span class="nx">$location</span><span class="p">,</span> <span class="nx">$route</span><span class="p">,</span> <span class="nx">AuthService</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$on</span><span class="p">(</span><span class="s1">&#39;$routeChangeStart&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">next</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$on</span><span class="p">(</span><span class="s1">&#39;$routeChangeStart&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="kd">function</span> <span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">next</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">next</span><span class="p">.</span><span class="nx">access</span><span class="p">.</span><span class="nx">restricted</span> <span class="o">&amp;&amp;</span> <span class="nx">AuthService</span><span class="p">.</span><span class="nx">isLoggedIn</span><span class="p">()</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>      <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">);</span>
 </span><span class='line'>      <span class="nx">$route</span><span class="p">.</span><span class="nx">reload</span><span class="p">();</span>
@@ -1030,9 +1149,9 @@
 
 <p>Finally, what happens on a page refresh? Try it.</p>
 
-<p>The user is logged out, right? Why? Because the the controller and services are called again, setting the <code>user</code> variable to <code>null</code>. This is a problem since the user is still logged in on the server side.</p>
+<p>The user is logged out, right? Why? Because the controller and services are called again, setting the <code>user</code> variable to <code>null</code>. This is a problem since the user is still logged in on the server side.</p>
 
-<p>Fortunately, the fix is easy: Within the <code>$routeChangeStart</code> we just need to ALWAYS check if a user is logged in. Right now, it&#39;s checking if <code>isLoggedIn()</code> is <code>false</code>. Let&#39;s update that function in our service so that it checks the user status on the server side:</p>
+<p>Fortunately, the fix is simple: Within the <code>$routeChangeStart</code> we need to ALWAYS check if a user is logged in. Right now, it&#39;s checking whether <code>isLoggedIn()</code> is <code>false</code>. Let&#39;s update <code>getUserStatus()</code> so that it checks the user status on the back-end:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -1049,12 +1168,7 @@
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">isLoggedIn</span><span class="p">()</span> <span class="p">{</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getUserStatus</span><span class="p">()</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">$http</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/user/status&#39;</span><span class="p">)</span>
 </span><span class='line'>  <span class="c1">// handle success</span>
 </span><span class='line'>  <span class="p">.</span><span class="nx">success</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
@@ -1068,11 +1182,6 @@
 </span><span class='line'>  <span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>    <span class="nx">user</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
 </span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
-</span><span class='line'>    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">}</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
@@ -1084,15 +1193,49 @@
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/status&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">req</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="kc">false</span><span class="p">});</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">status</span><span class="o">:</span> <span class="kc">false</span>
+</span><span class='line'>    <span class="p">});</span>
 </span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">status</span><span class="o">:</span> <span class="kc">true</span>
+</span><span class='line'>  <span class="p">});</span>
 </span><span class='line'><span class="p">});</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Try it out! If it works, refactor the <code>isLoggedIn()</code> into two functions.</p>
+<p>Finally, update the <code>$routeChangeStart</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">myApp</span><span class="p">.</span><span class="nx">run</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$rootScope</span><span class="p">,</span> <span class="nx">$location</span><span class="p">,</span> <span class="nx">$route</span><span class="p">,</span> <span class="nx">AuthService</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$on</span><span class="p">(</span><span class="s1">&#39;$routeChangeStart&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="kd">function</span> <span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">next</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">getUserStatus</span><span class="p">();</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">next</span><span class="p">.</span><span class="nx">access</span><span class="p">.</span><span class="nx">restricted</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>          <span class="o">!</span><span class="nx">AuthService</span><span class="p">.</span><span class="nx">isLoggedIn</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">);</span>
+</span><span class='line'>        <span class="nx">$route</span><span class="p">.</span><span class="nx">reload</span><span class="p">();</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Try it out!</p>
 
 <h2>Conclusion</h2>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: angular | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/angular/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2016-02-27T20:22:42-07:00</updated>
+  <updated>2016-02-29T07:32:15-07:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -24,13 +24,16 @@
 
 <p><br></p>
 
-<p><strong>This post provides a solution to the question, &quot;How do I handle user authentication with the MEAN Stack - MongoDB, ExpressJS, AngularJS, NodeJS?&quot;.</strong></p>
+<p><strong>This post provides a solution to the question, &quot;How do I handle user authentication with the MEAN Stack - MongoDB, ExpressJS, AngularJS, and NodeJS?&quot;.</strong></p>
 
 <blockquote>
-<p>Much of this post is ported from <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">Handling User Authentication with Angular and Flask</a>.</p>
+<p>Much of this post is ported from <a href="https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/">Handling User Authentication with Angular and Flask</a> from <a href="https://realpython.com">Real Python</a>.</p>
 </blockquote>
 
-<p>Keep in mind that this solution posed in this tutorial is not the <em>only</em> solution to the question at hand, and it may not even be the <em>right</em> solution for your situation. Regardless of the solution you implement, it is important to note that since end users have full control of the browser as well as access to the front-end code, sensitive data living in your server-side API must be secure. In other words, make certain that you implement an authentication strategy on the server-side to protect sensitive API endpoints.</p>
+<p><em>Updates:</em><br>
+- 02/28/2016: Updated to the latest versions of NodeJS, ExpressJS, MongoDB, and AngularJS; added a section on persistant logins.</p>
+
+<p>Keep in mind that this solution posed in this tutorial is not the <em>only</em> solution to the question at hand, and it may not even be the <em>right</em> solution for your situation. Regardless of the solution you implement, it is important to note that since end users have full control of the browser as well as access to the front-end code, sensitive data living in your server-side API must be secure. <em>In other words, make certain that you implement an authentication strategy on the server-side to protect sensitive API endpoints.</em></p>
 
 <p>That said, we need to enable the following workflow:</p>
 
@@ -42,7 +45,7 @@
 </ol>
 
 <blockquote>
-<p>This tutorial uses <a href="http://docs.mongodb.org/v2.6/">MongoDB</a> v2.6.7, <a href="http://expressjs.com/4x/api.html">ExpressJS</a> v4.9.8, <a href="https://code.angularjs.org/1.3.15/docs/guide">AngularJS</a> v1.3.15, <a href="https://nodejs.org/">NodeJS</a> v0.12.2, and <a href="https://github.com/jaredhanson/passport-local">Passport-Local</a> v1.0.0. For a full list of dependencies, please view the <em><a href="https://github.com/mjhea0/mean-auth/blob/master/package.json">package.json</a></em> file.</p>
+<p>This tutorial uses <a href="https://nodejs.org/">NodeJS</a> v4.3.1, <a href="http://expressjs.com/4x/api.html">ExpressJS</a> v4.13.4, <a href="https://docs.mongodb.org/v3.2/">MongoDB</a> v3.2.3, and <a href="https://code.angularjs.org/1.4.9/docs/guide">AngularJS</a> v1.4.9. For a full list of dependencies, please view the <em><a href="https://github.com/mjhea0/mean-auth/blob/master/package.json">package.json</a></em> file.</p>
 </blockquote>
 
 <h2>Getting Started</h2>
@@ -71,24 +74,29 @@ $ npm start<br>
     └── server.js<br>
 </code></p>
 
-<p>Nothing too spectacular. You can see that the back-end code resides in the &quot;server&quot; folder, while the front-end code lives in the &quot;client&quot; folder. Explore the files and folder within each.</p>
+<p>Nothing too spectacular. You can see that the back-end code resides in the &quot;server&quot; folder, while the front-end code lives in the &quot;client&quot; folder. Explore the files and folders within each.</p>
 
 <h2>Login API</h2>
 
-<p>Let&#39;s start with the back-end API. This is already built out, for your convenience. Why? The focus is mainly on the client-side. If you&#39;re looking for a back-end tutorial for setting up Passport with NodeJS, ExpressJS, and MongoDB take a look at this <a href="http://mherman.org/blog/2015/01/31/local-authentication-with-passport-and-express-4/#.VZCK9xNViko">tutorial</a>.</p>
+<p>Let&#39;s start with the back-end API. This is already built out, for your convenience. Why? The focus of this tutorial is mainly on the client-side. If you&#39;re looking for a back-end tutorial for setting up Passport with NodeJS, ExpressJS, and MongoDB take a look at this <a href="http://mherman.org/blog/2015/01/31/local-authentication-with-passport-and-express-4/#.VZCK9xNViko">tutorial</a>.</p>
 
 <h3>User Registration</h3>
 
-<p>Open the &quot;routes&quot; folder and find the following code:</p>
+<p>Open the &quot;routes&quot; folder and locate the following code:</p>
 
 <p><code>javascript<br>
 router.post(&#39;/register&#39;, function(req, res) {<br>
-  User.register(new User({ username: req.body.username }), req.body.password, function(err, account) {<br>
+  User.register(new User({ username: req.body.username }),<br>
+    req.body.password, function(err, account) {<br>
     if (err) {<br>
-      return res.status(500).json({err: err});<br>
+      return res.status(500).json({<br>
+        err: err<br>
+      });<br>
     }<br>
     passport.authenticate(&#39;local&#39;)(req, res, function () {<br>
-      return res.status(200).json({status: &#39;Registration successful!&#39;});<br>
+      return res.status(200).json({<br>
+        status: &#39;Registration successful!&#39;<br>
+      });<br>
     });<br>
   });<br>
 });<br>
@@ -96,23 +104,32 @@ router.post(&#39;/register&#39;, function(req, res) {<br>
 
 <p>Here, we grab the values from the payload sent with the POST request (from the client-side), create a new <code>User</code> instance, and then attempt to add the instance to the database. If this succeeds a user is added, of course, and then we return a JSON response with a <code>status</code> of &quot;success&quot;. If it fails, an &quot;error&quot; response is sent.</p>
 
-<p>Let&#39;s test this via curl. Fire up the server and then run the following command:</p>
+<p>Let&#39;s test this via curl. Fire up the server, and then run the following command:</p>
 
 <p><code>sh<br>
-$ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST \<br>
--d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; http://localhost:3000/user/register<br>
+$ curl -H &quot;Accept: application/json&quot; -H \<br>
+&quot;Content-type: application/json&quot; -X POST \<br>
+-d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; \<br>
+http://localhost:3000/user/register<br>
 </code></p>
 
 <p>You should see a success message:</p>
 
 <p><code>sh<br>
-{&quot;status&quot;:&quot;Registration successful!&quot;}<br>
+{<br>
+  &quot;status&quot;: &quot;Registration successful!&quot;<br>
+}<br>
 </code></p>
 
 <p>Try it again, with the exact same username and password, and you should see an error:</p>
 
 <p><code>sh<br>
-{&quot;err&quot;:{&quot;name&quot;:&quot;BadRequestError&quot;,&quot;message&quot;:&quot;User already exists with username test@test.com&quot;}}<br>
+{<br>
+  &quot;err&quot;: {<br>
+    &quot;name&quot;: &quot;UserExistsError&quot;,<br>
+    &quot;message&quot;: &quot;A user with the given username is already registered&quot;<br>
+  }<br>
+}<br>
 </code></p>
 
 <p>On to the login...</p>
@@ -123,16 +140,22 @@ $ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: applicatio
 router.post(&#39;/login&#39;, function(req, res, next) {<br>
   passport.authenticate(&#39;local&#39;, function(err, user, info) {<br>
     if (err) {<br>
-      return res.status(500).json({err: err});<br>
+      return next(err);<br>
     }<br>
     if (!user) {<br>
-      return res.status(401).json({err: info});<br>
+      return res.status(401).json({<br>
+        err: info<br>
+      });<br>
     }<br>
     req.logIn(user, function(err) {<br>
       if (err) {<br>
-        return res.status(500).json({err: &#39;Could not log in user&#39;});<br>
+        return res.status(500).json({<br>
+          err: &#39;Could not log in user&#39;<br>
+        });<br>
       }<br>
-      res.status(200).json({status: &#39;Login successful!&#39;});<br>
+      res.status(200).json({<br>
+        status: &#39;Login successful!&#39;<br>
+      });<br>
     });<br>
   })(req, res, next);<br>
 });<br>
@@ -143,20 +166,29 @@ router.post(&#39;/login&#39;, function(req, res, next) {<br>
 <p>With the server running, test again with curl-</p>
 
 <p><code>sh<br>
-curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST \<br>
--d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; http://localhost:3000/user/login<br>
+curl -H &quot;Accept: application/json&quot; -H \<br>
+&quot;Content-type: application/json&quot; -X POST \<br>
+-d &#39;{&quot;username&quot;: &quot;test@test.com&quot;, &quot;password&quot;: &quot;test&quot;}&#39; \<br>
+http://localhost:3000/user/login<br>
 </code></p>
 
 <p>-and you should see:</p>
 
 <p><code>sh<br>
-{&quot;message&quot;:&quot;Login successful!&quot;}<br>
+{<br>
+  &quot;message&quot;: &quot;Login successful!&quot;<br>
+}<br>
 </code></p>
 
 <p>Test again with curl, sending the wrong password, and you should see:</p>
 
 <p><code>sh<br>
-{&quot;err&quot;:{&quot;status&quot;:&quot;Incorrect password&quot;}}<br>
+{<br>
+  &quot;err&quot;: {<br>
+    &quot;name&quot;: &quot;IncorrectPasswordError&quot;,<br>
+    &quot;message&quot;: &quot;Password or username are incorrect&quot;<br>
+  }<br>
+}<br>
 </code></p>
 
 <p>Perfect!</p>
@@ -168,21 +200,26 @@ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/
 <p><code>javascript<br>
 router.get(&#39;/logout&#39;, function(req, res) {<br>
   req.logout();<br>
-  res.status(200).json({status: &#39;Bye!&#39;});<br>
+  res.status(200).json({<br>
+    status: &#39;Bye!&#39;<br>
+  });<br>
 });<br>
 </code></p>
 
-<p>This should be straightforward, and you can probably guess what the response will look like - but let&#39;s test it  again:</p>
+<p>This should be straightforward, and you can probably guess what the response will look like - but let&#39;s test it again to be sure:</p>
 
-<p><code>javascript<br>
-$ curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X GET \<br>
+<p><code>sh<br>
+$ curl -H &quot;Accept: application/json&quot; -H \<br>
+&quot;Content-type: application/json&quot; -X GET \<br>
 http://localhost:3000/user/logout<br>
 </code></p>
 
 <p>You should see:</p>
 
 <p><code>sh<br>
-{&quot;status&quot;:&quot;Bye!&quot;}<br>
+{<br>
+  &quot;status&quot;: &quot;Bye!&quot;<br>
+}<br>
 </code></p>
 
 <p>On to the client-side!</p>
@@ -198,17 +235,33 @@ http://localhost:3000/user/logout<br>
 <p><code>javascript<br>
 myApp.config(function ($routeProvider) {<br>
   $routeProvider<br>
-    .when(&#39;/&#39;, {templateUrl: &#39;partials/home.html&#39;})<br>
-    .when(&#39;/login&#39;, {templateUrl: &#39;partials/login.html&#39;, controller: &#39;loginController&#39;})<br>
-    .when(&#39;/logout&#39;, {controller: &#39;logoutController&#39;})<br>
-    .when(&#39;/register&#39;, {templateUrl: &#39;partials/register.html&#39;, controller: &#39;registerController&#39;})<br>
-    .when(&#39;/one&#39;, {template: &#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;})<br>
-    .when(&#39;/two&#39;, {template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;})<br>
-    .otherwise({redirectTo: &#39;/&#39;});<br>
+    .when(&#39;/&#39;, {<br>
+      templateUrl: &#39;partials/home.html&#39;<br>
+    })<br>
+    .when(&#39;/login&#39;, {<br>
+      templateUrl: &#39;partials/login.html&#39;,<br>
+      controller: &#39;loginController&#39;<br>
+    })<br>
+    .when(&#39;/logout&#39;, {<br>
+      controller: &#39;logoutController&#39;<br>
+    })<br>
+    .when(&#39;/register&#39;, {<br>
+      templateUrl: &#39;partials/register.html&#39;,<br>
+      controller: &#39;registerController&#39;<br>
+    })<br>
+    .when(&#39;/one&#39;, {<br>
+      template: &#39;&lt;h1&gt;This is page one!&lt;/h1&gt;&#39;<br>
+    })<br>
+    .when(&#39;/two&#39;, {<br>
+      template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;<br>
+    })<br>
+    .otherwise({<br>
+      redirectTo: &#39;/&#39;<br>
+    });<br>
 });<br>
 </code></p>
 
-<p>Here, we created five new routes. Before we add the subsequent templates and controllers, let&#39;s create a <a href="https://docs.angularjs.org/guide/services">service</a> to handle authentication.</p>
+<p>Here, we created five new routes. Before we add the subsequent templates and controllers, let&#39;s create a <a href="https://code.angularjs.org/1.4.9/docs/guide/services">service</a> to handle authentication.</p>
 
 <h3>Authentication Service</h3>
 
@@ -221,7 +274,7 @@ angular.module(&#39;myApp&#39;).factory(&#39;AuthService&#39;,<br>
 <div class="highlight"><pre><code class="text">// create user variable
 var user = null;
 
-// return available functions for use in controllers
+// return available functions for use in the controllers
 return ({
   isLoggedIn: isLoggedIn,
   getUserStatus: getUserStatus,
@@ -276,7 +329,8 @@ function login(username, password) {</p>
   var deferred = $q.defer();</p>
 
 <p>// send a post request to the server<br>
-  $http.post(&#39;/user/login&#39;, {username: username, password: password})<br>
+  $http.post(&#39;/user/login&#39;,<br>
+    {username: username, password: password})<br>
     // handle success<br>
     .success(function (data, status) {<br>
       if(status === 200 &amp;&amp; data.status){<br>
@@ -299,9 +353,9 @@ function login(username, password) {</p>
 <p>}<br>
 ```</p>
 
-<p>Here, we used the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$q">$q</a> service to set up a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a>, which we&#39;ll access in a future controller. We also utilized the <a href="https://docs.angularjs.org/1.3.15/docs/api/ng/service/$http">$http</a> service to send an AJAX request to the <code>/api/login</code> endpoint that we already set up in our back-end Node/Express app.</p>
+<p>Here, we used the <a href="https://code.angularjs.org/1.4.9/docs/api/ng/service/$q">$q</a> service to set up a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a>, which we&#39;ll access in a future controller. We also utilized the <a href="https://code.angularjs.org/1.4.9/docs/api/ng/service/$http">$http</a> service to send an AJAX request to the <code>/user/login</code> endpoint that we already set up in our back-end Node/Express app.</p>
 
-<p>Based on the returned response, we either <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">resolve</a> or <a href="https://code.angularjs.org/1.3.15/docs/api/ng/service/$q#usage">reject</a> and set the value of <code>user</code> to <code>true</code> or <code>false</code>.</p>
+<p>Based on the returned response, we either <a href="https://code.angularjs.org/1.4.9/docs/api/ng/service/$q#usage">resolve</a> or <a href="https://code.angularjs.org/1.4.9/docs/api/ng/service/$q#usage">reject</a> and set the value of <code>user</code> to <code>true</code> or <code>false</code>, respectively.</p>
 
 <p><strong><code>logout()</code></strong></p>
 
@@ -341,7 +395,8 @@ function register(username, password) {</p>
   var deferred = $q.defer();</p>
 
 <p>// send a post request to the server<br>
-  $http.post(&#39;/user/register&#39;, {username: username, password: password})<br>
+  $http.post(&#39;/user/register&#39;,<br>
+    {username: username, password: password})<br>
     // handle success<br>
     .success(function (data, status) {<br>
       if(status === 200 &amp;&amp; data.status){<br>
@@ -370,9 +425,17 @@ function register(username, password) {</p>
 <p>Looking back at our routes, we need to setup two partials/templates and three controllers:</p>
 
 <p><code>javascript<br>
-.when(&#39;/login&#39;, {templateUrl: &#39;partials/login.html&#39;, controller: &#39;loginController&#39;})<br>
-.when(&#39;/logout&#39;, {controller: &#39;logoutController&#39;})<br>
-.when(&#39;/register&#39;, {templateUrl: &#39;partials/register.html&#39;, controller: &#39;registerController&#39;})<br>
+.when(&#39;/login&#39;, {<br>
+  templateUrl: &#39;partials/login.html&#39;,<br>
+  controller: &#39;loginController&#39;<br>
+})<br>
+.when(&#39;/logout&#39;, {<br>
+  controller: &#39;logoutController&#39;<br>
+})<br>
+.when(&#39;/register&#39;, {<br>
+  templateUrl: &#39;partials/register.html&#39;,<br>
+  controller: &#39;registerController&#39;<br>
+})<br>
 </code></p>
 
 <p><strong>Login</strong></p>
@@ -381,8 +444,8 @@ function register(username, password) {</p>
 
 <p><code>html<br>
 &lt;div class=&quot;col-md-4&quot;&gt;<br>
-  &lt;h1&gt;Login&lt;/h2&gt;<br>
-  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;&lt;/div&gt;<br>
+  &lt;h1&gt;Login&lt;/h1&gt;<br>
+  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;{{errorMessage}}&lt;/div&gt;<br>
   &lt;form class=&quot;form&quot; ng-submit=&quot;login()&quot;&gt;<br>
     &lt;div class=&quot;form-group&quot;&gt;<br>
       &lt;label&gt;Username&lt;/label&gt;<br>
@@ -401,7 +464,7 @@ function register(username, password) {</p>
 
 <p>Add this file to the &quot;partials&quot; directory.</p>
 
-<p>Take note of the form. We used the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngModel">ng-model</a> directive on each of the inputs so that we can capture those values in the controller. Also, when the form is submitted, the <a href="https://code.angularjs.org/1.3.15/docs/api/ng/directive/ngSubmit">ng-submit</a> directive handles the event by firing the <code>login()</code> function.</p>
+<p>Take note of the form. We used the <a href="https://code.angularjs.org/1.4.9/docs/api/ng/directive/ngModel">ng-model</a> directive on each of the inputs so that we can capture those values in the controller. Also, when the form is submitted, the <a href="https://code.angularjs.org/1.4.9/docs/api/ng/directive/ngSubmit">ng-submit</a> directive handles the event by firing the <code>login()</code> function.</p>
 
 <p>Next, within the &quot;client&quot; folder, add a new file called <em>controllers.js</em>. Yes, this will hold all of our Angular app&#39;s controllers. Don&#39;t forget to add the script to the <em>index.html</em> file:</p>
 
@@ -415,9 +478,7 @@ function register(username, password) {</p>
 angular.module(&#39;myApp&#39;).controller(&#39;loginController&#39;,<br>
   [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
   function ($scope, $location, AuthService) {</p>
-<div class="highlight"><pre><code class="text">console.log(AuthService.getUserStatus());
-
-$scope.login = function () {
+<div class="highlight"><pre><code class="text">$scope.login = function () {
 
   // initial values
   $scope.error = false;
@@ -448,9 +509,7 @@ $scope.login = function () {
 
 <p>So, when the <code>login()</code> function is fired, we set some initial values and then call <code>login()</code> from the <code>AuthService</code>, passing the user inputed email and password as arguments. The subsequent success or error is then handled and the DOM/view/template is updated appropriately.</p>
 
-<p>Did you notice how we logged the return value of <code>AuthService.getUserStatus()</code> to the console? This is to ensure that the value is correct based on whether a user is logged in or out - <code>true</code> or <code>false</code>, respectively.</p>
-
-<p>Ready to test the first round-trip - client =&gt; server =&gt; client?</p>
+<p>Ready to test the first round-trip - <strong>client =&gt; server =&gt; client</strong>?</p>
 
 <p>Fire up the server and navigate to <a href="http://localhost:3000/#/login">http://localhost:3000/#/login</a> in your browser. First, try logging in with the user credentials used to register earlier - e.g, <code>test@test.com</code> and <code>test</code>, respectively. If all went well, you should be redirected to the main URL. Next, try to log in using invalid credentials. You should see the error message flash, &quot;Invalid username and/or password&quot;.</p>
 
@@ -463,8 +522,6 @@ angular.module(&#39;myApp&#39;).controller(&#39;logoutController&#39;,<br>
   [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
   function ($scope, $location, AuthService) {</p>
 <div class="highlight"><pre><code class="text">$scope.logout = function () {
-
-  console.log(AuthService.getUserStatus());
 
   // call logout from service
   AuthService.logout()
@@ -497,8 +554,8 @@ angular.module(&#39;myApp&#39;).controller(&#39;logoutController&#39;,<br>
 
 <p><code>html<br>
 &lt;div class=&quot;col-md-4&quot;&gt;<br>
-  &lt;h1&gt;Register&lt;/h2&gt;<br>
-  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;&lt;/div&gt;<br>
+  &lt;h1&gt;Register&lt;/h1&gt;<br>
+  &lt;div ng-show=&quot;error&quot; class=&quot;alert alert-danger&quot;&gt;{{errorMessage}}&lt;/div&gt;<br>
   &lt;form class=&quot;form&quot; ng-submit=&quot;register()&quot;&gt;<br>
     &lt;div class=&quot;form-group&quot;&gt;<br>
       &lt;label&gt;Username&lt;/label&gt;<br>
@@ -521,9 +578,7 @@ angular.module(&#39;myApp&#39;).controller(&#39;logoutController&#39;,<br>
 angular.module(&#39;myApp&#39;).controller(&#39;registerController&#39;,<br>
   [&#39;$scope&#39;, &#39;$location&#39;, &#39;AuthService&#39;,<br>
   function ($scope, $location, AuthService) {</p>
-<div class="highlight"><pre><code class="text">console.log(AuthService.getUserStatus());
-
-$scope.register = function () {
+<div class="highlight"><pre><code class="text">$scope.register = function () {
 
   // initial values
   $scope.error = false;
@@ -564,7 +619,8 @@ $scope.register = function () {
 
 <p><code>javascript<br>
 myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
-  $rootScope.$on(&#39;$routeChangeStart&#39;, function (event, next, current) {<br>
+  $rootScope.$on(&#39;$routeChangeStart&#39;,<br>
+    function (event, next, current) {<br>
     if (AuthService.isLoggedIn() === false) {<br>
       $location.path(&#39;/login&#39;);<br>
     }<br>
@@ -572,7 +628,7 @@ myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
 });<br>
 </code></p>
 
-<p>The <a href="https://code.angularjs.org/1.3.15/docs/api/ngRoute/service/$route">$routeChangeStart</a> event happens before the actual route change occurs. So, whenever a route is accessed, before the view is served, we ensure that the user is logged in. Test this out!</p>
+<p>The <a href="https://code.angularjs.org/1.4.9/docs/api/ngRoute/service/$route">$routeChangeStart</a> event fires before the actual route change occurs. So, whenever a route is accessed, before the view is served, we ensure that the user is logged in. Test this out!</p>
 
 <h2>Route Restriction</h2>
 
@@ -591,7 +647,7 @@ myApp.config(function ($routeProvider) {<br>
   $routeProvider<br>
     .when(&#39;/&#39;, {<br>
       templateUrl: &#39;partials/home.html&#39;,<br>
-      access: {restricted: false}<br>
+      access: {restricted: true}<br>
     })<br>
     .when(&#39;/login&#39;, {<br>
       templateUrl: &#39;partials/login.html&#39;,<br>
@@ -615,7 +671,9 @@ myApp.config(function ($routeProvider) {<br>
       template: &#39;&lt;h1&gt;This is page two!&lt;/h1&gt;&#39;,<br>
       access: {restricted: false}<br>
     })<br>
-    .otherwise({redirectTo: &#39;/&#39;});<br>
+    .otherwise({<br>
+      redirectTo: &#39;/&#39;<br>
+    });<br>
 });<br>
 </code></p>
 
@@ -623,7 +681,8 @@ myApp.config(function ($routeProvider) {<br>
 
 <p><code>javascript<br>
 myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
-  $rootScope.$on(&#39;$routeChangeStart&#39;, function (event, next, current) {<br>
+  $rootScope.$on(&#39;$routeChangeStart&#39;,<br>
+  function (event, next, current) {<br>
     if (next.access.restricted &amp;&amp; AuthService.isLoggedIn() === false) {<br>
       $location.path(&#39;/login&#39;);<br>
       $route.reload();<br>
@@ -638,12 +697,12 @@ myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
 
 <p>Finally, what happens on a page refresh? Try it.</p>
 
-<p>The user is logged out, right? Why? Because the the controller and services are called again, setting the <code>user</code> variable to <code>null</code>. This is a problem since the user is still logged in on the server side.</p>
+<p>The user is logged out, right? Why? Because the controller and services are called again, setting the <code>user</code> variable to <code>null</code>. This is a problem since the user is still logged in on the server side.</p>
 
-<p>Fortunately, the fix is easy: Within the <code>$routeChangeStart</code> we just need to ALWAYS check if a user is logged in. Right now, it&#39;s checking if <code>isLoggedIn()</code> is <code>false</code>. Let&#39;s update that function in our service so that it checks the user status on the server side:</p>
+<p>Fortunately, the fix is simple: Within the <code>$routeChangeStart</code> we need to ALWAYS check if a user is logged in. Right now, it&#39;s checking whether <code>isLoggedIn()</code> is <code>false</code>. Let&#39;s update <code>getUserStatus()</code> so that it checks the user status on the back-end:</p>
 
 <p><code>javascript<br>
-function isLoggedIn() {<br>
+function getUserStatus() {<br>
   $http.get(&#39;/user/status&#39;)<br>
   // handle success<br>
   .success(function (data) {<br>
@@ -657,11 +716,6 @@ function isLoggedIn() {<br>
   .error(function (data) {<br>
     user = false;<br>
   });<br>
-  if(user){<br>
-    return true;<br>
-  } else {<br>
-    return false;<br>
-  }<br>
 }<br>
 </code></p>
 
@@ -670,13 +724,33 @@ function isLoggedIn() {<br>
 <p><code>javascript<br>
 router.get(&#39;/status&#39;, function(req, res) {<br>
   if (!req.isAuthenticated()) {<br>
-    return res.status(200).json({status: false});<br>
+    return res.status(200).json({<br>
+      status: false<br>
+    });<br>
   }<br>
-  res.status(200).json({status: true});<br>
+  res.status(200).json({<br>
+    status: true<br>
+  });<br>
 });<br>
 </code></p>
 
-<p>Try it out! If it works, refactor the <code>isLoggedIn()</code> into two functions.</p>
+<p>Finally, update the <code>$routeChangeStart</code>:</p>
+
+<p><code>javascript<br>
+myApp.run(function ($rootScope, $location, $route, AuthService) {<br>
+  $rootScope.$on(&#39;$routeChangeStart&#39;,<br>
+    function (event, next, current) {<br>
+      getUserStatus();<br>
+      if (next.access.restricted &amp;&amp;<br>
+          !AuthService.isLoggedIn()) {<br>
+        $location.path(&#39;/login&#39;);<br>
+        $route.reload();<br>
+      }<br>
+  });<br>
+});<br>
+</code></p>
+
+<p>Try it out!</p>
 
 <h2>Conclusion</h2>
 
