@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2016-03-13T12:44:04-06:00</updated>
+  <updated>2016-03-13T13:37:09-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -408,18 +408,22 @@ app.use(function(err, req, res, next) {<br>
 <p><code>javascript<br>
 function checkID(req, res, next) {<br>
   var pupID = req.params.id;<br>
-  db.one(&#39;select id from pups where id = $1&#39;, pupID)<br>
+  db.any(&#39;select id from pups where id = $1&#39;, pupID)<br>
     .then(function(data) {<br>
-      return next();<br>
+      if(!data.length) {<br>
+        /* jshint ignore:start */<br>
+        res.status(400)<br>
+          .json({<br>
+            status: &#39;error&#39;,<br>
+            message: `ID &#39;${pupID}&#39; does not exist.`<br>
+          });<br>
+        /* jshint ignore:end */<br>
+      } else {<br>
+        return next();<br>
+      }<br>
     })<br>
     .catch(function(err) {<br>
-      /* jshint ignore:start */<br>
-      res.status(400)<br>
-        .json({<br>
-          status: &#39;error&#39;,<br>
-          message: `ID &#39;${pupID}&#39; does not exist.`<br>
-        });<br>
-      /* jshint ignore:end */<br>
+      return next(err);<br>
     });<br>
 }<br>
 </code></p>
