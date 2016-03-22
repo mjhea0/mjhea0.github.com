@@ -204,7 +204,7 @@
 
 <p>Why <code>pg-promise</code> instead of <code>pg</code>? Put simply, pg-promise abstracts away much of the difficult, low-level connection management, allowing you to focus on the business logic. Further, the library includes a powerful <a href="https://www.npmjs.com/package/pg-promise#queries-and-parameters">query formatting engine</a> and support for <a href="https://www.npmjs.com/package/pg-promise#transactions">automated transactions</a>.</p>
 
-<p>Finally, let&#39;s update the <em>index.js</em> route file:</p>
+<p>Finally, create a new file in the project root called <em>queries.js</em>:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -218,9 +218,15 @@
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
 </span><span class='line'>
 </span><span class='line'><span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
 </span><span class='line'>  <span class="c1">// Initialization Options</span>
@@ -230,6 +236,16 @@
 </span><span class='line'><span class="kd">var</span> <span class="nx">pgp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;pg-promise&#39;</span><span class="p">)(</span><span class="nx">options</span><span class="p">);</span>
 </span><span class='line'><span class="kd">var</span> <span class="nx">connectionString</span> <span class="o">=</span> <span class="s1">&#39;postgres://localhost:5432/puppies&#39;</span><span class="p">;</span>
 </span><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">pgp</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// add query functions</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">getAllPuppies</span><span class="o">:</span> <span class="nx">getAllPuppies</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">getSinglePuppy</span><span class="o">:</span> <span class="nx">getSinglePuppy</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">createPuppy</span><span class="o">:</span> <span class="nx">createPuppy</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">updatePuppy</span><span class="o">:</span> <span class="nx">updatePuppy</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">removePuppy</span><span class="o">:</span> <span class="nx">removePuppy</span>
+</span><span class='line'><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>Here, we created an instance of <code>pg-promise</code> and assigned it to a variable, <code>pgp</code>.</p>
@@ -252,7 +268,7 @@
 
 <h2>Postgres setup</h2>
 
-<p>Create a new file in your project root called <em>puppies.sql</em> and then add the following code:</p>
+<p>Create a new file also in the root called <em>puppies.sql</em> and then add the following code:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -302,11 +318,9 @@
 </span><span class='line'>INSERT 0 1
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Now we can start setting up the route handlers&#8230;</p>
-
 <h2>Routes</h2>
 
-<h3>GET ALL</h3>
+<p>Now we can set up the route handlers in <em>index.js</em>:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -322,27 +336,61 @@
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// return ALL puppies</span>
-</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/puppies&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../queries&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/puppies&#39;</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">getAllPuppies</span><span class="p">);</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">getSinglePuppy</span><span class="p">);</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/puppies&#39;</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">createPuppy</span><span class="p">);</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">updatePuppy</span><span class="p">);</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">removePuppy</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2>Queries</h2>
+
+<p>Next, let&#39;s add the SQL queries to the <em>queries.js</em> file&#8230;</p>
+
+<h3>GET All Puppies</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getAllPuppies</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="s1">&#39;select * from pups&#39;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
-</span><span class='line'>          <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;success&#39;</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Retrieved ALL puppies&#39;</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>    <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>        <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;success&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Retrieved ALL puppies&#39;</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>In the above code, we utilized the <code>any</code> <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Mask</a> to query the database, which returns a promise object. This method is used to indicate that we are expecting any number of results back. Success and failures are then handled by <code>.then()</code> and <code>.catch()</code>.</p>
 
-<p>Besides, <code>any</code>, you can use the following <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Masks</a> (to name a few):</p>
+<p>Besides, <code>any</code>, you can use the following <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Masks</a> (just to name a few):</p>
 
 <ul>
 <li><code>one</code> - a single row is expected</li>
@@ -351,45 +399,7 @@
 <li><code>result</code> - passes the original object when resolved (we&#39;ll look at an example of this shortly)</li>
 </ul>
 
-<h3>GET Single Puppy</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// return SINGLE puppy</span>
-</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">pupID</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="s1">&#39;select * from pups where id = $1&#39;</span><span class="p">,</span> <span class="nx">pupID</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
-</span><span class='line'>          <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;success&#39;</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Retrieved ONE puppy&#39;</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>    <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Test the GET requests out in the browser&#8230;</p>
-
-<p>GET ALL puppies: <a href="http://localhost:3000/api/puppies">http://localhost:3000/api/puppies</a></p>
+<p>Test the request out in the browser - <a href="http://localhost:3000/api/puppies">http://localhost:3000/api/puppies</a>:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -419,7 +429,41 @@
 </span><span class='line'><span class="err">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>GET SINGLE puppy: <a href="http://localhost:3000/api/puppies/1">http://localhost:3000/api/puppies/1</a></p>
+<h3>GET Single Puppy</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getSinglePuppy</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">pupID</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="s1">&#39;select * from pups where id = $1&#39;</span><span class="p">,</span> <span class="nx">pupID</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>          <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;success&#39;</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Retrieved ONE puppy&#39;</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Again, test in the browser: <a href="http://localhost:3000/api/puppies/1">http://localhost:3000/api/puppies/1</a></p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -445,7 +489,7 @@
 </span><span class='line'><span class="err">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<h3>POST route</h3>
+<h3>POST</h3>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -460,28 +504,22 @@
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// insert puppy</span>
-</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/puppies&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">none</span><span class="p">(</span><span class="s1">&#39;insert into pups(name, breed, age, sex)&#39;</span><span class="o">+</span>
-</span><span class='line'>          <span class="s1">&#39;values(${name}, ${breed}, ${age}, ${sex})&#39;</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
-</span><span class='line'>          <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;success&#39;</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Inserted one puppy&#39;</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>    <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">none</span><span class="p">(</span><span class="s1">&#39;insert into pups(name, breed, age, sex)&#39;</span><span class="o">+</span>
+</span><span class='line'>        <span class="s1">&#39;values(${name}, ${breed}, ${age}, ${sex})&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>        <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;success&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Inserted one puppy&#39;</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Test with curl in a new terminal tab:</p>
+<p>Test with curl in a new terminal window:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -503,7 +541,7 @@
 
 <p>Double check the GET ALL route in your browser to ensure that the new puppy is now part of the collection.</p>
 
-<h3>PUT route</h3>
+<h3>PUT</h3>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -520,10 +558,10 @@
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// update puppy</span>
-</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">none</span><span class="p">(</span><span class="s1">&#39;update pups set $1~=$2 where id=$3&#39;</span><span class="p">,</span>
-</span><span class='line'>          <span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">column</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">])</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">updatePuppy</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">none</span><span class="p">(</span><span class="s1">&#39;update pups set name=$1, breed=$2, age=$3, sex=$4 where id=$5&#39;</span><span class="p">,</span>
+</span><span class='line'>           <span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">breed</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">age</span><span class="p">,</span>
+</span><span class='line'>            <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">sex</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">])</span>
 </span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 </span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
 </span><span class='line'>        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
@@ -534,24 +572,18 @@
 </span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
 </span><span class='line'>    <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
-<p>Here, we expect that a column name is passed in with the PUT request along with a new value. Try it out:</p>
+<p>Test:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -X PUT --data <span class="s2">&quot;column=name&amp;value=Hunter&quot;</span> <span class="se">\</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -X PUT --data <span class="s2">&quot;name=Hunter&amp;breed=annoying&amp;age=33&amp;sex=m&quot;</span> <span class="se">\</span>
 </span><span class='line'>http://127.0.0.1:3000/api/puppies/1
 </span></code></pre></td></tr></table></div></figure>
 
-<p>This should change the name of the first puppy from &#39;Tyler&#39; to &#39;Hunter&#39;. Again, check the GET ALL route in your browser to ensure that puppy&#39;s updated name is now Hunter.</p>
-
-<blockquote>
-<p>Did you notice the <code>~</code> in the SQL query? This is used to prevent SQL injection by properly <a href="https://www.npmjs.com/package/pg-promise#sql-names">escaping</a> SQL names and identifiers.</p>
-</blockquote>
-
-<h3>DELETE route</h3>
+<h3>Delete</h3>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -569,9 +601,7 @@
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// remove puppy</span>
-</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">removePuppy</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>  <span class="kd">var</span> <span class="nx">pupID</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
 </span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">result</span><span class="p">(</span><span class="s1">&#39;delete from pups where id = $1&#39;</span><span class="p">,</span> <span class="nx">pupID</span><span class="p">)</span>
 </span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
@@ -586,7 +616,7 @@
 </span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
 </span><span class='line'>      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
 </span><span class='line'>    <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>So, we used the <code>result</code> <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Mask</a>, in order to get the number of records affected by the query.</p>
@@ -609,7 +639,7 @@
 
 <h2>Error Handling</h2>
 
-<p>First, update the error handlers in <em>app.js</em> to serve up JSON:</p>
+<p>Update the error handlers in <em>app.js</em> to serve up JSON:</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -654,259 +684,6 @@
 </span><span class='line'>  <span class="p">});</span>
 </span><span class='line'><span class="p">});</span>
 </span></code></pre></td></tr></table></div></figure>
-
-<p>Next, let&#39;s add three helper functions:<br>
-  - <code>checkID()</code> - ensures that the ID parameter from the query string exists<br>
-  - <code>validPostObject()</code> - ensures that the JSON object is valid for the POST request<br>
-  - <code>validPutObject()</code> - ensures that the JSON object is valid for the PUT request</p>
-
-<p>We could put these functions into a helpers file, but let&#39;s keep it simple and just add it to the <em>index.js</em> file with our route handlers.</p>
-
-<h3><code>checkID()</code></h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">checkID</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">pupID</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
-</span><span class='line'>  <span class="nx">db</span><span class="p">.</span><span class="nx">oneOrNone</span><span class="p">(</span><span class="s1">&#39;select id from pups where id = $1&#39;</span><span class="p">,</span> <span class="nx">pupID</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* jshint ignore:start */</span>
-</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
-</span><span class='line'>          <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
-</span><span class='line'>            <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
-</span><span class='line'>            <span class="nx">message</span><span class="o">:</span> <span class="err">`</span><span class="nx">ID</span> <span class="s1">&#39;${pupID}&#39;</span> <span class="nx">does</span> <span class="nx">not</span> <span class="nx">exist</span><span class="p">.</span><span class="err">`</span>
-</span><span class='line'>          <span class="p">});</span>
-</span><span class='line'>        <span class="cm">/* jshint ignore:end */</span>
-</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
-</span><span class='line'>      <span class="p">}</span>
-</span><span class='line'>    <span class="p">})</span>
-</span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>What&#39;s happening here? Basically, if the ID exists, we pass the request to the next middleware function. If the ID does not exist, we send an error. Add the function to the appropriate route handlers:</p>
-
-<p>GET Single Puppy:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="nx">checkID</span><span class="p">,</span>
-</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>PUT route:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="nx">checkID</span><span class="p">,</span>
-</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>DELETE route:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="nx">checkID</span><span class="p">,</span>
-</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Test this out for each updated route handler. If an ID exists then the route handler should function as it normally should. But, if an ID does not exist, you should see an error:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span>
-</span><span class='line'>  <span class="s2">&quot;status&quot;</span>: <span class="s2">&quot;error&quot;</span>,
-</span><span class='line'>  <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;ID &#39;7&#39; does not exist.&quot;</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h3><code>validPostObject()</code></h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">validPostObject</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">payload</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;breed&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;sex&#39;</span><span class="p">];</span>
-</span><span class='line'>  <span class="nx">keys</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">){</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">key</span> <span class="k">in</span> <span class="nx">payload</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="cm">/* jshint ignore:start */</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
-</span><span class='line'>          <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">message</span><span class="o">:</span> <span class="err">`</span><span class="nx">Invalid</span> <span class="nx">JSON</span><span class="p">.</span> <span class="s1">&#39;${key}&#39;</span> <span class="nx">does</span> <span class="nx">not</span> <span class="nx">exist</span><span class="p">.</span><span class="err">`</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>      <span class="cm">/* jshint ignore:end */</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>This function simply takes the payload from the POST request and verifies that all keys are present.</p>
-
-<p>Update the route handler, like so:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/puppies&#39;</span><span class="p">,</span> <span class="nx">validPostObject</span><span class="p">,</span>
-</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Then test it out:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl --data <span class="s2">&quot;name=Whisky&amp;breed=annoying&amp;age=3&quot;</span> <span class="se">\</span>
-</span><span class='line'>http://127.0.0.1:3000/api/puppies
-</span></code></pre></td></tr></table></div></figure>
-
-<p>You should see:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span>
-</span><span class='line'>  <span class="s2">&quot;status&quot;</span>: <span class="s2">&quot;error&quot;</span>,
-</span><span class='line'>  <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;Invalid JSON. &#39;sex&#39; does not exist.&quot;</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Keep in mind that this function does not check if a key also contains a value - so, <code>&quot;name=Whisky&amp;breed=annoying&amp;age=3&amp;sex=&quot;</code> will still pass - and the function breaks at the first key not found. What if the end user forgets multiple keys? Shouldn&#39;t we give them this info all at once? Yes. Refactor on your own using <code>filter</code>!</p>
-
-<p>Don&#39;t forget to test with valid JSON to ensure that all is well.</p>
-
-<h3><code>validPutObject()</code></h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">validPutObject</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">payload</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;column&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">];</span>
-</span><span class='line'>  <span class="nx">keys</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">){</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">key</span> <span class="k">in</span> <span class="nx">payload</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="cm">/* jshint ignore:start */</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
-</span><span class='line'>          <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">message</span><span class="o">:</span> <span class="err">`</span><span class="nx">Invalid</span> <span class="nx">JSON</span><span class="p">.</span> <span class="s1">&#39;${key}&#39;</span> <span class="nx">does</span> <span class="nx">not</span> <span class="nx">exist</span><span class="p">.</span><span class="err">`</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>      <span class="cm">/* jshint ignore:end */</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>This should be straightforward. Again, update the route handler-</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/api/puppies/:id&#39;</span><span class="p">,</span> <span class="nx">checkID</span><span class="p">,</span> <span class="nx">validPutObject</span><span class="p">,</span>
-</span><span class='line'>  <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>-and then test it out.</p>
-
-<h3>Refactor</h3>
-
-<p>Finally, did you notice the duplicate code in the last two functions - <code>validPostObject()</code> and <code>validPutObject()</code>? Let&#39;s clean that up by combining the logic into a single function:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">validPayload</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">keys</span><span class="p">;</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">===</span> <span class="s1">&#39;POST&#39;</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;breed&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;sex&#39;</span><span class="p">];</span>
-</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">===</span> <span class="s1">&#39;PUT&#39;</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;column&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">];</span>
-</span><span class='line'>  <span class="p">}</span>
-</span><span class='line'>  <span class="nx">keys</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">){</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">key</span> <span class="k">in</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="cm">/* jshint ignore:start */</span>
-</span><span class='line'>      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
-</span><span class='line'>        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
-</span><span class='line'>          <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
-</span><span class='line'>          <span class="nx">message</span><span class="o">:</span> <span class="err">`</span><span class="nx">Invalid</span> <span class="nx">JSON</span><span class="p">.</span> <span class="s1">&#39;${key}&#39;</span> <span class="nx">does</span> <span class="nx">not</span> <span class="nx">exist</span><span class="p">.</span><span class="err">`</span>
-</span><span class='line'>        <span class="p">});</span>
-</span><span class='line'>      <span class="cm">/* jshint ignore:end */</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>Update the route handlers, then test one last time!</p>
 
 <h2>Conclusion</h2>
 

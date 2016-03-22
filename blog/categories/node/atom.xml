@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2016-03-22T13:42:17-06:00</updated>
+  <updated>2016-03-22T15:26:35-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -103,12 +103,10 @@ $ npm install pg-promise@3.2.3 --save<br>
 
 <p>Why <code>pg-promise</code> instead of <code>pg</code>? Put simply, pg-promise abstracts away much of the difficult, low-level connection management, allowing you to focus on the business logic. Further, the library includes a powerful <a href="https://www.npmjs.com/package/pg-promise#queries-and-parameters">query formatting engine</a> and support for <a href="https://www.npmjs.com/package/pg-promise#transactions">automated transactions</a>.</p>
 
-<p>Finally, let&#39;s update the <em>index.js</em> route file:</p>
+<p>Finally, create a new file in the project root called <em>queries.js</em>:</p>
 
 <p>```javascript<br>
-var promise = require(&#39;bluebird&#39;);<br>
-var express = require(&#39;express&#39;);<br>
-var router = express.Router();</p>
+var promise = require(&#39;bluebird&#39;);</p>
 
 <p>var options = {<br>
   // Initialization Options<br>
@@ -117,7 +115,17 @@ var router = express.Router();</p>
 
 <p>var pgp = require(&#39;pg-promise&#39;)(options);<br>
 var connectionString = &#39;postgres://localhost:5432/puppies&#39;;<br>
-var db = pgp(connectionString);<br>
+var db = pgp(connectionString);</p>
+
+<p>// add query functions</p>
+
+<p>module.exports = {<br>
+  getAllPuppies: getAllPuppies,<br>
+  getSinglePuppy: getSinglePuppy,<br>
+  createPuppy: createPuppy,<br>
+  updatePuppy: updatePuppy,<br>
+  removePuppy: removePuppy<br>
+};<br>
 ```</p>
 
 <p>Here, we created an instance of <code>pg-promise</code> and assigned it to a variable, <code>pgp</code>.</p>
@@ -140,7 +148,7 @@ $ npm install bluebird@3.3.4 --save<br>
 
 <h2>Postgres setup</h2>
 
-<p>Create a new file in your project root called <em>puppies.sql</em> and then add the following code:</p>
+<p>Create a new file also in the root called <em>puppies.sql</em> and then add the following code:</p>
 
 <p>```sql<br>
 DROP DATABASE IF EXISTS puppies;<br>
@@ -171,33 +179,51 @@ CREATE TABLE<br>
 INSERT 0 1<br>
 ```</p>
 
-<p>Now we can start setting up the route handlers...</p>
-
 <h2>Routes</h2>
 
-<h3>GET ALL</h3>
+<p>Now we can set up the route handlers in <em>index.js</em>:</p>
+
+<p>```javascript<br>
+var express = require(&#39;express&#39;);<br>
+var router = express.Router();</p>
+
+<p>var db = require(&#39;../queries&#39;);</p>
+
+<p>router.get(&#39;/api/puppies&#39;, db.getAllPuppies);<br>
+router.get(&#39;/api/puppies/:id&#39;, db.getSinglePuppy);<br>
+router.post(&#39;/api/puppies&#39;, db.createPuppy);<br>
+router.put(&#39;/api/puppies/:id&#39;, db.updatePuppy);<br>
+router.delete(&#39;/api/puppies/:id&#39;, db.removePuppy);</p>
+
+<p>module.exports = router;<br>
+```</p>
+
+<h2>Queries</h2>
+
+<p>Next, let&#39;s add the SQL queries to the <em>queries.js</em> file...</p>
+
+<h3>GET All Puppies</h3>
 
 <p><code>javascript<br>
-// return ALL puppies<br>
-router.get(&#39;/api/puppies&#39;, function(req, res, next) {<br>
+function getAllPuppies(req, res, next) {<br>
   db.any(&#39;select * from pups&#39;)<br>
-    .then(function(data) {<br>
-      res.status(200)<br>
-        .json({<br>
-          status: &#39;success&#39;,<br>
-          data: data,<br>
-          message: &#39;Retrieved ALL puppies&#39;<br>
-        });<br>
-    })<br>
-    .catch(function(err) {<br>
-      return next(err);<br>
-    });<br>
-});<br>
+  .then(function(data) {<br>
+    res.status(200)<br>
+      .json({<br>
+        status: &#39;success&#39;,<br>
+        data: data,<br>
+        message: &#39;Retrieved ALL puppies&#39;<br>
+      });<br>
+  })<br>
+  .catch(function(err) {<br>
+    return next(err);<br>
+  });<br>
+}<br>
 </code></p>
 
 <p>In the above code, we utilized the <code>any</code> <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Mask</a> to query the database, which returns a promise object. This method is used to indicate that we are expecting any number of results back. Success and failures are then handled by <code>.then()</code> and <code>.catch()</code>.</p>
 
-<p>Besides, <code>any</code>, you can use the following <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Masks</a> (to name a few):</p>
+<p>Besides, <code>any</code>, you can use the following <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Masks</a> (just to name a few):</p>
 
 <ul>
 <li><code>one</code> - a single row is expected</li>
@@ -206,30 +232,7 @@ router.get(&#39;/api/puppies&#39;, function(req, res, next) {<br>
 <li><code>result</code> - passes the original object when resolved (we&#39;ll look at an example of this shortly)</li>
 </ul>
 
-<h3>GET Single Puppy</h3>
-
-<p><code>javascript<br>
-// return SINGLE puppy<br>
-router.get(&#39;/api/puppies/:id&#39;, function(req, res, next) {<br>
-  var pupID = req.params.id;<br>
-  db.one(&#39;select * from pups where id = $1&#39;, pupID)<br>
-    .then(function(data) {<br>
-      res.status(200)<br>
-        .json({<br>
-          status: &#39;success&#39;,<br>
-          data: data,<br>
-          message: &#39;Retrieved ONE puppy&#39;<br>
-        });<br>
-    })<br>
-    .catch(function(err) {<br>
-      return next(err);<br>
-    });<br>
-});<br>
-</code></p>
-
-<p>Test the GET requests out in the browser...</p>
-
-<p>GET ALL puppies: <a href="http://localhost:3000/api/puppies">http://localhost:3000/api/puppies</a></p>
+<p>Test the request out in the browser - <a href="http://localhost:3000/api/puppies">http://localhost:3000/api/puppies</a>:</p>
 
 <p><code>json<br>
 {<br>
@@ -247,7 +250,27 @@ router.get(&#39;/api/puppies/:id&#39;, function(req, res, next) {<br>
 }<br>
 </code></p>
 
-<p>GET SINGLE puppy: <a href="http://localhost:3000/api/puppies/1">http://localhost:3000/api/puppies/1</a></p>
+<h3>GET Single Puppy</h3>
+
+<p><code>javascript<br>
+function getSinglePuppy(req, res, next) {<br>
+  var pupID = req.params.id;<br>
+  db.one(&#39;select * from pups where id = $1&#39;, pupID)<br>
+    .then(function(data) {<br>
+      res.status(200)<br>
+        .json({<br>
+          status: &#39;success&#39;,<br>
+          data: data,<br>
+          message: &#39;Retrieved ONE puppy&#39;<br>
+        });<br>
+    })<br>
+    .catch(function(err) {<br>
+      return next(err);<br>
+    });<br>
+}<br>
+</code></p>
+
+<p>Again, test in the browser: <a href="http://localhost:3000/api/puppies/1">http://localhost:3000/api/puppies/1</a></p>
 
 <p><code>json<br>
 {<br>
@@ -263,28 +286,25 @@ router.get(&#39;/api/puppies/:id&#39;, function(req, res, next) {<br>
 }<br>
 </code></p>
 
-<h3>POST route</h3>
+<h3>POST</h3>
 
 <p><code>javascript<br>
-// insert puppy<br>
-router.post(&#39;/api/puppies&#39;, function(req, res, next) {<br>
-  db.none(&#39;insert into pups(name, breed, age, sex)&#39;+<br>
-          &#39;values(${name}, ${breed}, ${age}, ${sex})&#39;,<br>
-          req.body)<br>
-    .then(function() {<br>
-      res.status(200)<br>
-        .json({<br>
-          status: &#39;success&#39;,<br>
-          message: &#39;Inserted one puppy&#39;<br>
-        });<br>
-    })<br>
-    .catch(function(err) {<br>
-      return next(err);<br>
-    });<br>
-});<br>
+db.none(&#39;insert into pups(name, breed, age, sex)&#39;+<br>
+        &#39;values(${name}, ${breed}, ${age}, ${sex})&#39;,<br>
+        req.body)<br>
+  .then(function() {<br>
+    res.status(200)<br>
+      .json({<br>
+        status: &#39;success&#39;,<br>
+        message: &#39;Inserted one puppy&#39;<br>
+      });<br>
+  })<br>
+  .catch(function(err) {<br>
+    return next(err);<br>
+  });<br>
 </code></p>
 
-<p>Test with curl in a new terminal tab:</p>
+<p>Test with curl in a new terminal window:</p>
 
 <p><code>sh<br>
 $ curl --data &quot;name=Whisky&amp;breed=annoying&amp;age=3&amp;sex=f&quot; \<br>
@@ -302,13 +322,13 @@ http://127.0.0.1:3000/api/puppies<br>
 
 <p>Double check the GET ALL route in your browser to ensure that the new puppy is now part of the collection.</p>
 
-<h3>PUT route</h3>
+<h3>PUT</h3>
 
 <p><code>javascript<br>
-// update puppy<br>
-router.put(&#39;/api/puppies/:id&#39;, function(req, res, next) {<br>
-  db.none(&#39;update pups set $1~=$2 where id=$3&#39;,<br>
-          [req.body.column, req.body.value, req.params.id])<br>
+function updatePuppy(req, res, next) {<br>
+  db.none(&#39;update pups set name=$1, breed=$2, age=$3, sex=$4 where id=$5&#39;,<br>
+           [req.body.name, req.body.breed, req.body.age,<br>
+            req.body.sex, req.params.id])<br>
     .then(function() {<br>
       res.status(200)<br>
         .json({<br>
@@ -319,27 +339,20 @@ router.put(&#39;/api/puppies/:id&#39;, function(req, res, next) {<br>
     .catch(function(err) {<br>
       return next(err);<br>
     });<br>
-});<br>
+}<br>
 </code></p>
 
-<p>Here, we expect that a column name is passed in with the PUT request along with a new value. Try it out:</p>
+<p>Test:</p>
 
 <p><code>sh<br>
-$ curl -X PUT --data &quot;column=name&amp;value=Hunter&quot; \<br>
+$ curl -X PUT --data &quot;name=Hunter&amp;breed=annoying&amp;age=33&amp;sex=m&quot; \<br>
 http://127.0.0.1:3000/api/puppies/1<br>
 </code></p>
 
-<p>This should change the name of the first puppy from &#39;Tyler&#39; to &#39;Hunter&#39;. Again, check the GET ALL route in your browser to ensure that puppy&#39;s updated name is now Hunter.</p>
-
-<blockquote>
-<p>Did you notice the <code>~</code> in the SQL query? This is used to prevent SQL injection by properly <a href="https://www.npmjs.com/package/pg-promise#sql-names">escaping</a> SQL names and identifiers.</p>
-</blockquote>
-
-<h3>DELETE route</h3>
+<h3>Delete</h3>
 
 <p><code>javascript<br>
-// remove puppy<br>
-router.delete(&#39;/api/puppies/:id&#39;, function(req, res, next) {<br>
+function removePuppy(req, res, next) {<br>
   var pupID = req.params.id;<br>
   db.result(&#39;delete from pups where id = $1&#39;, pupID)<br>
     .then(function(result) {<br>
@@ -354,7 +367,7 @@ router.delete(&#39;/api/puppies/:id&#39;, function(req, res, next) {<br>
     .catch(function(err) {<br>
       return next(err);<br>
     });<br>
-});<br>
+}<br>
 </code></p>
 
 <p>So, we used the <code>result</code> <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Mask</a>, in order to get the number of records affected by the query.</p>
@@ -374,7 +387,7 @@ $ curl -X DELETE http://127.0.0.1:3000/api/puppies/1<br>
 
 <h2>Error Handling</h2>
 
-<p>First, update the error handlers in <em>app.js</em> to serve up JSON:</p>
+<p>Update the error handlers in <em>app.js</em> to serve up JSON:</p>
 
 <p>```javascript<br>
 // development error handler<br>
@@ -399,179 +412,6 @@ app.use(function(err, req, res, next) {<br>
   });<br>
 });<br>
 ```</p>
-
-<p>Next, let&#39;s add three helper functions:<br>
-  - <code>checkID()</code> - ensures that the ID parameter from the query string exists<br>
-  - <code>validPostObject()</code> - ensures that the JSON object is valid for the POST request<br>
-  - <code>validPutObject()</code> - ensures that the JSON object is valid for the PUT request</p>
-
-<p>We could put these functions into a helpers file, but let&#39;s keep it simple and just add it to the <em>index.js</em> file with our route handlers.</p>
-
-<h3><code>checkID()</code></h3>
-
-<p><code>javascript<br>
-function checkID(req, res, next) {<br>
-  var pupID = parseInt(req.params.id);<br>
-  db.oneOrNone(&#39;select id from pups where id = $1&#39;, pupID)<br>
-    .then(function(data) {<br>
-      if(!data) {<br>
-        /* jshint ignore:start */<br>
-        res.status(400)<br>
-          .json({<br>
-            status: &#39;error&#39;,<br>
-            message: `ID &#39;${pupID}&#39; does not exist.`<br>
-          });<br>
-        /* jshint ignore:end */<br>
-      } else {<br>
-        return next();<br>
-      }<br>
-    })<br>
-    .catch(function(err) {<br>
-      return next(err);<br>
-    });<br>
-}<br>
-</code></p>
-
-<p>What&#39;s happening here? Basically, if the ID exists, we pass the request to the next middleware function. If the ID does not exist, we send an error. Add the function to the appropriate route handlers:</p>
-
-<p>GET Single Puppy:</p>
-
-<p><code>javascript<br>
-router.get(&#39;/api/puppies/:id&#39;, checkID,<br>
-  function(req, res, next) {<br>
-</code></p>
-
-<p>PUT route:</p>
-
-<p><code>javascript<br>
-router.put(&#39;/api/puppies/:id&#39;, checkID,<br>
-  function(req, res, next) {<br>
-</code></p>
-
-<p>DELETE route:</p>
-
-<p><code>javascript<br>
-router.delete(&#39;/api/puppies/:id&#39;, checkID,<br>
-  function(req, res, next) {<br>
-</code></p>
-
-<p>Test this out for each updated route handler. If an ID exists then the route handler should function as it normally should. But, if an ID does not exist, you should see an error:</p>
-
-<p><code>sh<br>
-{<br>
-  &quot;status&quot;: &quot;error&quot;,<br>
-  &quot;message&quot;: &quot;ID &#39;7&#39; does not exist.&quot;<br>
-}<br>
-</code></p>
-
-<h3><code>validPostObject()</code></h3>
-
-<p><code>javascript<br>
-function validPostObject(req, res, next) {<br>
-  var payload = req.body;<br>
-  var keys = [&#39;name&#39;, &#39;breed&#39;, &#39;age&#39;, &#39;sex&#39;];<br>
-  keys.forEach(function(key){<br>
-    if(!(key in payload)) {<br>
-      /* jshint ignore:start */<br>
-      return res.status(400)<br>
-        .json({<br>
-          status: &#39;error&#39;,<br>
-          message: `Invalid JSON. &#39;${key}&#39; does not exist.`<br>
-        });<br>
-      /* jshint ignore:end */<br>
-    }<br>
-  });<br>
-  return next();<br>
-}<br>
-</code></p>
-
-<p>This function simply takes the payload from the POST request and verifies that all keys are present.</p>
-
-<p>Update the route handler, like so:</p>
-
-<p><code>javascript<br>
-router.post(&#39;/api/puppies&#39;, validPostObject,<br>
-  function(req, res, next) {<br>
-</code></p>
-
-<p>Then test it out:</p>
-
-<p><code>sh<br>
-$ curl --data &quot;name=Whisky&amp;breed=annoying&amp;age=3&quot; \<br>
-http://127.0.0.1:3000/api/puppies<br>
-</code></p>
-
-<p>You should see:</p>
-
-<p><code>sh<br>
-{<br>
-  &quot;status&quot;: &quot;error&quot;,<br>
-  &quot;message&quot;: &quot;Invalid JSON. &#39;sex&#39; does not exist.&quot;<br>
-}<br>
-</code></p>
-
-<p>Keep in mind that this function does not check if a key also contains a value - so, <code>&quot;name=Whisky&amp;breed=annoying&amp;age=3&amp;sex=&quot;</code> will still pass - and the function breaks at the first key not found. What if the end user forgets multiple keys? Shouldn&#39;t we give them this info all at once? Yes. Refactor on your own using <code>filter</code>!</p>
-
-<p>Don&#39;t forget to test with valid JSON to ensure that all is well.</p>
-
-<h3><code>validPutObject()</code></h3>
-
-<p><code>javascript<br>
-function validPutObject(req, res, next) {<br>
-  var payload = req.body;<br>
-  var keys = [&#39;column&#39;, &#39;value&#39;];<br>
-  keys.forEach(function(key){<br>
-    if(!(key in payload)) {<br>
-      /* jshint ignore:start */<br>
-      return res.status(400)<br>
-        .json({<br>
-          status: &#39;error&#39;,<br>
-          message: `Invalid JSON. &#39;${key}&#39; does not exist.`<br>
-        });<br>
-      /* jshint ignore:end */<br>
-    }<br>
-  });<br>
-  return next();<br>
-}<br>
-</code></p>
-
-<p>This should be straightforward. Again, update the route handler-</p>
-
-<p><code>javascript<br>
-router.put(&#39;/api/puppies/:id&#39;, checkID, validPutObject,<br>
-  function(req, res, next) {<br>
-</code></p>
-
-<p>-and then test it out.</p>
-
-<h3>Refactor</h3>
-
-<p>Finally, did you notice the duplicate code in the last two functions - <code>validPostObject()</code> and <code>validPutObject()</code>? Let&#39;s clean that up by combining the logic into a single function:</p>
-
-<p><code>javascript<br>
-function validPayload(req, res, next) {<br>
-  var keys;<br>
-  if (req.method === &#39;POST&#39;) {<br>
-    keys = [&#39;name&#39;, &#39;breed&#39;, &#39;age&#39;, &#39;sex&#39;];<br>
-  } else if (req.method === &#39;PUT&#39;) {<br>
-    keys = [&#39;column&#39;, &#39;value&#39;];<br>
-  }<br>
-  keys.forEach(function(key){<br>
-    if(!(key in req.body)) {<br>
-      /* jshint ignore:start */<br>
-      return res.status(400)<br>
-        .json({<br>
-          status: &#39;error&#39;,<br>
-          message: `Invalid JSON. &#39;${key}&#39; does not exist.`<br>
-        });<br>
-      /* jshint ignore:end */<br>
-    }<br>
-  });<br>
-  return next();<br>
-}<br>
-</code></p>
-
-<p>Update the route handlers, then test one last time!</p>
 
 <h2>Conclusion</h2>
 
