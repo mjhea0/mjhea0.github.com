@@ -4,7 +4,7 @@
   <title><![CDATA[Category: node | Michael Herman]]></title>
   <link href="http://mjhea0.github.com/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mjhea0.github.com/"/>
-  <updated>2016-03-22T15:38:10-06:00</updated>
+  <updated>2016-03-23T13:21:05-06:00</updated>
   <id>http://mjhea0.github.com/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -207,17 +207,17 @@ router.delete(&#39;/api/puppies/:id&#39;, db.removePuppy);</p>
 <p><code>javascript<br>
 function getAllPuppies(req, res, next) {<br>
   db.any(&#39;select * from pups&#39;)<br>
-  .then(function(data) {<br>
-    res.status(200)<br>
-      .json({<br>
-        status: &#39;success&#39;,<br>
-        data: data,<br>
-        message: &#39;Retrieved ALL puppies&#39;<br>
-      });<br>
-  })<br>
-  .catch(function(err) {<br>
-    return next(err);<br>
-  });<br>
+    .then(function (data) {<br>
+      res.status(200)<br>
+        .json({<br>
+          status: &#39;success&#39;,<br>
+          data: data,<br>
+          message: &#39;Retrieved ALL puppies&#39;<br>
+        });<br>
+    })<br>
+    .catch(function (err) {<br>
+      return next(err);<br>
+    });<br>
 }<br>
 </code></p>
 
@@ -254,9 +254,9 @@ function getAllPuppies(req, res, next) {<br>
 
 <p><code>javascript<br>
 function getSinglePuppy(req, res, next) {<br>
-  var pupID = req.params.id;<br>
+  var pupID = parseInt(req.params.id);<br>
   db.one(&#39;select * from pups where id = $1&#39;, pupID)<br>
-    .then(function(data) {<br>
+    .then(function (data) {<br>
       res.status(200)<br>
         .json({<br>
           status: &#39;success&#39;,<br>
@@ -264,7 +264,7 @@ function getSinglePuppy(req, res, next) {<br>
           message: &#39;Retrieved ONE puppy&#39;<br>
         });<br>
     })<br>
-    .catch(function(err) {<br>
+    .catch(function (err) {<br>
       return next(err);<br>
     });<br>
 }<br>
@@ -289,19 +289,22 @@ function getSinglePuppy(req, res, next) {<br>
 <h3>POST</h3>
 
 <p><code>javascript<br>
-db.none(&#39;insert into pups(name, breed, age, sex)&#39;+<br>
-        &#39;values(${name}, ${breed}, ${age}, ${sex})&#39;,<br>
-        req.body)<br>
-  .then(function() {<br>
-    res.status(200)<br>
-      .json({<br>
-        status: &#39;success&#39;,<br>
-        message: &#39;Inserted one puppy&#39;<br>
-      });<br>
-  })<br>
-  .catch(function(err) {<br>
-    return next(err);<br>
-  });<br>
+function createPuppy(req, res, next) {<br>
+  req.body.age = parseInt(req.body.age);<br>
+  db.none(&#39;insert into pups(name, breed, age, sex)&#39; +<br>
+      &#39;values(${name}, ${breed}, ${age}, ${sex})&#39;,<br>
+    req.body)<br>
+    .then(function () {<br>
+      res.status(200)<br>
+        .json({<br>
+          status: &#39;success&#39;,<br>
+          message: &#39;Inserted one puppy&#39;<br>
+        });<br>
+    })<br>
+    .catch(function (err) {<br>
+      return next(err);<br>
+    });<br>
+}<br>
 </code></p>
 
 <p>Test with curl in a new terminal window:</p>
@@ -327,16 +330,16 @@ http://127.0.0.1:3000/api/puppies<br>
 <p><code>javascript<br>
 function updatePuppy(req, res, next) {<br>
   db.none(&#39;update pups set name=$1, breed=$2, age=$3, sex=$4 where id=$5&#39;,<br>
-           [req.body.name, req.body.breed, req.body.age,<br>
-            req.body.sex, req.params.id])<br>
-    .then(function() {<br>
+    [req.body.name, req.body.breed, parseInt(req.body.age),<br>
+      req.body.sex, parseInt(req.params.id)])<br>
+    .then(function () {<br>
       res.status(200)<br>
         .json({<br>
           status: &#39;success&#39;,<br>
           message: &#39;Updated puppy&#39;<br>
         });<br>
     })<br>
-    .catch(function(err) {<br>
+    .catch(function (err) {<br>
       return next(err);<br>
     });<br>
 }<br>
@@ -353,9 +356,9 @@ http://127.0.0.1:3000/api/puppies/1<br>
 
 <p><code>javascript<br>
 function removePuppy(req, res, next) {<br>
-  var pupID = req.params.id;<br>
+  var pupID = parseInt(req.params.id);<br>
   db.result(&#39;delete from pups where id = $1&#39;, pupID)<br>
-    .then(function(result) {<br>
+    .then(function (result) {<br>
       /* jshint ignore:start */<br>
       res.status(200)<br>
         .json({<br>
@@ -364,7 +367,7 @@ function removePuppy(req, res, next) {<br>
         });<br>
       /* jshint ignore:end */<br>
     })<br>
-    .catch(function(err) {<br>
+    .catch(function (err) {<br>
       return next(err);<br>
     });<br>
 }<br>
