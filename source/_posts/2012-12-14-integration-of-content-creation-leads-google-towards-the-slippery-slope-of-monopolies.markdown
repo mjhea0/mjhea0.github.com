@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Integration of Content Creation Leads Google Towards the Slippery Slope of Monopolies"
 date: 2012-11-18 19:19
 comments: true

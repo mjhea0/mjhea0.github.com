@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Handling AJAX Calls With Node.js and Express (part 2)"
 date: 2013-11-01 07:01
 comments: true
@@ -66,18 +67,18 @@ results = body.query.results.RDF.item[0]['about']
 craig = '<a href ="'+results+'">'+results+'</a>'
 ```
 
-Let's expand this out so that it returns the title, url, and description. It's also much easier to loop through an array than an object in Handlebars, so let's return an array of objects - 
+Let's expand this out so that it returns the title, url, and description. It's also much easier to loop through an array than an object in Handlebars, so let's return an array of objects -
 
 ```javascript
 [{title: <title>, link:<link>, description:<description>}, . . .]
 ```
-    
+
 **How do we do that?** Based on the returned JSON data we know that the data needed is found in the `items` key. Add the following `console.log` to the `else` block:
 
 ```javascript
 console.log(body.query.results.RDF.item[0])
 ```
-    
+
 Fire up your server. Navigate to [http://localhost:3000/](http://localhost:3000/). Run a search on "Ruby". Then check the output in the terminal. You should see something similar to this:
 
 ```javascript
@@ -100,8 +101,8 @@ Thus, each object will look like this:
 ```javascript
 {title:results.title[0], about:results["link"], desc:results["description"]}
 ```
-    
-> `title` is an array with two values, where each value contains the exact same result. You can double check this by looking at other returned items. 
+
+> `title` is an array with two values, where each value contains the exact same result. You can double check this by looking at other returned items.
 
 Next, update the loop with the following code:
 
@@ -118,7 +119,7 @@ if (!body.query.results.RDF.item) {
 	}
 }
 ```
-	
+
 To test out this code, `console.log` the array outside of the loop. Run another search for "ruby". You should see something similar to this:
 
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/part2-results.png)
@@ -145,7 +146,7 @@ request(url, function(err, resp, body) {
   res.send(resultsArray);
 });
 ```
-	
+
 So, if no results are found from the search, we're sending `results` back to the client side, otherwise we're sending `resultsArray`.
 
 Finally, let's refactor the code to seperate out concerns:
@@ -159,7 +160,7 @@ app.get('/searching', function(req, res){
   var url = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search" +
 "%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22" + val + "%22&format=" +
 "json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
-		
+
   requests(url,function(data){
     res.send(data);
   });
@@ -202,7 +203,7 @@ $.get('/searching', parameters, function(data){
   };
 });
 ```
-  	
+
 This tests whether the returned data is an array. If so, `data` is passed to Handledbars, and, if not, `data` is added to `index.html`, indicating that no results are found. Test this out. Try searching for a something you know won't return any results:
 
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/no_results.png)
@@ -239,7 +240,7 @@ Next, add `template.html` to the "views" folder, and then add the following code
   </ul>
 </script>
 ```
-    
+
 As you probably guessed, the `each` helper iterates through the list, adding a new list item - which includes the title, link, and description - to the dom.
 
 Test this out one last time. Search for "ruby":
@@ -247,7 +248,7 @@ Test this out one last time. Search for "ruby":
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/ruby-search-results.png)
 
 Looks pretty good.
-  
+
 ## Conclusion
 
 Alright, so next time we'll add user login and authentication. You can grab the code [here](https://github.com/mjhea0/node-express-ajax-craigslist).

@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Basic Git Commands"
 date: 2013-10-11 11:19
 comments: true
@@ -15,14 +16,14 @@ Check to see which email address is associated to Git:
 ```sh
 $ git config user.email
 ```
-    
+
 You can update the email if necessary:
 
 ```sh
 $ git config --global user.email "myemail@address.com"
 ```
 
-### Initializing
+## Initializing
 
 As you probably know, Git is a [version control](http://en.wikipedia.org/wiki/Revision_control) system, which allows you to save snapshots of your projects into repositories. Before you can start taking snapshots though, you have to establish a repository by either creating one from scratch or by copying an already established repository.
 
@@ -42,17 +43,17 @@ remote: Counting objects: 48, done.
 remote: Compressing objects: 100% (36/36), done.
 remote: Total 48 (delta 14), reused 44 (delta 10)
 Receiving objects: 100% (48/48), 10.05 KiB, done.
-Resolving deltas: 100% (14/14), done. 
+Resolving deltas: 100% (14/14), done.
 ```
 
-To see the repo, navigate into the directory and then view all files. You'll see a hidden directory called ".git", which is the actual repository:   
+To see the repo, navigate into the directory and then view all files. You'll see a hidden directory called ".git", which is the actual repository:
 
-```sh    
+```sh
 $ cd sinatra-blog
 $ ls -a
 ```
 
-### Staging 
+## Staging
 
 The goal of really any version control system is to save periodic snapshots of your projects. Once you have a snapshot saved, you can feel safe working on your project as you can always revert back to an earlier snapshot if you make a huge error.
 
@@ -102,7 +103,7 @@ $ git status
 #
 #	new file:   readme.md
 #	new file:   test.md
-# 
+#
 ```
 
 ### Committing
@@ -116,10 +117,10 @@ $ git commit -am "initial commit"
 [master 93127ee] initial commit
 2 files changed, 2 insertions(+)
 ```
-      
+
 What does `git status` say now?
 
-```sh    
+```sh
 $ git status
 # On branch master
 nothing to commit (working directory clean)
@@ -129,7 +130,7 @@ nothing to commit (working directory clean)
 
 > Before you can push, you must add a remote repository to share your local repository with, which you'll see in the example.
 
-```sh    
+```sh
 $ git remote add origin git@github.com:mjhea0/git-commands.git
 $ git push origin master
 Counting objects: 6, done.
@@ -143,17 +144,17 @@ To git@github.com:mjhea0/git-commands.git
 
 Success! Take a look at my remote [repo](https://github.com/mjhea0/git-commands) on Github, which has identical copies of my files from my local working directory and repository.
 
-### Maintaining
+## Maintaining
 
 The more you work with Git - or any version control system, for that matter - the less you'll spend simply taking (`git add .`) and saving (`git commit`) snapshots. Maintaining (both local and remote) and ensuring your local and remote repositories stay in sync can be incredibly time consuming.
 
-This section could easily be split into multiple sections, with five ot ten commands each. However, most readers will follow a pretty straight forward workflow of initializing, staging, and then committing, without having to stray too far into maintenance. 
+This section could easily be split into multiple sections, with five ot ten commands each. However, most readers will follow a pretty straight forward workflow of initializing, staging, and then committing, without having to stray too far into maintenance.
 
 - `git pull origin master` literally pulls the changes made from a remote repository to your local repository. Perhaps you are collaborating on a project and need to pull changes down made by your collaborators or maybe you're just working solo and updating a local repository on different computer.
 
 To demonstrate a basic pull, I made changes to the "readme.md" files on the remote repository. I want those changes to reflect locally, so I can simply pull them down.
 
-```sh    
+```sh
 $ git pull origin master
 remote: Counting objects: 5, done.
 remote: Compressing objects: 100% (3/3), done.
@@ -168,14 +169,14 @@ Fast-forward
 ```
 
 > You may have heard of the `fetch` and/or `merge` commands. Well, the `pull` command literally is a combination of both those commands. In essence, you are first "fetching" all the changes, then "merging" those changes. In the example above, I fetched the changes made to "readme.md", then merged the two files. Keep in mind that most merge situations are never this simple, and problems can arise in the merge process, which can be difficult to solve.
-    
+
 In the example, I changed the text within "test.md" both locally and remotely:
 - Local: "testing merge"
 - Remote: "merging test"
-    
+
 If I just try to `push` or `pull` like normal, I will run into errors:
 
-```sh    
+```sh
 $ git pull origin master
 remote: Counting objects: 5, done.
 remote: Compressing objects: 100% (2/2), done.
@@ -195,20 +196,20 @@ error: failed to push some refs to 'git@github.com:mjhea0/git-commands.git'
 hint: Updates were rejected because the tip of your current branch is behind
 hint: its remote counterpart. Merge the remote changes (e.g. 'git pull')
 hint: before pushing again.
-hint: See the 'Note about fast-forwards' in 'git push --help' for details. 
-```      
-    
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+```
+
 So neither command worked. You can see in the stack trace some helpful hints. Basically, I can do a fast forward in either direction (PUSH or PULL), which forces the changes by adding an `-f` to the end of either command:
 
-```sh      
+```sh
 $ git push origin master -f
 Total 0 (delta 0), reused 0 (delta 0)
 To git@github.com:mjhea0/git-commands.git
 + 30b7818...15f4b6c master -> master (forced update)
 ```
-   
+
 In small, trivial situations, it's perfectly fine to use this method of merging. However, when you are dealing with complex code, you will definitely want to take a different approach - which will be covered next time.
-    
+
 - `git log` is used to view the history of your repository.
 
 ```sh
@@ -225,14 +226,14 @@ Date:   Thu Oct 10 22:45:14 2013 -0600
 
    initial commit
 ```
-         
+
 Here we can see the local commits, along with the commit number, author info, date, and the note from the commit - which is exactly why it's good to use detailed messages with your commits.
 
-- `git reset --hard <commit number>` is used for reverting back to a particular commit. Check the logs to find the commit number you want to revert back to. If you ever submit code that breaks other code (which will happen), use this command to discard that commit and roll back the entire repository to the commit you specify. Continuing with the snapshot analogy, perhaps you took and then saved three bad pictures of yourself. Well, you can use this command to discard those pictures. 
+- `git reset --hard <commit number>` is used for reverting back to a particular commit. Check the logs to find the commit number you want to revert back to. If you ever submit code that breaks other code (which will happen), use this command to discard that commit and roll back the entire repository to the commit you specify. Continuing with the snapshot analogy, perhaps you took and then saved three bad pictures of yourself. Well, you can use this command to discard those pictures.
 
 So I went ahead and made another change to "readme.md" and committed the files locally. I now have three commits according to the log:
 
-```sh      
+```sh
 $ git log
 commit 0f3165bf69b3d508431fa2fe2d5a0b8013637fd2
 Author: Michael Herman <hermanmu@gmail.com>
@@ -255,14 +256,14 @@ Date:   Thu Oct 10 22:45:14 2013 -0600
 
 Let's say I made that last commit on accident. How do I correct?
 
-```sh    
+```sh
 $ git reset --hard 15f4b6c44b3c8924caabfac9e4be11946e72acfb
 HEAD is now at 15f4b6c Update readme.md
 ```
-    
+
 By using the 'reset' command I completely discarded the changes from the last commit. The file even reverted back. It's like the changes never happened:
 
-```sh    
+```sh
 $ git log
 commit 15f4b6c44b3c8924caabfac9e4be11946e72acfb
 Author: Michael Herman <hermanmu@gmail.com>
@@ -276,7 +277,7 @@ Date:   Thu Oct 10 22:45:14 2013 -0600
 
    initial commit
 ```
-         
+
 Back to the previous state. Yay!
 
 <br>

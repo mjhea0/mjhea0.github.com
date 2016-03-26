@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Handling AJAX calls with Node.js and Express (scraping Craigslist)"
 date: 2013-10-20 01:12
 comments: true
@@ -10,7 +11,7 @@ This tutorial is meant for someone who's finished a basic Hello World project wi
 
 You can find the finished code on this [repo](https://github.com/mjhea0/node-express-ajax-craigslist) if wish to bypass the tutorial altogether.
 
-Let's get right to it. 
+Let's get right to it.
 
 Here is an index of all the articles in the series that have been published to date:
 
@@ -28,16 +29,16 @@ Here is an index of all the articles in the series that have been published to d
 ```sh
 $ express node-express-ajax-craigslist
 ```
-       
+
 #### CD into the newly created directory and install the node modules:
 
 ```sh
 $ cd node-express-ajax-craigslist
 $ npm install
 ```
-       
+
 Aside for the installed node modules/dependencies, your project structure should look like this:
- 
+
 ```sh
 ├── app.js
 ├── package.json
@@ -53,9 +54,9 @@ Aside for the installed node modules/dependencies, your project structure should
 	├── index.jade
 	└── layout.jade
 ```
-          
+
 > In short, your server-side Javascript is held in the `app.js` file, while the client-side file(s) will be placed in the "javascripts" directory. Keep this in mind as we go through the remainder of the tutorial as it's important to understand both the relationship between client and server-side Javascript as well as the ability to distinguish between the two.
- 
+
 #### Next, install [Supervisor](https://github.com/isaacs/node-supervisor) if you don't already have it:
 
 ```sh
@@ -67,11 +68,11 @@ $ npm install supervisor -g
 ```sh
 $ supervisor app
 ```
-       
+
 Point your browser to [http://localhost:3000/](http://localhost:3000/) and you should see the simple "Welcome to Express" message:
 
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/welcome.png)
- 
+
 Still with me? Good. Let's set up our first route.
 
 ## app.js (server-side)
@@ -82,14 +83,14 @@ Still with me? Good. Let's set up our first route.
 var routes = require('./routes');
 var user = require('./routes/user');
 ```
-       
+
 Comment out the following routes as well:
 
-```javascript 
+```javascript
 app.get('/', routes.index);
 app.get('/users', user.list);
 ```
-       
+
 > You probably noticed the `'express'` dependency. Remember that we also used Express to generate our project structure. To clarify, Express is *both* a framework and a command line tool. Just be aware that you can use the Express framework without generating the project structure, although you would probably want to follow another boilerplate structure to speed up the development process.
 
 #### **Let's set up our routes.** Routes bind a URL to a specific function. In other words, when a request is sent by the end user, it's handled by a specific URL. Different requests are handled by different URLs within our application. Hence the need for different routes.
@@ -97,7 +98,7 @@ app.get('/users', user.list);
 Our app we'll have two routes. (1) The first renders the search page where the end user directly searches Craigslist. (2) The result of the search is then passed to another route via AJAX, which processes the request on the server side.
 
 Let's look at the former.
- 
+
 ## Index Route (client-side)
 
 #### Add the following code to 'app.js':
@@ -108,21 +109,21 @@ app.get('/', function(req, res) {res.render('index')});
 
 Essentially, when a user sends an HTTP GET request to `/`, the `index.jade` view is rendered. Let's test this out. Update the code in the `index.jade` view:
 
-```jade 
+```jade
 extends layout
 
 block content
  h1 goodbye, cruel world
 ```
-       
+
 Double check in the terminal that your server is still running (and that there are no errors), and then return to your browser and refresh the page. You should see the updated H1 tag:
-    
+
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/goodbye.png)
- 
+
 Next, we'll update the view.
 
 ## Index View (client-side)
-          
+
 #### First, update `index.jade`:
 
 ```jade
@@ -135,10 +136,10 @@ extends layout
    script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")
    script(src="/javascripts/main.js")
 ```
-       
+
 Then add the following styles to "style.css":
 
-```css   
+```css
 #search {
   text-align: center;
   width:500px;
@@ -147,13 +148,13 @@ Then add the following styles to "style.css":
   border-radius:8px;
 }
 ```
-        
-Refresh your browser. See the updates? 
+
+Refresh your browser. See the updates?
 
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/craigs.png)
 
 This should be straightforward.
-      
+
 ## Main.js (client-side)
 
 #### While we're still on the client side, let's go ahead and add the event handler within the `main.js` file:
@@ -170,9 +171,9 @@ $(function(){
  });
 });
 ```
- 
+
 Here we're capturing the search results after the end user presses (and releases) the ENTER button (keycode `13`), and then storing them in the variable `val`. This data is then sent to the server where the response *will* then be handled, passed back to the client, and finally added to the document via another event handler: `$('#results').html(data)`.
-    
+
 That's a lot to take in. Let's stop for a minute and look at the workflow from the user perspective.
 
 ## Workflow
@@ -180,11 +181,11 @@ That's a lot to take in. Let's stop for a minute and look at the workflow from t
 1. User navigates to main page. The page loads.
 2. On the page load, the user sees the search box.
 3. User can then enter some text to search for.
-4. After the user presses ENTER results are displayed. 
+4. After the user presses ENTER results are displayed.
 
 Thus far, we've finished numbers 1, 2, and 3. Most of the action is handled in step 4, though. We already passed the results back to the server to the `/searching/` route. We need to then scrape Craigslist, send the results back, and then display them, of course.
 
-Now might be a good time to take out a piece of paper and a pen and write a diagram of what has happened thus far. 
+Now might be a good time to take out a piece of paper and a pen and write a diagram of what has happened thus far.
 
 Ready? Let's move back to the server-side.
 
@@ -198,19 +199,19 @@ app.get('/searching', function(req, res){
 });
 ```
 
-#### Notice the `res.send()`. I just want to test that the route works. Point your browser to [http://localhost:3000/searching](http://localhost:3000/searching). If all is well, you should see "WHEEE" in the top-left of the screen. We now know the route is working. 
+#### Notice the `res.send()`. I just want to test that the route works. Point your browser to [http://localhost:3000/searching](http://localhost:3000/searching). If all is well, you should see "WHEEE" in the top-left of the screen. We now know the route is working.
 
-####With the route working, we need to accomplish a number of things - 	
+####With the route working, we need to accomplish a number of things -
 - Set the returned value from the search box to a variable;
 - Pass the variable into the YQL search URL (YQL handles the actual scraping);
 - Use the *request* module to process the YQL URL and return the results; and,
 - Pass the results back to the client side.
 
 **We'll handle all this in increments, testing as we go.**
-    
+
 #### Set the returned value from the search box to a variable:
 
-```javascript    
+```javascript
 app.get('/searching', function(req, res){
 
  // input value from search
@@ -222,7 +223,7 @@ app.get('/searching', function(req, res){
 
 });
 ```
-       
+
 So after you add this code, return to your main route in the browser - [http://localhost:3000/](http://localhost:3000/) - and place your terminal next to the browser. Now enter a search term and press ENTER. You should see the `console.log()` in the terminal:
 
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/value.png)
@@ -252,7 +253,7 @@ console.log(url);
 });
 ```
 
-Again, open your browser along with your terminal and search for something relevant. (This specific YQL URL searches for all jobs in the San Francisco Bay Area.) 
+Again, open your browser along with your terminal and search for something relevant. (This specific YQL URL searches for all jobs in the San Francisco Bay Area.)
 
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/yql.png)
 
@@ -266,7 +267,7 @@ $ npm install request
 
 Now add the following code to the route function:
 
-```javascript    
+```javascript
 // request module is used to process the yql url and return the results in JSON format
 request(url, function(err, resp, body) {
  body = JSON.parse(body);
@@ -312,12 +313,12 @@ console.log(url);
 });
 ```
 
-In this code, we pass the YQL URL to the *request* module (`request(url`. . .), then we grab the callback (`body`), which is a string, and then parse it as JSON (`body = JSON.parse(body);`). Next, we test to see if any results are returned. If so, we assign the value `body.query.results.RDF.item[0]['about']` to `craig`, and if not, we assign the value `"No results found. Try again."` to `craig`. 
+In this code, we pass the YQL URL to the *request* module (`request(url`. . .), then we grab the callback (`body`), which is a string, and then parse it as JSON (`body = JSON.parse(body);`). Next, we test to see if any results are returned. If so, we assign the value `body.query.results.RDF.item[0]['about']` to `craig`, and if not, we assign the value `"No results found. Try again."` to `craig`.
 
-> If you run into problems here, stop and test. `console.log()` the `body`. You can also add a `console.log` inside the conditional statement to see if the logic is even working. For example, if you know that no results are being returned, yet when you add `console.log(testing)` inside the first conditional and don't see it in your console when you run the app, you know that your logic is incorrect. 
- 
+> If you run into problems here, stop and test. `console.log()` the `body`. You can also add a `console.log` inside the conditional statement to see if the logic is even working. For example, if you know that no results are being returned, yet when you add `console.log(testing)` inside the first conditional and don't see it in your console when you run the app, you know that your logic is incorrect.
+
 > **When in doubt always, always, ALWAYS test with `console.log()`.**
-     
+
 #### Finally, let's pass the results back to the client side:
 
 ```javascript
@@ -343,7 +344,7 @@ console.log(url);
     craig = body.query.results.RDF.item[0]['about'];
    }
  });
- 
+
   // pass back the results to client side
   res.send(craig);
 
@@ -354,9 +355,9 @@ console.log(url);
 ```
 
 So, we're simply taking `craig`, which could contain results or a string stating that no results could be found and sending it back to the client using     `res.send(craig)`.
-    
+
 And with that, we're finished with the server side.
-    
+
 ## Main.js (client-side) redux
 
 #### Open `main.js` and look at the following code:
@@ -367,18 +368,18 @@ $.get( '/searching',parameters, function(data) {
 ```
 
 This is the *actual* AJAX request. As I stated before, we pass the `parameters` (which is an object) to the server side. We also have a handler setup to process the response from the server, which then takes the returned results and adds the data to the `<h2>` tag with the `id` of `results` in the JADE template.
-    
-Now the end user should see the results. 
-   
+
+Now the end user should see the results.
+
 ## Testing
 
 Test it out using a number of inputs. *Remember: this searches jobs in the SF Bay Area, so use appropriate keywords.*
-        
+
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/ruby.png)
-    
+
 Wait. Why did this return just the URL? Well, go back to `app.js` and check the conditional logic:
 
-```javascript    
+```javascript
 if (!body.query.results.RDF.item) {
   craig = "No results found. Try again.";
 } else {
@@ -387,14 +388,14 @@ if (!body.query.results.RDF.item) {
 ```
 
 If the query returns results, then we pass `body.query.results.RDF.item[0]['about']` to `craig`. What is that value? Well, we take the JSON file, `body`, and traverse through it. Let's look at the JSON file real quick. You can grab this from the [repo](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/yql.json).
-   
+
 Now just look at the value, `body.query.results.RDF.item[0]['about']`, and compare it to the JSON file. We move from `query` to `RDF` to the first item, `item[0]`. Finally, when we call the `about` key, the URL (the value) is returned. Make sense? See if you can return the `description` from the second `item`.
-   
-   
+
+
 Now let's turn that text URL into an actual clickable URL. See if you can do it yourself before you look at my [answer](https://gist.github.com/mjhea0/05da6ead756bd6af7d3b).
-   
+
 ![image](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/final.png)
-  
+
 ## Conclusion
 
 That's all for now. Next time we'll look at how to return multiple results and loop through them with [Handlebars](http://handlebarsjs.com/) and the separation of concerns. Comment if you have questions. Check out the [repo](https://github.com/mjhea0/node-express-ajax-craigslist). Cheers!

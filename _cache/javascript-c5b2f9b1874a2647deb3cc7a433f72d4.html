@@ -1,0 +1,37 @@
+<div class="highlight"><pre><span class="c1">// grade 20 tweets from today with keyword choice and call callback</span>
+<span class="c1">// when done</span>
+<span class="kd">function</span> <span class="nx">getAndScoreTweets</span><span class="p">(</span><span class="nx">choice</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">twitter</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;search/tweets&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">q</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="o">+</span> <span class="nx">choice</span> <span class="o">+</span> <span class="s1">&#39; since:&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getFullYear</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span>
+    <span class="p">(</span><span class="nx">today</span><span class="p">.</span><span class="nx">getMonth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getDate</span><span class="p">(),</span> <span class="nx">count</span><span class="o">:</span><span class="mi">20</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// perform sentiment analysis (see below)</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">);</span>
+      <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;score:&quot;</span><span class="p">,</span> <span class="nx">score</span><span class="p">)</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;choice:&quot;</span><span class="p">,</span> <span class="nx">choice</span><span class="p">)</span>
+    <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">score</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+<span class="c1">//Grade tweets for each choice in parallel and compute winner when</span>
+<span class="c1">//all scores are collected</span>
+<span class="nx">async</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">choices</span><span class="p">,</span> <span class="nx">getAndScoreTweets</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">scores</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Unable to score all tweets&quot;</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span>
+  <span class="p">}</span>
+  <span class="kd">var</span> <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+  <span class="kd">var</span> <span class="nx">highestScore</span> <span class="o">=</span> <span class="nx">scores</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">cur</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">prev</span> <span class="o">&lt;</span> <span class="nx">cur</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
+      <span class="k">return</span> <span class="nx">cur</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">prev</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="o">:</span> <span class="nx">highestScore</span><span class="p">,</span> <span class="s1">&#39;choice&#39;</span><span class="o">:</span> <span class="nx">highestChoice</span><span class="p">}));</span>
+<span class="p">});</span>
+</pre>
+</div>

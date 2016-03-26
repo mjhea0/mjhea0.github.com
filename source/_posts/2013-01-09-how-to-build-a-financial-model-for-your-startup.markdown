@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "How to Build a Financial Model for Your Startup"
 date: 2013-01-10 9:30
 comments: true
@@ -16,7 +17,7 @@ The first step in developing your financial analysis is determining the expected
 
 The top-down approach takes into consideration targeted variables to reach a likely conversion rate. For example, you are selling children’s clothing in an area consisting of 3 million households.  A baseline assumption would estimate that each household consists of one child and that one of every three households will make a purchase within a prescribed time frame, say three months. Factor in additional filters such as competition, market share, etc. This is how you determine traffic; the number of customers expected to visit your business. The next step is to convert that number into expected sales. Since not everyone who visits your business will purchase something you will need to estimate the percentage using industry standards. In the case of the clothing store, it is safe assumption that 0.5% of the traffic will convert into sales.
 
-In essence, the top down approach is based on the assumption that your business can expect to gain a certain market share in year one, and will continue to grow in subsequent years. 
+In essence, the top down approach is based on the assumption that your business can expect to gain a certain market share in year one, and will continue to grow in subsequent years.
 
 The bottoms-up approach takes into consideration how much money is necessary to meet your goals and costs by focusing on actual sales forecasts (potential sales X average transaction value). For instance, a restaurant that has a base operating cost of $5000 per day needs to sell 100 meals at a rate of $50 per meal to cover that day’s operating costs. This is also known as the break-even level: the point where the daily revenue results in zero net profit. Any revenue made beyond this point would be considered profit for the day.
 

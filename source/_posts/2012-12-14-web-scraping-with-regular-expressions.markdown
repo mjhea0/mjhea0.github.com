@@ -1,14 +1,19 @@
 ---
 layout: post
+toc: true
 title: "Web Scraping with Regular Expressions"
 date: 2012-10-05 13:26
 comments: true
 categories: python
 ---
 
-**Problem:**You need to extract and parse all the headers and links from a web site or an XML feed, and then dump the data into a CSV file.
+## Problem
 
-**Import modules:**
+You need to extract and parse all the headers and links from a web site or an XML feed, and then dump the data into a CSV file.
+
+> Check out the accompanying [video](http://www.youtube.com/watch?v=DcZTNwdWVeo)!
+
+## Solution
 
 ```python
 import csv
@@ -51,7 +56,7 @@ for i in iterate:
 	writer.writerow([findTitle[i], findLink[i]])
 ```
 
-***Final Script:***
+## Script
 
 ```python
 #!/usr/bin/env python
@@ -84,7 +89,3 @@ writer.writerow(head)
 for i in iterate:
 	writer.writerow([findTitle[i], findLink[i]])
 ```
-
-***
-
-{% youtube DcZTNwdWVeo %}

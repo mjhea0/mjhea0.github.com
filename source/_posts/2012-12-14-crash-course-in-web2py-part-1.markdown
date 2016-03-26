@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Crash Course in web2py (part 1)"
 date: 2012-11-27 19:53
 comments: true
@@ -9,6 +10,8 @@ categories: python
 This tutorial shows how to create a basic web app using the web2py framework. I came across the framework last night and literally created and deployed a web app in less than ten minutes.
 
 Web2py is an open source web application framework that focuses on rapid development. By placing a strong emphasis on ease of use and productivity, it's one of the easiest frameworks to learn and use. Despite its simplicity, though, web2py is jam packed with features and is quite powerful and flexible - much like the Python language itself.
+
+> Be sure to check out the accompanying [video](http://www.youtube.com/watch?v=BXzqmHx6edY)!
 
 ## Download and Run
 
@@ -59,8 +62,6 @@ Finally, go to your homepage to view the app at [https://user_name.pythonanywher
 
 You just deployed your first app - congrats!
 
-***
+<br>
 
-{% youtube BXzqmHx6edY %}
-<br />
 *In the next [post](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/), I'll show you how to create a much more advanced web app. Cheers!*

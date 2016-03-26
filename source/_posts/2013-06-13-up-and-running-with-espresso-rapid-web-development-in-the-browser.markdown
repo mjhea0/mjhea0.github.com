@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Up and Running with Espresso: Rapid web development in the browser"
 date: 2013-06-13 08:06
 comments: true
@@ -47,7 +48,7 @@ This generates a Tasks model with 3 columns in it:
 - **name:** string, which is the default data type
 - **description:**  text
 
-Now we need to create a table for our Tasks model by migrating up the initialization migration. When we created our model, this generated a serial number associated with the migration. You can find the migrations within your project structure. 
+Now we need to create a table for our Tasks model by migrating up the initialization migration. When we created our model, this generated a serial number associated with the migration. You can find the migrations within your project structure.
 
 For example:
 
@@ -55,7 +56,7 @@ For example:
 base/migrations/tasks/1.2013-06-12_19-34-15.initializing-Tasks-model.rb
 ```
 
-This particular migration has a serial number of 1. 
+This particular migration has a serial number of 1.
 
 Let's finish the migration:
 
@@ -71,7 +72,7 @@ Fire up the server:
 $ ruby app.rb
 ```
 
-Then navigate to [http://localhost:5252/admin](http://localhost:5252/admin), click Tasks and add a few in. Get creative. 
+Then navigate to [http://localhost:5252/admin](http://localhost:5252/admin), click Tasks and add a few in. Get creative.
 
 Fast, right? Let's get even faster with Frontline.
 
@@ -90,12 +91,12 @@ Run it:
 ```sh
 $ frontline
 ```
-    
+
 Rock it: [http://localhost:5000](http://localhost:5000)
 
 Boom! Is any explanation needed? Perhaps ...
 
-Load your existing app using the project name, `espresso`, and the path, `/Users/michaelherman/desktop/espresso` (customize for your app and path). From here you have total control over setting up and maintaining your application. You can even put it under version control. 
+Load your existing app using the project name, `espresso`, and the path, `/Users/michaelherman/desktop/espresso` (customize for your app and path). From here you have total control over setting up and maintaining your application. You can even put it under version control.
 
 Let's update the base view. Click the "Maintenance" menu and select "layout.erb". Update the code:
 
@@ -139,13 +140,13 @@ class Index
     @tasks = Tasks.all
     render
   end
-  
+
 end
 ```
 
 Then add the following code to *list.erb*:
 
-```html    
+```html
 <br/>
 <ul>
 <% @tasks.each do |task| %>
@@ -157,7 +158,7 @@ Then add the following code to *list.erb*:
 </ul>
 ```
 
-Then check out your live app at [http://localhost:5252/list](http://localhost:5252/list) 
+Then check out your live app at [http://localhost:5252/list](http://localhost:5252/list)
 
 ![image](http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/45d09f61-b994-4ee4-a8ac-6034723747ff/00000164.png)
 

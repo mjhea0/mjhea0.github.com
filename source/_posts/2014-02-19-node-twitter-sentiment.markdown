@@ -1,10 +1,11 @@
 ---
 layout: post
+toc: true
 title: "Node Twitter Sentiment"
 date: 2014-02-19 10:33
 comments: true
 categories: node
---- 
+---
 
 In this tutorial we'll be building an app to pull in real-time Tweets using a Twitter client library for Node called [Twit](https://github.com/ttezel/twit) along with [NodeJS](http://nodejs.org/), [Express](http://expressjs.com/), and [Sentimental](https://www.npmjs.org/package/Sentimental) (for sentiment analysis).
 
@@ -87,7 +88,7 @@ var express = require('express'),
   path = require('path'),
   fs = require('fs');
 
-// create express app  
+// create express app
 var app = express();
 
 // all environments
@@ -117,7 +118,7 @@ http.createServer(app).listen(app.get('port'), function(){
 });
 ```
 
-You've seen the majority of this code already, from the original [tutorial](https://github.com/mjhea0/node-getting-started), so I won't go into too much detail. Plus, it's heavily commented and, right now, it resembles a pretty standard Node/Express app. 
+You've seen the majority of this code already, from the original [tutorial](https://github.com/mjhea0/node-getting-started), so I won't go into too much detail. Plus, it's heavily commented and, right now, it resembles a pretty standard Node/Express app.
 
 Let's setup our routes next.
 
@@ -309,13 +310,13 @@ $(function () {
 
 ```
 
-Now comes the fun part! Add a *main.js* file to your "javascripts" folder. 
+Now comes the fun part! Add a *main.js* file to your "javascripts" folder.
 
-Yes, there's a lot going on here. Fortunately, it's well documented. 
+Yes, there's a lot going on here. Fortunately, it's well documented.
 
 Start with the `// ----- MAIN ----- //` code. This essentially controls everything else. Nothing happens until the decision button is clicked. Once that happens the `goDecide()` function fires. This is where things get, well, interested.
 
-Go through it line by line, reading the comment, then code. Make sure you understand what each statement is doing. 
+Go through it line by line, reading the comment, then code. Make sure you understand what each statement is doing.
 
 Notice how the magic starts happening when the data is grabbed from the inputs, added to an array, and then sent to the server side via AJAX. Notice the `/search` endpoint. We pass the stringified `choice` array to that endpoint, which needs to be setup on the server side, then what for the data to comeback before appending it to the DOM.
 
@@ -366,7 +367,7 @@ exports.search = function(req, res) {
     // add choice to new array
     array.push(choices[i])
     // grad 20 tweets from today
-    twitter.get('search/tweets', {q: '' + choices[i] + ' since:' + today.getFullYear() + '-' + 
+    twitter.get('search/tweets', {q: '' + choices[i] + ' since:' + today.getFullYear() + '-' +
       (today.getMonth() + 1) + '-' + today.getDate(), count:20}, function(err, data) {
         // perform sentiment analysis
         score = performAnalysis(data['statuses']);
@@ -383,7 +384,7 @@ exports.search = function(req, res) {
     })(i)
   }
   // send response back to the server side; why the need for the timeout?
-  setTimeout(function() { res.end(JSON.stringify({'score': highestScore, 'choice': highestChoice})) }, 5000);	
+  setTimeout(function() { res.end(JSON.stringify({'score': highestScore, 'choice': highestChoice})) }, 5000);
 };
 ```
 
@@ -392,7 +393,7 @@ Again, I've commented this heavily. So go through, line by line, and see what's 
 Points of note:
 
 1. Add your Twitter config keys to a new file called *config.js*. More on this in the next section.
-2. Why are we using a timeout? Try removing it. What happens? Why is this a bad practice? 
+2. Why are we using a timeout? Try removing it. What happens? Why is this a bad practice?
 
 ### 3. Config
 
@@ -412,7 +413,7 @@ Remember this line from your routes file, *index.js*:
 score = performAnalysis(data['statuses']);
 ```
 
-Well, we pass the pulled tweets as arguments into the `performAnalysis()` function. 
+Well, we pass the pulled tweets as arguments into the `performAnalysis()` function.
 performAnalysis
 Let's add that function:
 
@@ -459,7 +460,7 @@ function performAnalysis(tweetSet) {
 
 After the tweets are passed in, the text is parsed and sentiment is analyzed. Finally a score is calculated and returned.
 
-Boom. That's it! 
+Boom. That's it!
 
 Your project structure should now look like:
 
@@ -484,7 +485,7 @@ Test time!
 
 ## Conclusion
 
-Test this out a few times. Make sure it all works. Perhaps go through it iteratively, following along with the code for further understanding. 
+Test this out a few times. Make sure it all works. Perhaps go through it iteratively, following along with the code for further understanding.
 
 Think about what you could add to make this app more fun/unique?
 

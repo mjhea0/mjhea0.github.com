@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Node Twitter Sentiment - Part 2"
 date: 2014-03-18 11:55
 comments: true
@@ -45,7 +46,7 @@ exports.search = function(req, res) {
     // add choice to new array
     array.push(choices[i])
     // grad 20 tweets from today
-    twitter.get('search/tweets', {q: '' + choices[i] + ' since:' + today.getFullYear() + '-' + 
+    twitter.get('search/tweets', {q: '' + choices[i] + ' since:' + today.getFullYear() + '-' +
       (today.getMonth() + 1) + '-' + today.getDate(), count:20}, function(err, data) {
         // perform sentiment analysis (see below)
         score = performAnalysis(data['statuses']);
@@ -62,7 +63,7 @@ exports.search = function(req, res) {
     })(i)
   }
   // send response back to the server side; why the need for the timeout?
-  setTimeout(function() { res.end(JSON.stringify({'score': highestScore, 'choice': highestChoice})) }, 5000);   
+  setTimeout(function() { res.end(JSON.stringify({'score': highestScore, 'choice': highestChoice})) }, 5000);
 };
 ```
 
@@ -125,7 +126,7 @@ One solution is to use the [Async](https://github.com/caolan/async). This is oft
 ### Basics
 
 Start by installing the package:
-    
+
 ```sh
 $ npm install async
 ```
@@ -196,7 +197,7 @@ exports.search = function(req, res) {
   // grade 20 tweets from today with keyword choice and call callback
   // when done
   function getAndScoreTweets(choice, callback) {
-    twitter.get('search/tweets', {q: '' + choice + ' since:' + today.getFullYear() + '-' + 
+    twitter.get('search/tweets', {q: '' + choice + ' since:' + today.getFullYear() + '-' +
       (today.getMonth() + 1) + '-' + today.getDate(), count:20}, function(err, data) {
         // perform sentiment analysis (see below)
       if(err) {
@@ -218,7 +219,7 @@ exports.search = function(req, res) {
       res.end(JSON.stringify(err));
     }
     var highestChoice = choices[0];
-    var highestScore = scores.reduce(function(prev, cur, index) { 
+    var highestScore = scores.reduce(function(prev, cur, index) {
       if(prev < cur) {
         highestChoice = choices[index];
         return cur;
@@ -227,7 +228,7 @@ exports.search = function(req, res) {
       }
     });
     res.end(JSON.stringify({'score': highestScore, 'choice': highestChoice}));
-  });             
+  });
 }
 
 function performAnalysis(tweetSet) {
@@ -278,7 +279,7 @@ Let's look at the specific changes:
 // grade 20 tweets from today with keyword choice and call callback
 // when done
 function getAndScoreTweets(choice, callback) {
-  twitter.get('search/tweets', {q: '' + choice + ' since:' + today.getFullYear() + '-' + 
+  twitter.get('search/tweets', {q: '' + choice + ' since:' + today.getFullYear() + '-' +
     (today.getMonth() + 1) + '-' + today.getDate(), count:20}, function(err, data) {
       // perform sentiment analysis (see below)
     if(err) {
@@ -300,7 +301,7 @@ async.map(choices, getAndScoreTweets, function(err, scores) {
     res.end(JSON.stringify(err));
   }
   var highestChoice = choices[0];
-  var highestScore = scores.reduce(function(prev, cur, index) { 
+  var highestScore = scores.reduce(function(prev, cur, index) {
     if(prev < cur) {
       highestChoice = choices[index];
       return cur;
@@ -309,7 +310,7 @@ async.map(choices, getAndScoreTweets, function(err, scores) {
     }
   });
   res.end(JSON.stringify({'score': highestScore, 'choice': highestChoice}));
-});             
+});
 ```
 
 We pass in the `choices` array, the `getAndScoreTweets()` function (which handles the calculating of sentiment), then the results are serialized and sent back to the client. `async.map()` suspends the `getAndScoreTweets()` function until it's done running. Thus, the results are not sent back to the client until Sentiment is done.
@@ -320,7 +321,7 @@ Simple, right?
 
 Check out the final code here: [https://github.com/mjhea0/node-twitter-sentiment-async](https://github.com/mjhea0/node-twitter-sentiment-async)
 
-## Promises 
+## Promises
 
 **Thanks to [Richard Lucas](http://www.meetup.com/Node-js-Denver-Boulder/members/23013171/) for developing the code and writing the following explanation.**
 
@@ -426,9 +427,9 @@ exports.search = function(req, res) {
 
 Have Fun!
 
-## Generators 
+## Generators
 
-Generators are the new kid on the block, but they look the most promising. Essentially, they make it easy to suspend/pause a function then resume it with the `yield` function. 
+Generators are the new kid on the block, but they look the most promising. Essentially, they make it easy to suspend/pause a function then resume it with the `yield` function.
 
 > Make sure you are using a browser that supports ES6: [http://kangax.github.io/es5-compat-table/es6/#Generators_(yield)](http://kangax.github.io/es5-compat-table/es6/#Generators_(yield)). I personally use [Chrome Canary](https://www.google.com/intl/en/chrome/browser/canary.html), with experimental Javasctipt enabled: "chrome://flags/#enable-javascript-harmony".
 
@@ -436,7 +437,7 @@ Generators are the new kid on the block, but they look the most promising. Essen
 
 > As of Node v0.11.3, you must use the `--harmony_generators` flag for running applications that contain generator examples in order to enable ES6 experimental features - e.g., `node --harmony_generators app.js`.
 
-Let's look at a quick example. 
+Let's look at a quick example.
 
 ### Example
 
@@ -485,15 +486,15 @@ So, how do we ad this to our Sentiment project? I'm not sure. :)
 
 **Thanks to [Aaron Vandrey](http://www.meetup.com/Node-js-Denver-Boulder/members/103374712/) for developing the code and writing the following explanation.**
 
-Although there are a number of front-end MV* frameworks that could be used, we chose the [KnockoutJS](https://github.com/knockout/knockout) data binding library for simplicity. KnockoutJS uses "observables" to enable two-way data binding from the View (HTML) back to the View-model (JavaScript). 
+Although there are a number of front-end MV* frameworks that could be used, we chose the [KnockoutJS](https://github.com/knockout/knockout) data binding library for simplicity. KnockoutJS uses "observables" to enable two-way data binding from the View (HTML) back to the View-model (JavaScript).
 
 From [10 things to know about KnockoutJS on day one])http://www.knockmeout.net/2011/06/10-things-to-know-about-knockoutjs-on.html)":
 
-> Observables are functions. The actual value and subscribers to the observable are cached internally by the function. You set an observable’s value by passing the new value as the only argument to the function and you read the value by passing no arguments. 
+> Observables are functions. The actual value and subscribers to the observable are cached internally by the function. You set an observable’s value by passing the new value as the only argument to the function and you read the value by passing no arguments.
 
-We can use these functions to read the values from the form directly, hide and expose DIVs and change text on the screen. 
+We can use these functions to read the values from the form directly, hide and expose DIVs and change text on the screen.
 
-From the KnockoutJS data-binding [page](http://knockoutjs.com/documentation/binding-syntax.html): 
+From the KnockoutJS data-binding [page](http://knockoutjs.com/documentation/binding-syntax.html):
 
 > Knockout’s declarative binding system provides a concise and powerful way to link data to the UI. It’s generally easy and obvious to bind to simple data properties or to use a single binding.
 …
@@ -503,7 +504,7 @@ A binding consists of two items, the binding name and value, separated by a colo
 
 #### Views
 
-Combining the functions in our *main.js* (more on this later), on the client side, with Knockout’s declarative data-binding syntax, we can set up the Jade template in the manner shown below. 
+Combining the functions in our *main.js* (more on this later), on the client side, with Knockout’s declarative data-binding syntax, we can set up the Jade template in the manner shown below.
 
 In the original Jade template there are placeholder DIVs set up that we then use jQuery to interact with - to display the error messages and results. We also used jQuery to update the styles applied to the DIVs. Since we are using data binding in this example, we will go ahead and set up the DIVs for errors and results and have their HTML and styles in the DOM at all times. Then using the "visible" data binding on the DIVs we can hide and expose them as needed. In the example below we have a couple of data-bind attributes that KnockoutJS will use to handle the two-way communication from the View to the ViewModel and vise-versa.
 
@@ -527,8 +528,8 @@ In the original Jade template there are placeholder DIVs set up that we then use
         input#decision.btn.btn-success.btn-sm.text-center(type='button', value='Again?' data-bind='click: tryAgain')
 ```
 
-In the highlighted text we can see just a few of the many [data-binding](http://knockoutjs.com/documentation/introduction.html) possibilities. 
- 
+In the highlighted text we can see just a few of the many [data-binding](http://knockoutjs.com/documentation/introduction.html) possibilities.
+
 The `submit` binding will handle both the "click" event of the submit button as well as a user hitting the "enter" key. In the background KnockoutJS will also perform a "preventDefault" so that the form does not attempt to submit the form to the server.
 
 The `value` binding will update the ViewModel with the values entered into the text boxes. A form submit is not needed to consume these values, though in this case we are using a form submit. Alternatively we could use KnockoutJS to `subscribe` to the change event for these form values and begin our processing when our inputs passed validation.
@@ -586,11 +587,11 @@ function getDecision(){
     $.post('/search', { 'choices': JSON.stringify(choices) }, function(data) {
         choices.length = 0;
         var results = JSON.parse(data);
-        
+
         self.results(RESULTS_START_HTML + results.choice + RESULTS_END_HTML + results.score);
         self.hasResults(true);
         self.isProcessing(false);
-    });  
+    });
 }
 ```
 
@@ -611,7 +612,7 @@ p(class='decision-text', data-bind='html: results')
 
 ### Refactor
 
-After submitting this code it we determined that the data-binding could have been used even better by not having an error DIV and a results DIV. By taking advantage of the `css` binding and a KnockoutJS `computed` observable (an observable that can watch multiple observables and return one value) the Bootstrap class could have easily been changed from `danger` to `success` and the title and copy changed using existing observables. 
+After submitting this code it we determined that the data-binding could have been used even better by not having an error DIV and a results DIV. By taking advantage of the `css` binding and a KnockoutJS `computed` observable (an observable that can watch multiple observables and return one value) the Bootstrap class could have easily been changed from `danger` to `success` and the title and copy changed using existing observables.
 
 Here `shouldShowMessages` is a computed observable that will return true if either we have an error or if we have results, otherwise it will return false. Similarly, `messageType` is a computed observable that will return "error" unless we have successfully received results, at which point it will return "success".
 
@@ -650,7 +651,7 @@ self.messageType = ko.computed(function(){
     }
 
     return returnValue;
-}); 
+});
 ```
 
 It should be noted that *most* data-bindings will make a call to `ko.utils.unwrapObservable()` behind the scenes. This allows us to make the data-bind safely on both observables and non-observables. However, if you take a look at where the `messageType` observable is used you will notice that we are referencing the observable as a function (with parentheses). This is because we are accessing the observable inside an expression.

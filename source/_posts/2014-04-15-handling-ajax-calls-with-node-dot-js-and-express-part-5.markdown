@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Handling AJAX Calls With Node.js and Express (part 5)"
 date: 2014-04-15 20:34
 comments: true
@@ -28,12 +29,13 @@ From an end user's perspective, after logging in and then searching for jobs, on
 1. Insert the data in the newly created Mongo collection.
 1. Use jQuery to remove the job from the DOM and alert the user that job has been added.
 
-Let's get started. 
+Let's get started.
 
 ## Add a save button
 
 Start by adding the "save" button to the Handlebars template:
 
+{% raw %}
 ```html
 <script id="search-results" type="text/x-handlebars-template">
     {{#each resultsArray}}
@@ -46,6 +48,7 @@ Start by adding the "save" button to the Handlebars template:
     </ul>
 </script>
 ```
+{% endraw %}
 
 Moving right along ...
 
@@ -91,7 +94,7 @@ Nothing. Right? What's going on? We have the right selector. The event is a clic
 
 The problem is fairly simple: On the initial loading of the DOM, those selectors - `.save-btn` - are not present. In fact, they only become present after we append all the jobs to the DOM. Since the selectors are not present to begin with though, our event handler in its current state won't find them. Fortunately, this is an easy fix.
 
-We can simply attach a listener to a parent element, then once the event is fired, it will search for the child selector, `.save-btn`. It will obviously only find that selector once it exists in the DOM. 
+We can simply attach a listener to a parent element, then once the event is fired, it will search for the child selector, `.save-btn`. It will obviously only find that selector once it exists in the DOM.
 
 This is called event delegation. If interested, check [this](https://learn.jquery.com/events/event-delegation/) article out for more info.
 
@@ -107,7 +110,7 @@ So, the listener is set to the `#results` selector, which when fired (by the but
 
 ![delegated-events](https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/delegated-events.png)
 
-Next, instead of just outputting the text "whee!", we need to grab the job title and URL by replacing the current console log with: 
+Next, instead of just outputting the text "whee!", we need to grab the job title and URL by replacing the current console log with:
 
 ```javascript
 var jobTitle = $(this).next('a').text()
@@ -115,7 +118,7 @@ var jobURL = $(this).next('a').attr('href')
 console.log(jobTitle, jobURL)
 ```
 
-Notice the `this` keyword? It's extremely powerful yet it can be difficult to use. In this case, it refers to the DOM element that the event handler is triggered on. 
+Notice the `this` keyword? It's extremely powerful yet it can be difficult to use. In this case, it refers to the DOM element that the event handler is triggered on.
 
 Don't believe me? Test it out: update the `console.log()` to `console.log($(this))`. Test it out.
 
@@ -163,7 +166,7 @@ Test this out. You should see:
 
 ## Update Mongo
 
-Now that we have the data in our possession, let's add it to the database. 
+Now that we have the data in our possession, let's add it to the database.
 
 ### Add a new schema
 
@@ -327,14 +330,14 @@ From:
 
 ```javascript
 console.log('Job already in database.');
-console.log("New job, " + newJob.title + ", was added to mongo"); 
+console.log("New job, " + newJob.title + ", was added to mongo");
 ```
 
 To:
 
 ```javascript
 res.send('Job already in database.');
-res.send("New job, " + newJob.title + ", was added to mongo"); 
+res.send("New job, " + newJob.title + ", was added to mongo");
 ```
 
 Updated function:
@@ -356,7 +359,7 @@ exports.save = function(req, res){
         if(err){
           throw err;
         }
-        res.send("New job, " + newJob.title + ", was added to mongo"); 
+        res.send("New job, " + newJob.title + ", was added to mongo");
       });
     };
   });
@@ -400,12 +403,12 @@ $.get( '/save', parameters, function(data) {
 
 `$('#alert').html(data)` adds the message to the DOM between the `<p>` tags that have the id "results".
 
-Check it out live. 
+Check it out live.
 
 ### Display saved jobs
 
 This is actually a fairly large task, so we'll tackle this in the next part, along with re-organizing the entire search page and adding some more styles.
 
-You can grab the code [here](https://github.com/mjhea0/node-express-ajax-craigslist). 
+You can grab the code [here](https://github.com/mjhea0/node-express-ajax-craigslist).
 
 See you next time!

@@ -1,12 +1,13 @@
 ---
 layout: post
+toc: true
 title: "Designing with Class: Sinatra + PostgreSQL +  Heroku"
 date: 2013-06-08 07:37
 comments: true
 categories: ruby
 ---
 
-**Change Log**: 
+**Change Log**:
 
 1. September 29, 2013: bootstrap 3, jQuery, css
 2. November 21, 2013: added the ability to edit posts, demonstarted how to escape HTML
@@ -18,7 +19,7 @@ Know a little Ruby? Ready to start web development? Before jumping to Rails, get
 
 Once you feel good, add another step. Perhaps switch to DataMapper or ActiveRecord for managing your database with objects. Add a more complex database, such as  PostgreSQL.
 
-Finally, get familiar with front-end. Start with Bootstrap. Play around with JavaScript. 
+Finally, get familiar with front-end. Start with Bootstrap. Play around with JavaScript.
 
 ## In this tutorial ...
 
@@ -41,7 +42,7 @@ Finally, get familiar with front-end. Start with Bootstrap. Play around with Jav
 ```sh
 $ mkdir sinatra-blog
 ```
-        
+
 ### Setup your gems using a Gemfile. Create the following *Gemfile* (no extension) within your main directory:
 
 ```ruby
@@ -50,41 +51,41 @@ $ mkdir sinatra-blog
 source 'https://rubygems.org'
 ruby "2.0.0"
 
-gem "sinatra" 
-gem "activerecord" 
+gem "sinatra"
+gem "activerecord"
 gem "sinatra-activerecord"
 gem 'sinatra-flash'
 gem 'sinatra-redirect-with-flash'
- 
+
 group :development do
  gem 'sqlite3'
  gem "tux"
 end
- 
+
 group :production do
  gem 'pg'
 end
 ```
-        
+
 Notice how we're using SQLite3 for our development environment and PostgreSQL for production, in order to simply the dev process.
-        
+
 ### Install the gems:
 
 ```sh
 $ bundle install
-```        
+```
 
 This will create *Gemfile.lock*, displaying the exact versions of each gem that were installed.
 
 ### Create a *config.ru* file, which is a standard convention that Heroku looks for.
 
-```ruby        
+```ruby
 # config.ru
 
 require './app'
 run Sinatra::Application
 ```
-        
+
 ## Model
 
 ### Create a file called *environments.rb* and include the following code for our database configuration:
@@ -94,10 +95,10 @@ configure :development do
  set :database, 'sqlite:///dev.db'
  set :show_exceptions, true
 end
- 
+
 configure :production do
  db = URI.parse(ENV['DATABASE_URL'] || 'postgres:///localhost/mydb')
- 
+
  ActiveRecord::Base.establish_connection(
    :adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,
    :host     => db.host,
@@ -108,7 +109,7 @@ configure :production do
  )
 end
 ```
-        
+
 ### Next, create the main application file, "app.rb". Make sure to include the required gems and the *environments.rb* file we just created.
 
 ```ruby
@@ -122,29 +123,29 @@ require './environments'
 class Post < ActiveRecord::Base
 end
 ```
-        
+
 ### Create a *Rakefile* (again, no extension) so we can use migrations for setting up the data model:
 
 ```ruby
 # Rakefile
 
 require './app'
-require 'sinatra/activerecord/rake' 
+require 'sinatra/activerecord/rake'
 ```
-        
+
 ### Now run the following command to setup the migration files:
 
 ```sh
 $ rake db:create_migration NAME=create_posts
 ```
-        
-If you look at your project structure. You'll see a new folder called "db" and within that folder another folder called "migrate." You should then see a Ruby script with a timestamp. This is a migration file. The timestamp tells ActiveRecord the order in which to apply the migrations in case there is more than one file. 
-    
+
+If you look at your project structure. You'll see a new folder called "db" and within that folder another folder called "migrate." You should then see a Ruby script with a timestamp. This is a migration file. The timestamp tells ActiveRecord the order in which to apply the migrations in case there is more than one file.
+
 ### Essentially, these migration files are used for setting up your database tables. Edit the file now.
 
 > The up method is used when we complete the migration (`rake db:migrate`), while the down method is ran when we rollback the last migration (`rake db:rollback`).
 
-```ruby    
+```ruby
 class CreatePosts < ActiveRecord::Migration
  def self.up
    create_table :posts do |t|
@@ -165,9 +166,9 @@ end
 ```sh
 $ rake db:migrate
 ```
-        
+
 Just so you know, ActiveRecord created these table columns: `id`, `title`, `body`, `created_at`, `updated_at`
-    
+
 When you create a new post, you only need to specify the title and body; the remaining fields are generated automatically with ActiveRecord's magic! Pretty cool, eh?
 
 ### Use tux in order to add some data to the database.
@@ -177,18 +178,18 @@ $ tux
 >> Post.create(title: 'Testing the title', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum venenatis eros eget lectus hendrerit, sed mattis quam pretium. Aenean accumsan eget leo non cursus. Aliquam sagittis luctus mi, quis suscipit neque venenatis et. Pellentesque vitae elementum diam. Quisque iaculis eget neque mattis fermentum. Donec et luctus eros. Suspendisse egestas pharetra elit vel bibendum.')
 >>
 >> Post.all
-D, [2013-06-08T12:26:44.929333 #42914] DEBUG -- :   Post Load (0.2ms)  SELECT "posts".* FROM "posts" 
+D, [2013-06-08T12:26:44.929333 #42914] DEBUG -- :   Post Load (0.2ms)  SELECT "posts".* FROM "posts"
 => [#<Post id: 1, title: "Testing the title", body: "Lorem ipsum dolor sit amet, consectetur adipiscing ...", created_at: "2013-06-08 12:24:12", updated_at: "2013-06-08 12:24:12">]
 ```
-        
+
 Did you notice the actual SQL syntax used for each command? No? Look again.
-    
+
 Add a few more posts. Then exit:
 
 ```sh
 >>> exit
 ```
-    
+
 ## Version Control
 
 ### Before moving on, let's get this app under version control.
@@ -198,7 +199,7 @@ $ git init
 $ git add .
 $ git commit -am "initial commit"
 ```
- 
+
 ## Templates and views
 
 ###  Add the following code to *app.rb* to setup the first route:
@@ -210,14 +211,14 @@ get "/" do
   erb :"posts/index"
 end
 ```
-        
-This maps the `/` url to the template *index.html* (or *index.erb* in Ruby terms), found in ""views/posts/" directory. 
-    
+
+This maps the `/` url to the template *index.html* (or *index.erb* in Ruby terms), found in ""views/posts/" directory.
+
 > Note: The *app.rb* file is the controller in MVC-style architecture.
-    
+
 Add the helper for the title variable:
 
-```ruby    
+```ruby
 helpers do
   def title
     if @title
@@ -228,17 +229,17 @@ helpers do
   end
 end
 ```
-    
+
 Fire up the dev server:
-    
+
 ```ruby
 $ ruby app.rb
 ```
-        
+
 Then navigate to [http://localhost:4567/](http://localhost:4567/). You should see an error indicating the template can't be found - "/sinatra-blog/views/posts/index.erb". In other words, the URL routing is working; we just need to set up a template.
 
 First create two new directories - "views/posts" ...
-    
+
 ### Now, setup the associated template called *index.erb*:
 
 ```html
@@ -253,8 +254,8 @@ First create two new directories - "views/posts" ...
 ```
 
 Save this file within the "posts" directory.
-        
-### Now set up the *layout.erb* template, which is used as the parent template for all other templates. This is just a convention used to speed up development. Child templates, such as *index.erb* inherent the HTML and CSS (common code) from the parent template.  
+
+### Now set up the *layout.erb* template, which is used as the parent template for all other templates. This is just a convention used to speed up development. Child templates, such as *index.erb* inherent the HTML and CSS (common code) from the parent template.
 
 ```html
 <html>
@@ -274,7 +275,7 @@ Save this file within the "posts" directory.
 Save this file within the "views" directory.
 
 > The yield method indicates where templates are embedded.
-    
+
 ### Kill the server. Fire it back up. Go back to [http://localhost:4567/](http://localhost:4567/). Refresh. You should see your basic blog. Click on a link for one of the posts. Since we don't have a route associated with that URL, Sinatra gives us a little suggestion.
 
 
@@ -282,14 +283,14 @@ Save this file within the "views" directory.
 
 Route:
 
-```ruby            
+```ruby
 get "/posts/:id" do
  @post = Post.find(params[:id])
  @title = @post.title
  erb :"posts/view"
 end
 ```
-        
+
 Template (called *view.erb*):
 
 ```html
@@ -301,17 +302,17 @@ Template (called *view.erb*):
 
 Route:
 
-```ruby    
+```ruby
 get "/posts/create" do
  @title = "Create post"
  @post = Post.new
  erb :"posts/create"
 end
 ```
-        
+
 Template (called *create.erb*):
 
-```html   
+```html
 <h2>Create Post</h2>
 <br/>
 <form action="/posts" method="post"role="form">
@@ -328,7 +329,7 @@ Template (called *create.erb*):
  <button type="submit" class="btn btn-success">Submit</button>
 </form>
 ```
-        
+
 ### We also need a route for handling the POST requests.
 
 ```ruby
@@ -341,7 +342,7 @@ post "/posts" do
  end
 end
 ```
-        
+
 ### Test this out. Did it work? If you get this error "Couldn't find Post with ID=new" you need to put the last two routes above the route for viewing each post:
 
 ```ruby
@@ -404,8 +405,8 @@ class Post < ActiveRecord::Base
  validates :body, presence: true
 end
 ```
-    
-So, both the title and body cannot be null, and the title has to be at least 5 characters long.        
+
+So, both the title and body cannot be null, and the title has to be at least 5 characters long.
 
 ### Navigate to [http://localhost:4567/posts/create](http://localhost:4567/posts/create). Try to submit a blank post and then submit a real one. It's a bit confusing to the user when a blank post is submitted and nothing happens, so add some messages indicating that an error has occurred.
 
@@ -417,20 +418,20 @@ require 'sinatra/redirect_with_flash'
 
 enable :sessions
 ```
-        
+
 ### Update the POST request route:
 
 ```ruby
 post "/posts" do
  @post = Post.new(params[:post])
  if @post.save
-   redirect "posts/#{@post.id}", :notice => 'Congrats! Love the new post. (This message will disapear in 4 seconds.)'
+   redirect "posts/#{@post.id}", :notice => 'Congrats! Love the new post. (This message will disappear in 4 seconds.)'
  else
-   redirect "posts/create", :error => 'Something went wrong. Try again. (This message will disapear in 4 seconds.)'
+   redirect "posts/create", :error => 'Something went wrong. Try again. (This message will disappear in 4 seconds.)'
  end
 end
 ```
-        
+
 ### Add the following code to the *layout.erb* template just above the yield method:
 
 ```ruby
@@ -439,14 +440,14 @@ end
 <% end %>
 <% if flash[:error] %>
  <p class="alert alert-error"><%= flash[:error] %>
-<% end %>  
+<% end %>
 ```
-        
+
 Now test it again!
 
 ## Styles
 
-The app is ugly. Add some quick bootstrap styling. 
+The app is ugly. Add some quick bootstrap styling.
 
 ### Updated *layout.erb*:
 
@@ -470,7 +471,7 @@ The app is ugly. Add some quick bootstrap styling.
       }
       .container {
         max-width:1000px;
-      }  
+      }
     </style>
   </head>
 
@@ -503,7 +504,7 @@ The app is ugly. Add some quick bootstrap styling.
       <% end %>
       <% if flash[:error] %>
         <p class="alert alert-warning"><%= flash[:error] %>
-      <% end %> 
+      <% end %>
       <%= yield %>
 
     </div><!-- /.container -->
@@ -518,7 +519,7 @@ The app is ugly. Add some quick bootstrap styling.
     //** removes alerts after 4 seconds */
     window.setTimeout(function() {
         $(".alert").fadeTo(4500, 0).slideUp(500, function(){
-            $(this).remove(); 
+            $(this).remove();
         });
     }, 4000);
     </script>
@@ -615,7 +616,7 @@ end
 <br/>
 <form action="/posts/<%= @post.id %>" method="post">
  <div class="form-group">
-  <input type="hidden" name="_method" value="put" /> 
+  <input type="hidden" name="_method" value="put" />
   <label for="post_title">Title:</label>
   <br>
   <input id="post_title" class="form-control" name="post[title]" type="text" value="<%= @post.title %>" />
@@ -649,7 +650,7 @@ Currently, you can enter really anything into the input boxes for the title and 
 1. `<strong>Very, very strong</strong>`
 2. `<script>alert('happy birthday');</script>`
 
-See the issue? We need to escape the text properly in order to avoid this. 
+See the issue? We need to escape the text properly in order to avoid this.
 
 ### Update app.rb
 
@@ -678,7 +679,7 @@ end
 <br/>
 <form action="/posts/<%= @post.id %>" method="post">
  <div class="form-group">
-  <input type="hidden" name="_method" value="put" /> 
+  <input type="hidden" name="_method" value="put" />
   <label for="post_title">Title:</label>
   <br>
   <input id="post_title" class="form-control" name="post[title]" type="text" value="<%=h @post.title %>" />
@@ -722,7 +723,7 @@ Finally, let's get this app live on Heroku!
 $ heroku create <my-app-name>.
 $ git push heroku master
 ```
-        
+
 ### Rake the remote database:
 
 ```sh
@@ -744,8 +745,8 @@ Help elimiante spam by adding a captcha to the new post form. View the blog post
 
 
 
-   
-    
+
+
 
 
 

@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "User Authentication with Passport.js"
 date: 2013-11-11 07:45
 comments: true
@@ -9,13 +10,13 @@ categories: node
 **Change Log**
 
 1. *November 21st, 2013:* After a user registers, they are automatically logged in
-2. *May 15th, 2014:* Added info about salt and hashing passwords 
+2. *May 15th, 2014:* Added info about salt and hashing passwords
 
 <br>
 
 In this post I'll demonstrate how to add user authentication to Node.js with Passport.js.
 
-> If you're interested in social authentication, please check out [this](http://mherman.org/blog/2013/11/10/social-authentication-with-passport-dot-js/) blog post. 
+> If you're interested in social authentication, please check out [this](http://mherman.org/blog/2013/11/10/social-authentication-with-passport-dot-js/) blog post.
 
 ## Contents
 
@@ -23,7 +24,7 @@ In this post I'll demonstrate how to add user authentication to Node.js with Pas
 2. Edit app.js
 3. Mongoose
 4. Add routes
-5. Test 
+5. Test
 6. Edit index.jade
 7. Add login.jade
 8. Add register.jade
@@ -62,7 +63,7 @@ Return to your other terminal window and run:
 ```sh
 $ node app
 ```
- 
+
 Navigate to [http://localhost:1337/](http://localhost:1337/)
 
 #### Install additional dependencies:
@@ -70,13 +71,13 @@ Navigate to [http://localhost:1337/](http://localhost:1337/)
 ```sh
 $ npm install passport --save
 $ npm install passport-local --save
-$ npm install npm install jade --save
-$ npm install npm install mongodb --save
+$ npm install jade --save
+$ npm install mongodb --save
 $ npm install mongoose --save
 $ npm install passport-local-mongoose --save
 ```
 
-## Edit app.js 
+## Edit app.js
 
 #### Make sure your requirements look like this:
 
@@ -165,7 +166,7 @@ var passport = require('passport');
 var Account = require('./models/account');
 
 module.exports = function (app) {
-    
+
   app.get('/', function (req, res) {
       res.render('index', { user : req.user });
   });
@@ -202,7 +203,7 @@ module.exports = function (app) {
   app.get('/ping', function(req, res){
       res.send("pong!", 200);
   });
-  
+
 };
 ```
 
@@ -240,7 +241,7 @@ html
   body
   .container
     h1 Login Page
-    p.lead Say something worthwhile here. 
+    p.lead Say something worthwhile here.
     br
     form(role='form', action="/login",method="post", style='max-width: 300px;')
       .form-group
@@ -269,7 +270,7 @@ html
   body
   .container
     h1 Register Page
-    p.lead Say something worthwhile here. 
+    p.lead Say something worthwhile here.
     br
     form(role='form', action="/register",method="post", style='max-width: 300px;')
       .form-group
@@ -288,9 +289,9 @@ Fire up the server and test! Register, then login. PUSH to git again.
 
 ![login](https://raw.github.com/mjhea0/passport-local/master/login.png)
 
-Remember how I said that we'd look at salting and hashing a password again? Well, let's check our Mongo database to ensure that it's working. 
+Remember how I said that we'd look at salting and hashing a password again? Well, let's check our Mongo database to ensure that it's working.
 
-When I tested the user registration, I used "Michael" for both my username and password. 
+When I tested the user registration, I used "Michael" for both my username and password.
 
 Let's see what this looks like in the database:
 
@@ -307,9 +308,9 @@ switched to db passport_local_mongoose
 
 So, you can see that we have a document with five keys:
 
-- Username is as we expected. 
-- _id pertains to the unique id associated with that document. 
-- __v is the [version #](http://mongoosejs.com/docs/guide.html#versionKey) for that specific documents. 
+- Username is as we expected.
+- _id pertains to the unique id associated with that document.
+- __v is the [version #](http://mongoosejs.com/docs/guide.html#versionKey) for that specific documents.
 - Finally, instead of a password key we have both a salt and a hash key. For more on how these are generated, please refer to the [passport-local-mongoose](https://github.com/saintedlama/passport-local-mongoose#hash-algorithm) documentation.
 
 ## Unit tests

@@ -1,0 +1,163 @@
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">FacebookStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-facebook&#39;</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">TwitterStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-twitter&#39;</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">GithubStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-github2&#39;</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">GoogleStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-google-oauth&#39;</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">InstagramStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;passport-instagram&#39;</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">User</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./user.js&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./oauth.js&#39;</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">FacebookStrategy</span><span class="p">({</span>
+  <span class="nx">clientID</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">facebook</span><span class="p">.</span><span class="nx">clientID</span><span class="p">,</span>
+  <span class="nx">clientSecret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">facebook</span><span class="p">.</span><span class="nx">clientSecret</span><span class="p">,</span>
+  <span class="nx">callbackURL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">facebook</span><span class="p">.</span><span class="nx">callbackURL</span>
+  <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">accessToken</span><span class="p">,</span> <span class="nx">refreshToken</span><span class="p">,</span> <span class="nx">profile</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span> <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">User</span><span class="p">({</span>
+          <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+          <span class="nx">name</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">displayName</span><span class="p">,</span>
+          <span class="nx">created</span><span class="o">:</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>
+        <span class="p">});</span>
+        <span class="nx">user</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;saving user ...&quot;</span><span class="p">);</span>
+            <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+          <span class="p">}</span>
+        <span class="p">});</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">));</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">TwitterStrategy</span><span class="p">({</span>
+  <span class="nx">consumerKey</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">twitter</span><span class="p">.</span><span class="nx">consumerKey</span><span class="p">,</span>
+  <span class="nx">consumerSecret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">twitter</span><span class="p">.</span><span class="nx">consumerSecret</span><span class="p">,</span>
+  <span class="nx">callbackURL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">twitter</span><span class="p">.</span><span class="nx">callbackURL</span>
+  <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">accessToken</span><span class="p">,</span> <span class="nx">refreshToken</span><span class="p">,</span> <span class="nx">profile</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span> <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">User</span><span class="p">({</span>
+          <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+          <span class="nx">name</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">displayName</span><span class="p">,</span>
+          <span class="nx">created</span><span class="o">:</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>
+        <span class="p">});</span>
+        <span class="nx">user</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;saving user ...&quot;</span><span class="p">);</span>
+            <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+          <span class="p">}</span>
+        <span class="p">});</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">));</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">GithubStrategy</span><span class="p">({</span>
+  <span class="nx">clientID</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">github</span><span class="p">.</span><span class="nx">clientID</span><span class="p">,</span>
+  <span class="nx">clientSecret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">github</span><span class="p">.</span><span class="nx">clientSecret</span><span class="p">,</span>
+  <span class="nx">callbackURL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">github</span><span class="p">.</span><span class="nx">callbackURL</span>
+ <span class="p">},</span>
+ <span class="kd">function</span><span class="p">(</span><span class="nx">accessToken</span><span class="p">,</span> <span class="nx">refreshToken</span><span class="p">,</span> <span class="nx">profile</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span> <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">User</span><span class="p">({</span>
+          <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+          <span class="nx">name</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">displayName</span><span class="p">,</span>
+          <span class="nx">created</span><span class="o">:</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>
+        <span class="p">});</span>
+        <span class="nx">user</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;saving user ...&quot;</span><span class="p">);</span>
+            <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+          <span class="p">}</span>
+        <span class="p">});</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">));</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">GoogleStrategy</span><span class="p">({</span>
+  <span class="nx">returnURL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">returnURL</span><span class="p">,</span>
+  <span class="nx">realm</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">google</span><span class="p">.</span><span class="nx">realm</span>
+ <span class="p">},</span>
+ <span class="kd">function</span><span class="p">(</span><span class="nx">accessToken</span><span class="p">,</span> <span class="nx">refreshToken</span><span class="p">,</span> <span class="nx">profile</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span> <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">User</span><span class="p">({</span>
+          <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+          <span class="nx">name</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">displayName</span><span class="p">,</span>
+          <span class="nx">created</span><span class="o">:</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>
+        <span class="p">});</span>
+        <span class="nx">user</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;saving user ...&quot;</span><span class="p">);</span>
+            <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+          <span class="p">}</span>
+        <span class="p">});</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">));</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">InstagramStrategy</span><span class="p">({</span>
+  <span class="nx">returnURL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">instagram</span><span class="p">.</span><span class="nx">returnURL</span><span class="p">,</span>
+  <span class="nx">realm</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">instagram</span><span class="p">.</span><span class="nx">realm</span>
+  <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">accessToken</span><span class="p">,</span> <span class="nx">refreshToken</span><span class="p">,</span> <span class="nx">profile</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span> <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span> <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">User</span><span class="p">({</span>
+          <span class="nx">oauthID</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+          <span class="nx">name</span><span class="o">:</span> <span class="nx">profile</span><span class="p">.</span><span class="nx">displayName</span><span class="p">,</span>
+          <span class="nx">created</span><span class="o">:</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>
+        <span class="p">});</span>
+        <span class="nx">user</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>  <span class="c1">// handle errors!</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;saving user ...&quot;</span><span class="p">);</span>
+            <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+          <span class="p">}</span>
+        <span class="p">});</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">));</span>
+</pre>
+</div>

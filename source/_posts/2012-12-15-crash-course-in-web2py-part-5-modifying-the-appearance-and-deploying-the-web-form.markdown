@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Crash Course in web2py (part 5 - modifying the appearance and deploying the web form)"
 date: 2012-12-10 07:39
 comments: true
@@ -34,7 +35,7 @@ Back on the admin page for the form, scroll to the bottom of the page, and uploa
 
 Next, I'm going to remove the *Web Form* title between the h1 tags, remove the line breaks, and clean up the instructions. I'm also going to remove the *Submitted*, *Accepted*, and, *Errors*  sections, as the user does not need to see all that information. So the final code looks like this:
 
-```html	
+```html
 {{extend 'plugin_layouts/layouts/KeepitSimple.html'}}
 <p>Please enter your first name, last name, and email address - thanks!</p>
 <h2>Inputs:</h2>
@@ -45,7 +46,7 @@ Okay, now let's edit the *KeepitSimple html* file:
 
 First change the header div found in the middle of the page - "Welcome. Please register to access your services." (I also surrounded it in `<center>` tags)
 
-Add the following code to the header, just below the style.css -  
+Add the following code to the header, just below the style.css -
 
 ```html
 {{response.files.append(URL(request.application,'static','css/bootstrap.min.css'))}}
@@ -53,7 +54,7 @@ Add the following code to the header, just below the style.css -
 
 Then remove these lines of code-
 
-```html			
+```html
 {{try:}}{ {=auth.navbar(action=URL('default','user'))}}{{ except:pass}}
 {{=MENU(response.menu,_class='web2py-menu')}}
 <div id="footer">&copy;2007 Keep it Simple &nbsp;
@@ -113,7 +114,7 @@ db.define_table('register',
 	Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
 	Field('last_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
 	Field('email', unique=True, requires=[IS_NOT_EMPTY(), IS_EMAIL()]),
-	Field('email_validate',requires=[IS_EMAIL(), IS_EQUAL_TO(request.vars.email)]))	
+	Field('email_validate',requires=[IS_EMAIL(), IS_EQUAL_TO(request.vars.email)]))
 db.register.email.requires=IS_NOT_IN_DB(db,'register.email')
 ```
 

@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Handling AJAX Calls With Node.js and Express (part 4)"
 date: 2014-04-15 15:27
 comments: true
@@ -224,7 +225,7 @@ Now, move the main authentication code to a separate file.
 Create a new file called *authentication.js* and add the following code:
 
 ```javascript
-// authentication 
+// authentication
 
 var passport = require('passport')
 var GoogleStrategy = require('passport-google').Strategy;
@@ -283,13 +284,13 @@ Then back in *app.js*, make sure to import that module back in by adding it as a
 var passport = require('./authentication');
 ```
 
-Fire up the server, and test your app out. If it all went well, everything should still work properly. 
+Fire up the server, and test your app out. If it all went well, everything should still work properly.
 
 Finally, let's update the styles.
 
 ## Styles
 
-First, add in a [Bootstrap](http://getbootstrap.com/) stylesheet to the *layout.jade* file: 
+First, add in a [Bootstrap](http://getbootstrap.com/) stylesheet to the *layout.jade* file:
 
 ```html
 link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css')

@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Removing a Django App"
 date: 2013-07-04 09:43
 comments: true
@@ -13,7 +14,7 @@ Let's look at two ways to handle this: Manually and with [South](http://south.ae
 In this case, the application name is called `customers`, and it contains the following tables within *models.py*:
 
 ```python
-class Student(models.Model): 
+class Student(models.Model):
     name = models.CharField(max_length=30)
     courses = models.ManyToManyField('Course')
 
@@ -47,7 +48,7 @@ $ python manage.py sqlclear customers > drop_customers_customerprofile
 $ sqlite3 test.db
 sqlite> DROP TABLE customers_customerprofile;
 ```
-       
+
 > equivalent MySQL command - `$ mysql -u root -p <database_name> < drop_<app_name>_<table_name>.sql`
 
 4. Clean up the related contenttypes from the Shell:
@@ -70,7 +71,7 @@ I use South with all my Django projects, so I tend to prefer this method. Let's 
 $ python manage.py schemamigration customers --initial
 $ python manage.py migrate customers
 ```
-       
+
 2. Remove the `CustomerProfile` class from *models.py*.
 
 3. Setup the migration to delete the table:
@@ -78,7 +79,7 @@ $ python manage.py migrate customers
 ```sh
 $ python manage.py schemamigration customers --auto
 ```
-       
+
 4. Update the migration file *0002_auto__del_customerprofile.py*, to clean up the related contenttypes as well as delete the table from the database, by updating the `forwards` function:
 
 ```python
@@ -88,19 +89,19 @@ def forwards(self, orm):
    from django.contrib.contenttypes.models import ContentType
    ContentType.objects.filter(app_label='customers').delete()
 ```
- 
+
 5. Push the migration through:
 
 ```sh
 $ python manage.py migrate customers
 ```
-       
+
 6. Fake a zero migration to remove the migration history and clear up the South tables:
 
 ```sh
 $ python manage.py migrate customers zero --fake
 ```
-       
+
 7. Remove the app from the INSTALLED_APPS section in *settings.py* and delete any associated URL patterns from *urls.py*. Then delete the app folder and any related media files and/or templates. Finally, make sure to uninstall any packages or dependencies using `pip unistall <package_name>`. *Make sure to use virtualenv*.
 
 **Comment if you have questions. Cheers!**

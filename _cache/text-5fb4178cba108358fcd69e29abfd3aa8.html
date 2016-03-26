@@ -1,0 +1,36 @@
+<div class="highlight"><pre><code class="text">var results = [];
+
+// Grab data from the URL parameters
+var id = req.params.todo_id;
+
+// Grab data from http request
+var data = {text: req.body.text, complete: req.body.complete};
+
+// Get a Postgres client from the connection pool
+pg.connect(connectionString, function(err, client, done) {
+    // Handle connection errors
+    if(err) {
+      done();
+      console.log(err);
+      return res.status(500).send(json({ success: false, data: err}));
+    }
+
+    // SQL Query &gt; Update Data
+    client.query(&quot;UPDATE items SET text=($1), complete=($2) WHERE id=($3)&quot;, [data.text, data.complete, id]);
+
+    // SQL Query &gt; Select Data
+    var query = client.query(&quot;SELECT * FROM items ORDER BY id ASC&quot;);
+
+    // Stream results back one row at a time
+    query.on(&#39;row&#39;, function(row) {
+        results.push(row);
+    });
+
+    // After all data is returned, close connection and return results
+    query.on(&#39;end&#39;, function() {
+        done();
+        return res.json(results);
+    });
+});
+</code></pre>
+</div>

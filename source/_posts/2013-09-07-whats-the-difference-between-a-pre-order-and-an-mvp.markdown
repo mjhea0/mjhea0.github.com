@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "What’s the Difference Between a Pre-Order and an MVP?"
 date: 2013-09-07 14:02
 comments: true

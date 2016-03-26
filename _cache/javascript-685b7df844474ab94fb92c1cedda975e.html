@@ -1,0 +1,39 @@
+<div class="highlight"><pre><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">fs</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">path</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Sequelize</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;sequelize&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">basename</span>  <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">basename</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">filename</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">env</span>       <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">||</span> <span class="s1">&#39;development&#39;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">config</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/../config.json&#39;</span><span class="p">)[</span><span class="nx">env</span><span class="p">];</span>
+<span class="kd">var</span> <span class="nx">db</span>        <span class="o">=</span> <span class="p">{};</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">use_env_variable</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">sequelize</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sequelize</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">[</span><span class="nx">config</span><span class="p">.</span><span class="nx">use_env_variable</span><span class="p">]);</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">sequelize</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sequelize</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="nx">config</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">fs</span>
+  <span class="p">.</span><span class="nx">readdirSync</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">file</span> <span class="o">!==</span> <span class="nx">basename</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="o">!==</span> <span class="s1">&#39;.js&#39;</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">model</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">[</span><span class="s1">&#39;import&#39;</span><span class="p">](</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="nx">file</span><span class="p">));</span>
+    <span class="nx">db</span><span class="p">[</span><span class="nx">model</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
+  <span class="p">});</span>
+
+<span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">db</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">modelName</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">db</span><span class="p">[</span><span class="nx">modelName</span><span class="p">].</span><span class="nx">associate</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">db</span><span class="p">[</span><span class="nx">modelName</span><span class="p">].</span><span class="nx">associate</span><span class="p">(</span><span class="nx">db</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">db</span><span class="p">.</span><span class="nx">sequelize</span> <span class="o">=</span> <span class="nx">sequelize</span><span class="p">;</span>
+<span class="nx">db</span><span class="p">.</span><span class="nx">Sequelize</span> <span class="o">=</span> <span class="nx">Sequelize</span><span class="p">;</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">db</span><span class="p">;</span>
+</pre>
+</div>

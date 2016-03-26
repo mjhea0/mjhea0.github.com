@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Crash Course in web2py (part 2 - web forms)"
 date: 2012-12-01 21:27
 comments: true
@@ -36,8 +37,8 @@ Okay - Go ahead and start the web2py server, go to the admin interface, and then
 Open db.py in the Model's section and append the following code below, which defines the database schema. There are three required fields, plus a unique ID that is automatically created by web2py.
 
 ```python
-db = DAL('sqlite://webform.sqlite') 
-db.define_table('register', 
+db = DAL('sqlite://webform.sqlite')
+db.define_table('register',
     Field('first_name', requires=IS_NOT_EMPTY()),
     Field('last_name', requires=IS_NOT_EMPTY()),
     Field('email', requires=IS_NOT_EMPTY()))
@@ -45,14 +46,14 @@ db.define_table('register',
 
 ## View
 
-Create a new HTML file named default/display\_your\_form.html 
+Create a new HTML file named default/display\_your\_form.html
 
 ![](http://www.backwardsteps.com/uploads/2012-11-30_2319.png)
 
 And then add the following code to call the form-
 
-    
-```html    
+
+```html
 <center>
 <br /><br /><br />
 <h1>Web Form</h1>
@@ -63,7 +64,7 @@ And then add the following code to call the form-
 {{=BEAUTIFY(request.vars)}}
 </center>
 ```
-    
+
 
 ## Controller
 

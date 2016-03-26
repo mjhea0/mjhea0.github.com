@@ -1,11 +1,15 @@
 ---
 layout: post
+toc: true
 title: "Sentiment Analysis: Feelings, not Facts"
 date: 2012-10-19 14:32
 comments: true
 categories: analytics
 ---
 
+## Sentiment Analysis, defined
+
+> Be sure to check out the accompanying [video](http://www.youtube.com/watch?v=YmOYrozqCps)!
 
 Sentiment analysis is a process, which gathers the latest input from a human source or several human sources and uses it to determine the general opinion of a person, place or thing. For example, the old-fashioned comment boxes and comment cards is a form of sentiment analysis. Often called opinion gathering, sentiment analysis can be generated from various technological sources, like Twitter or Facebook. Like the old fashioned comment box, sentiment analysis can help owners or managers find the strengths and weaknesses of a business.
 
@@ -15,8 +19,6 @@ A single opinion posted on the web can damage a business's image quickly. And fi
 
 On the other hand, a good comment on social media can bring in more customers.  Performing sentiment analysis on twitter and other social media platforms let the business owner market based on the positive sentiment. After all, if one person likes something, such a certain product or customer service, then others will like it, too.
 
+## Conclusion
+
 That's why sentiment analysis is important to businesses. It allows business owners or managers to keep their finger on the pulse of their business. The most successful businesses know that customers are the life blood of the business and their opinion matters. Gone are the days of hardwood boxes and paper forms, but sentiment analysis is still just as important to the success of a business. Business owners and managers use it to improve every aspect of their business. How would you use sentiment analysis to improve your business?
-
-***
-
-{% youtube YmOYrozqCps %}

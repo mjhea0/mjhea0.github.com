@@ -1,19 +1,20 @@
 ---
 layout: post
+toc: true
 title: "Managing Multiple Github Accounts"
 date: 2013-09-16 07:43
 comments: true
 categories: github
 ---
 
-Let's look at how to manage multiple Github accounts from one computer. In essence, it's simply a matter of balancing both your git and ssh configurations - which actually is not as bad as it might seem. 
+Let's look at how to manage multiple Github accounts from one computer. In essence, it's simply a matter of balancing both your git and ssh configurations - which actually is not as bad as it might seem.
 
-> Note: This tutorial is meant for Unix users. 
+> Note: This tutorial is meant for Unix users.
 
 
 ## Set up SSH Keys
 
-Let's assume your two Github accounts are named *githubPersonal* and *githubWork*, respectively. 
+Let's assume your two Github accounts are named *githubPersonal* and *githubWork*, respectively.
 
 Create two SSH keys, saving each to a separate file:
 
@@ -26,7 +27,7 @@ $ ssh-keygen -t rsa -C "your_email@associated_with_githubWork.com"
 ```
 
 The above commands setup the following files:
-    
+
 - *id_rsa_personal*
 - *id_rsa_personal.pub*
 - *id_rsa_work*
@@ -39,7 +40,7 @@ The above commands setup the following files:
 ```sh
 $ pbcopy < ~/.ssh/id_rsa_personal.pub
 ```
-    
+
 #### Add the key to your account:
 - Go to your Account Settings
 - Click "SSH Keys" then "Add SSH key"
@@ -55,11 +56,11 @@ $ pbcopy < ~/.ssh/id_rsa_personal.pub
 
 ```sh
 $ touch config
-```    
-    
+```
+
 #### Edit the file using the text editor of your choice. I used vim - `$ vim config`:
 
-```sh    
+```sh
 # githubPersonal
 Host personal
    HostName github.com
@@ -72,38 +73,38 @@ Host work
    User git
    IdentityFile ~/.ssh/id_rsa_work
 ```
-    
+
 ## Update stored identities
 
 #### Clear currently stored identities:
-    
-```sh    
+
+```sh
 $ ssh-add -D
-```    
-    
+```
+
 #### Add new keys:
-    
-```sh    
+
+```sh
 $ ssh-add id_rsa_personal
 $ ssh-add id_rsa_work
 ```
-    
-#### Test to make sure new keys are stored:    
-    
-```sh    
+
+#### Test to make sure new keys are stored:
+
+```sh
 $ ssh-add -l
-```   
-    
+```
+
 #### Test to make sure Github recognizes the keys:
 
-```sh    
+```sh
 $ ssh -T personal
 Hi githubPersonal! You've successfully authenticated, but GitHub does not provide shell access.
 $ ssh -T work
 Hi githubWork! You've successfully authenticated, but GitHub does not provide shell access.
-```    
+```
 
-    
+
 ## Test PUSH
 
 #### On Github, create a new repo in your personal account, *githubPersonal*, called *test-personal*.
@@ -115,10 +116,10 @@ $ cd ~/documents
 $ mkdir test-personal
 $ cd test-personal
 ```
-    
+
 #### Add a blank "readme.md" file and PUSH to Github:
 
-```sh    
+```sh
 $ touch readme.md
 $ git init
 $ git add .
@@ -126,9 +127,9 @@ $ git commit -am "first commit"
 $ git remote add origin git@personal:githubPersonal/test-personal.git
 $ git push origin master
 ```
-    
-> Notice how we're using the custom account, `git@personal`, instead of `git@github.com`. 
-    
+
+> Notice how we're using the custom account, `git@personal`, instead of `git@github.com`.
+
 #### Repeat the process for your *githubWork* account.
 
 ## Test PULL
@@ -139,8 +140,8 @@ $ git push origin master
 
 ```sh
 $ git pull origin master
-```    
-    
+```
+
 #### Again, repeat this for your *githubWork* account.
 
 

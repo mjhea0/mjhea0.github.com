@@ -1,18 +1,19 @@
 ---
 layout: post
+toc: true
 title: "Adding a Captcha to Sinatra to Minimize Spam"
 date: 2014-05-04 18:43
 comments: true
 categories: ruby
 ---
 
-Spam is irritating. 
+Spam is irritating.
 
-It's been especially irritating on a [blog](http://sinatra-sings.herokuapp.com/) I created for a Sinatra [tutorial](http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku) hosted on Heroku where the database was filling up so quickly I had to run a [script](https://github.com/mjhea0/sinatra-blog/blob/master/reset.rb) to delete all rows once a week. Ugh. 
+It's been especially irritating on a [blog](http://sinatra-sings.herokuapp.com/) I created for a Sinatra [tutorial](http://mherman.org/blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku) hosted on Heroku where the database was filling up so quickly I had to run a [script](https://github.com/mjhea0/sinatra-blog/blob/master/reset.rb) to delete all rows once a week. Ugh.
 
 So, let’s add a [captcha](https://github.com/bmizerany/sinatra-captcha) to our blog in just five simple steps that will take less than five minutes element in order to help prevent so much spam.
 
-## Steps:
+## Steps
 
 ### 1. Add the following gem to your *Gemfile*:
 
@@ -36,7 +37,7 @@ require 'sinatra/captcha'
 ...
 
 post "/posts" do
-  halt(401, "invalid captcha") unless captcha_pass?
+  redirect "posts/create", :error => 'Invalid captcha' unless captcha_pass?
   @post = Post.new(params[:post])
   if @post.save
     redirect "posts/#{@post.id}", :notice => 'Congrats! Love the new post. (This message will disapear in 4 seconds.)'

@@ -1,0 +1,34 @@
+<div class="highlight"><pre><code class="text">var results = [];
+
+// Grab data from the URL parameters
+var id = req.params.todo_id;
+
+
+// Get a Postgres client from the connection pool
+pg.connect(connectionString, function(err, client, done) {
+
+    // SQL Query &gt; Delete Data
+    client.query(&quot;DELETE FROM items WHERE id=($1)&quot;, [id]);
+
+    // SQL Query &gt; Select Data
+    var query = client.query(&quot;SELECT * FROM items ORDER BY id ASC&quot;);
+
+    // Stream results back one row at a time
+    query.on(&#39;row&#39;, function(row) {
+        results.push(row);
+    });
+
+    // After all data is returned, close connection and return results
+    query.on(&#39;end&#39;, function() {
+        client.end();
+        return res.json(results);
+    });
+
+    // Handle Errors
+    if(err) {
+      console.log(err);
+    }
+
+});
+</code></pre>
+</div>

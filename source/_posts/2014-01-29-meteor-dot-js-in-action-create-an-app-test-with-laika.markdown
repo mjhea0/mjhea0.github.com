@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Meteor.js in Action: Create an App, Test with Laika"
 date: 2014-01-29 10:51
 comments: true
@@ -154,7 +155,7 @@ $ mrt add bootstrap-3
 bootstrap-3: Provides bootstrap 3.
 ```
 
-Watch your browser as you add these. You should see the styles update almost immediately. 
+Watch your browser as you add these. You should see the styles update almost immediately.
 
 You can read more about these packages [here](http://docs.meteor.com/#accountsui), [here](http://docs.meteor.com/#accounts_api), [here](https://github.com/mangasocial/meteor-bootstrap-3). It's pretty awesome that you can add these web components in just a matter of minutes! Awesome for prototyping!
 
@@ -248,7 +249,7 @@ Since both client and server code are interconnected, we want to be able to writ
 
 For this reason, your tests will run bit slower.
 
-Before installing Laika, make sure you have [Node.js](http://nodejs.org/), [PhantomJS](http://phantomjs.org/download.html), and [MongoDB](http://docs.mongodb.org/manual/installation/) installed. Also, run [`mongod`](http://docs.mongodb.org/v2.2/reference/mongod/) in a separate terminal window.  
+Before installing Laika, make sure you have [Node.js](http://nodejs.org/), [PhantomJS](http://phantomjs.org/download.html), and [MongoDB](http://docs.mongodb.org/manual/installation/) installed. Also, run [`mongod`](http://docs.mongodb.org/v2.2/reference/mongod/) in a separate terminal window.
 
 Install Laika:
 
@@ -256,7 +257,7 @@ Install Laika:
 $ sudo npm install -g laika
 ```
 All of our tests will reside in the "index.js" file within the "tests" folder.
- 
+
 Now let's start building.
 
 <a id="submit"></a>
@@ -267,7 +268,7 @@ Now let's start building.
 
 ```javascript
 Answers = new Meteor.Collection("answers");
-  
+
 Template.addAnswer.events({
   'click input.add-answer' : function(e){
     e.preventDefault();
@@ -566,7 +567,7 @@ Template.answer.events({
     var answerId = Session.get('selected_answer');
     console.log('updating yes count for answerId '+answerId);
     Meteor.call("incrementYesVotes",answerId);
-  }, 
+  },
   'click a.no': function(e) {
     e.preventDefault();
     var answerId = Session.get('selected_answer');
@@ -704,7 +705,7 @@ Next, test logging in. If all went well you should see:
 
 #### 4. Automated Test
 
-Since the Twitter login is part of a pre-written package, we do not need to do any unit tests. In general, unit tests should be reserved to code that you have written. Other people's code should be tested within the scope of a functional test, which I cannot figure out how to do with Laika. You could use Selenium or PhantomJS here, but I think just the manual testing is fine for now. The Meteor team really needs to develop an internal testing solution. 
+Since the Twitter login is part of a pre-written package, we do not need to do any unit tests. In general, unit tests should be reserved to code that you have written. Other people's code should be tested within the scope of a functional test, which I cannot figure out how to do with Laika. You could use Selenium or PhantomJS here, but I think just the manual testing is fine for now. The Meteor team really needs to develop an internal testing solution.
 
 Commit your code. Take a breath. Move on.
 
@@ -728,7 +729,7 @@ Template.answer.events({
       console.log('updating yes count for answerId '+answerId);
       Meteor.call("incrementYesVotes",answerId);
     }
-  }, 
+  },
   'click a.no': function(e) {
     e.preventDefault();
     if(Meteor.userId()){
@@ -736,7 +737,7 @@ Template.answer.events({
       console.log('updating no count for answerId '+answerId);
       Meteor.call("incrementNoVotes",answerId);
     }
-  } 
+  }
 });
 ```
 
@@ -828,7 +829,7 @@ Open your browser. If you're logged in, go ahead and log out. You should see thi
 
 ![loggedout](https://raw.github.com/mjhea0/meteor-in-action/master/images/loggedout.png)
 
-Now, before logging in to test. Let's dump the answers collection so that each record in the collection has a user associated with it. To do this, make sure your meteor app is running, then open a new terminal window and navigate to your app's project root. 
+Now, before logging in to test. Let's dump the answers collection so that each record in the collection has a user associated with it. To do this, make sure your meteor app is running, then open a new terminal window and navigate to your app's project root.
 
 Follow these commands to dump the collection:
 
@@ -871,7 +872,7 @@ Success! There is a key/value pair for the user - `"submittedBy" : "Ex2bHmCgkygN
 
 ## Remove insecure packages
 
-All Meteor applications have a package called Insecure pre-installed. This handy little package gives the client the ability to interact with the database, as you saw before. While this may be handy for prototyping you always want to remove it for production applications. 
+All Meteor applications have a package called Insecure pre-installed. This handy little package gives the client the ability to interact with the database, as you saw before. While this may be handy for prototyping you always want to remove it for production applications.
 
 To remove, just run:
 
@@ -886,7 +887,7 @@ Manually test this on your end. With the Meteor server running and your browser 
 ```sh
 > Answers.insert({answerText: 'Client Console Test!'})
 "oeYhZMmXyBjivJ5uM"
-insert failed: Access denied 
+insert failed: Access denied
 ```
 You should the see above insertion error. Also, you know that it's not working if the answer did not get immediately added to the page.
 
@@ -934,7 +935,7 @@ Check it out at [http://answers.meteor.com/](http://answers.meteor.com/).
 
 > The Meteor servers are for **testing** only; they are not meant for apps in production.
 
-Don't forget to commit! 
+Don't forget to commit!
 
 <a id="next"></a>
 

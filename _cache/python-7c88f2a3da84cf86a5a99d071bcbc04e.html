@@ -1,0 +1,21 @@
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">scrapy.spider</span> <span class="kn">import</span> <span class="n">BaseSpider</span>
+<span class="kn">from</span> <span class="nn">scrapy.selector</span> <span class="kn">import</span> <span class="n">HtmlXPathSelector</span>
+<span class="kn">from</span> <span class="nn">craigslist_sample.items</span> <span class="kn">import</span> <span class="n">CraigslistSampleItem</span>
+ 
+<span class="k">class</span> <span class="nc">MySpider</span><span class="p">(</span><span class="n">BaseSpider</span><span class="p">):</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="s">&quot;craig&quot;</span>
+	<span class="n">allowed_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;craigslist.org&quot;</span><span class="p">]</span>
+	<span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;http://sfbay.craigslist.org/npo/&quot;</span><span class="p">]</span>
+ 
+	<span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+		<span class="n">hxs</span> <span class="o">=</span> <span class="n">HtmlXPathSelector</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+		<span class="n">titles</span> <span class="o">=</span> <span class="n">hxs</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;//span[@class=&#39;pl&#39;]&quot;</span><span class="p">)</span>
+		<span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">titles</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">:</span>
+			<span class="n">item</span> <span class="o">=</span> <span class="n">CraigslistSampleItem</span><span class="p">()</span>
+			<span class="n">item</span> <span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/text()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+			<span class="n">item</span> <span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s">&quot;a/@href&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+			<span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">items</span>
+</pre>
+</div>

@@ -1,26 +1,27 @@
 ---
 layout: post
+toc: true
 title: "Excel Tips: How to Cut Down on Calculations Using SUMIF and SUMIFS"
 date: 2012-12-12 20:23
 comments: true
 categories: excel
 ---
 
-The SUMIF and SUMIFS function in Microsoft Excel is a simple, yet powerful calculation tool. This tutorial will show you how this function works, as well as provide examples of how to use it. Most of you are aware that the SUM function calculates the total of a cell range. SUMIF takes this calculation step a bit further. It says, "Only **SUM** the numbers _in this range_ **IF** a cell _in this range_ contains a specific value." 
+The SUMIF and SUMIFS function in Microsoft Excel is a simple, yet powerful calculation tool. This tutorial will show you how this function works, as well as provide examples of how to use it. Most of you are aware that the SUM function calculates the total of a cell range. SUMIF takes this calculation step a bit further. It says, "Only **SUM** the numbers _in this range_ **IF** a cell _in this range_ contains a specific value."
 
 ## **SUMIF Arguments: Range, Criteria, and Sum Range**
- _Proper syntax:_ =SUMIF(range, criteria, sum_range) Range and criteria are essential parts of any SUMIF equation; while the sum range is optional. What does each part do, in English? 
+ _Proper syntax:_ =SUMIF(range, criteria, sum_range) Range and criteria are essential parts of any SUMIF equation; while the sum range is optional. What does each part do, in English?
 
 *   *Range* - The range of cells you want Excel to search. This could be a block of cells, in which case you would use the top left corner and bottom right corner of your range (A1:C3, for example, gives a three by three area of cells).
 *   *Criteria* - Defines the flag Excel is to use to determine which cells to add. Using our spreadsheet example below, the criteria could be "Non Edible", "October" or "Car", to name a few. In many cases, it's just a number. It could be greater than, less than, or equal to, as well.
-*   *Sum Range* - Optional. Defines the cells to sum. This range holds the actual numbers. If it's left out of the equation, the function sums the range. As with range, this could be a block of cells, column or rows. 
+*   *Sum Range* - Optional. Defines the cells to sum. This range holds the actual numbers. If it's left out of the equation, the function sums the range. As with range, this could be a block of cells, column or rows.
 
 ## **Using the SUMIF Function**
- For this tutorial, we're going to use a simple table to track household expenditures for two months. To set up your table and criteria, you first have to define the overall goals. In this example, our goals are: 
+ For this tutorial, we're going to use a simple table to track household expenditures for two months. To set up your table and criteria, you first have to define the overall goals. In this example, our goals are:
 
 *   determine monthly household costs
 *   provide a breakdown of overall costs
-*   automaticly update of calculations Let's get started! 
+*   automaticly update of calculations Let's get started!
 
 **(1) Spreadsheet Setup**
 
@@ -41,7 +42,7 @@ Meanwhile, the formula for cell C5 - _=SUMIF(G4:G8,"food",I4:I8)_
 Notice how the range only goes from G4:G8, as I only want to total food for October. If wanted to total food for November as well, I'd use the range G4:G13. Now, if the Month column was not sorted, then I'd need to use the SUMIFS function and specify to criteria - e.g., _=SUMIFS(I4:I13,F4:F13,"October",G4:G13,"Food")_
 
 This produces the exact same results - $4.24. The syntax is slightly different in that you specify the sum_range first, and it is mandatory. _ Proper syntax:_ =SUMIFS(sum_range, criteria_range1, criteria1, criteria_range2, criteria2, criteria_range3, criteria3 ...)
- ![2012-12-12_1013](http://www.backwardsteps.com/uploads/2012-12-12_1013.png) 
+ ![2012-12-12_1013](http://www.backwardsteps.com/uploads/2012-12-12_1013.png)
 
 **(3) ** **Automatic Updates**
 

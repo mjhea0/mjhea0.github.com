@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "The Benefits of Performing a Cohort Analysis in Determining Engagement Over Time"
 date: 2012-11-16 18:57
 comments: true
@@ -52,14 +53,14 @@ Each of these metrics is important and it is therefore essential that an eye be 
 
 A cohort analysis also helps in identifying times when engagement in the site drops. Since it is a study that takes time into consideration, decisions can be made fast in an effort to rectify the problem areas that may have resulted in the drop. By factoring-in time, there is a clear temporal sequence when analyzing the relationship between first contact with the website, and consequent results.
 
-***
+## Video
 
-The video below illustrates how a cohort analysis is performed. In my opinion Excel is the best tool to use for cohort analysis as it's much easier than say Mixpanel or Kissmetrics - plus you get your hands dirty and (hopefully) gain an understanding of your data. Although, I really do like [RJMetrics](http://blog.rjmetrics.com/see-what-drives-repeat-business-in-your-rjmetrics-online-dashboard/) for cohort analysis as well.
+> Check out the [video](http://www.youtube.com/watch?v=2QZQolcLo6M)!
 
-In the video, dummy data has been used on the premise that the business has been operating for an entire year.
+The video illustrates how a cohort analysis is performed. In my opinion Excel is the best tool to use for cohort analysis as it's much easier than say Mixpanel or Kissmetrics - plus you get your hands dirty and (hopefully) gain an understanding of your data. Although, I really do like [RJMetrics](http://blog.rjmetrics.com/see-what-drives-repeat-business-in-your-rjmetrics-online-dashboard/) for cohort analysis as well.
+
+Dummy data has been used on the premise that the business has been operating for an entire year.
 
 That said the data has been generated from real data, which I obtained using [Zapier](https://zapier.com/). With Zapier, you can easily source data from hundreds of locations like [Salesforce](https://zapier.com/blog/2012/09/18/making-salesforce-work-with-your-favorite-apps/), ZenDesk, Zoho, MySQL, and [Shopify](https://zapier.com/blog/2012/07/01/shopify-integrations-boost-retention-increase-upsales-and-provide-killer-customer-support/).
 
 The video begins with showing you how to divide the users of a service into cohorts, based on the time that they first subscribed for the services. The retention rate has also been included. These values are obtained by dividing the number of users, who are still subscribing after a particular month, by the total number of users who started in each category. The average retention rate is therefore obtained by calculating the average across the cohort.
-
-{% youtube 2QZQolcLo6M %}

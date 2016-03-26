@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Handling AJAX Calls With Node.js and Express (part 3)"
 date: 2013-12-21 14:34
 comments: true
@@ -164,7 +165,7 @@ block content
   ul#results
   include template.html
 
-script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")	
+script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")
 script(src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js")
 script(src="/javascripts/main.js")
 ```
@@ -180,7 +181,7 @@ block content
   br
   a(href='/auth/google') Login with Google
 
-script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")	
+script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")
 script(src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js")
 script(src="/javascripts/main.js")
 ```
@@ -266,4 +267,4 @@ Here we connected to the Mongo database, `craigslist`, then searched the collect
 
 ## Conclusion
 
-Grab the final code from the repo found [here](https://github.com/mjhea0/node-express-ajax-craigslist). Ask questions. <3 Next time we'll be taking a step back to create user stories and reorganize our codebase. Perhaps we'll even get to some testing! 
+Grab the final code from the repo found [here](https://github.com/mjhea0/node-express-ajax-craigslist). Ask questions. <3 Next time we'll be taking a step back to create user stories and reorganize our codebase. Perhaps we'll even get to some testing!

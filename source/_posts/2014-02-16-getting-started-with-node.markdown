@@ -1,12 +1,13 @@
 ---
 layout: post
+toc: true
 title: "Getting Started with Node"
 date: 2014-02-16 07:57
 comments: true
 categories: node
 ---
 
-For the [Node-js-Denver-Boulder Meetup](http://www.meetup.com/Node-js-Denver-Boulder/) <3 
+For the [Node-js-Denver-Boulder Meetup](http://www.meetup.com/Node-js-Denver-Boulder/) <3
 
 **You can grab the example code [here](https://github.com/mjhea0/node-getting-started).**
 
@@ -75,7 +76,7 @@ console.log('Server running at http://127.0.0.1:1137/');
 
 #### 3. Save and run.
 
-#### 4. Go over this line by line. See if you can figure out what's going on? Need help? Consult the Node [documentation](http://nodejs.org/api/) and/or use the "Google-it-first" algorithm. 
+#### 4. Go over this line by line. See if you can figure out what's going on? Need help? Consult the Node [documentation](http://nodejs.org/api/) and/or use the "Google-it-first" algorithm.
 
 **Next time we'll add [Express](http://expressjs.com/) into the mix!**
 
@@ -83,7 +84,7 @@ console.log('Server running at http://127.0.0.1:1137/');
 
 **We'll be creating an entirely new app for this tutorial.**
 
-As promised, let's add Express, which is a lightweight framework for Node. 
+As promised, let's add Express, which is a lightweight framework for Node.
 
 There's also an Express command line tool used to set up a project structure/boilerplate for use with, well, the Express framework. We can install them at the same time ...
 
@@ -107,7 +108,7 @@ $ express <new_folder>
 $ npm install
 ```
 
-  > Please note: The dependencies within *package.json* are generally listed by name and version. In some cases, instead of a version, you'll see an `*`, which means that npm will retrieve the latest version of the dependency. For more information on NPM, please check out this [link](https://www.npmjs.org/doc/json.html). 
+  > Please note: The dependencies within *package.json* are generally listed by name and version. In some cases, instead of a version, you'll see an `*`, which means that npm will retrieve the latest version of the dependency. For more information on NPM, please check out this [link](https://www.npmjs.org/doc/json.html).
 
   Your project structure should now look like this:
 
@@ -187,7 +188,7 @@ http.createServer(app).listen(app.get('port'), function(){
   - First, we load our module dependencies. Essentially, when you structure a Node app, you use the global `require()` method to load and cache Javascript modules. The `app` variable is the actual Express server.
   - In the second section, `app.set()` is used to tell Express that we want to use Jade templates and where to find
  our "views" folder. Meanwhile `app.use()` functions are for middlewares, which you can read more about [here](http://expressjs.com/api.html#middleware).
-  - Next, we have routes. The actual endpoint, or path, is defined here as well as the specific HTTP method. The actual callback is handled within the "routes" folder in the *index.js* file. 
+  - Next, we have routes. The actual endpoint, or path, is defined here as well as the specific HTTP method. The actual callback is handled within the "routes" folder in the *index.js* file.
   -  Finally, we configure the HTTP server like in Part 1.
 
 #### 2. Next, let's set up the first route. Open *index.js* from the "routes" folder. Update the code as follows:
@@ -197,7 +198,7 @@ exports.index = function(req, res){
 };
 ```
 
-  *Remember:* Routes have a path (string and/or regex), callback function, and a HTTP method. In the above code, we are simply adding the callback, which renders the `index` view and sets a title. 
+  *Remember:* Routes have a path (string and/or regex), callback function, and a HTTP method. In the above code, we are simply adding the callback, which renders the `index` view and sets a title.
 
 #### 3. Update your *index.jade* file:
 ```html
@@ -250,7 +251,7 @@ $("#submit").on("click",function() {
 
 ## Part 3
 
-Try this on your own. Create a basic number guessing game. 
+Try this on your own. Create a basic number guessing game.
 
 Building on the code from the second part, update the code so that you enter a number instead of text. Create a new route that checks to see if the number is equal to the right number. If the user guesses right, return "Right!"; but, if the user guesses wrong, return "Wrong. Guess again." Finally, update your *main.js* to call the new endpoint of the route - passing the inputted number - then have it wait for a callback ("Right!" or "Wrong. Guess again."), which will be appended to the DOM.
 

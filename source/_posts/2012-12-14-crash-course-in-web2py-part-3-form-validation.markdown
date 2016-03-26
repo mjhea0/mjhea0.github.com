@@ -1,5 +1,6 @@
 ---
 layout: post
+toc: true
 title: "Crash Course in web2py (part 3 - form validation)"
 date: 2012-12-06 21:52
 comments: true
@@ -20,7 +21,7 @@ Start the web2py server, go to the admin interface, and then edit the "form" app
 
 Right now, there is a requirement set in the db.py file for each field-
 
-```python   
+```python
 requires=IS_NOT_EMPTY
 ```
 
@@ -47,7 +48,7 @@ Please note: All attempts must be error free before any info is accepted.</p>
 {{=BEAUTIFY(form.vars)}}
 <h2>Errors:</h2>
 {{=BEAUTIFY(form.errors)}}
-```  
+```
 
 By adding *{ {extend 'layout.html'}}*, you will be able to display the flash error messages, which we'll add in next.
 
