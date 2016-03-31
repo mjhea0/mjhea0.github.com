@@ -70,7 +70,7 @@ Follow the download instructions from the guide [Installing Docker on Mac OS X](
 
 Once installed, let's run a quick sanity check to ensure Docker is installed correctly. Start by creating a Docker VM by running the "Docker Quickstart Terminal" application. If all went well, you should see something similar to in your terminal:
 
-```sh
+``` sh
 bash --login '/Applications/Docker/Docker Quickstart Terminal.app/Contents/Resources/Scripts/start.sh'
 ➜  ~  bash --login '/Applications/Docker/Docker Quickstart Terminal.app/Contents/Resources/Scripts/start.sh'
 Creating Machine default...
@@ -102,13 +102,13 @@ For help getting started, check out the docs at https://docs.docker.com
 
 Now let's create a new container:
 
-```sh
+``` sh
 $ docker run hello-world
 ```
 
 You should see:
 
-```sh
+``` sh
 Unable to find image 'hello-world:latest' locally
 latest: Pulling from library/hello-world
 b901d36b6f2f: Pull complete
@@ -143,7 +143,7 @@ With that, let's create our Node Project...
 
 Grab the base code from the [repo](https://github.com/mjhea0/node-docker-workflow/releases/tag/v2), and add it to your project directory:
 
-```sh
+``` sh
 └── app
     ├── Dockerfile
     ├── index.js
@@ -156,19 +156,19 @@ Grab the base code from the [repo](https://github.com/mjhea0/node-docker-workflo
 
 Within your project directory, start Docker Machine:
 
-```sh
+``` sh
 $ docker-machine create -d virtualbox dev;
 ```
 
 This command, `create`, setup a new "Machine" (called `dev`) for local Docker development. Now we just need to point Docker at this specific Machine:
 
-```sh
+``` sh
 eval "$(docker-machine env dev)"
 ```
 
 You now should have two Machines running:
 
-```sh
+``` sh
 $ docker-machine  ls
 NAME      ACTIVE   DRIVER       STATE     URL                         SWARM
 default            virtualbox   Running   tcp://192.168.99.100:2376
@@ -183,14 +183,14 @@ dev       *        virtualbox   Running   tcp://192.168.99.102:2376
 
 Make sure Compose is set up correctly:
 
-```sh
+``` sh
 $ docker-compose -v
 docker-compose version: 1.4.2
 ```
 
 Now we just need to define the services - web (NodeJS) and persistence (Redis) in a configuration file called  *docker-compose.yml*:
 
-```yaml
+``` yaml
 web:
   build: ./app
   volumes:
@@ -254,7 +254,7 @@ Given a Dockerfile, CircleCI builds an image, starts a new container (or contain
 
 Next we need to add a configuration file, called *circle.yml*, to the root folder of the project so that CircleCI can properly create the build.
 
-```yaml
+``` yaml
 machine:
   services:
     - docker
@@ -296,7 +296,7 @@ Back on CircleCI, let's add that curl command as an environment variable:
 
 Then add the following code to the bottom of the *circle.yml* file:
 
-```yaml
+``` yaml
 deployment:
   hub:
     branch: master
@@ -329,13 +329,13 @@ After you've signed up and [set up an SSH key](https://www.digitalocean.com/comm
 
 Once setup, SSH into the server as the 'root' user:
 
-```sh
+``` sh
 $ ssh root@<some_ip_address>
 ```
 
 Now you just need to clone the repo, install Docker compose, and then you can run your app:
 
-```sh
+``` sh
 $ git clone https://github.com/mjhea0/node-docker-workflow.git
 $ curl -L https://github.com/docker/compose/releases/download/1.4.2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
 $ chmod +x /usr/local/bin/docker-compose
@@ -360,7 +360,7 @@ Now you can add a new Node. The process is straightforward, but if you need help
 
 With a Node setup, we can now add a [Stack](https://support.tutum.co/support/solutions/articles/5000569899-stacks) of services - *web* and *Redis*, in our case - that make up our tech stack. Next, create a new file called *tutum.yml*, and add the following code:
 
-```yaml
+``` yaml
 web:
   image: mjhea0/node-docker-workflow
   autorestart: always

@@ -25,7 +25,7 @@ First, move the config settings into a separate file, outside the main project. 
 
 Create a *config.js* file and add the following code:
 
-```javascript
+``` javascript
 module.exports = {
   google: {
     returnURL: 'http://127.0.0.1:3000/auth/google/callback',
@@ -37,20 +37,20 @@ module.exports = {
 
 Then make sure to include the file as part of *app.js*'s dependencies:
 
-```javascript
+``` javascript
 var config = require('./config');
 ```
 
 Finally, update these two areas within *app.js*:
 
-```javascript
+``` javascript
 // connect to the database
 mongoose.connect(config.mongoUrl);
 ```
 
 And:
 
-```javascript
+``` javascript
 passport.use(new GoogleStrategy({
   returnURL: config.google.returnURL,
   realm: config.google.realm
@@ -63,7 +63,7 @@ Next, update the user schema for mongoose.
 
 Create a new folder called "models" and add a file called *user.js* to hold the user schema:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var config = require('../config');
 
@@ -80,13 +80,13 @@ module.exports = mongoose.model('User', userSchema);
 
 Add this to the dependencies:
 
-```javascript
+``` javascript
 var user = require('./models/user');
 ```
 
 Then update *app.js*:
 
-```javascript
+``` javascript
 // passport settings
 passport.serializeUser(function(user, done) {
   console.log('serializeUser: ' + user.id)
@@ -137,7 +137,7 @@ The Passport code searches the database to see if a user already exists before c
 
 Next, move the main routing into a separate module by adding the following code to *routes/index.js*:
 
-```javascript
+``` javascript
 var request = require('request');
 
 exports.index = function(req, res){
@@ -189,7 +189,7 @@ Again, add the dependency: `var routes = require('./routes');`
 
 The routes section in *app.js* should now look like this:
 
-```javascript
+``` javascript
 // user routes
 app.get('/', routes.index);
 app.get('/search', ensureAuthenticated, routes.search);
@@ -224,7 +224,7 @@ Now, move the main authentication code to a separate file.
 
 Create a new file called *authentication.js* and add the following code:
 
-```javascript
+``` javascript
 // authentication
 
 var passport = require('passport')
@@ -280,7 +280,7 @@ module.exports = passport;
 
 Then back in *app.js*, make sure to import that module back in by adding it as a dependency:
 
-```javascript
+``` javascript
 var passport = require('./authentication');
 ```
 
@@ -292,13 +292,13 @@ Finally, let's update the styles.
 
 First, add in a [Bootstrap](http://getbootstrap.com/) stylesheet to the *layout.jade* file:
 
-```html
+``` html
 link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css')
 ```
 
 ### index.jade
 
-```html
+``` html
 extends layout
 
 block content
@@ -315,7 +315,7 @@ block content
 
 ### search.jade
 
-```html
+``` html
 extends layout
 
 block content

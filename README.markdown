@@ -1,4 +1,4 @@
 - rake new_post["title"]
-- rake generate       
-- rake preview  
+- rake generate
+- rake preview
 - rake deploy

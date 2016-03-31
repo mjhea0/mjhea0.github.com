@@ -15,7 +15,7 @@ You need to extract and parse all the headers and links from a web site or an XM
 
 ## Solution
 
-```python
+``` python
 import csv
 from urllib import urlopen
 import re
@@ -23,7 +23,7 @@ import re
 
 **Perform html/xml query, grab desired fields, create a range:**
 
-```python
+``` python
 xml = urlopen("http://www.tableausoftware.com/public/feed.rss").read()
 
 xmlTitle = re.compile("&lt;title&gt;(.*)&lt;/title&gt;")
@@ -38,27 +38,27 @@ iterate[:] = range(1, 25)
 
 **Open CSV file:**
 
-```python
+``` python
 writer = csv.writer(open("pytest.csv", "wb"))
 ```
 
 **Write header to CSV file (you want to do this before you enter the loop):**
 
-```python
+``` python
 head = ("Title", "URL")
 writer.writerow(head)
 ```
 
 **Write the For loop to iterate through the XML file and write the rows to the CSV file:**
 
-```python
+``` python
 for i in iterate:
 	writer.writerow([findTitle[i], findLink[i]])
 ```
 
 ## Script
 
-```python
+``` python
 #!/usr/bin/env python
 
 import csv

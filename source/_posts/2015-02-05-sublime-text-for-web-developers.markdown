@@ -59,7 +59,7 @@ Config settings can be set at the global/default-level or by user, project, pack
 
 Don't know where to start?
 
-```json
+``` json
 {
   "draw_white_space": "all",
   "rulers": [80],
@@ -83,7 +83,7 @@ What else can you update? Start with the **theme**.
 
 For example -
 
-```javascript
+``` javascript
 "color_scheme": "Packages/User/Flatland Dark (SL).tmTheme",
 ```
 
@@ -135,14 +135,14 @@ Start with the following linters:
 
 Press *CTRL-ALT-F* to turn this mess...
 
-```javascript
+``` javascript
 function peopleFromBoulder(arr) {return arr.filter(function(val) {return val.city == 'Boulder';})
     .map(function(val) {return val.name + ' is from Boulder';});}
 ```
 
 ...into...
 
-```javascript
+``` javascript
 function peopleFromBoulder(arr) {
     return arr.filter(function(val) {
             return val.city == 'Boulder';
@@ -159,7 +159,7 @@ function peopleFromBoulder(arr) {
 
 Try it!
 
-```javascript
+``` javascript
 function refactorU (student) {
     if (student === "Zach") {
         var str = student + " is awesome!";
@@ -172,7 +172,7 @@ function refactorU (student) {
 
 Now add an opening comment block - `/**` - and as soon as you press tab, it will create a dummy-documentation-comment automatically.
 
-```javascript
+``` javascript
 /**
  * [refactorU description]
  * @param  {[type]}
@@ -201,7 +201,7 @@ With [Emmet](https://packagecontrol.io/packages/Emmet) you can turn a symbol or 
 
 Try this out: Once installed, start a new HTML file, type a bang, `!`, and then press tab.
 
-```html
+``` html
 <!doctype html>
 <html lang="en">
 <head>

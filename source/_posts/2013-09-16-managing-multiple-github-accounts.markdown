@@ -18,7 +18,7 @@ Let's assume your two Github accounts are named *githubPersonal* and *githubWork
 
 Create two SSH keys, saving each to a separate file:
 
-```sh
+``` sh
 $ cd ~/.ssh
 $ ssh-keygen -t rsa -C "your_email@associated_with_githubPersonal.com"
 # save it as id_rsa_personal when prompted
@@ -37,7 +37,7 @@ The above commands setup the following files:
 
 #### Copy the key to your clipboard:
 
-```sh
+``` sh
 $ pbcopy < ~/.ssh/id_rsa_personal.pub
 ```
 
@@ -54,13 +54,13 @@ $ pbcopy < ~/.ssh/id_rsa_personal.pub
 
 #### Create a config file in ~/.ssh/
 
-```sh
+``` sh
 $ touch config
 ```
 
 #### Edit the file using the text editor of your choice. I used vim - `$ vim config`:
 
-```sh
+``` sh
 # githubPersonal
 Host personal
    HostName github.com
@@ -78,26 +78,26 @@ Host work
 
 #### Clear currently stored identities:
 
-```sh
+``` sh
 $ ssh-add -D
 ```
 
 #### Add new keys:
 
-```sh
+``` sh
 $ ssh-add id_rsa_personal
 $ ssh-add id_rsa_work
 ```
 
 #### Test to make sure new keys are stored:
 
-```sh
+``` sh
 $ ssh-add -l
 ```
 
 #### Test to make sure Github recognizes the keys:
 
-```sh
+``` sh
 $ ssh -T personal
 Hi githubPersonal! You've successfully authenticated, but GitHub does not provide shell access.
 $ ssh -T work
@@ -111,7 +111,7 @@ Hi githubWork! You've successfully authenticated, but GitHub does not provide sh
 
 #### Back on your local machine, create a test directory:
 
-```sh
+``` sh
 $ cd ~/documents
 $ mkdir test-personal
 $ cd test-personal
@@ -119,7 +119,7 @@ $ cd test-personal
 
 #### Add a blank "readme.md" file and PUSH to Github:
 
-```sh
+``` sh
 $ touch readme.md
 $ git init
 $ git add .
@@ -138,7 +138,7 @@ $ git push origin master
 
 #### Now PULL and merge the changes by running the following command within the *test-personal* directory:
 
-```sh
+``` sh
 $ git pull origin master
 ```
 

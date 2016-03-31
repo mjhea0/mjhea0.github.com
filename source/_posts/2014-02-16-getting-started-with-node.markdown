@@ -17,7 +17,7 @@ For the [Node-js-Denver-Boulder Meetup](http://www.meetup.com/Node-js-Denver-Bou
 
 #### 1. Download [Node](http://nodejs.org/download/) for your specific platform. *This also installs [NPM](https://npmjs.org/)*. More on this later.
 #### 2. Create a new folder. Within that folder create a file called *app.js*. and add the following code to the file:
-```javascript
+``` javascript
 // load http module
 var http = require('http');
 
@@ -34,7 +34,7 @@ console.log('Server running at http://127.0.0.1:1137/');
   Save the file.
 
 #### 3. Navigate to the folder in your terminal and fire up the server:
-```sh
+``` sh
 $ node app.js
 ```
 
@@ -54,7 +54,7 @@ Please consult the Node API [documentation](http://nodejs.org/api/) for more inf
 ### Extended Example
 
 #### 1. Open *app.js* and save it as *app2.js*, then add the following code:
-```javascript
+``` javascript
 // load http module and use fs to access the file system
 var http = require('http'),
   fs = require('fs');
@@ -90,21 +90,21 @@ There's also an Express command line tool used to set up a project structure/boi
 
 Start by installing Express globally:
 
-```sh
+``` sh
 $ npm install -g express
 ```
 
 ### Project Setup
 
 #### 1. Use the Express command line tool to create our project structure:
-```sh
+``` sh
 $ express <new_folder>
 ```
 
   This creates a new directory with a basic project structure.
 
 #### 2. Before we can begin developing, navigate into the folder then run the following command to load the Express dependencies from the *package.json* file:
-```sh
+``` sh
 $ npm install
 ```
 
@@ -112,7 +112,7 @@ $ npm install
 
   Your project structure should now look like this:
 
-```sh
+``` sh
 ├── app.js
 ├── package.json
 ├── public
@@ -136,7 +136,7 @@ $ npm install
   - "views" contain views, templates, and partials.
 
 #### 3. Test out your app to ensure everything is installed:
-```sh
+``` sh
 $ node app
 ```
 
@@ -149,7 +149,7 @@ $ node app
 ### Server Side
 
 #### 1.  Open *app.js*, then update the routes to match the following code:
-```javascript
+``` javascript
 // load dependencies
 var express = require('express'),
   routes = require('./routes'),
@@ -192,7 +192,7 @@ http.createServer(app).listen(app.get('port'), function(){
   -  Finally, we configure the HTTP server like in Part 1.
 
 #### 2. Next, let's set up the first route. Open *index.js* from the "routes" folder. Update the code as follows:
-```javascript
+``` javascript
 exports.index = function(req, res){
   res.render('index', {title:'AJAX Testing'});
 };
@@ -201,7 +201,7 @@ exports.index = function(req, res){
   *Remember:* Routes have a path (string and/or regex), callback function, and a HTTP method. In the above code, we are simply adding the callback, which renders the `index` view and sets a title.
 
 #### 3. Update your *index.jade* file:
-```html
+``` html
 doctype html
 html
 head
@@ -226,7 +226,7 @@ script(src='/javascripts/main.js')
 ### Client Side
 
 #### 1. Add a *main.js* file to the "javascripts" file and add the following code to the file:
-```javascript
+``` javascript
 $(function() {
 $("#submit").on("click",function() {
   event.preventDefault()
@@ -241,7 +241,7 @@ $("#submit").on("click",function() {
 
 
 #### 2. We're just about done. Let's add one custom style to *style.css*:
-```css
+``` css
 .container {
   max-width: 500px;
 }

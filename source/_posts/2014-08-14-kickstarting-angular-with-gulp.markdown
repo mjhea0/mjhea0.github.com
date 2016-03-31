@@ -21,7 +21,7 @@ Let's develop an Angular boilerplate. Why? Despite the plethora of Angular seeds
 
 #### Setup a project folder and create a *package.json* file:
 
-```sh
+``` sh
 $ mkdir project_name && cd project_name
 $ npm init
 ```
@@ -30,13 +30,13 @@ The `npm init` command helps you create your project's base configuration throug
 
 Do the same for Bower:
 
-```sh
+``` sh
 $ bower init
 ```
 
 Accept all the defaults. After the file is created update the `ignore` list:
 
-```javascript
+``` javascript
 "ignore": [
   "**/.*",
   "node_modules",
@@ -48,7 +48,7 @@ Accept all the defaults. After the file is created update the `ignore` list:
 
 #### Install global dependencies:
 
-```sh
+``` sh
 $ npm install -g gulp bower
 ```
 
@@ -56,7 +56,7 @@ $ npm install -g gulp bower
 
 You can specify where you want the dependencies (commonly known as bower components) installed to by adding a *.bowerrc* file and adding the following code:
 
-```javascript
+``` javascript
 {
   "directory": "/app/bower_components"
 }
@@ -66,13 +66,13 @@ You can specify where you want the dependencies (commonly known as bower compone
 
 *NPM*
 
-```sh
+``` sh
 $ npm install gulp bower gulp-clean gulp-jshint gulp-uglify gulp-minify-css gulp-connect --save
 ```
 
 *Bower*
 
-```sh
+``` sh
 $bower install angular angular-animate angular-route jquery animate.css bootstrap fontawesome --save
 ```
 
@@ -87,7 +87,7 @@ We'll address each of these dependencies shortly. For now, be sure you understan
 
 Let's setup a base folder structure:
 
-```sh
+``` sh
 .
 ├── app
 │   ├── bower_components
@@ -114,7 +114,7 @@ Add the files and folders not already included. This structure is based on the p
 
 To start, we just need the following code:
 
-```javascript
+``` javascript
 // gulp
 var gulp = require('gulp');
 
@@ -136,7 +136,7 @@ This allows us to serve our future Angular app on a development server running o
 
 Let's test it out. Add the word 'hi' to the *index.html* file, then run the following command:
 
-```sh
+``` sh
 $ gulp connect
 ```
 
@@ -146,7 +146,7 @@ Navigate to [http://localhost:8888/](http://localhost:8888/) and you should see 
 
 ### *index.html*
 
-```html
+``` html
 <!DOCTYPE html>
 <html ng-app="SampleApp">
   <head lang="en">
@@ -182,7 +182,7 @@ This should look familiar. The `ng-app` directive initiates an Angular app while
 
 ### *main.js*
 
-```javascript
+``` javascript
 (function () {
 
 'use strict';
@@ -226,11 +226,11 @@ Again, this should be relatively straightforward. We setup the basic Angular cod
 
 Now let's add the partial template:
 
-{% raw %}
-```html
-<p>{{ test }}</p>
-```
-{% endraw %}
+
+
+{% codeblock lang:html %}
+<p>{% raw %}{{ test }}{% endraw %}</p>
+{% endcodeblock %}
 
 ### Test
 
@@ -246,7 +246,7 @@ Testing...
 
 Now that our app is working locally, let's modify our *gulpfile.js* to generate a deployable build. Kill the server.
 
-```javascript
+``` javascript
 // gulp
 var gulp = require('gulp');
 
@@ -335,7 +335,7 @@ The build task creates a new directory called "dist", runs the linter, minifies 
 
 Test this out:
 
-```sh
+``` sh
 $ gulp build
 ```
 

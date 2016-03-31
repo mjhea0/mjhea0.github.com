@@ -25,7 +25,7 @@ Before you start, make sure you have [Node](http://nodejs.org/download/) install
 
 Start by installing the Express generator, which we'll use to generate a basic project boilerplate:
 
-```sh
+``` sh
 $ npm install -g express-generator@4
 ```
 
@@ -33,7 +33,7 @@ $ npm install -g express-generator@4
 
 Navigate to a convenient directory, like your "Desktop" or "Documents", then create your app:
 
-```sh
+``` sh
 $ express passport-local-express4
 ```
 
@@ -64,7 +64,7 @@ This took care of the heavy lifting, adding common files and functions associate
 
 Update the *package.json* file to reference the correct dependencies:
 
-```json
+``` json
 {
   "name": "passport-local-express4",
   "version": "0.0.0",
@@ -101,7 +101,7 @@ Update the *package.json* file to reference the correct dependencies:
 
 Now install the dependencies:
 
-```sh
+``` sh
 $ cd express-local-express4
 $ npm install
 ```
@@ -110,7 +110,7 @@ $ npm install
 
 Let's test our setup by running the app:
 
-```sh
+``` sh
 $ node ./bin/www
 ```
 
@@ -120,13 +120,13 @@ Navigate to [http://localhost:3000/](http://localhost:3000/) in your browser and
 
 Install:
 
-```sh
+``` sh
 $ npm install -g mongodb
 ```
 
 Then, in a new terminal window, start the MongoDB daemon:
 
-```sh
+``` sh
 $ sudo mongod
 ```
 
@@ -136,7 +136,7 @@ $ sudo mongod
 
 Add the following requirements:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
@@ -146,7 +146,7 @@ var LocalStrategy = require('passport-local').Strategy;
 
 Update all of *app.js* with the following code (check the comments for a brief explanation):
 
-```javascript
+``` javascript
 // dependencies
 var express = require('express');
 var path = require('path');
@@ -233,7 +233,7 @@ module.exports = app;
 
 Let's get the Mongoose up and running. Add a new file called *account.js* to a new directory called "models" with the following code:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var passportLocalMongoose = require('passport-local-mongoose');
@@ -254,7 +254,7 @@ You may be wondering about password security, specifically salting/hashing the p
 
 Again, test the app:
 
-```sh
+``` sh
 $ node ./bin/www
 ```
 
@@ -264,7 +264,7 @@ Make sure you still see the same "Welcome to Express" text.
 
 Within the "routes" folder, add the following code to the *index.js* file:
 
-```javascript
+``` javascript
 var express = require('express');
 var passport = require('passport');
 var Account = require('../models/account');
@@ -340,7 +340,7 @@ html
 
 Update:
 
-```jade
+``` jade
 extends layout
 
 block content
@@ -357,7 +357,7 @@ block content
 
 Add a new file called *login.jade* to the views:
 
-```jade
+``` jade
 extends layout
 
 block content
@@ -380,7 +380,7 @@ block content
 
 Add another file called *register.jade* to the views:
 
-```javascript
+``` javascript
 extends layout
 
 block content
@@ -409,7 +409,7 @@ When I tested the user registration, I used "michael" for both my username and p
 
 Let's see what this looks like in the database:
 
-```sh
+``` sh
 $ mongo
 MongoDB shell version: 2.4.6
 connecting to: test
@@ -431,7 +431,7 @@ So, you can see that we have a document with five keys:
 
 First, update the `scripts` object in *package.json*:
 
-```json
+``` json
 "scripts": {
   "start": "node ./bin/www",
   "test": "make test"
@@ -455,7 +455,7 @@ Create a new folder called "test", and then run `make test` from the command lin
 
 Add a new file called *test.user.js* to the "test folder:
 
-```javascript
+``` javascript
 var should = require("should");
 var mongoose = require('mongoose');
 var Account = require("../models/account.js");
@@ -513,7 +513,7 @@ Right now we have some poorly handled errors that are confusing to the end user.
 
 First, update the `/register` route so an error is thrown, which gets sent to the Jade template, if a user tries to register a username that already exists:
 
-```javascript
+``` javascript
 router.post('/register', function(req, res) {
     Account.register(new Account({ username : req.body.username }), req.body.password, function(err, account) {
         if (err) {
@@ -529,7 +529,7 @@ router.post('/register', function(req, res) {
 
 Then add the following code to the bottom of the "register.jade" template:
 
-```jade
+``` jade
 br
 h4= info
 ```

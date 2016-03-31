@@ -17,7 +17,7 @@ Before adding additional functionality to the [Node Twitter Sentiment Analysis](
 
 Remember this function from *index.js* in the routes folder:
 
-```javascript
+``` javascript
 exports.search = function(req, res) {
   // grab the request from the client
   var choices = JSON.parse(req.body.choices);
@@ -127,7 +127,7 @@ One solution is to use the [Async](https://github.com/caolan/async). This is oft
 
 Start by installing the package:
 
-```sh
+``` sh
 $ npm install async
 ```
 
@@ -135,7 +135,7 @@ In our code we will be using the `map()` helper method, which takes an array, a 
 
 Simple example:
 
-```javascript
+``` javascript
 var async = require('async');
 
 var names = ["michael","richard","john","jennifer","ben","julie"];
@@ -163,7 +163,7 @@ Basically, we have an array of names, in lower case, which we are converting to 
 ### Update Node-Twitter-Sentiment
 
 We just need to update the *index.js* file in the "routes" folder:
-```javascript
+``` javascript
 "use strict";
 
 var path = require("path");
@@ -275,7 +275,7 @@ function performAnalysis(tweetSet) {
 
 Let's look at the specific changes:
 
-```javascript
+``` javascript
 // grade 20 tweets from today with keyword choice and call callback
 // when done
 function getAndScoreTweets(choice, callback) {
@@ -344,7 +344,7 @@ Promises are not the easiest JavaScript concept to wrap your head around, so do 
 ### Pattern used
 Here the deferred pattern was used, which goes something like this:
 
-```javascript
+``` javascript
 var promise = function(err, result) {
   var deferred = Q.defer();
   if (err) {
@@ -358,7 +358,7 @@ var promise = function(err, result) {
 
 You then go on to using the `then` and `done` methods:
 
-```javascript
+``` javascript
 promise.then(function(data) {
   return doSomething(data);
 }).done(function(data) {
@@ -367,7 +367,7 @@ promise.then(function(data) {
 ```
 
 ### How they were implemented
-```javascript
+``` javascript
 var searchTweets = function(choice) {
   var deferred = Q.defer(), // declare the deferred
      ...
@@ -393,7 +393,7 @@ var searchTweets = function(choice) {
 
 The search function.  Note the promise chain:
 
-```javascript
+``` javascript
 exports.search = function(req, res) {
   var choices = JSON.parse(req.body.choices),
       choiceArray = [];
@@ -442,7 +442,7 @@ Let's look at a quick example.
 ### Example
 
 Open the Javascript console, then enter this generator function:
-```javascript
+``` javascript
 function* naturalNumbers(){
   var n = 1;
   while (true){
@@ -453,7 +453,7 @@ function* naturalNumbers(){
 
 Next, you can call the function with this line:
 
-```javascript
+``` javascript
 var numbers = naturalNumbers();
 ```
 
@@ -467,7 +467,7 @@ So, how do we add this to our Sentiment project? I'm not sure. :)
 
 ### Example
 
-```coffeescript
+``` coffeescript
 et = require 'errTo'
 {get} = require 'request'
 fn = (done) ->
@@ -508,7 +508,7 @@ Combining the functions in our *main.js* (more on this later), on the client sid
 
 In the original Jade template there are placeholder DIVs set up that we then use jQuery to interact with - to display the error messages and results. We also used jQuery to update the styles applied to the DIVs. Since we are using data binding in this example, we will go ahead and set up the DIVs for errors and results and have their HTML and styles in the DOM at all times. Then using the "visible" data binding on the DIVs we can hide and expose them as needed. In the example below we have a couple of data-bind attributes that KnockoutJS will use to handle the two-way communication from the View to the ViewModel and vise-versa.
 
-```html
+``` html
 .form-container
   form(action='', method='post', data-bind='submit: formSubmit')
     input#choice1.choice(type='text', placeholder='Choice #1...', name='choice1', data-bind='value: inputOne')
@@ -544,7 +544,7 @@ The `enable` binding will disable the submit button when the ViewModel reports b
 
 The biggest difference to */public/javascripts/main.js* is to create a ViewModel, and at the ViewModels closure, call KnockoutJS’s `applyBindings` method to enable all the two-way data binding goodness.
 
-```javascript
+``` javascript
 function ViewModel() {
 
     …
@@ -555,7 +555,7 @@ ko.applyBindings(new ViewModel());
 
 In order to grab the two choices from the form we write a small method that will take use the KnockoutJS observable’s ‘no parameter’ signature to return the values.
 
-```javascript
+``` javascript
 self.formSubmit = function(){
     // some error handling
     if(!self.inputOne() || !self.inputTwo()){
@@ -574,7 +574,7 @@ self.formSubmit = function(){
 
 The error handling will remain the same, however in the data-binding example we set the value of our `error()` observable. The act of setting the value of the error observable causes it to change from being a "falsey" value to being a "truthy" value, which cause the `visible` data binding to also change from `visible = false` to `visible = true`. This changes the visibility of the DIV formatted for error reporting as well as set the text of the specific error we encountered.
 
-```javascript
+``` javascript
 p(class='alert alert-danger' data-bind='visible: error, text: error')
 ```
 
@@ -582,7 +582,7 @@ If no errors are encountered on subsequent submissions we can set up the array w
 
 We finish up processing the results. This logic to this is essentially unchanged, however, it is shown here to further exemplify how values are set and retrieved in KnockoutJS.
 
-```javascript
+``` javascript
 function getDecision(){
     $.post('/search', { 'choices': JSON.stringify(choices) }, function(data) {
         choices.length = 0;
@@ -599,14 +599,14 @@ The logic required to turn off the "processing" animation, expose the DIV format
 
 #### main.js:
 
-```javascript
+``` javascript
 self.RESULTS_START_HTML = 'and the winner is ... <strong>';
 self.RESULTS_END_HTML = '</strong> ... with a score of ';
 ```
 
 #### index.jade:
 
-```html
+``` html
 p(class='decision-text', data-bind='html: results')
 ```
 
@@ -618,7 +618,7 @@ Here `shouldShowMessages` is a computed observable that will return true if eith
 
 #### index.jade
 
-```html
+``` html
 div(class='panel panel-lg' data-bind='visible: shouldShowMessages, css: "panel-" + messageType()')
   div(class='panel-heading')
     h3(class='panel-title' data-bind='text: messageTitle')
@@ -631,7 +631,7 @@ div(class='panel panel-lg' data-bind='visible: shouldShowMessages, css: "panel-"
 
 #### main.js:
 
-```javascript
+``` javascript
 self.shouldShowMessages = ko.computed(function(){
     var returnValue = false;
 

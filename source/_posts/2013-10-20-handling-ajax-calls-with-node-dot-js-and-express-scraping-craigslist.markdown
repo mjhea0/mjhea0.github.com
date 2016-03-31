@@ -26,20 +26,20 @@ Here is an index of all the articles in the series that have been published to d
 
 #### Navigate to where you'd like your project to reside, then run the following command:
 
-```sh
+``` sh
 $ express node-express-ajax-craigslist
 ```
 
 #### CD into the newly created directory and install the node modules:
 
-```sh
+``` sh
 $ cd node-express-ajax-craigslist
 $ npm install
 ```
 
 Aside for the installed node modules/dependencies, your project structure should look like this:
 
-```sh
+``` sh
 ├── app.js
 ├── package.json
 ├── public
@@ -59,13 +59,13 @@ Aside for the installed node modules/dependencies, your project structure should
 
 #### Next, install [Supervisor](https://github.com/isaacs/node-supervisor) if you don't already have it:
 
-```sh
+``` sh
 $ npm install supervisor -g
 ```
 
 #### Finally, run a sanity check by testing out your app:
 
-```sh
+``` sh
 $ supervisor app
 ```
 
@@ -79,14 +79,14 @@ Still with me? Good. Let's set up our first route.
 
 #### Within `app.js`, comment out the following two dependencies since we'll be defining *all* our views directly in `app.js`:
 
-```javascript
+``` javascript
 var routes = require('./routes');
 var user = require('./routes/user');
 ```
 
 Comment out the following routes as well:
 
-```javascript
+``` javascript
 app.get('/', routes.index);
 app.get('/users', user.list);
 ```
@@ -103,13 +103,13 @@ Let's look at the former.
 
 #### Add the following code to 'app.js':
 
-```javascript
+``` javascript
 app.get('/', function(req, res) {res.render('index')});
 ```
 
 Essentially, when a user sends an HTTP GET request to `/`, the `index.jade` view is rendered. Let's test this out. Update the code in the `index.jade` view:
 
-```jade
+``` jade
 extends layout
 
 block content
@@ -126,7 +126,7 @@ Next, we'll update the view.
 
 #### First, update `index.jade`:
 
-```jade
+``` jade
 extends layout
 
    block content
@@ -139,7 +139,7 @@ extends layout
 
 Then add the following styles to "style.css":
 
-```css
+``` css
 #search {
   text-align: center;
   width:500px;
@@ -159,7 +159,7 @@ This should be straightforward.
 
 #### While we're still on the client side, let's go ahead and add the event handler within the `main.js` file:
 
-```javascript
+``` javascript
 $(function(){
  $('#search').on('keyup', function(e){
    if(e.keyCode === 13) {
@@ -193,7 +193,7 @@ Ready? Let's move back to the server-side.
 
 #### Back on the sever side, we need a route to handle `/searching/`:
 
-```javascript
+``` javascript
 app.get('/searching', function(req, res){
  res.send("WHEEE");
 });
@@ -211,7 +211,7 @@ app.get('/searching', function(req, res){
 
 #### Set the returned value from the search box to a variable:
 
-```javascript
+``` javascript
 app.get('/searching', function(req, res){
 
  // input value from search
@@ -234,7 +234,7 @@ Moving on, let's add another step.
 
 #### Pass the variable into the YQL search URL.
 
-```javascript
+``` javascript
 app.get('/searching', function(req, res){
 
  // input value from search
@@ -261,13 +261,13 @@ I searched for Ruby then Python in the example above. If you want to see the act
 
 #### Use the [*request*](https://github.com/mikeal/request) module to process the YQL URL and return the results. To do this we need to first install this module by running this command from your terminal:
 
-```sh
+``` sh
 $ npm install request
 ```
 
 Now add the following code to the route function:
 
-```javascript
+``` javascript
 // request module is used to process the yql url and return the results in JSON format
 request(url, function(err, resp, body) {
  body = JSON.parse(body);
@@ -283,7 +283,7 @@ request(url, function(err, resp, body) {
 ```
 So that `app.js` looks like this:
 
-```javascript
+``` javascript
 app.get('/searching', function(req, res){
 
  // input value from search
@@ -321,7 +321,7 @@ In this code, we pass the YQL URL to the *request* module (`request(url`. . .), 
 
 #### Finally, let's pass the results back to the client side:
 
-```javascript
+``` javascript
 app.get('/searching', function(req, res){
 
  // input value from search
@@ -362,7 +362,7 @@ And with that, we're finished with the server side.
 
 #### Open `main.js` and look at the following code:
 
-```javascript
+``` javascript
 $.get( '/searching',parameters, function(data) {
  $('#results').html(data);
 ```
@@ -379,7 +379,7 @@ Test it out using a number of inputs. *Remember: this searches jobs in the SF Ba
 
 Wait. Why did this return just the URL? Well, go back to `app.js` and check the conditional logic:
 
-```javascript
+``` javascript
 if (!body.query.results.RDF.item) {
   craig = "No results found. Try again.";
 } else {

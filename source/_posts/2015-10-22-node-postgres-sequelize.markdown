@@ -24,7 +24,7 @@ description: "This article details how to build a basic CRUD app with Node, Expr
 
 Grab the initial boilerplate and install the dependencies:
 
-```sh
+``` sh
 $ git clone git@github.com:mjhea0/node-postgres-sequelize.git
 $ git checkout tags/v1
 $ npm install
@@ -32,7 +32,7 @@ $ npm install
 
 Now run a quick sanity check:
 
-```sh
+``` sh
 $ gulp
 ```
 
@@ -46,7 +46,7 @@ With Postgres listening on port 5432, we can make a connection to it using the [
 
 Install Sequelize, [pg](https://www.npmjs.com/package/pg) (for making the database connection), and [pg-hstore](https://www.npmjs.com/package/pg-hstore) (for serializing and deserializing JSON into the [Postgres hstore key/value pair format](http://www.postgresql.org/docs/9.0/static/hstore.html)):
 
-```sh
+``` sh
 $ npm install sequelize@3.12.2 pg@4.4.3 pg-hstore@2.3.2 --save
 ```
 
@@ -60,13 +60,13 @@ The [Sequelize CLI](https://github.com/sequelize/cli) is used to bootstrap a new
 
 Start by installing the package:
 
-```sh
+``` sh
 $ npm install sequelize-cli@2.1.0 --save
 ```
 
 Next, create a config file called *.sequelizerc* in your project root to specify the paths to specific files required by Sequelize:
 
-```javascript
+``` javascript
 var path = require('path');
 
 module.exports = {
@@ -79,13 +79,13 @@ module.exports = {
 
 Now, run the init command to create the files (*config.json*) and folders ("migrations", "models", and "seeders"):
 
-```sh
+``` sh
 $ node_modules/.bin/sequelize init
 ```
 
 Take a look at the *index.js* file within the "models" directory:
 
-```javascript
+``` javascript
 'use strict';
 
 var fs        = require('fs');
@@ -131,7 +131,7 @@ Here, we establish a connection to the database, grab all the model files from t
 
 Be sure to also update the *config.js* file for your development, test, and production databases:
 
-```javascript
+``` javascript
 {
   "development": {
     "username": "update me",
@@ -166,13 +166,13 @@ Go ahead and create a database named "todos".
 
 Now let's create a model along with a migration. Since we're working with todos, run the following command:
 
-```sh
+``` sh
 $ node_modules/.bin/sequelize model:create --name Todo --attributes "title:string, complete:boolean,UserId:integer"
 ```
 
 Take a look a the newly created model file, *todo.js* in the models directory:
 
-```javascript
+``` javascript
 'use strict';
 module.exports = function(sequelize, DataTypes) {
   var Todo = sequelize.define('Todo', {
@@ -191,7 +191,7 @@ module.exports = function(sequelize, DataTypes) {
 
 The corresponding migration file can be found in the "migrations" folder. Take a look. Next, let's associate a user to a todo. First, we need to define a new migration:
 
-```sh
+``` sh
 $ node_modules/.bin/sequelize model:create --name User --attributes "email:string"
 ```
 
@@ -203,7 +203,7 @@ To associate the models (one user can have many todos), make the following updat
 
 **todo.js**:
 
-```javascript
+``` javascript
 'use strict';
 module.exports = function(sequelize, DataTypes) {
   var Todo = sequelize.define('Todo', {
@@ -222,7 +222,7 @@ module.exports = function(sequelize, DataTypes) {
 
 **user.js**:
 
-```javascript
+``` javascript
 'use strict';
 module.exports = function(sequelize, DataTypes) {
   var User = sequelize.define('User', {
@@ -242,7 +242,7 @@ module.exports = function(sequelize, DataTypes) {
 
 Finally, before we sync, let's add an additional attribute to the `complete` filed in the *todo.js* file:
 
-```javascript
+``` javascript
 'use strict';
 module.exports = function(sequelize, DataTypes) {
   var Todo = sequelize.define('Todo', {
@@ -264,7 +264,7 @@ module.exports = function(sequelize, DataTypes) {
 
 Run the migration to create the tables:
 
-```sh
+``` sh
 $ node_modules/.bin/sequelize db:migrate
 
 Sequelize [Node: 4.1.1, CLI: 2.1.0, ORM: 3.12.2]
@@ -285,13 +285,13 @@ Starting 'db:migrate'...
 
 With Sequelize set up and the models defined, we can now set up our RESTful routing structure for the todo resource. First, within *index.js* in the "routes" folder add the following requirement:
 
-```javascript
+``` javascript
 var models = require('../models/index');
 ```
 
 Then add a route for creating a new user:
 
-```javascript
+``` javascript
 router.post('/users', function(req, res) {
   models.User.create({
     email: req.body.email
@@ -303,13 +303,13 @@ router.post('/users', function(req, res) {
 
 To add a new user, run the server - `gulp` - and then run the following in a new terminal window:
 
-```sh
+``` sh
 $ curl --data "email=michael@mherman.org" http://127.0.0.1:3000/users
 ```
 
 You should see:
 
-```json
+``` json
 {
   "id":1,
   "email":"michael@mherman.org",
@@ -322,7 +322,7 @@ Now we can add the todo routes...
 
 ### GET all todos
 
-```javascript
+``` javascript
 // get all todos
 router.get('/todos', function(req, res) {
   models.Todo.findAll({}).then(function(todos) {
@@ -335,7 +335,7 @@ When you hit that route you should see an empty array since we have not added an
 
 ### POST
 
-```javascript
+``` javascript
 // add new todo
 router.post('/todos', function(req, res) {
   models.Todo.create({
@@ -349,14 +349,14 @@ router.post('/todos', function(req, res) {
 
 Now let's test:
 
-```sh
+``` sh
 $ curl --data "title=test&user_id=1" http://127.0.0.1:3000/todos
 $ curl --data "title=test2&user_id=1" http://127.0.0.1:3000/todos
 ```
 
 Then if you go back and hit [http://127.0.0.1:3000/todos](http://127.0.0.1:3000/todos) in our browser, you should see:
 
-```json
+``` json
 [
   {
     id: 1,
@@ -381,7 +381,7 @@ Then if you go back and hit [http://127.0.0.1:3000/todos](http://127.0.0.1:3000/
 
 How about getting a single todo?
 
-```javascript
+``` javascript
 // get single todo
 router.get('/todo/:id', function(req, res) {
   models.Todo.find({
@@ -400,7 +400,7 @@ Navigate to [http://localhost:3000/todo/1](http://localhost:3000/todo/1) in your
 
 Need to update a todo?
 
-```javascript
+``` javascript
 // update single todo
 router.put('/todo/:id', function(req, res) {
   models.Todo.find({
@@ -422,7 +422,7 @@ router.put('/todo/:id', function(req, res) {
 
 And now for a test, of course:
 
-```sh
+``` sh
 $ curl -X PUT --data "complete=true" http://127.0.0.1:3000/todo/2
 ```
 
@@ -430,7 +430,7 @@ $ curl -X PUT --data "complete=true" http://127.0.0.1:3000/todo/2
 
 Want to delete a todo?
 
-```javascript
+``` javascript
 // delete a single todo
 router.delete('/todo/:id', function(req, res) {
   models.Todo.destroy({
@@ -445,7 +445,7 @@ router.delete('/todo/:id', function(req, res) {
 
 Test:
 
-```sh
+``` sh
 $ curl -X DELETE http://127.0.0.1:3000/todo/1
 ```
 

@@ -37,7 +37,7 @@ $ npm install mongoose --save
 
 Once installed, require the dependencies in "app.js":
 
-```javascript
+``` javascript
 var mongoose = require('mongoose')
 var passport = require('passport')
 var GoogleStrategy = require('passport-google').Strategy;
@@ -54,7 +54,7 @@ $ mongod
 
 Add the following code, just below the development config section:
 
-```javascript
+``` javascript
 // serialize and deserialize
 passport.serializeUser(function(user, done) {
   done(null, user);
@@ -87,7 +87,7 @@ Here we are handling the login and authentication via Google.
 
 Next, update the routes:
 
-```javascript
+``` javascript
 // routes
 app.get('/', function(req, res){
   res.render('index', { user: req.user });
@@ -130,7 +130,7 @@ Go through this code slowly to make sure you understand at a high-level what's g
 
 Then update the middleware to handle sessions and passport initialization:
 
-```javascript
+``` javascript
 // all environments
 app.set('port', process.env.PORT || 3000);
 app.set('views', __dirname + '/views');
@@ -153,7 +153,7 @@ Since we now have several more routes, let's get our views straightened out.
 
 First, rename "index.jade" to "search.jade" since the searching actually happens on a different route. Update the code to include a logout option:
 
-```html
+``` html
 extends layout
 
 block content
@@ -172,7 +172,7 @@ script(src="/javascripts/main.js")
 
 Next, go ahead and add a new "index.jade" file:
 
-```html
+``` html
 extends layout
 
 block content
@@ -192,7 +192,7 @@ Before we add Mongo, fire up the server and test everything. If you run into an 
 
 Add/update the following code in "app.js":
 
-```javascript
+``` javascript
 // connect to the database
 mongoose.connect('mongodb://localhost/craigslist');
 

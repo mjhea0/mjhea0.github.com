@@ -17,7 +17,7 @@ Welcome. Using Node, Express, and Mongoose, let's create an interactive form.
 
 Start by installing the Express generator, which will be used to create a basic project for us:
 
-```sh
+``` sh
 $ npm install -g express-generator@4
 ```
 
@@ -25,7 +25,7 @@ $ npm install -g express-generator@4
 
 Navigate to a convenient directory, like your "Desktop" or "Documents", then create your app:
 
-```sh
+``` sh
 $ express node-mongoose-form
 ```
 
@@ -54,14 +54,14 @@ Don't worry about the files and folders for now. Just know that we have created 
 
 Notice the *package.json* file. This stores your project's dependencies, which we still need to install:
 
-```sh
+``` sh
 $ cd node-mongoose-form
 $ npm install
 ```
 
 Now let's install one last dependency:
 
-```sh
+``` sh
 $ npm install mongoose --save
 ```
 
@@ -71,7 +71,7 @@ $ npm install mongoose --save
 
 Let's test our setup by running the app:
 
-```sh
+``` sh
 $ npm start
 ```
 
@@ -81,7 +81,7 @@ Navigate to [http://localhost:3000/](http://localhost:3000/) in your browser and
 
 I highly recommend setting up [Supervisor](https://github.com/isaacs/node-supervisor) so that you can run your app and watch for code changes. Check out the above link to learn more.
 
-```sh
+``` sh
 $ npm install supervisor -g
 ```
 
@@ -91,7 +91,7 @@ Once installed, let's update the *package.json* file to utilize Supervisor to ru
 
 Simply change this-
 
-```javascript
+``` javascript
 "scripts": {
   "start": "node ./bin/www"
 },
@@ -99,7 +99,7 @@ Simply change this-
 
 To this:
 
-```javascript
+``` javascript
 "scripts": {
   "start": "supervisor ./bin/www"
 },
@@ -107,13 +107,13 @@ To this:
 
 Let's test again:
 
-```sh
+``` sh
 $ npm start
 ```
 
 In your terminal you should see:
 
-```sh
+``` sh
 Watching directory 'node-mongoose-form' for changes.
 ```
 
@@ -125,7 +125,7 @@ Awesome. With the setup out of the way, let's get our hands dirty and actually b
 
 Grab your favorite text editor, and then open the main file, *app.js*, which houses all of the business logic. Take a look at the routes:
 
-```javascript
+``` javascript
 app.use('/', routes);
 app.use('/users', users);
 ```
@@ -134,7 +134,7 @@ Understanding how routes work as well as how to trace all the files associated w
 
 Let's look at this route:
 
-```javascript
+``` javascript
 app.use('/users', users)
 ```
 
@@ -144,13 +144,13 @@ So the end user navigates to that endpoint and expects *something* to happen. Th
 
 Also, within that route, you can see the variable `users`. Where is this file this file? It's at the top, and it loads in another file within our app:
 
-```javascript
+``` javascript
 var users = require('./routes/users');
 ```
 
 Open that file:
 
-```javascript
+``` javascript
 var express = require('express');
 var router = express.Router();
 
@@ -172,7 +172,7 @@ Let's now add a new route that renders an HTML form to the end user.
 
 Start by adding the route handler in the *app.js* file:
 
-```javascript
+``` javascript
 app.use('/form', form);
 ```
 
@@ -180,7 +180,7 @@ app.use('/form', form);
 
 Use the `form` variable to require a JS file within our routes folder.
 
-```javascript
+``` javascript
 var form = require('./routes/form');
 ```
 
@@ -188,7 +188,7 @@ Take a look in the terminal. You should see an error, indicating Node can't find
 
 Create that JS file/module by saving an empty file called *form.js* to the "routes" directory. Add the following code:
 
-```javascript
+``` javascript
 var express = require('express');
 var router = express.Router();
 
@@ -214,7 +214,7 @@ Do you see the `block` keyword?
 
 What really happens when the *index* file is rendered is that it first inherits the base template because of the `extends` keywords. So, the *layout* template then gets rendered, which eventually pulls in the child template, overwriting the `block` keyword with:
 
-```html
+``` html
 h1= title
   p Welcome to #{title}
 ```
@@ -225,7 +225,7 @@ Hope that makes sense. If not, check out [this](http://www.learnjade.com/tour/te
 
 Create a new file called "form.jade" in the "views" directory, and then add the following code:
 
-```html
+``` html
 extends layout
 
 block content
@@ -237,13 +237,13 @@ The same thing is happening here with inheritance. If you're unfamiliar with Jad
 
 Update `./routes/form.js` by changing-
 
-```javascript
+``` javascript
 res.send('My funky form');
 ```
 
 To:
 
-```javascript
+``` javascript
 res.render('form', { title: 'My funky form' });
 ```
 
@@ -259,7 +259,7 @@ Did it work? If yes, move on. If not, go back through this section and review. L
 
 So, let's update the Jade syntax to load a form.
 
-```html
+``` html
 extends layout
 
 block content
@@ -280,7 +280,7 @@ Refresh your browser. Do you see the form? Try clicking save. What happens? Well
 
 Open *app.js* and add a new route:
 
-```javascript
+``` javascript
 app.use('/create', form);
 ```
 
@@ -288,7 +288,7 @@ app.use('/create', form);
 
 Open *form.js* to add the logic for this new route:
 
-```javascript
+``` javascript
 var express = require('express');
 var router = express.Router();
 
@@ -316,7 +316,7 @@ Okay. So, we are handling the routes, rendering the right template, let's now se
 
 Create a file called *database.js* in your app's root directory, then add the following code:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var Schema   = mongoose.Schema;
 
@@ -335,7 +335,7 @@ Here, we required/included the Mongoose library along with a reference to the `S
 
 Next, open *app.js* and require the Mongoose config at the very top of the file:
 
-```javascript
+``` javascript
 // mongoose config
 require('./database');
 ```
@@ -346,14 +346,14 @@ With Mongoose setup, we need to update *form.js* to create (via POST) and read (
 
 Open *form.js*. Require Mongoose as well as the `comments` model, which we already created:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var Comment = mongoose.model('comments');
 ```
 
 Now, update the function handling GET requests:
 
-```javascript
+``` javascript
 /* GET form. */
 router.get('/', function(req, res) {
   Comment.find(function(err, comments){
@@ -372,7 +372,7 @@ router.get('/', function(req, res) {
 
 Let's add a loop to iterate through the comments and then display the `title` key from the collection.
 
-```html
+``` html
 extends layout
 
 block content
@@ -396,7 +396,7 @@ Before this will actually work - e.g., display comments - we first need to add t
 
 Back in *form.js*, update the function handling POST requests:
 
-```javascript
+``` javascript
 /* POST form. */
 router.post('/', function(req, res) {
   new Comment({title : req.body.comment})

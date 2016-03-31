@@ -7,8 +7,6 @@ comments: true
 categories: python
 ---
 
-{% raw %}
-
 You made it. In this final tutorial I'll show you how to easily modify the form's appearance, and we'll deploy the app to PythonAnywhere.
 
 *Assumptions:*
@@ -35,12 +33,14 @@ Back on the admin page for the form, scroll to the bottom of the page, and uploa
 
 Next, I'm going to remove the *Web Form* title between the h1 tags, remove the line breaks, and clean up the instructions. I'm also going to remove the *Submitted*, *Accepted*, and, *Errors*  sections, as the user does not need to see all that information. So the final code looks like this:
 
-```html
+{% raw %}
+``` html
 {{extend 'plugin_layouts/layouts/KeepitSimple.html'}}
 <p>Please enter your first name, last name, and email address - thanks!</p>
 <h2>Inputs:</h2>
 {{=form}}
 ```
+{% endraw %}
 
 Okay, now let's edit the *KeepitSimple html* file:
 
@@ -48,13 +48,16 @@ First change the header div found in the middle of the page - "Welcome. Please r
 
 Add the following code to the header, just below the style.css -
 
-```html
+{% raw %}
+``` html
 {{response.files.append(URL(request.application,'static','css/bootstrap.min.css'))}}
 ```
+{% endraw %}
 
 Then remove these lines of code-
 
-```html
+{% raw %}
+``` html
 {{try:}}{ {=auth.navbar(action=URL('default','user'))}}{{ except:pass}}
 {{=MENU(response.menu,_class='web2py-menu')}}
 <div id="footer">&copy;2007 Keep it Simple &nbsp;
@@ -67,6 +70,7 @@ Reality Software
 </a>
 </div>
 ```
+{% endraw %}
 
 ## Update CSS
 
@@ -100,7 +104,7 @@ I'll go over this quick since I covered this in [detail](http://mherman.org/blog
 
 Now just test it out to make sure it all works. Make sure all the errors/validators are working and then add a new record. One thing you do need to change is the default for generic view. You can read more about it [here](http://web2py.com/books/default/chapter/29/10#Generic-views). Open up db.py and scroll down to line 28. You need to remove the if statement, so the line will look just like this:
 
-```python
+``` python
 response.generic_patterns = ['*']
 ```
 
@@ -108,7 +112,7 @@ Now, make sure you can access the *grid* page - [https://mjhea9.pythonanywhere.c
 
 One change that does need to be made is to add the requirement *IS_EMAIL()* to the email validation field to the db.py file; otherwise, you can submit email addresses that do not follow the conventional format. The final code looks like this:
 
-```python
+``` python
 db = DAL('sqlite://webform.sqlite')
 db.define_table('register',
 	Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),
@@ -140,5 +144,3 @@ What's next? Think about what you can do with this info.
 Thanks for reading. Cheers.
 
 You can find the new code for db.py, display_your_form.html, and default.py, as well as all the files and the final packed app (.w2p) [here](https://github.com/mjhea0/web2py/tree/master/form%20-%20part%204).
-
-{% endraw %}

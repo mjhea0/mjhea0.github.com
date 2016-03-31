@@ -39,13 +39,13 @@ Finally, get familiar with front-end. Start with Bootstrap. Play around with Jav
 
 ### Start by creating a project directory somewhere on your file system:
 
-```sh
+``` sh
 $ mkdir sinatra-blog
 ```
 
 ### Setup your gems using a Gemfile. Create the following *Gemfile* (no extension) within your main directory:
 
-```ruby
+``` ruby
 # Gemfile
 
 source 'https://rubygems.org'
@@ -71,7 +71,7 @@ Notice how we're using SQLite3 for our development environment and PostgreSQL fo
 
 ### Install the gems:
 
-```sh
+``` sh
 $ bundle install
 ```
 
@@ -79,7 +79,7 @@ This will create *Gemfile.lock*, displaying the exact versions of each gem that 
 
 ### Create a *config.ru* file, which is a standard convention that Heroku looks for.
 
-```ruby
+``` ruby
 # config.ru
 
 require './app'
@@ -90,7 +90,7 @@ run Sinatra::Application
 
 ### Create a file called *environments.rb* and include the following code for our database configuration:
 
-```ruby
+``` ruby
 configure :development do
  set :database, 'sqlite:///dev.db'
  set :show_exceptions, true
@@ -112,7 +112,7 @@ end
 
 ### Next, create the main application file, "app.rb". Make sure to include the required gems and the *environments.rb* file we just created.
 
-```ruby
+``` ruby
 # app.rb
 
 require 'sinatra'
@@ -126,7 +126,7 @@ end
 
 ### Create a *Rakefile* (again, no extension) so we can use migrations for setting up the data model:
 
-```ruby
+``` ruby
 # Rakefile
 
 require './app'
@@ -135,7 +135,7 @@ require 'sinatra/activerecord/rake'
 
 ### Now run the following command to setup the migration files:
 
-```sh
+``` sh
 $ rake db:create_migration NAME=create_posts
 ```
 
@@ -145,7 +145,7 @@ If you look at your project structure. You'll see a new folder called "db" and w
 
 > The up method is used when we complete the migration (`rake db:migrate`), while the down method is ran when we rollback the last migration (`rake db:rollback`).
 
-```ruby
+``` ruby
 class CreatePosts < ActiveRecord::Migration
  def self.up
    create_table :posts do |t|
@@ -163,7 +163,7 @@ end
 
 ### Run the migration
 
-```sh
+``` sh
 $ rake db:migrate
 ```
 
@@ -173,7 +173,7 @@ When you create a new post, you only need to specify the title and body; the rem
 
 ### Use tux in order to add some data to the database.
 
-```sh
+``` sh
 $ tux
 >> Post.create(title: 'Testing the title', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum venenatis eros eget lectus hendrerit, sed mattis quam pretium. Aenean accumsan eget leo non cursus. Aliquam sagittis luctus mi, quis suscipit neque venenatis et. Pellentesque vitae elementum diam. Quisque iaculis eget neque mattis fermentum. Donec et luctus eros. Suspendisse egestas pharetra elit vel bibendum.')
 >>
@@ -186,7 +186,7 @@ Did you notice the actual SQL syntax used for each command? No? Look again.
 
 Add a few more posts. Then exit:
 
-```sh
+``` sh
 >>> exit
 ```
 
@@ -194,7 +194,7 @@ Add a few more posts. Then exit:
 
 ### Before moving on, let's get this app under version control.
 
-```sh
+``` sh
 $ git init
 $ git add .
 $ git commit -am "initial commit"
@@ -204,7 +204,7 @@ $ git commit -am "initial commit"
 
 ###  Add the following code to *app.rb* to setup the first route:
 
-```ruby
+``` ruby
 get "/" do
   @posts = Post.order("created_at DESC")
   @title = "Welcome."
@@ -218,7 +218,7 @@ This maps the `/` url to the template *index.html* (or *index.erb* in Ruby terms
 
 Add the helper for the title variable:
 
-```ruby
+``` ruby
 helpers do
   def title
     if @title
@@ -232,7 +232,7 @@ end
 
 Fire up the dev server:
 
-```ruby
+``` ruby
 $ ruby app.rb
 ```
 
@@ -242,7 +242,7 @@ First create two new directories - "views/posts" ...
 
 ### Now, setup the associated template called *index.erb*:
 
-```html
+``` html
 <ul>
 <% @posts.each do |post| %>
  <li>
@@ -257,7 +257,7 @@ Save this file within the "posts" directory.
 
 ### Now set up the *layout.erb* template, which is used as the parent template for all other templates. This is just a convention used to speed up development. Child templates, such as *index.erb* inherent the HTML and CSS (common code) from the parent template.
 
-```html
+``` html
 <html>
 <head>
  <title><%= title %></title>
@@ -283,7 +283,7 @@ Save this file within the "views" directory.
 
 Route:
 
-```ruby
+``` ruby
 get "/posts/:id" do
  @post = Post.find(params[:id])
  @title = @post.title
@@ -293,16 +293,16 @@ end
 
 Template (called *view.erb*):
 
-```html
+{% codeblock lang:html %}
 <h1><%= @post.title %></h1>
 <p><%= @post.body %></p>
-```
+{% endcodeblock %}
 
 ### Route and template for adding new posts.
 
 Route:
 
-```ruby
+``` ruby
 get "/posts/create" do
  @title = "Create post"
  @post = Post.new
@@ -312,7 +312,7 @@ end
 
 Template (called *create.erb*):
 
-```html
+``` html
 <h2>Create Post</h2>
 <br/>
 <form action="/posts" method="post"role="form">
@@ -332,7 +332,7 @@ Template (called *create.erb*):
 
 ### We also need a route for handling the POST requests.
 
-```ruby
+``` ruby
 post "/posts" do
  @post = Post.new(params[:post])
  if @post.save
@@ -345,7 +345,7 @@ end
 
 ### Test this out. Did it work? If you get this error "Couldn't find Post with ID=new" you need to put the last two routes above the route for viewing each post:
 
-```ruby
+``` ruby
 # app.rb
 
 require 'sinatra'
@@ -399,7 +399,7 @@ end
 
 ### Add some basic validation to *app.rb*:
 
-```ruby
+``` ruby
 class Post < ActiveRecord::Base
  validates :title, presence: true, length: { minimum: 5 }
  validates :body, presence: true
@@ -412,7 +412,7 @@ So, both the title and body cannot be null, and the title has to be at least 5 c
 
 ### First, add this to the top of *app.rb*:
 
-```ruby
+``` ruby
 require 'sinatra/flash'
 require 'sinatra/redirect_with_flash'
 
@@ -421,7 +421,7 @@ enable :sessions
 
 ### Update the POST request route:
 
-```ruby
+``` ruby
 post "/posts" do
  @post = Post.new(params[:post])
  if @post.save
@@ -434,7 +434,7 @@ end
 
 ### Add the following code to the *layout.erb* template just above the yield method:
 
-```ruby
+``` ruby
 <% if flash[:notice] %>
  <p class="alert alert-success"><%= flash[:notice] %>
 <% end %>
@@ -451,7 +451,7 @@ The app is ugly. Add some quick bootstrap styling.
 
 ### Updated *layout.erb*:
 
-```html
+``` html
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -529,7 +529,7 @@ The app is ugly. Add some quick bootstrap styling.
 
 Looking good? Well, a little better.
 
-```sh
+``` sh
 $ git add .
 $ git commit -am "updated"
 ```
@@ -540,7 +540,7 @@ Alright. We need to be able to edit live posts.
 
 ### Update app.rb
 
-```ruby
+``` ruby
 # app.rb
 
 require 'sinatra'
@@ -611,7 +611,7 @@ end
 
 ### Add an edit template
 
-```html
+``` html
 <h2>Edit Post</h2>
 <br/>
 <form action="/posts/<%= @post.id %>" method="post">
@@ -632,7 +632,7 @@ end
 
 ### Update the view template
 
-```html
+``` html
 <h1><%= @post.title %></h1>
 <p><%= @post.body %></p>
 <br>
@@ -656,7 +656,7 @@ See the issue? We need to escape the text properly in order to avoid this.
 
 Add the following helper:
 
-```ruby
+``` ruby
 helpers do
   include Rack::Utils
   alias_method :h, :escape_html
@@ -665,7 +665,7 @@ end
 
 ### Update the view template
 
-```html
+``` html
 <h1><%=h @post.title %></h1>
 <p><%=h @post.body %></p>
 <br>
@@ -674,7 +674,7 @@ end
 
 ### Update the edit template
 
-```html
+``` html
 <h2>Edit Post</h2>
 <br/>
 <form action="/posts/<%= @post.id %>" method="post">
@@ -695,7 +695,7 @@ end
 
 ### Update the index template
 
-```html
+``` html
 <ul>
 <% @posts.each do |post| %>
  <li>
@@ -719,14 +719,14 @@ Finally, let's get this app live on Heroku!
 ### Generate an SSH key. (if needed)
 ### Push to Heroku:
 
-```sh
+``` sh
 $ heroku create <my-app-name>.
 $ git push heroku master
 ```
 
 ### Rake the remote database:
 
-```sh
+``` sh
 $ heroku rake db:migrate
 ```
 

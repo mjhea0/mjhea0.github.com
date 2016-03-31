@@ -7,7 +7,7 @@ comments: true
 categories: python
 ---
 
-{% raw %}
+
 Well, in the last [tutorial](http://mherman.org/blog/2012/12/01/crash-course-in-web2py-part-2-web-forms/) I showed you  how to create a basic web form that stores the submitted data in a SQLite database. In this tutorial, we're going to add in data validation to your form.
 
 *Assumptions:*
@@ -21,7 +21,7 @@ Start the web2py server, go to the admin interface, and then edit the "form" app
 
 Right now, there is a requirement set in the db.py file for each field-
 
-```python
+``` python
 requires=IS_NOT_EMPTY
 ```
 
@@ -33,7 +33,8 @@ What do you want to display to the user?
 
 Open up display\_your\_form.html and change your code to match the following:
 
-```python
+{% raw %}
+``` html
 {{extend 'layout.html'}}
 <br /><br /><br />
 <h1>Web Form</h1>
@@ -49,6 +50,7 @@ Please note: All attempts must be error free before any info is accepted.</p>
 <h2>Errors:</h2>
 {{=BEAUTIFY(form.errors)}}
 ```
+{% endraw %}
 
 By adding *{ {extend 'layout.html'}}*, you will be able to display the flash error messages, which we'll add in next.
 
@@ -56,7 +58,7 @@ By adding *{ {extend 'layout.html'}}*, you will be able to display the flash err
 
 Update deafult.py to match the following code-
 
-```python
+``` python
 def display_your_form():
     form = SQLFORM(db.register)
     if form.accepts(request,session):
@@ -100,7 +102,7 @@ This is a problem. Let's add additional requirements to prevent this from happen
 
 Update the code in db.py to match the following-
 
-```python
+``` python
 db = DAL('sqlite://webform.sqlite')
 db.define_table('register',
     Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),

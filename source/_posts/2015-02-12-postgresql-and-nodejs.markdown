@@ -21,26 +21,26 @@ description: "This article details how to build a todo app with Node, Express, A
 
 Start by installing the [Express generator](http://expressjs.com/starter/generator.html) if you don't already have it:
 
-```sh
+``` sh
 $ npm install -g express-generator@4
 ```
 
 Then create a new project and install the dependencies:
 
-```sh
+``` sh
 $ express node-postgres-todo
 $ cd node-postgres-todo && npm install
 ```
 
 Add [Supervisor](https://github.com/isaacs/node-supervisor) to watch for code changes:
 
-```sh
+``` sh
 $ npm install supervisor -g
 ```
 
 Update the ‘start’ script in the _package.json_ file:
 
-```json
+``` json
 "scripts": {
   "start": "supervisor ./bin/www"
 },
@@ -48,7 +48,7 @@ Update the ‘start’ script in the _package.json_ file:
 
 Run the app:
 
-```sh
+``` sh
 $ npm start
 ```
 
@@ -60,13 +60,13 @@ Then navigate to [http://localhost:3000/](http://localhost:3000/) in your browse
 
 With your Postgres server up and listening on port 5432, making a database connection is easy with the [pg](https://www.npmjs.com/package/pg) library:
 
-```sh
+``` sh
 $ npm install pg --save
 ```
 
 Now let’s set up a simple table creation script:
 
-```javascript
+``` javascript
 var pg = require('pg');
 var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/todo';
 
@@ -82,13 +82,13 @@ Here we create a new instance of `Client` to interact with the database and then
 
 Make sure you have a database called "todo" setup, and then run the script to setup the table and subsequent fields:
 
-```sh
+``` sh
 $ node models/database.js
 ```
 
 Verify the table/schema creation in [psql](http://postgresguide.com/utilities/psql.html):
 
-```sh
+``` sh
 michaelherman=# \c todo
 You are now connected to database "todo" as user "michaelherman".
 todo=# \d+ items
@@ -108,7 +108,7 @@ With the database connection setup along with the "items" table, we can now conf
 
 Let’s keep it simple by adding all endpoints to the _index.js_ file within the "routes" folder. Make sure to update the imports:
 
-```javascript
+``` javascript
 var express = require('express');
 var router = express.Router();
 var pg = require('pg');
@@ -155,7 +155,7 @@ Follow along with the inline comments below for an explanation of what’s happe
 
 ### Create
 
-```javascript
+``` javascript
 router.post('/api/v1/todos', function(req, res) {
 
     var results = [];
@@ -196,13 +196,13 @@ router.post('/api/v1/todos', function(req, res) {
 
 Test this out via Curl in your terminal:
 
-```sh
+``` sh
 $ curl --data "text=test&complete=false" http://127.0.0.1:3000/api/v1/todos
 ```
 
 Then confirm that the data was INSERT’ed correctly into the database via psql:
 
-```sh
+``` sh
 todo=# SELECT * FROM items ORDER BY id ASC;
  id | text  | complete
 ----+-------+----------
@@ -212,7 +212,7 @@ todo=# SELECT * FROM items ORDER BY id ASC;
 
 ### Read
 
-```javascript
+``` javascript
 router.get('/api/v1/todos', function(req, res) {
 
     var results = [];
@@ -247,7 +247,7 @@ router.get('/api/v1/todos', function(req, res) {
 
 Add a few more rows of data via Curl, and then test the endpoint out in your browser at [http://localhost:3000/api/v1/todos](http://localhost:3000/api/v1/todos). You should see an array of JSON objects:
 
-```json
+``` json
 [
     {
         id: 1,
@@ -269,7 +269,7 @@ Add a few more rows of data via Curl, and then test the endpoint out in your bro
 
 ### Update
 
-```javascript
+``` javascript
 router.put('/api/v1/todos/:todo_id', function(req, res) {
 
     var results = [];
@@ -312,13 +312,13 @@ router.put('/api/v1/todos/:todo_id', function(req, res) {
 
 Again, test via Curl:
 
-```sh
+``` sh
 $ curl -X PUT --data "text=test&complete=true" http://127.0.0.1:3000/api/v1/todos/1
 ```
 
 Navigate to [http://localhost:3000/api/v1/todos](http://localhost:3000/api/v1/todos) to make sure the data has been updated correctly.
 
-```json
+``` json
 [
     {
         id: 1,
@@ -340,7 +340,7 @@ Navigate to [http://localhost:3000/api/v1/todos](http://localhost:3000/api/v1/to
 
 ### Delete
 
-```javascript
+``` javascript
 router.delete('/api/v1/todos/:todo_id', function(req, res) {
 
     var results = [];
@@ -381,13 +381,13 @@ router.delete('/api/v1/todos/:todo_id', function(req, res) {
 
 Final Curl test:
 
-```sh
+``` sh
 $ curl -X DELETE http://127.0.0.1:3000/api/v1/todos/3
 ```
 
 And you should now have:
 
-```json
+``` json
 
 [
     {
@@ -417,7 +417,7 @@ Let’s dive right in to Angular.
 
 Create a file called _app.js_ in the "public/javascripts" folder. This file will house our Angular module and controller:
 
-```javascript
+``` javascript
 angular.module('nodeTodo', [])
 
 .controller('mainController', function($scope, $http) {
@@ -447,7 +447,7 @@ Well, we’re [injecting](https://docs.angularjs.org/guide/di) the `$scope` and 
 
 Let’s update the main route in _index.js_ within the "routes" folder:
 
-```javascript
+``` javascript
 router.get('/', function(req, res, next) {
   res.sendFile(path.join(__dirname, '../views', 'index.html'));
 });
@@ -457,7 +457,7 @@ So when the end user hits the main endpoint, we send the _index.html_ file. This
 
 Make sure to add the following dependency as well:
 
-```javascript
+``` javascript
 var path = require('path');
 ```
 
@@ -465,7 +465,7 @@ var path = require('path');
 
 Now, let’s add our basic Angular view within _index.html_:
 
-```html
+``` html
 <!DOCTYPE html>
 <html ng-app="nodeTodo">
   <head>
@@ -493,7 +493,7 @@ This should all be straightforward. We bootstrap Angular - `ng-app="nodeTodo"`, 
 
 Next, let’s update the module to handle the Create and Delete functions:
 
-```javascript
+``` javascript
 // Create a new todo
 $http.post('/api/v1/todos', $scope.formData)
     .success(function(data) {
@@ -523,7 +523,7 @@ Now, let’s update our view…
 Simply update each list item like so:
 
 {% raw %}
-```html
+``` html
 <li><input type="checkbox" ng-click="deleteTodo(todo.id)">&nbsp;{{ todo.text }}</li>
 ```
 {% endraw %}
@@ -534,7 +534,7 @@ This uses the [`ng-click`](https://docs.angularjs.org/api/ng/directive/ngClick) 
 
 Update the controller:
 
-```javascript
+``` javascript
 // Delete a todo
 $scope.deleteTodo = function(todoID) {
     $http.delete('/api/v1/todos/' + todoID)
@@ -554,8 +554,7 @@ We simply wrapped the delete functionality in the `deleteTodo()` function. Test 
 
 To handle the creation of a new todo, we need to add an HTML form:
 
-{% raw %}
-```html
+{% codeblock lang:html %}
 <div class="container">
 
   <form>
@@ -566,18 +565,17 @@ To handle the creation of a new todo, we need to add an HTML form:
   </form>
 
   <ul ng-repeat="todo in todoData">
-    <li><input type="checkbox" ng-click="deleteTodo(todo.id)">&nbsp;{{ todo.text }}</li>
+    <li><input type="checkbox" ng-click="deleteTodo(todo.id)">&nbsp;{% raw %}{{ todo.text }}{% endraw %}</li>
   </ul>
 
 </div>
-```
-{% endraw %}
+{% endcodeblock%}
 
 Again, we use `ng-click` to call a function in the controller.
 
 ### Module (round four)
 
-```javascript
+``` javascript
 // Create a new todo
 $scope.createTodo = function(todoID) {
     $http.post('/api/v1/todos', $scope.formData)
@@ -601,7 +599,7 @@ With the main functionality done, let’s update the front-end to make it look, 
 **HTML**:
 
 {% raw %}
-```html
+``` html
 <!DOCTYPE html>
 <html ng-app="nodeTodo">
   <head>
@@ -652,7 +650,7 @@ With the main functionality done, let’s update the front-end to make it look, 
 
 **CSS**:
 
-```css
+``` css
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
@@ -688,7 +686,7 @@ Now that we added the front-end functionality, let’s update our application’
 
 Since our application is logically split between the client and server, let’s do the same for our project structure. So, make the following changes to your folder structure:
 
-```sh
+``` sh
 ├── app.js
 ├── bin
 │   └── www
@@ -713,19 +711,19 @@ Now, we need to make a few updates to the code:
 
 _server/routes/index.js_:
 
-```javascript
+``` javascript
 res.sendFile(path.join(__dirname, '../', '../', 'client', 'views', 'index.html'));
 ```
 
 _app.js_:
 
-```javascript
+``` javascript
 var routes = require('./server/routes/index');
 ```
 
 _app.js_:
 
-```javascript
+``` javascript
 app.use(express.static(path.join(__dirname, './client', 'public')));
 ```
 
@@ -735,7 +733,7 @@ Next, let’s move the `connectionString` variable - which specifies the databas
 
 Create a file called _config.js_ in the root directory, and then add the following code to it:
 
-```javascript
+``` javascript
 var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/todo';
 
 module.exports = connectionString;
@@ -743,7 +741,7 @@ module.exports = connectionString;
 
 Then update the `connectionString` variable in both _server/models/database.js_ and _server/routes/index.js_:
 
-```javascript
+``` javascript
 var connectionString = require(path.join(__dirname, '../', '../', 'config'));
 ```
 
@@ -753,7 +751,7 @@ And make sure to add `var path = require('path');` to the former file as well.
 
 Did you notice in our routes that we are reusing the same code in each of the CRUD functions:
 
-```javascript
+``` javascript
 // SQL Query > Select Data
 var query = client.query("SELECT * FROM items ORDER BY id ASC");
 

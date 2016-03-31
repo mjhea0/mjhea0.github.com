@@ -17,19 +17,19 @@ So, let’s add a [captcha](https://github.com/bmizerany/sinatra-captcha) to our
 
 ### 1. Add the following gem to your *Gemfile*:
 
-```ruby
+``` ruby
 gem 'sinatra-captcha'
 ```
 
 ### 2. Update your gems and their dependencies:
 
-```
+``` sh
 $ bundle install
 ```
 
 ### 3. Update *app.rb*:
 
-```ruby
+``` ruby
 ...
 
 require 'sinatra/captcha'
@@ -51,7 +51,7 @@ end
 
 ### 4. Update the form in the *create.erb* view:
 
-```ruby
+{% codeblock lang:html %}
 <form action="/posts" method="post"role="form">
 <div class="form-group">
   <label for="post_title">Title:</label>
@@ -71,11 +71,11 @@ end
 <button type="submit" class="btn btn-success">Submit</button>
 <br>
 </form>
-```
+{% endcodeblock %}
 
 ### 5. Preview locally before updating Heroku:
 
-```
+``` sh
 $ ruby app.rb
 ```
 

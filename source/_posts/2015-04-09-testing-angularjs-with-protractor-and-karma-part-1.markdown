@@ -33,7 +33,7 @@ The repo includes the following tags:
 
 Start by cloning the repo, checkout out the first tag, and then install the dependencies:
 
-```sh
+``` sh
 $ git clone https://github.com/mjhea0/angular-testing-tutorial.git
 $ cd angular-testing-tutorial
 $ git checkout tags/v1
@@ -42,7 +42,7 @@ $ npm install && bower install
 
 Run the app:
 
-```sh
+``` sh
 $ gulp
 ```
 
@@ -56,7 +56,7 @@ Navigate to [http://localhost:8888](http://localhost:8888) to view the live app.
 
 Test it out. Once done, kill the server and checkout the second tag:
 
-```sh
+``` sh
 $ git checkout tags/v2
 ```
 
@@ -64,13 +64,13 @@ There should now be a "tests" folder and a few more tasks in the Gulpfile.
 
 Run the unit tests:
 
-```sh
+``` sh
 $ gulp unit
 ```
 
 They should pass:
 
-```sh
+``` sh
 [05:28:02] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
 [05:28:02] Starting 'unit'...
 INFO [karma]: Karma v0.12.31 server started at http://localhost:9876/
@@ -88,7 +88,7 @@ Now for the e2e tests:
 
 They should pass as well:
 
-```sh
+``` sh
 [05:29:45] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
 [05:29:45] Starting 'e2e'...
 Using the selenium server at http://localhost:4444/wd/hub
@@ -114,7 +114,7 @@ There are two configuration files in the "tests" folder - one for Karma and the 
 
 Let's look the config file, *karma.conf.js*:
 
-```javascript
+``` javascript
 module.exports = function(config) {
   config.set({
 
@@ -170,7 +170,7 @@ Be sure to read over the comments for an overview of each config option. For mor
 
 Turn your attention to the Protractor config file, *protractor.conf.js*:
 
-```javascript
+``` javascript
 exports.config = {
   seleniumAddress: 'http://localhost:4444/wd/hub',
   specs: ['tests/e2e/*.js']
@@ -197,7 +197,7 @@ With that, let's create some tests, broken up by controller!
 
 Take a look at the code in the first controller:
 
-```javascript
+``` javascript
 myApp.controller('TestOneController', function($scope) {
   $scope.greeting = "Hello, World!";
   $scope.newText = undefined;
@@ -214,7 +214,7 @@ What's happening here? Confirm your answer by running your app and watching what
 
 You probably noticed that we are already testing this in the spec:
 
-```javascript
+``` javascript
 describe('TestOneController', function () {
 
   var controller = null;
@@ -263,7 +263,7 @@ Run the tests again to ensure they still pass - `gulp unit`.
 
 What else could we test? How about if `newText` doesn't change - e.g., if the user submits the button without entering any text in the input box - then the value of `greeting` should stay the same. Try writing this on your own, before you look at my answer:
 
-```javascript
+``` javascript
 it('clicking the button does not change the greeting if text is not inputed', function () {
   $scope.changeGreeting();
   assert.equal($scope.greeting, "Hello, World!");
@@ -272,14 +272,14 @@ it('clicking the button does not change the greeting if text is not inputed', fu
 
 Try running this. It should fail.
 
-```sh
+``` sh
 Chrome 41.0.2272 (Mac OS X 10.10.2) TestOneController clicking the button does not change the greeting FAILED
   AssertionError: expected undefined to equal 'Hello, World!'
 ```
 
 So, we've revealed a bug. We could fix this by adding validation to the input box to ensure the end user enters a value or we could update `changeGreeting` to only update `greeting` if `newText` is not `undefined`. Let's go with the latter.
 
-```javascript
+``` javascript
 $scope.changeGreeting = function() {
   if ($scope.newText !== undefined) {
     $scope.greeting = $scope.newText;
@@ -289,7 +289,7 @@ $scope.changeGreeting = function() {
 
 Save the code, and then run the tests again:
 
-```sh
+``` sh
 $ gulp unit
 [08:28:18] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
 [08:28:18] Starting 'unit'...
@@ -308,7 +308,7 @@ Nice!
 
 Start by analyzing the code:
 
-```javascript
+``` javascript
 myApp.controller('TestTwoController', function($scope) {
   $scope.total = 6;
   $scope.newItem = undefined;
@@ -327,7 +327,7 @@ What should we test? Take out a pen and paper and write down everything that sho
 
 Be sure to start with the following boilerplate:
 
-```javascript
+``` javascript
 describe('TestTwoController', function () {
 
   var controller = null;
@@ -349,7 +349,7 @@ describe('TestTwoController', function () {
 
 #### Test 1: The initial value of `total`
 
-```javascript
+``` javascript
 it('initially has a total', function () {
   assert.equal($scope.total, 6);
 });
@@ -357,7 +357,7 @@ it('initially has a total', function () {
 
 #### Test 2: The initial value of `items`
 
-```javascript
+``` javascript
 it('initially has items', function () {
   assert.isArray($scope.items);
   assert.deepEqual($scope.items, [1, 2, 3]);
@@ -366,7 +366,7 @@ it('initially has items', function () {
 
 #### Test 3: The `add` function updates the `total` and `items` array when a value is added
 
-```javascript
+``` javascript
 it('the `add` function updates the `total` and `items` array when a value is added', function () {
   $scope.newItem = 7;
   $scope.add();
@@ -377,7 +377,7 @@ it('the `add` function updates the `total` and `items` array when a value is add
 
 #### Test 4: The `add` function does not update the `total` and `items` array when an empty value is added
 
-```javascript
+``` javascript
 it('does not update the `total` and `items` array when an empty value is added', function () {
   $scope.newItem = undefined;
   $scope.add();
@@ -394,14 +394,14 @@ it('does not update the `total` and `items` array when an empty value is added',
 
 Each test should be straightforward. Run the tests. There should be one failure:
 
-```javascript
+``` javascript
 Chrome 41.0.2272 (Mac OS X 10.10.2) TestTwoController does not update the `total` and `items` array when an empty value is added FAILED
   AssertionError: expected NaN to equal 6
 ```
 
 Update the code, adding a conditional again:
 
-```javascript
+``` javascript
 $scope.add = function () {
   if(typeof $scope.newItem == 'number') {
     $scope.items.push($scope.newItem);
@@ -415,13 +415,13 @@ $scope.add = function () {
 
 Also update the partial, */app/partials/two.html*:
 
-```html
+``` html
 <input type="number" ng-model="newItem">
 ```
 
 Run it again:
 
-```sh
+``` sh
 $ gulp unit
 [09:56:10] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
 [09:56:10] Starting 'unit'...
@@ -440,7 +440,7 @@ Did I miss anything? Comment below.
 
 Again, check out the code in *app.js*:
 
-```javascript
+``` javascript
 myApp.controller('TestThreeController', function($scope) {
   $scope.modal = {title: 'Hi!', content: 'This is a message!'};
 });
@@ -448,7 +448,7 @@ myApp.controller('TestThreeController', function($scope) {
 
 What can we test here?
 
-```javascript
+``` javascript
 it('initially has a modal', function () {
   assert.isObject($scope.modal);
   assert.deepEqual($scope.modal, {title: 'Hi!', content: 'This is a message!'});
@@ -459,7 +459,7 @@ Perhaps a better question is: What *should* we test here? Is the above test real
 
 #### Update *app.js*:
 
-```javascript
+``` javascript
 myApp.controller('TestThreeController', function($scope, $modal) {
   $scope.modalNumber = 1;
   var myModal = $modal({scope: $scope, template: 'modal.tpl.html', show: false});
@@ -476,7 +476,7 @@ Here we are defined a custom template, `modal.tpl.html`, to be used for the moda
 
 #### Add *modal.tpl.html*:
 
-```html
+{% codeblock lang:html %}
 <div class="modal" tabindex="-1" role="dialog">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -493,7 +493,7 @@ Here we are defined a custom template, `modal.tpl.html`, to be used for the moda
     </div>
   </div>
 </div>
-```
+{% endcodeblock %}
 
 Add this template to the "app" folder.
 
@@ -501,18 +501,18 @@ Add this template to the "app" folder.
 
 Finally, update the partial:
 
-```html
+{% codeblock lang:html %}
 <h2>Just a modal</h2>
 <button type="button" class="btn btn-lg btn-default" data-template="modal.tpl.html" bs-modal="modal">
   Launch modal!
 </button>
-```
+{% endcodeblock %}
 
 Run the app to make sure everything works, and then update the test...
 
 #### Test redux
 
-```javascript
+``` javascript
 describe('TestThreeController', function () {
 
   var controller = null;
@@ -549,7 +549,7 @@ Notice how we're no longer testing that a modal is present. We'll test that via 
 
 Finally, let's test the AJAX request:
 
-```sh
+``` sh
 myApp.controller('TestFourController', function($scope, $http) {
   $scope.repos = [];
   $scope.loadRepos = function () {
@@ -566,7 +566,7 @@ First, let's first add the *mock.js* file found in the [repo](https://github.com
 
 Update the list of files in *karma.conf.js* so that the the mock file is loaded and served by Karma:
 
-```javascript
+``` javascript
 files: [
   '../app/bower_components/angular/angular.js',
   '../app/bower_components/jquery/dist/jquery.js',
@@ -582,7 +582,7 @@ files: [
 
 Next, add the test:
 
-```javascript
+``` javascript
 describe('TestFourController', function () {
 
   var controller = null;
@@ -634,7 +634,7 @@ Test it out!
 
 How about the routes, templates, and partials?
 
-```javascript
+``` javascript
 describe('routes', function(){
 
   beforeEach(function () {
@@ -666,7 +666,7 @@ describe('routes', function(){
 
 Make sure to run the tests one last time:
 
-```sh
+``` sh
 $ gulp unit
 [05:20:07] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
 [05:20:07] Starting 'unit'...
@@ -683,7 +683,7 @@ That's it for unit tests. In the next [part](http://mherman.org/blog/2015/04/26/
 
 Checkout the third tag, `v3`, to view all the completed unit tests:
 
-```sh
+``` sh
 $ git checkout tags/v3
 ```
 

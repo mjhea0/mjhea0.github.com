@@ -21,7 +21,7 @@ Before diving in it's important that you understand *why* tests are necessary.
 
 Grab the Node/Express sample CRUD application from the [repository](https://github.com/mjhea0/node-mocha-chai-tutorial):
 
-```sh
+``` sh
 $ git clone https://github.com/mjhea0/node-mocha-chai-tutorial.git
 $ git checkout tags/v1
 ```
@@ -38,7 +38,7 @@ This is a tedious process. What if you had to go through this same manual proces
 
 With that, install Mocha:
 
-```sh
+``` sh
 $ npm install -g mocha@2.3.1
 ```
 
@@ -48,7 +48,7 @@ $ npm install -g mocha@2.3.1
 
 To set up the basic tests, create a new folder called "test" in the project root, then within that folder add a file called *test-server.js*. Your file/folder structure should now look like:
 
-```sh
+``` sh
 ├── package.json
 ├── server
 │   ├── app.js
@@ -62,7 +62,7 @@ To set up the basic tests, create a new folder called "test" in the project root
 
 Now add the following code to the new file:
 
-```javascript
+``` javascript
 describe('Blobs', function() {
   it('should list ALL blobs on /blobs GET');
   it('should list a SINGLE blob on /blob/<id> GET');
@@ -80,13 +80,13 @@ To add the necessary logic, we'll utilize [Chai](http://chaijs.com/) (v3.2.0), a
 
 Install them both now:
 
-```sh
+``` sh
 $ npm install chai@3.2.0 chai-http@1.0.0 --save-dev
 ```
 
 Then update *test-server.js*, like so:
 
-```javascript
+``` javascript
 var chai = require('chai');
 var chaiHttp = require('chai-http');
 var server = require('../server/app');
@@ -114,7 +114,7 @@ Now we can write our tests...
 
 Update the first `it()` statement:
 
-```javascript
+``` javascript
 it('should list ALL blobs on /blobs GET', function(done) {
   chai.request(server)
     .get('/blobs')
@@ -131,7 +131,7 @@ Simple, right?
 
 To test, simply run `mocha`; and if all went well, you should see:
 
-```sh
+``` sh
 $ mocha
 
 
@@ -151,7 +151,7 @@ GET /blobs 200 19.621 ms - 2
 
 Since testing the status code alone isn't very significant, let's add some more assertions:
 
-```javascript
+``` javascript
 it('should list ALL blobs on /blobs GET', function(done) {
   chai.request(server)
     .get('/blobs')
@@ -172,7 +172,7 @@ How about testing a POST request...
 
 Based on the code within *index.js*, when a new "blob" is successfully added, we should see the following response:
 
-```sh
+``` sh
 {
   "SUCCESS": {
     "__v": 0,
@@ -187,7 +187,7 @@ Based on the code within *index.js*, when a new "blob" is successfully added, we
 
 With that, think about how you would write/structure your assertions to test this...
 
-```javascript
+``` javascript
 it('should add a SINGLE blob on /blobs POST', function(done) {
   chai.request(server)
     .post('/blobs')
@@ -218,7 +218,7 @@ This sounds a bit difficult, but with Mocha it's super easy!
 
 Start by adding a configuration file called *_config.js* to the "server" folder in order to specify a different database URI for testing purposes:
 
-```javascript
+``` javascript
 var config = {};
 
 config.mongoURI = {
@@ -231,7 +231,7 @@ module.exports = config;
 
 Next, update *app.js* to utilize the test database when the environment variable `app.settings.env` evaluates to `test`. (The default is `development`.)
 
-```javascript
+``` javascript
 // *** config file *** //
 var config = require('./_config');
 
@@ -247,7 +247,7 @@ mongoose.connect(config.mongoURI[app.settings.env], function(err, res) {
 
 Finally, update the requirements and add the hooks to the testing script:
 
-```javascript
+``` javascript
 process.env.NODE_ENV = 'test';
 
 var chai = require('chai');
@@ -290,7 +290,7 @@ Run the tests again to ensure they still pass.
 
 With the hooks set up, let's refactor the first test to assert that the blob from the `beforeEach()` is part of the collection:
 
-```javascript
+``` javascript
 it('should list ALL blobs on /blobs GET', function(done) {
   chai.request(server)
     .get('/blobs')
@@ -312,7 +312,7 @@ Let's look at the final three tests...
 
 ## Test - GET (single)
 
-```javascript
+``` javascript
 it('should list a SINGLE blob on /blob/<id> GET', function(done) {
     var newBlob = new Blob({
       name: 'Super',
@@ -341,7 +341,7 @@ In this test case, we first added a new blob, and then used the newly created `_
 
 ## Test - PUT
 
-```javascript
+``` javascript
 it('should update a SINGLE blob on /blob/<id> PUT', function(done) {
   chai.request(server)
     .get('/blobs')
@@ -370,7 +370,7 @@ Here, we hit the `/blobs` endpoint with a GET request to grab the blob added fro
 
 Finally...
 
-```javascript
+``` javascript
 it('should delete a SINGLE blob on /blob/<id> DELETE', function(done) {
   chai.request(server)
     .get('/blobs')

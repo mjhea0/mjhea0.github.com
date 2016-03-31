@@ -43,7 +43,7 @@ The [repo](https://github.com/mjhea0/angular-testing-tutorial) includes the foll
 
 Assuming you followed the [first part](http://mherman.org/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1) of this tutorial, checkout the third tag, `v3`, and then run the current test suite starting with the unit tests:
 
-```sh
+``` sh
 $ git checkout tags/v3
 $ gulp unit
 
@@ -60,7 +60,7 @@ For the e2e tests, you'll need to open two new terminal windows. In the first ne
 
 Finally, back in the original window, run the tests:
 
-```sh
+``` sh
 $ gulp e2e
 
 [23:31:11] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
@@ -82,7 +82,7 @@ Everything look good?
 
 Open the test spec, *spec.js*, within the "tests/e2e" directory. Let's look at the first test:
 
-```javascript
+``` javascript
 describe('myController', function () {
 
   it('the dom initially has a greeting', function () {
@@ -109,7 +109,7 @@ With that, let's write some tests on our own.
 
 Just like in the first part, open the controller code:
 
-```javascript
+``` javascript
 myApp.controller('TestOneController', function($scope) {
   $scope.greeting = "Hello, World!";
   $scope.newText = undefined;
@@ -123,18 +123,18 @@ myApp.controller('TestOneController', function($scope) {
 
 How about the HTML?
 
-```html
+{% codeblock lang:html %}
 <h2>Say something</h2>
 <input type="text" ng-model="newText">
 <button class="btn btn-default" ng-click="changeGreeting()">Change!</button>
-<p id="greeting">{{ greeting }}</p>
-```
+<p id="greeting">{% raw %}{{ greeting }}{% endraw %}</p>
+{% endcodeblock  %}
 
 Looking at the Angular code along with the HTML, we know that on the button click, `greeting` is updated with the user supplied text from the input box. Sound right? Test this out: With the app running via Gulp, navigate to [http://localhost:8888/#/one](http://localhost:8888/#/one) and manually test the app to ensure that the controller is working as it should.
 
 Now since we already tested the initial state of `greeting`, let's write the test to ensure that the state updates on the button click:
 
-```javascript
+``` javascript
 describe('TestOneController', function () {
 
   beforeEach(function() {
@@ -163,7 +163,7 @@ So, in both new test cases we're targeting the input form - via the global [elem
 
 Run the tests. If all went well, you should see:
 
-```sh
+``` sh
 [06:15:45] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
 [06:15:45] Starting 'e2e'...
 Using the selenium server at http://localhost:4444/wd/hub
@@ -180,7 +180,7 @@ Michaels-MacBook-Pro-3:angular-testing-tutorial michael$
 
 Did you see Chrome open in a new window and run the tests, then close itself? It's super fast!! Want to run the tests in Firefox (or a different [browser](http://angular.github.io/protractor/#/browser-support)) as well? Simply update the Protractor config file, *protractor.conf.js*, like so:
 
-```javascript
+``` javascript
 exports.config = {
   seleniumAddress: 'http://localhost:4444/wd/hub',
   specs: ['tests/e2e/*.js'],
@@ -196,7 +196,7 @@ Test it again. You should now see the tests run in both Chrome and Firefox simul
 
 Finally, to simplify the code and speed up the tests (so we only search the DOM once per element), we can assign each element to a variable:
 
-```javascript
+``` javascript
 describe('TestOneController', function () {
 
   var greeting = element(by.id('greeting'));
@@ -234,7 +234,7 @@ Again, start with the code.
 
 Angular:
 
-```sh
+``` sh
 myApp.controller('TestTwoController', function($scope) {
   $scope.total = 6;
   $scope.newItem = undefined;
@@ -253,18 +253,18 @@ myApp.controller('TestTwoController', function($scope) {
 
 HTML:
 
-```html
+{% codeblock lang:html %}
 <h2>Add values</h2>
 <input type="number" ng-model="newItem">
 <button class="btn btn-default" ng-click="add()">Add!</button>
-<p>{{ total }}</p>
-```
+<p>{% raw %}{{ total }}{% endraw %}</p>
+{% endcodeblock %}
 
 Then test it in the browser.
 
 Like last time, we simply need to ensure that `total` is updated appropriately when the end user submits a number in the input box and then clicks the button.
 
-```javascript
+``` javascript
 describe('TestTwoController', function () {
 
   var total = element(by.tagName('p'));
@@ -307,7 +307,7 @@ describe('TestTwoController', function () {
 
 Run the tests and you should see:
 
-```sh
+``` sh
 6 tests, 9 assertions, 0 failures
 ```
 
@@ -323,7 +323,7 @@ You know the drill:
 
 Try this on your own before looking at the code below.
 
-```javascript
+``` javascript
 describe('TestThreeController', function () {
 
   var modalNumber = element.all(by.tagName('span')).get(1);
@@ -356,7 +356,7 @@ describe('TestThreeController', function () {
 
 Since this controller makes an external call to [https://api.github.com/repositories](https://api.github.com/repositories) you can either mock out (fake) this request using [ngMockE2E](https://docs.angularjs.org/api/ngMockE2E), like we did for the unit test, or you can actually make the API call. Again, this depends on how expensive the call is and how important the functionality is to your application. In most cases, it's better to actually make the call since e2e tests should mimic the actual end user experience as much as possible. Plus, unlike unit tests which test implementation, these tests test user behavior, across several independent units - thus, these tests should not be isolated and can rely on making actual API calls either to the back-end or externally.
 
-```javascript
+``` javascript
 describe('TestFourController', function () {
 
   var loadButton = element(by.tagName('button'));

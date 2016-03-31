@@ -29,13 +29,13 @@ Essentially, any URL pattern that fell under /crm/ would be served by web2py, wh
 
 1. Transfer the apache SSL configuration from the current crm domain (crm.mainpage.com) to the main domain (mainpage.com):
 
-```sh
+``` sh
 # mv /usr/local/apache/conf/userdata/ssl/2/main/crm.maindomain.com /usr/local/apache/conf/userdata/ssl/2/main/maindomain.com
 ```
 
 2. Update the apache config `/usr/local/apache/conf/userdata/ssl/2/main/maindomain.com/wsgi.conf`:
 
-```sh
+``` sh
 ServerName maindomain.com
 ServerAlias crm.maindomain.com www.maindomain.com
 
@@ -46,7 +46,7 @@ WSGIScriptAlias /crm /home/main/python/maindomain.com/app/app.wsgi
 
 3. Update web2py routing configuration, `/home/main/python/maindomain.com/app/web2py/routes.py`:
 
-```python
+``` python
 routers = dict(
     BASE = dict(
     default_application='CRM',
@@ -57,13 +57,13 @@ routers = dict(
 
  4. Rebuild apache config:
 
-```sh
+``` sh
 # /scripts/rebuildhttpdconf
 ```
 
 5. Restart apache:
 
-```sh
+``` sh
 # /scripts/restartsrv_httpd
 ```
 

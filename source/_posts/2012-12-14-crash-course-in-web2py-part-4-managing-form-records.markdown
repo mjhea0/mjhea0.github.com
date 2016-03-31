@@ -21,7 +21,7 @@ Let's begin ...
 
 Add the following code to *default.py* just before the SQLFORM function, then add the variable to the function itself:
 
-```python
+``` python
 update = db.register(request.args(0))
 form = SQLFORM(db.register, update)
 ```
@@ -52,7 +52,7 @@ Moving on, for this process to work right, the user making the edits must know t
 
 The *grid* method is just wonderful. You have to see it to believe it. Quickly now, add the following function to *default.py*:
 
-```python
+``` python
 def all_records():
     grid = SQLFORM.grid(db.register,user_signature=False)
     return locals()
@@ -70,7 +70,7 @@ Finally, let's add two more validators to the form. Go to your database.
 
 I want the user to validate his/her email address and I want it to be unique, so update db.py with the following code:
 
-```python
+``` python
 db = DAL('sqlite://webform.sqlite')
 db.define_table('register',
     Field('first_name', requires=[IS_NOT_EMPTY(), IS_ALPHANUMERIC()]),

@@ -31,7 +31,7 @@ This post uses the following dependencies:
 
 ### Download the starter template
 
-```sh
+``` sh
 $ git clone https://github.com/mjhea0/node-bootstrap3-template.git passport-examples
 $ cd passport-examples
 $ npm install
@@ -39,7 +39,7 @@ $ npm install
 
 ### Test locally
 
-```sh
+``` sh
 $ node app
 ```
 
@@ -47,7 +47,7 @@ Navigate to [http://127.0.0.1:1337/](http://127.0.0.1:1337/)
 
 ### Install additional dependencies:
 
-```sh
+``` sh
 $ npm install passport@0.3.2 --save
 $ npm install passport-facebook@2.0.0 --save
 $ npm install passport-github2@0.1.9 --save
@@ -97,7 +97,7 @@ Register your application (or in this case a dummy application) with all of the 
 
 Create a separate file in the root directory called *oauth.js* and add the following code:
 
-```javascript
+``` javascript
 var ids = {
   facebook: {
     clientID: 'get_your_own',
@@ -135,7 +135,7 @@ module.exports = ids;
 
 Add the following requirements:
 
-```javascript
+``` javascript
 var passport = require('passport');
 var config = require('./oauth.js');
 var FacebookStrategy = require('passport-facebook').Strategy;
@@ -147,7 +147,7 @@ var InstagramStrategy = require('passport-instagram').Strategy;
 
 Update the rest of *app.js* with the following code (check the comments for a brief explanation):
 
-```javascript
+``` javascript
 // serialize and deserialize
 passport.serializeUser(function(user, done) {
   done(null, user);
@@ -224,7 +224,7 @@ function ensureAuthenticated(req, res, next) {
 
 Add the following URL:
 
-```jade
+``` jade
 a(href="/auth/facebook") Login via Facebook
 ```
 
@@ -232,7 +232,7 @@ a(href="/auth/facebook") Login via Facebook
 
 Add a new file called *account.jade* to the "views" folder with the following code:
 
-```jade
+``` jade
 !!! 5
 html
   head
@@ -264,7 +264,7 @@ Fire up the server and test! You should be redirected to the `/account` page aft
 
 Add the remaining social providers, one by one, testing as you go, until your *app.js* file looks like this:
 
-```javascript
+``` javascript
 // dependencies
 var fs = require('fs');
 var express = require('express');
@@ -438,7 +438,7 @@ module.exports = app;
 
 ## Update *index.jade*
 
-```jade
+``` jade
 !!! 5
 html
   head
@@ -476,7 +476,7 @@ Now let's take it a step further and save the user in MongoDB via [Mongoose](htt
 
 Add the following code just before the `config` section in *app.js*:
 
-```javascript
+``` javascript
 // connect to the database
 mongoose.connect('mongodb://localhost/passport-example');
 
@@ -490,7 +490,7 @@ var User = mongoose.model('User', {
 
 Update the `FacebookStrategy` so that it saves the user if s/he doesn't exist in the database:
 
-```javascript
+``` javascript
 passport.use(new FacebookStrategy({
   clientID: config.facebook.clientID,
   clientSecret: config.facebook.clientSecret,
@@ -525,7 +525,7 @@ passport.use(new FacebookStrategy({
 
 Move the serialization/deserialization after the `config` section and update:
 
-```javascript
+``` javascript
 // serialize and deserialize
 passport.serializeUser(function(user, done) {
   console.log('serializeUser: ' + user._id);
@@ -542,7 +542,7 @@ passport.deserializeUser(function(id, done) {
 
 Update the `/account` route:
 
-```javascript
+``` javascript
 app.get('/account', ensureAuthenticated, function(req, res){
   User.findById(req.session.passport.user, function(err, user) {
     if(err) {
@@ -562,7 +562,7 @@ Fire up the server and make sure Facebook authentication is still working. Once 
 
 Update the remaining strategies so that users are saved in the database:
 
-```javascript
+``` javascript
 // dependencies
 var fs = require('fs');
 var express = require('express');
@@ -856,7 +856,7 @@ It's a mess. Let's clean it up, breaking apart concerns, and add in the remainin
 
 Create a separate file for your Mongoose schema called *users.js*:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 
 // create a user model
@@ -874,7 +874,7 @@ module.exports = User;
 
 Now let's move the social config to a separate file called *authentication.js*:
 
-```javascript
+``` javascript
 var passport = require('passport');
 var FacebookStrategy = require('passport-facebook').Strategy;
 var User = require('./user.js');
@@ -921,7 +921,7 @@ module.exports = passport.use(new FacebookStrategy({
 
 #### Update the dependencies in *app.js*
 
-```javascript
+``` javascript
 // dependencies
 var fs = require('fs');
 var express = require('express');
@@ -944,7 +944,7 @@ Test again!
 
 Move the remaining auth configs to *authentication.js* and add in the mongoose code to save the user:
 
-```javascript
+``` javascript
 var passport = require('passport');
 var FacebookStrategy = require('passport-facebook').Strategy;
 var TwitterStrategy = require('passport-twitter').Strategy;
@@ -1112,7 +1112,7 @@ passport.use(new InstagramStrategy({
 
 Your *app.js* file should now look like this:
 
-```javascript
+``` javascript
 // dependencies
 var fs = require('fs');
 var express = require('express');
@@ -1245,13 +1245,13 @@ Continue to break apart *app.js* - i.e., moving your routes to a new file. Once 
 
 #### Install Mocha:
 
-```sh
+``` sh
 $ npm install mocha@2.3.4 chai@3.4.1 should@7.1 --save
 ```
 
 Update the `scripts` in *package.json*
 
-```json
+``` json
 "scripts": {
   "start": "node app.js",
   "test": "make test"
@@ -1271,7 +1271,7 @@ Create a new folder called "test", and then tun `make test` from the command lin
 
 Create a new file called *test.user.js* with the following code and save the file in "test":
 
-```javascript
+``` javascript
 var should = require('should');
 var mongoose = require('mongoose');
 var User = require('../user.js');

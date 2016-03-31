@@ -13,7 +13,7 @@ Let's look at two ways to handle this: Manually and with [South](http://south.ae
 
 In this case, the application name is called `customers`, and it contains the following tables within *models.py*:
 
-```python
+``` python
 class Student(models.Model):
     name = models.CharField(max_length=30)
     courses = models.ManyToManyField('Course')
@@ -36,7 +36,7 @@ Let's say we want to drop the Course table (for reasons unknown).
 
 1. Navigate to your project working directory and drop the table:
 
-```python
+``` python
 $ python manage.py sqlclear customers > drop_customers_customerprofile
 ```
 
@@ -44,7 +44,7 @@ $ python manage.py sqlclear customers > drop_customers_customerprofile
 
 3. Drop the database tables:
 
-```python
+``` python
 $ sqlite3 test.db
 sqlite> DROP TABLE customers_customerprofile;
 ```
@@ -53,7 +53,7 @@ sqlite> DROP TABLE customers_customerprofile;
 
 4. Clean up the related contenttypes from the Shell:
 
-```python
+``` python
 $ python manage.py shell
 >>> from django.contrib.contenttypes.models import ContentType
 >>> ContentType.objects.filter(app_label='customers').delete()
@@ -67,7 +67,7 @@ I use South with all my Django projects, so I tend to prefer this method. Let's 
 
 1. Setup the initial migration and push it through:
 
-```python
+``` python
 $ python manage.py schemamigration customers --initial
 $ python manage.py migrate customers
 ```
@@ -76,13 +76,13 @@ $ python manage.py migrate customers
 
 3. Setup the migration to delete the table:
 
-```sh
+``` sh
 $ python manage.py schemamigration customers --auto
 ```
 
 4. Update the migration file *0002_auto__del_customerprofile.py*, to clean up the related contenttypes as well as delete the table from the database, by updating the `forwards` function:
 
-```python
+``` python
 def forwards(self, orm):
    # Deleting model 'CustomerProfile'
    db.delete_table(u'customers_customerprofile')
@@ -92,13 +92,13 @@ def forwards(self, orm):
 
 5. Push the migration through:
 
-```sh
+``` sh
 $ python manage.py migrate customers
 ```
 
 6. Fake a zero migration to remove the migration history and clear up the South tables:
 
-```sh
+``` sh
 $ python manage.py migrate customers zero --fake
 ```
 

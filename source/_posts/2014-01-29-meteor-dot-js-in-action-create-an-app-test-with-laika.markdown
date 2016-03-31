@@ -42,7 +42,7 @@ With that, let's start building …
 ## Setup a Project
 
 #### 1. Install Meteor and the Meteor Package Manager, [Meteorite](https://github.com/oortcloud/meteorite):
-```sh
+``` sh
 $ curl https://install.meteor.com/ | sh
 $ meteor update
 $ npm install -g meteorite
@@ -52,13 +52,13 @@ $ npm install -g meteorite
 
 #### 2. Create a Meteor project:
 
-```sh
+``` sh
 $ meteor create mymeteor
 ```
 
 Look! It tells you exactly what to do:
 
-```sh
+``` sh
 To run your new app:
    cd mymeteor
    meteor
@@ -66,7 +66,7 @@ To run your new app:
 
 Go ahead and run it:
 
-```sh
+``` sh
 $ cd mymeteor
 $ meteor
 [[[[[ ~/Desktop/mymeteor ]]]]]
@@ -81,7 +81,7 @@ We just initialized the Meteor server. Navigate to [http://localhost:3000/]
 
 If port 3000 is unavailable, you can use `–port` as an option:
 
-```sh
+``` sh
 $ meteor --port 1337
 ```
 
@@ -91,7 +91,7 @@ Leave the app running. The browser will automatically update as you save changes
 
 Look at your basic project structure:
 
-```sh
+``` sh
 .
 ├── mymeteor.css
 ├── mymeteor.html
@@ -99,7 +99,7 @@ Look at your basic project structure:
 ```
 
 Your JS file contains both client and server code:
-  ```javascript
+  ``` javascript
   // client!
   if (Meteor.isClient) {
     Template.hello.greeting = function () {
@@ -146,7 +146,7 @@ Before we start adding this functionality, let's first restructure the project.
 
 #### 1. Add Packages (err Smart Packages!)
 
-```sh
+``` sh
 $ mrt add accounts-ui
 accounts-ui: Simple templates to add login widgets to an app
 $ mrt add accounts-twitter
@@ -167,7 +167,7 @@ Add two new folders - "client" and "server". Essentially, if Meteor detects a cl
 
 Within the client folder, create a file called "mainClient.js" and add the following code:
 
-```javascript
+``` javascript
 if (Meteor.isClient) {
   Template.hello.greeting = function () {
     return "Welcome to mymeteor.";
@@ -185,7 +185,7 @@ if (Meteor.isClient) {
 
 Then within the server folder, and a file called "mainServer.js" and add the following code:
 
-```javascript
+``` javascript
 if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
@@ -197,7 +197,7 @@ Delete the "mymeteor.js" file. If you look at your browser, everything should lo
 
 Your project structure should now look like this:
 
-```sh
+``` sh
 .
 ├── client
 │   └── mainClient.js
@@ -214,7 +214,7 @@ Your project structure should now look like this:
 
 Update "mymeteor.html":
 
-```html
+``` html
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -253,7 +253,7 @@ Before installing Laika, make sure you have [Node.js](http://nodejs.org/), [Phan
 
 Install Laika:
 
-```sh
+``` sh
 $ sudo npm install -g laika
 ```
 All of our tests will reside in the "index.js" file within the "tests" folder.
@@ -266,7 +266,7 @@ Now let's start building.
 
 #### 1. Client JS
 
-```javascript
+``` javascript
 Answers = new Meteor.Collection("answers");
 
 Template.addAnswer.events({
@@ -286,7 +286,7 @@ First, we have a click event, which grabs the value from the input box. This val
 
 #### 1. Server JS
 
-```javascript
+``` javascript
 Answers = new Meteor.Collection("answers");
 
 Meteor.methods({
@@ -310,7 +310,7 @@ Notice how we established the Mongo collection on both the client and server.
 
 #### 3. HTML
 
-```html
+``` html
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -351,7 +351,7 @@ Next, arrange your screen so that you can view both your terminal as well as you
 
 Then, just like in the screenshot above, add an answer. On the client side, you should see the MongoDB ID - i.e., `Added answer with ID: ECrTqRQha7vpXu78q`, which should match the ID on the server side:
 
-```sh
+``` sh
 I20140114-07:38:27.061(-7)? Adding Answer ...
 I20140114-07:38:27.340(-7)? ECrTqRQha7vpXu78q
 ```
@@ -360,7 +360,7 @@ I20140114-07:38:27.340(-7)? ECrTqRQha7vpXu78q
 
 Open up your browser's console. Let's add an answer:
 
-```sh
+``` sh
 > Answers.insert({answerText: 'Client Side Console Test!'});
 "3D9nQYn87gXQX66ha"
 ```
@@ -370,7 +370,7 @@ You should see the answer appear on the page instantly!!
 
 Now, add a Laika test by adding the following code to "index.js":
 
-```javascript
+``` javascript
 'use strict'
 
 var assert = require('assert');
@@ -423,7 +423,7 @@ You may have noticed that Laika runs a bit slow. Well, that's normal - because L
 
 If all goes well, you should see this:
 
-```sh
+``` sh
 $ laika
 
   injecting laika...
@@ -453,14 +453,14 @@ Congrats! You just wrote your first test!
 
 Add the following template to pull out the data from the collection and sort in descending order.
 
-```javascript
+``` javascript
 return Answers.find({},{sort:{'submittedOn':-1}});
 ```
 #### 2. HTML
 
 Add the templates to the HTML file:
 
-```html
+``` html
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -518,7 +518,7 @@ Go ahead and add new answers. They should immediately appear.
 
 As far as automated testing goes, we are already testing this with this code:
 
-```javascript
+``` javascript
 client.once('collection', function(collection) {
   assert.equal(Answers.find().fetch().length, 1);
   done();
@@ -540,7 +540,7 @@ Let's add some voting capabilities. Think about what we need to add for this.
 
 Add the following code:
 
-```javascript
+``` javascript
 incrementYesVotes : function(answerID){
   console.log(answerID);
   Answers.update(answerID,{$inc : {'yes':1}});
@@ -557,7 +557,7 @@ This utilizes Meteor's collection update to increment the counter.
 
 Add the event handler:
 
-```javascript
+``` javascript
 Template.answer.events({
   'click': function () {
     Session.set("selected_answer", this._id);
@@ -581,7 +581,7 @@ Template.answer.events({
 
 Update the `answer` template:
 
-```html
+``` html
 <template name="answer">
   <div>
     <p class="lead">
@@ -608,7 +608,7 @@ Test it out:
 
 Add the following code to "index.js":
 
-```javascript
+``` javascript
 suite('addVotes', function() {
 
   // ensure that -
@@ -636,7 +636,7 @@ Similar to the last test, we are just testing that the collection exists and tha
 
 ##### Run the test
 
-```sh
+``` sh
 $ laika
 
   injecting laika...
@@ -672,7 +672,7 @@ Remember when we added these two packages-
 
 #### 1. Update HTML
 
-```html
+``` html
 <body>
   <div class="container">
     <h1>Add an answer. Or vote.</h1>
@@ -717,7 +717,7 @@ Finally, let's add some restrictions so that a user must be logged in before add
 
 #### 1. Client JS
 
-```javascript
+``` javascript
 Template.answer.events({
   'click': function () {
     Session.set("selected_answer", this._id);
@@ -743,7 +743,7 @@ Template.answer.events({
 
 #### 2. Server JS
 
-```javascript
+``` javascript
 var answerId = Answers.insert({
   'answerText' : answerText,
   'submittedOn': new Date(),
@@ -753,7 +753,7 @@ var answerId = Answers.insert({
 
 #### 3. HTML
 
-```html
+``` html
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -833,7 +833,7 @@ Now, before logging in to test. Let's dump the answers collection so that each r
 
 Follow these commands to dump the collection:
 
-```sh
+``` sh
 $ meteor mongo
 MongoDB shell version: 2.4.8
 connecting to: 127.0.0.1:3002/meteor
@@ -855,7 +855,7 @@ Back on your browser, go ahead and log back in. Add an answer.
 
 Finally, jump back to the mongo shell:
 
-```sh
+``` sh
 meteor:PRIMARY> show collections;
 answers
 meteor_accounts_loginServiceConfiguration
@@ -876,7 +876,7 @@ All Meteor applications have a package called Insecure pre-installed. This handy
 
 To remove, just run:
 
-```sh
+``` sh
 $ meteor remove insecure
 ```
 
@@ -884,7 +884,7 @@ $ meteor remove insecure
 
 Manually test this on your end. With the Meteor server running and your browser open, try to insert an answer in the console. Make sure that the user is logged in.
 
-```sh
+``` sh
 > Answers.insert({answerText: 'Client Console Test!'})
 "oeYhZMmXyBjivJ5uM"
 insert failed: Access denied
@@ -893,7 +893,7 @@ You should the see above insertion error. Also, you know that it's not working i
 
 Finally, you can look in Mongo, just to be sure. Open a new window in your terminal, navigate to your "mymeteor" directory, then type the following commands:
 
-```sh
+``` sh
 $ meteor mongo
 MongoDB shell version: 2.4.8
 connecting to: 127.0.0.1:3002/meteor
@@ -912,7 +912,7 @@ users
 
 Now search the collection:
 
-```sh
+``` sh
 meteor:PRIMARY> db.answers.find({answerText: 'Client Console Test!'})
 meteor:PRIMARY>
 ```
@@ -927,7 +927,7 @@ Although there are a number of deployment options, pushing your new app to the M
 
 So -
 
-```sh
+``` sh
 meteor deploy answers
 ```
 

@@ -32,7 +32,7 @@ Start by creating the following files and directories, to define a basic project
 
 > **What program are you using to make these files in?** I will be using [Sublime Text](http://www.sublimetext.com/) for this tutorial, which is an advanced text editor for Windows, Mac, and Linux. If you are looking for something simpler, check out [gedit](https://wiki.gnome.org/Apps/Gedit) - which is also cross-platform. Both of these editors have syntax highlighting. Put simply, syntax highlighting helps distinguish between different parts of a languages syntax (rules), by highlighting common parts the same color. This makes code easier to read and debug.
 
-```
+``` sh
 ├── css
 │   └── main.css
 ├── index.html
@@ -42,7 +42,7 @@ Start by creating the following files and directories, to define a basic project
 
 #### index.html
 
-```html
+{% codeblock lang:html %}
 <!DOCTYPE html>
 <html>
   <head>
@@ -59,17 +59,17 @@ Start by creating the following files and directories, to define a basic project
     <script src="js/main.js"></script>
   </body>
 </html>
-```
+{% endcodeblock %}
 
 #### main.css
 
-```css
+``` css
 /* main.css */
 ```
 
 #### main.js
 
-```javascript
+``` javascript
 $(function() {
   console.log("whee!")
 });
@@ -85,11 +85,11 @@ Go back and look at "index.html" in your text editor. You're looking at HTML. Pu
 
 So, while we're on the topic of HTML, there are a number of different parts and rules. If I attempted to explain them all, this tutorial would last for days. Fortunately, for this tutorial, you really only need to understand tags, elements, and selectors.
 
-```html
+{% codeblock lang:html %}
 <div class="container">
   <h1>Hello, World!</h1>
 </div>
-```
+{% endcodeblock %}
 
 1. Tags form the structure of your page. There usually is an opening tag and then a closing tag, like - `<div></div>`.
 2. Elements represent the tags as well as *whatever* falls within the tags, like - `<h1>Hello, World!</h1>`
@@ -113,7 +113,7 @@ For Mad Libs we need to display a form for the user to enter words. Let's start 
 
 Add the following code to your "index.html" file right after `<h1>Hello, World!</h1>`:
 
-```html
+{% codeblock lang:html %}
 <!-- start form -->
 <form id="my-form" role="form">
   <input id="my-input" class="form-control" type="text" placeholder="Enter something ..">
@@ -121,12 +121,11 @@ Add the following code to your "index.html" file right after `<h1>Hello, World!<
   <button type="submit" class="btn btn-primary btn-md">My BIG Button</button>
 </form>
 <!-- end form -->
-```
+{% endcodeblock %}
 
 Updated file:
 
-
-```html
+{% codeblock lang:html %}
 <!DOCTYPE html>
 <html>
   <head>
@@ -150,7 +149,7 @@ Updated file:
     <script src="js/main.js"></script>
   </body>
 </html>
-```
+{% endcodeblock %}
 
 ### What's going on?
 
@@ -160,7 +159,7 @@ Let's add some custom styles within our local CSS file, "main.css":
 
 #### main.css
 
-```css
+``` css
 /* main.css */
 
 .container {
@@ -189,7 +188,7 @@ Please note that jQuery is JavaScript. Well, it's actually a set of libraries de
 
 Update "main.js"
 
-```javascript
+``` javascript
 $(function() {
 
   console.log("whee!")
@@ -207,15 +206,15 @@ Add an id (`id="btn-click"`) to "index.html" within the `<button>` tags:
 
 Before:
 
-```html
+{% codeblock lang:html %}
 <button type="submit" class="btn btn-primary btn-md">My BIG Button</button>
-```
+{% endcodeblock %}
 
 After:
 
-```html
+{% codeblock lang:html %}
 <button type="submit" id="btn-click" class="btn btn-primary btn-md">My BIG Button</button>
-```
+{% endcodeblock %}
 
 ### What's going on?
 
@@ -240,13 +239,13 @@ In this case, we want to add the text to the DOM.
 
 Open up your JavaScript file and add this line of code:
 
-```javascript
+``` javascript
 $(".results").empty().append(input);
 ```
 
 Updated file:
 
-```javascript
+``` javascript
 $(function() {
 
   console.log("whee!")
@@ -268,12 +267,12 @@ $(function() {
 
 Add the following lines just below the form:
 
-```html
+{% codeblock lang:html %}
 <br>
 <br>
 <!-- inputted text after button click -->
 <p class="results"></p>
-```
+{% endcodeblock %}
 
 ### What's going on?
 
@@ -289,13 +288,13 @@ Before moving on, we need to make one last update to "main.js". Did you notice h
 
 Before:
 
-```javascript
+``` javascript
 $(".results").append(input);
 ```
 
 After:
 
-```javascript
+``` javascript
 $(".results").empty().append(input);
 ```
 
@@ -309,7 +308,7 @@ First, expand the form:
 
 #### index.html
 
-```html
+{% codeblock lang:html %}
 <!-- start form -->
 <div id="questions">
   <h1>Please fill out the following!</h1>
@@ -346,7 +345,7 @@ First, expand the form:
   <hr>
 </div>
 <!-- end form -->
-```
+{% endcodeblock %}
 
 ### What's going on?
 
@@ -362,16 +361,16 @@ Check out the file in the browser:
 
 Next, remove this code-
 
-```html
+{% codeblock lang:html %}
 <br>
 <br>
 <!-- inputted text after button click -->
 <p class="results"></p>
-```
+{% endcodeblock %}
 
 -and in it's place add the story:
 
-```html
+{% codeblock lang:html %}
 <!-- start story -->
 <div id="story">
   <h1>Mad with the Libs</h1>
@@ -379,11 +378,11 @@ Next, remove this code-
   <h3>I'm in love with <span class="person"></span>. He's so <span class="adjective"></span>! He has big flat <span class="noun"></span>, and when our <span class="insect"></span> meet, I get <span class="noun2"></span> in my stomach. I've fallen for him like a ton of <span class="verb"></span>, and he shuffles for me, too. But I think he's got another girlfriend. What should I do?</h3>
 </div>
 <!-- end story -->
-```
+{% endcodeblock %}
 
 Updated file:
 
-```html
+{% codeblock lang:html %}
 <!DOCTYPE html>
 <html>
   <head>
@@ -447,7 +446,7 @@ Updated file:
     <script src="js/main.js"></script>
   </body>
 </html>
-```
+{% endcodeblock %}
 
 ### What's going on?
 
@@ -461,7 +460,7 @@ Now we need to expand our JavaScript file so that upon the event (button click),
 
 #### main.js
 
-```javascript
+``` javascript
 $(function() {
   console.log("whee!")
 
@@ -501,7 +500,7 @@ Now, before we move on, let's add some more functionality:
 
 Update main.js with those additional methods:
 
-```javascript
+``` javascript
 $(function() {
 
   // hide the story from view
@@ -544,7 +543,7 @@ Okay. Everything looks good. But what happens if the user wants to play again? S
 
 #### main.js
 
-```javascript
+``` javascript
 $("#play-btn").click(function(e) {
   $("#questions").show();
   $("#story").hide();
@@ -557,11 +556,11 @@ Can you tell what's happening here? Look at previous jQuery code that we added b
 
 Finally, add in a button with the an id of `play-btn` right before the closing div, `</div>` in the story section:
 
-```html
+{% codeblock lang:html %}
 <div>
   <button type="submit" class="btn btn-primary btn-lg" id="play-btn">Play Again?</button>
 </div>
-```
+{% endcodeblock %}
 
 ![story2](https://raw.github.com/mjhea0/jquery-madlibs/master/images/story2.png)
 

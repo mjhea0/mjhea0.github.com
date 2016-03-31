@@ -29,7 +29,7 @@ We are all (err, I am) guilty of this. Let's look at a very simple app ...
 #### HTML:
 
 {% raw %}
-```html
+``` html
 <!doctype html>
 <html lang="en" ng-app='myApp'>
 <head>
@@ -59,7 +59,7 @@ We are all (err, I am) guilty of this. Let's look at a very simple app ...
 
 #### Javascript:
 
-```javascript
+``` javascript
 var app = angular.module('myApp', [])
 
 app.controller('myController', function($scope) {
@@ -84,7 +84,7 @@ To do this, we are will use a service type called a factory, which is the most c
 
 Within the same JS file add the following code beneath the controller:
 
-```javascript
+``` javascript
 // Service
 app.factory('calculateService', function(){
   return {
@@ -101,7 +101,7 @@ So, we have simply abstracted the logic of taking the user inputted number and m
 
 Now update the controller:
 
-```javascript
+``` javascript
 app.controller('myController', function($scope, calculateService) {
   $scope.quantity = 100;
    $scope.calculate = function(number) {
@@ -124,7 +124,7 @@ Want some practice? Create separate services for each piece of functionality in 
 
 If you need help, start by creating a service that handles the actual API calls. Perhaps use a service name of `getData` then set up functions for the different HTTP requests - i.e., `readData()` for a GET request and `writeData()` for a POST. Then when you use dependency injection to add this service to your controller, you can simply use the following syntax for accessing the `readData()` function in the controller:
 
-```javascript
+``` javascript
 getData.readData(some_argument)
 ```
 

@@ -37,7 +37,7 @@ First, we can pass variables from our route handlers/view functions directly to 
 Update the *index.html* file:
 
 {% raw %}
-```html
+``` html
 <!DOCTYPE html>
 <html>
 <head>
@@ -52,7 +52,7 @@ Update the *index.html* file:
 
 Now, we can pass in a variable called `title` to the template from *app.js*:
 
-```javascript
+``` javascript
 // *** main routes *** //
 app.get('/', function(req, res) {
   res.render('index.html', {title: 'Swig Primer!'});
@@ -64,7 +64,7 @@ Fire up the server and test this out. Nice. **Try adding another variable to the
 *index.html*:
 
 {% raw %}
-```html
+``` html
 <!DOCTYPE html>
 <html>
 <head>
@@ -80,7 +80,7 @@ Fire up the server and test this out. Nice. **Try adding another variable to the
 
 *app.js*:
 
-```javascript
+``` javascript
 app.get('/', function(req, res) {
   var title = 'Swig Primer!'
   var description = 'Swig is "a simple, powerful, and extendable JavaScript Template Engine" for NodeJS.'
@@ -90,7 +90,7 @@ app.get('/', function(req, res) {
 
 Keep in mind that all variable outputs are [automtomatically escaped](http://paularmstrong.github.io/swig/docs/api/#SwigOpts) except for function outputs:
 
-```javascript
+``` javascript
 // *** main routes *** //
 app.get('/', function(req, res) {
   var title = 'Swig Primer!'
@@ -114,7 +114,7 @@ Don't forget to call the function in the template - `<p>{{allthethings()}}</p>`
 
 Filters, which are just simple methods, can be used to modify the output value. To illustrate some examples, add another route handler to *app.js*, like so:
 
-```javascript
+``` javascript
 app.get('/filter', function(req, res) {
   res.render('filter.html', {
     title: 'Hello, World!',
@@ -127,7 +127,7 @@ app.get('/filter', function(req, res) {
 Now just add a new template, *filter.html*, adding in a number of filters:
 
 {% raw %}
-```html
+``` html
 <!DOCTYPE html>
 <html>
 <head>
@@ -154,7 +154,7 @@ Here's a simple example...
 
 *app.js*:
 
-```javascript
+``` javascript
 app.get('/logic', function(req, res) {
   var title = 'Swig Logic!'
   res.render('logic.html', {title: title});
@@ -163,7 +163,7 @@ app.get('/logic', function(req, res) {
 
 *logic.html*:
 
-```html
+``` html
 {% raw %}
 <!DOCTYPE html>
 <html>
@@ -187,7 +187,7 @@ app.get('/logic', function(req, res) {
 
 *app.js*:
 
-```javascript
+``` javascript
 app.get('/logic', function(req, res) {
   var title = 'Swig Logic!'
   var numberArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -198,7 +198,7 @@ app.get('/logic', function(req, res) {
 *logic.html*:
 
 {% raw %}
-```html
+``` html
 <!DOCTYPE html>
 <html>
 <head>
@@ -223,7 +223,7 @@ app.get('/logic', function(req, res) {
 Simply add a filter:
 
 {% raw %}
-```html
+``` html
 <!DOCTYPE html>
 <html>
 <head>
@@ -246,7 +246,7 @@ Simply add a filter:
 **What would a basic loop and filter look like?**
 
 {% raw %}
-```html
+``` html
 <!DOCTYPE html>
 <html>
 <head>
@@ -283,7 +283,7 @@ There's also a number of [helper methods](http://paularmstrong.github.io/swig/do
 Try some of these out:
 
 {% raw %}
-```html
+``` html
 {% for num in numberArray | reverse %}
   {% if num % 2 === 0 %}
     <li>{{ num }} - {{loop.index}}</li>
@@ -299,7 +299,7 @@ Logic tags can also be used to extend common code from a base template to child 
 Create a new HTML file called *layout.html*:
 
 {% raw %}
-```html
+``` html
 <!DOCTYPE html>
 <html>
 <head>
@@ -317,7 +317,7 @@ Did you notice the {% raw %}`{% block content %}{% endblock %}`{% endraw %} tags
 Add another new file called *test.html*:
 
 {% raw %}
-```html
+``` html
 {% extends "layout.html" %}
 {% block content %}
   <h3> This is the start of a child template</h3>
@@ -328,7 +328,7 @@ Add another new file called *test.html*:
 Finally, add a route handler to *app.js*:
 
 {% raw %}
-```html
+``` html
 {% extends "layout.html" %}
 {% block content %}
   <h1>This is the start of a child template</h1>

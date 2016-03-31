@@ -25,7 +25,7 @@ We'll start with the server-side. Essentially, we need to modify the returned JS
 
 Our second route, `/searching`, currently looks like this:
 
-```javascript
+``` javascript
 // second route
 app.get('/searching', function(req, res){
 
@@ -62,26 +62,26 @@ app.get('/searching', function(req, res){
 
 Right now we're just sending back a single link to a single result from the returned JSON:
 
-```javascript
+``` javascript
 results = body.query.results.RDF.item[0]['about']
 craig = '<a href ="'+results+'">'+results+'</a>'
 ```
 
 Let's expand this out so that it returns the title, url, and description. It's also much easier to loop through an array than an object in Handlebars, so let's return an array of objects -
 
-```javascript
+``` javascript
 [{title: <title>, link:<link>, description:<description>}, . . .]
 ```
 
 **How do we do that?** Based on the returned JSON data we know that the data needed is found in the `items` key. Add the following `console.log` to the `else` block:
 
-```javascript
+``` javascript
 console.log(body.query.results.RDF.item[0])
 ```
 
 Fire up your server. Navigate to [http://localhost:3000/](http://localhost:3000/). Run a search on "Ruby". Then check the output in the terminal. You should see something similar to this:
 
-```javascript
+``` javascript
 { about: 'http://sfbay.craigslist.org/pen/sad/4151410088.html',
   title:
    [ 'Sr. System Administrator (mountain view)',
@@ -98,7 +98,7 @@ Fire up your server. Navigate to [http://localhost:3000/](http://localhost:3000/
 
 Thus, each object will look like this:
 
-```javascript
+``` javascript
 {title:results.title[0], about:results["link"], desc:results["description"]}
 ```
 
@@ -106,7 +106,7 @@ Thus, each object will look like this:
 
 Next, update the loop with the following code:
 
-```javascript
+``` javascript
 if (!body.query.results.RDF.item) {
   results = "No results found. Try again.";
 } else {
@@ -126,7 +126,7 @@ To test out this code, `console.log` the array outside of the loop. Run another 
 
 Which is the exact data structure that we need. Make sure that your `request` method looks like this:
 
-```javascript
+``` javascript
 request(url, function(err, resp, body) {
   resultsArray = [];
   body = JSON.parse(body);
@@ -151,7 +151,7 @@ So, if no results are found from the search, we're sending `results` back to the
 
 Finally, let's refactor the code to seperate out concerns:
 
-```javascript
+``` javascript
 // second route
 app.get('/searching', function(req, res){
   // input value from search
@@ -194,7 +194,7 @@ function requests(url, callback) {
 
 Back on the client side, add the following `if` statement:
 
-```javascript
+``` javascript
 $.get('/searching', parameters, function(data){
   if (data instanceof Array) {
     $results.html(dataTemplate({resultsArray:data}));
@@ -214,7 +214,7 @@ Finally, when results are returned, we want to pass `data`, which is the `result
 
 First, update the `index.jade` file to include the Handlebars template, `template.html`:
 
-```javascript
+``` javascript
 extends layout
 
 block content
@@ -231,7 +231,7 @@ block content
 Next, add `template.html` to the "views" folder, and then add the following code:
 
 
-```javascript
+``` javascript
 <script id="search-results" type="text/x-handlebars-template">
   {{#each resultsArray}}
     <li><a href={{about}}>{{title}}</a><br>{{desc}}></li>

@@ -25,19 +25,19 @@ Let's get to it.
 
 ### 1. Setup basic project structure with Express
 
-```sh
+``` sh
 $ express twit-decision
 ```
 
 ### 2. Install dependencies for Node, Express, and Jade:
 
-```sh
+``` sh
 $ cd twit-decision && npm install
 ```
 
 ### 3. Your project structure should now look like this:
 
-```sh
+``` sh
 .
 ├── app.js
 ├── package.json
@@ -61,7 +61,7 @@ $ cd twit-decision && npm install
 
 ### 4. Run the server
 
-```sh
+``` sh
 $ node app
 ```
 
@@ -73,14 +73,14 @@ We'll start with the server side. Our server code will be responsible for servin
 
 ### 1. Install dependences
 
-```sh
+``` sh
 $ npm install twit --save
 $ npm install Sentimental --save
 ```
 
 ### 2. Updated *app.js* code
 
-```javascript
+``` javascript
 // module dependencies
 var express = require('express'),
   routes = require('./routes'),
@@ -124,7 +124,7 @@ Let's setup our routes next.
 
 ### 3. Routes
 
-```javascript
+``` javascript
 var path = require("path");
 
 exports.index = function(req, res){
@@ -144,7 +144,7 @@ Test it out. Navigate to [http://localhost:3000/ping](http://localhost:3000/ping
 
 Update *index.jade*
 
-```html
+``` html
 doctype html
 html
   head
@@ -189,7 +189,7 @@ Let's quickly jump to the client side.
 
 Add these custom styles to the *main.css* style within the "stylesheets" folder:
 
-```css
+``` css
 .container {
   max-width: 1000px;
   padding-top: 50px;
@@ -225,7 +225,7 @@ If you're curious, see how these CSS styles (values and properties) align up to 
 
 ### 2. Client Side Javascript
 
-```javascript
+``` javascript
 $(function () {
 
   // highest # of choices (inputs) allowed
@@ -330,7 +330,7 @@ So, we need to set up a new route, '/search', on the server side to handle the d
 
 First, add the route to *app.js*:
 
-```javascript
+``` javascript
 app.post('/search', routes.search)
 ```
 
@@ -338,7 +338,7 @@ app.post('/search', routes.search)
 
 Then add the following code to *index.js* in the "routes" folder:
 
-```javascript
+``` javascript
 exports.search = function(req, res) {
   // grab the request from the client
   var choices = JSON.parse(req.body.choices);
@@ -399,7 +399,7 @@ Points of note:
 
 Open the *config_example.js* file. Save the file as *config.js*, then add your own [Twitter](http://dev.twitter.com) keys. Add this as a dependency along with Twit and Sentimental to your *index.js* file:
 
-```javascript
+``` javascript
 var twit = require('twit');
 var sentimental = require('Sentimental');
 var config = require("./config")
@@ -409,7 +409,7 @@ var config = require("./config")
 
 Remember this line from your routes file, *index.js*:
 
-```javascript
+``` javascript
 score = performAnalysis(data['statuses']);
 ```
 
@@ -417,7 +417,7 @@ Well, we pass the pulled tweets as arguments into the `performAnalysis()` functi
 performAnalysis
 Let's add that function:
 
-```javascript
+``` javascript
 function performAnalysis(tweetSet) {
   //set a results variable
   var results = 0;
@@ -464,7 +464,7 @@ Boom. That's it!
 
 Your project structure should now look like:
 
-```sh
+``` sh
 .
 ├── app.js
 ├── config.js

@@ -37,7 +37,7 @@ In this post I'll demonstrate how to add user authentication to Node.js with Pas
 
 #### Download the starter template
 
-```sh
+``` sh
 $ git clone https://github.com/mjhea0/node-bootstrap3-template.git passport-local
 $ cd passport-local
 $ npm install
@@ -45,7 +45,7 @@ $ npm install
 
 #### Install MongoDB Globally
 
-```sh
+``` sh
 $ npm install -g mongodb
 ```
 
@@ -53,14 +53,14 @@ $ npm install -g mongodb
 
 In a new terminal window, start the MongoDB daemon:
 
-```sh
+``` sh
 $ sudo mongod
 ```
 #### Test locally
 
 Return to your other terminal window and run:
 
-```sh
+``` sh
 $ node app
 ```
 
@@ -68,7 +68,7 @@ Navigate to [http://localhost:1337/](http://localhost:1337/)
 
 #### Install additional dependencies:
 
-```sh
+``` sh
 $ npm install passport --save
 $ npm install passport-local --save
 $ npm install jade --save
@@ -81,7 +81,7 @@ $ npm install passport-local-mongoose --save
 
 #### Make sure your requirements look like this:
 
-```javascript
+``` javascript
 var path = require('path');
 var express = require('express');
 var http = require('http');
@@ -92,7 +92,7 @@ var LocalStrategy = require('passport-local').Strategy;
 
 #### Update the rest of “app.js” with the following code (check the comments for a brief explanation):
 
-```javascript
+``` javascript
 // main config
 var app = express();
 app.set('port', process.env.PORT || 1337);
@@ -140,7 +140,7 @@ Let's get the database going ...
 
 #### Add a new file called "account.js" to a new directory called "models" with the following code:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema,
     passportLocalMongoose = require('passport-local-mongoose');
@@ -161,7 +161,7 @@ You may be wondering about password security, specifically salting/hashing the p
 
 #### Add a new file called "routes.js" to the root directory with the following code:
 
-```javascript
+``` javascript
 var passport = require('passport');
 var Account = require('./models/account');
 
@@ -215,7 +215,7 @@ Fire up the server. Make sure you do not get any errors. You should PUSH to git 
 
 #### Add the following urls/logic:
 
-```jade
+``` jade
 if (!user)
   a(href="/login") Login
   br
@@ -229,7 +229,7 @@ if (user)
 
 #### Add a new file called "login.jade" to the "views" folder with the following code:
 
-```jade
+``` jade
 doctype html
 html
   head
@@ -258,7 +258,7 @@ html
 
 #### Add a new file called "register.jade" to the "views" folder with the following code:
 
-```javascript
+``` javascript
 doctype html
 html
   head
@@ -295,7 +295,7 @@ When I tested the user registration, I used "Michael" for both my username and p
 
 Let's see what this looks like in the database:
 
-```sh
+``` sh
 $ mongo
 MongoDB shell version: 2.4.6
 connecting to: test
@@ -317,7 +317,7 @@ So, you can see that we have a document with five keys:
 
 #### Install Mocha:
 
-```sh
+``` sh
 $ npm install mocha --save
 $ npm install chai --save
 $ npm install should --save
@@ -325,7 +325,7 @@ $ npm install should --save
 
 #### Update the `scripts` in "package.json"
 
-```json
+``` json
 "scripts": {
 "start": "node app.js",
 "test": "make test"
@@ -349,7 +349,7 @@ test:
 
 #### Create a new file called "test.user.js" with the following code and save the file in "test":
 
-```javascript
+``` javascript
 var should = require("should");
 var mongoose = require('mongoose');
 var Account = require("../models/account.js");
@@ -406,7 +406,7 @@ Right now we have some poorly handled errors that are confusing for the end user
 
 First, update the `/register` route so an error is thrown, which gets sent to jade template, if a user tries to register a username that already exists:
 
-```javascript
+``` javascript
 app.post('/register', function(req, res) {
     Account.register(new Account({ username : req.body.username }), req.body.password, function(err, account) {
         if (err) {
@@ -422,7 +422,7 @@ app.post('/register', function(req, res) {
 
 Then add the following code to the bottom of the "register.jade" template:
 
-```jade
+``` jade
 br
 h4= info
 ```

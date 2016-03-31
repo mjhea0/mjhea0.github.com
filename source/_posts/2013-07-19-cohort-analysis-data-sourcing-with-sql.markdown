@@ -25,20 +25,20 @@ If you'd like to follow along, follow these steps to create the table and load t
 
 1. Access MySQL via the Shell (or your preferred method):
 
-```sh
+``` sh
 $ mysql -u root -p
 ```
 
 2. Create a new database, and then select it for use:
 
-```sh
+``` sh
 mysql> CREATE DATABASE cohortanalysis;
     mysql> USE cohortanalysis;
 ```
 
 3. Use the following commands to create the tables users and events:
 
-```sh
+``` sh
 mysql> CREATE TABLE users (id INT(11) PRIMARY KEY NOT NULL, name VARCHAR(40) NOT NULL, date DATETIME NOT NULL);
 mysql> CREATE TABLE events (id INT(11) PRIMARY KEY NOT NULL, type VARCHAR(15), user_id INT(11) NOT NULL, date DATETIME NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id));
 mysql> exit;
@@ -48,7 +48,7 @@ mysql> exit;
 
 Download the database file [here](http://www.backwardsteps.com/cohort/dump.sql). Then using the command line, navigate to the file path where the *dump.sql* file was downloaded. Now, type the following command into your terminal:
 
-```sh
+``` sh
 $ mysql -u root -p cohortanalysis < dump.sql
 ```
 
@@ -62,7 +62,7 @@ In this example, we will use a database filled with sample data for a subscripti
 
 **Users:**
 
-```sh
+``` sh
 mysql> DESCRIBE users;
 +-------+-------------+------+-----+---------+-------+
 | Field | Type        | Null | Key | Default | Extra |
@@ -78,7 +78,7 @@ mysql> SELECT COUNT(*) FROM users;
 
 **Events:**
 
-```sh
+``` sh
 mysql> DESCRIBE events;
 +---------+-------------+------+-----+---------+-------+
 | Field   | Type        | Null | Key | Default | Extra |
@@ -103,7 +103,7 @@ I will be using a new Group Date function to create the cohorts. Follow the inst
 
 Group users into monthly cohorts, based on sign-up date, and add in the total users for each cohort:
 
-```sh
+``` sh
 SELECT GD_MONTH(date, 'Greenwich') AS cohort,
 	   COUNT(*)
 FROM users
@@ -125,7 +125,7 @@ GROUP BY cohort;
 
 Like the last query, split the events into cohorts:
 
-```sh
+``` sh
 SELECT GD_MONTH(date, 'Greenwich') AS cohort,
 	   COUNT(*)
 FROM events
@@ -151,7 +151,7 @@ Based on these tables, you can see the total engagement vs. the total users. Rig
 
 Now start looking at each individual cohort to see if you can see any outliers or large discrepancies. For simplicity, you can follow this syntax:
 
-```sh
+``` sh
 SELECT
 	<action_or_event_date(s)>
 FROM
@@ -164,7 +164,7 @@ GROUP BY <action_or_even_date(s)>;
 
 For example:
 
-```sh
+``` sh
 SELECT GD_MONTH(events.date, 'Greenwich') AS engagement_date,
        COUNT(events.id) AS events
 FROM users
@@ -190,7 +190,7 @@ Continue to add cohorts to learn more about how your users are engaging. See if 
 
 In this query, we look at the total percent of twitter shares divided by the total # of engagements:
 
-```sh
+``` sh
 SELECT
   (SELECT count(TYPE)
    FROM events
@@ -214,7 +214,7 @@ SELECT
 
 You can even zoom in on individual users:
 
-```sh
+``` sh
 SELECT events.id,
        events.type,
        events.date AS enagement_date
@@ -244,7 +244,7 @@ ORDER BY events.type;
 
 Finally, create a chart that shows all the cohorts and their subsequent monthly engagement % for easy comparison. Make sure to normalize the data in this chart (see the ROUND function).
 
-```sh
+``` sh
 SELECT results.months,
        results.cohort,
        results.actives AS active_users,

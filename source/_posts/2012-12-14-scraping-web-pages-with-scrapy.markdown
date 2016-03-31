@@ -24,13 +24,13 @@ Start by [downloading](http://scrapy.org/) and installing Scrapy (v0.16.5) and a
 
 Once installed, open your terminal and create a Scrapy project by navigating to the directory you'd like to store your project in and then running the following command:
 
-```python
+``` python
 $ scrapy startproject craigslist_sample
 ```
 
 **Item Class:** Open the *items.py* file within the "craigslist_sample" directory. Edit the file to define the fields that you want contained within the `Item`. Since we want the post title and subsequent URL, the `Item` class looks like this:
 
-```python
+``` python
 from scrapy.item import Item, Field
 
 class CraigslistSampleItem(Item):
@@ -46,7 +46,7 @@ class CraigslistSampleItem(Item):
 
 You also need to use the HtmlXpathSelector for working with Xpaths. Visit the Scrapy [tutorial](http://doc.scrapy.org/en/0.16/) for more information. The following is the code for the basic spider:
 
-```python
+``` python
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 from craigslist_sample.items import CraigslistSampleItem
@@ -72,13 +72,13 @@ Save this in the "spiders" directory as *test.py*.
 
 Now you are ready for a trial run of the scraper. So, while in the root directory of your Scrapy project, run the following command to output the scraped data to the screen:
 
-```sh
+``` sh
 $ scrapy crawl craig
 ```
 
 **Dicts:** The `Item` objects defined above are simply custom dicts. Use the standard dict syntax to return the extracted data inside the Item objects:
 
-```python
+``` python
 item = CraigslistSampleItem()
 item["title"] = titles.select("a/text()").extract()
 item["link"] = titles.select("a/@href").extract()
@@ -89,7 +89,7 @@ items.append(item)
 
 Once complete, the final code looks like this:
 
-```python
+``` python
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 from craigslist_sample.items import CraigslistSampleItem
@@ -115,7 +115,7 @@ class MySpider(BaseSpider):
 
 The scraped data can now be [stored](http://doc.scrapy.org/en/0.16/topics/feed-exports.html#topics-feed-exports) in these formats- JSON, CSV, and XML (among others). Run the following command to save the data in CSV:
 
-```sh
+``` sh
 $ scrapy crawl craig -o items.csv -t csv
 ```
 

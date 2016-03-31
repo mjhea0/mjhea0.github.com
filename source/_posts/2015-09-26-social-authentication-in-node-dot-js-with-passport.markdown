@@ -42,7 +42,7 @@ Start by downloading the project structure from the [Github repo](https://github
 
 You should have:
 
-```sh
+``` sh
 ├── client
 │   └── public
 │       ├── css
@@ -66,14 +66,14 @@ You should have:
 
 Install Passport as well as the specific [Passport Strategies](https://github.com/jaredhanson/passport#search-all-strategies):
 
-```sh
+``` sh
 $ npm install passport@0.3.0 --save
 $ npm install passport-github2@0.1.9 passport-linkedin@1.0.0 passport-twitter@1.0.3 --save
 ```
 
 Create an "auth" directory in the "server" and add the following files:
 
-```sh
+``` sh
 └── auth
   ├── github.js
   ├── linkedin.js
@@ -82,25 +82,25 @@ Create an "auth" directory in the "server" and add the following files:
 
 Add the Passport dependency to *app.js*:
 
-```javascript
+``` javascript
 var passport = require('passport');
 ```
 
 Install the [express session](https://github.com/expressjs/session) middleware:
 
-```sh
+``` sh
 $ npm install express-session@1.11.3 --save
 ```
 
 And add it as a dependency:
 
-```javascript
+``` javascript
 var session = require('express-session');
 ```
 
 Then add the required middleware:
 
-```javascript
+``` javascript
 app.use(session({
   secret: 'keyboard cat',
   resave: true,
@@ -114,7 +114,7 @@ app.use(passport.session());
 
 Add a *_config.js* file to the "server" and add the following:
 
-```javascript
+``` javascript
 var ids = {
   github: {
     clientID: 'get_your_own',
@@ -142,26 +142,26 @@ Make sure to add this file to your *.gitignore* since this will contain sensitiv
 
 Install [Mongoose](http://mongoosejs.com/):
 
-```sh
+``` sh
 $ npm install mongoose@4.1.8 --save
 ```
 
 Require the dependency in *app.js*:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 ```
 
 Then establish the connection to MongoDB within *app.js*:
 
-```javascript
+``` javascript
 // *** mongoose *** //
 mongoose.connect('mongodb://localhost/passport-social-auth');
 ```
 
 Add a Mongoose Schema to a new file called *user.js* in a new folder, within "server", called "models":
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
@@ -180,7 +180,7 @@ module.exports = mongoose.model('users', User);
 
 Passport needs to serialize and deserialize user instances from a session store to support login sessions. To add this funcionality, create an *init.js* file within the "auth" directory, and then add the following code:
 
-```javascript
+``` javascript
 var passport = require('passport');
 var User = require('../models/user');
 
@@ -204,7 +204,7 @@ module.exports = function() {
 
 Before we test, add the following route-
 
-```javascript
+``` javascript
 router.get('/login', function(req, res, next) {
   res.send('Go back and register!');
 });
@@ -213,7 +213,7 @@ router.get('/login', function(req, res, next) {
 -and update the *index.html* file:
 
 {% raw %}
-```html
+``` html
 {% extends 'layout.html' %}
 
 {% block title %}{% endblock %}
@@ -240,7 +240,7 @@ router.get('/login', function(req, res, next) {
 
 Test this code to make sure all is well:
 
-```sh
+``` sh
 $ npm start
 ```
 
@@ -264,7 +264,7 @@ For almost all of the strategies, you will need to-
 
 Navigate to [LinkedIn Developers](https://www.linkedin.com/developer/apps/) to register a new application. Just enter dummy info, make sure to add the callback - [http://127.0.0.1:3000/auth/linkedin/callback](http://127.0.0.1:3000/auth/linkedin/callback) - and update the config within the app:
 
-```javascript
+``` javascript
 linkedin: {
  clientID: 'ADD YOUR ID HERE',
  clientSecret: 'ADD YOUR SECRET HERE',
@@ -278,7 +278,7 @@ linkedin: {
 
 Add the following code to *linkedin.js*:
 
-```javascript
+``` javascript
 var passport = require('passport');
 var LinkedInStrategy = require('passport-linkedin');
 
@@ -334,7 +334,7 @@ Aside for the Passport magic, you can see that we're either updating the user, i
 
 Update the routes with:
 
-```javascript
+``` javascript
 router.get('/auth/linkedin', passportLinkedIn.authenticate('linkedin'));
 
 router.get('/auth/linkedin/callback',
@@ -347,7 +347,7 @@ router.get('/auth/linkedin/callback',
 
 Add in the dependency as well:
 
-```javascript
+``` javascript
 var passportLinkedIn = require('../auth/linkedin');
 ```
 
@@ -369,7 +369,7 @@ Again, create an app, adding in the correct callback URL, and add the given clie
 
 > [https://github.com/cfsghost/passport-github#configure-strategy](https://github.com/cfsghost/passport-github#configure-strategy)
 
-```javascript
+``` javascript
 var passport = require('passport');
 var GitHubStrategy = require('passport-github2').Strategy;
 
@@ -421,7 +421,7 @@ module.exports = passport;
 
 > [https://github.com/cfsghost/passport-github#authenticate-requests](https://github.com/cfsghost/passport-github#authenticate-requests)
 
-```javascript
+``` javascript
 var passportGithub = require('../auth/github');
 
 router.get('/auth/github', passportGithub.authenticate('github', { scope: [ 'user:email' ] }));
@@ -446,7 +446,7 @@ Create an app on the [Twitter Developer page](https://apps.twitter.com/), and gr
 
 > [https://github.com/jaredhanson/passport-twitter#configure-strategy](https://github.com/jaredhanson/passport-twitter#configure-strategy)
 
-```javascript
+``` javascript
 var passport = require('passport');
 var TwitterStrategy = require('passport-twitter').Strategy;
 
@@ -497,7 +497,7 @@ module.exports = passport;
 
 > [https://github.com/jaredhanson/passport-twitter#authenticate-requests](https://github.com/jaredhanson/passport-twitter#authenticate-requests)
 
-```javascript
+``` javascript
 var passportTwitter = require('../auth/twitter');
 
 router.get('/auth/twitter', passportTwitter.authenticate('twitter'));

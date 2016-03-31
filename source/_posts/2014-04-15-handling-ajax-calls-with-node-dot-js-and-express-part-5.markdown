@@ -35,8 +35,8 @@ Let's get started.
 
 Start by adding the "save" button to the Handlebars template:
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 <script id="search-results" type="text/x-handlebars-template">
     {{#each resultsArray}}
       <li>
@@ -47,8 +47,8 @@ Start by adding the "save" button to the Handlebars template:
     <br>
     </ul>
 </script>
-```
 {% endraw %}
+{% endcodeblock %}
 
 Moving right along ...
 
@@ -56,7 +56,7 @@ Moving right along ...
 
 Next, let's add an event handler to *main.js* that captures the button when clicked:
 
-```javascript
+``` javascript
 $('.save-btn').on('click', function() {
   console.log("whee!")
 });
@@ -64,7 +64,7 @@ $('.save-btn').on('click', function() {
 
 Your file should now look like this:
 
-```javascript
+``` javascript
 $(function(){
   var source = $("#search-results").html();
   var dataTemplate = Handlebars.compile(source);
@@ -100,7 +100,7 @@ This is called event delegation. If interested, check [this](https://learn.jquer
 
 Update the code:
 
-```javascript
+``` javascript
 $('#results').on('click', '.save-btn', function() {
   console.log("whee!")
 });
@@ -112,7 +112,7 @@ So, the listener is set to the `#results` selector, which when fired (by the but
 
 Next, instead of just outputting the text "whee!", we need to grab the job title and URL by replacing the current console log with:
 
-```javascript
+``` javascript
 var jobTitle = $(this).next('a').text()
 var jobURL = $(this).next('a').attr('href')
 console.log(jobTitle, jobURL)
@@ -130,7 +130,7 @@ Now what happens when you click the save button?
 
 Finally, we need to pass the data to the server.
 
-```javascript
+``` javascript
 var parameters = { title: jobTitle, url: jobURL };
 console.log(parameters)
 $.get( '/save', parameters, function(data) {
@@ -146,13 +146,13 @@ On the server side, we need to setup a `/save` route. Again, if you have questio
 
 Update `app.js`:
 
-```javascript
+``` javascript
 app.get('/save', ensureAuthenticated, routes.save)
 ```
 
 Now update the routes file, `index.js`:
 
-```javascript
+``` javascript
 exports.save = function(req, res){
   var title = req.query.title;
   var url = req.query.url;
@@ -172,7 +172,7 @@ Now that we have the data in our possession, let's add it to the database.
 
 Create a new file in the "models" directory called *job.js*, then add the following code to the file:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var config = require('../config');
 
@@ -191,7 +191,7 @@ module.exports = mongoose.model('Job', jobSchema);
 
 With the schema set up, we can now add our data to the Mongo collection. Within your routes, add the following code to the `/save` route:
 
-```javascript
+``` javascript
 exports.save = function(req, res){
   var title = req.query.title;
   var url = req.query.url;
@@ -213,7 +213,7 @@ Here, we are simply creating a new record assigned to the variable `newJob`, the
 
 Make sure to require the config and Mongoose schema files:
 
-```javascript
+``` javascript
 var config = require('../config');
 var job = require('../models/job');
 ```
@@ -228,7 +228,7 @@ Now check out the results in Mongo:
 
 Before moving on, let's add a line of code to search the Mongo collection to see if a job exists, then within a conditional we can setup logic for only adding a job if it doesn't already exist in the collection:
 
-```javascript
+``` javascript
 exports.save = function(req, res){
   var title = req.query.title;
   var url = req.query.url;
@@ -285,7 +285,7 @@ newJob.save(function(err){
 
 Test this out, then check out the object in Mongo:
 
-```javascript
+``` javascript
 { "user" : ObjectId("534cb94fd4b72d7618000001"), "url" : "http://sfbay.craigslist.org/sfc/eng/4423216760.html", "title" : "Principal Web Engineer", "_id" : ObjectId("5351f3a1cc6813119e000001"), "__v" : 0 }
 ```
 
@@ -303,13 +303,13 @@ Okay. Back on the client side, we need to do three things before we're finally d
 
 Add the following line of code to *main.js* right before we send the data to the server side:
 
-```javascript
+``` javascript
 $(this).parent().remove()
 ```
 
 Updated code:
 
-```javascript
+``` javascript
 $('#results').on('click', '.save-btn', function() {
   var jobTitle = $(this).next('a').text()
   var jobURL = $(this).next('a').attr('href')
@@ -328,21 +328,21 @@ First, within *index.js* update the following two lines of code.
 
 From:
 
-```javascript
+``` javascript
 console.log('Job already in database.');
 console.log("New job, " + newJob.title + ", was added to mongo");
 ```
 
 To:
 
-```javascript
+``` javascript
 res.send('Job already in database.');
 res.send("New job, " + newJob.title + ", was added to mongo");
 ```
 
 Updated function:
 
-```javascript
+``` javascript
 exports.save = function(req, res){
   var title = req.query.title;
   var url = req.query.url;
@@ -370,7 +370,7 @@ The `res.send()` method is used to send a response back to the client side. You 
 
 First, add a new element, `p#alert`, to *search.jade* where you want the message to go:
 
-```html
+``` html
 extends layout
 
 block content
@@ -394,7 +394,7 @@ block content
 
 Next update *main.js*:
 
-```javascript
+``` javascript
 $.get( '/save', parameters, function(data) {
   $('#alert').html(data)
   console.log(data)

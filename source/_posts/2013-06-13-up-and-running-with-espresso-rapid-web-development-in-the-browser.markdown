@@ -16,20 +16,20 @@ In this tutorial we'll be developing a simple application with [Espresso](https:
 
 Create a new project directory:
 
-```sh
+``` sh
 $ mkdir espresso
 ```
 
 Install Espresso and Enginery:
 
-```ruby
+``` ruby
 $ gem install espresso-framework
 $ gem install enginery
 ```
 
 Create a new application utilizing DataMapper:
 
-```sh
+``` sh
 $ enginery g orm:dm
 ```
 
@@ -39,7 +39,7 @@ Essentially, Enginery is similar to the Rails' Scaffolding functionality, allowi
 
 Next, generate your first model:
 
-```sh
+``` sh
 $ enginery g:m Tasks column:name column:description:text
 ```
 
@@ -52,7 +52,7 @@ Now we need to create a table for our Tasks model by migrating up the initializa
 
 For example:
 
-```sh
+``` sh
 base/migrations/tasks/1.2013-06-12_19-34-15.initializing-Tasks-model.rb
 ```
 
@@ -60,7 +60,7 @@ This particular migration has a serial number of 1.
 
 Let's finish the migration:
 
-```sh
+``` sh
 $ enginery m:up 1
 ```
 
@@ -68,7 +68,7 @@ With a table now associated with the database, let's add some tasks!
 
 Fire up the server:
 
-```sh
+``` sh
 $ ruby app.rb
 ```
 
@@ -82,13 +82,13 @@ Frontline is is a front-end manager for Enginery, which allows you to fully mana
 
 Install it:
 
-```sh
+``` sh
 $ gem install frontline
 ```
 
 Run it:
 
-```sh
+``` sh
 $ frontline
 ```
 
@@ -100,7 +100,7 @@ Load your existing app using the project name, `espresso`, and the path, `/Users
 
 Let's update the base view. Click the "Maintenance" menu and select "layout.erb". Update the code:
 
-```html
+``` html
 <!DOCTYPE html>
 <html>
   <head>
@@ -132,7 +132,7 @@ Now let's add some controllers, routes, and additional views. Enginery already g
 
 Let's add some logic to the new route. Click "Index Action", and then "list". Add the following code to the *list.rb* file:
 
-```ruby
+``` ruby
 class Index
   # action-specific setups
 
@@ -146,7 +146,7 @@ end
 
 Then add the following code to *list.erb*:
 
-```html
+``` html
 <br/>
 <ul>
 <% @tasks.each do |task| %>

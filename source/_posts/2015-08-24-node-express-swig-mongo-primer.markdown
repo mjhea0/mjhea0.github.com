@@ -24,7 +24,7 @@ description: "This article details how to create a basic web app with Node, Expr
 
 Start by downloading the [Express application generator](http://expressjs.com/starter/generator.html) (if you don't already have it) to create a basic Express project:
 
-```sh
+``` sh
 $ npm install express-generator -g
 ```
 
@@ -32,14 +32,14 @@ $ npm install express-generator -g
 
 Navigate to a convenient directory, like your "Desktop" or "Documents", then create the boilerplate:
 
-```sh
+``` sh
 $ express node-express-swig-mongo
 $ cd node-express-swig-mongo
 ```
 
 Check out the project structure:
 
-```sh
+``` sh
 ├── app.js
 ├── bin
 │   └── www
@@ -62,13 +62,13 @@ Don't worry about the files and folders for now. Just know that we have created 
 
 Notice the *package.json* file. This stores your project's dependencies, which we still need to install:
 
-```sh
+``` sh
 $ npm install
 ```
 
 Now let's install Mongoose and Swig:
 
-```sh
+``` sh
 $ npm install mongoose swig --save
 ```
 
@@ -78,7 +78,7 @@ $ npm install mongoose swig --save
 
 Let's test our setup by running the app:
 
-```sh
+``` sh
 $ npm start
 ```
 
@@ -88,19 +88,19 @@ Navigate to [http://localhost:3000/](http://localhost:3000/) in your browser and
 
 Before moving on, let's setup [Nodemon](http://nodemon.io/) so that you can run your app and watch for code changes without having to manually restart the server. Check out the link above to learn more.
 
-```sh
+``` sh
 $ npm install nodemon -g
 ```
 
 Let's test again:
 
-```sh
+``` sh
 $ nodemon
 ```
 
 In your terminal you should see:
 
-```sh
+``` sh
 23 Aug 16:31:02 - [nodemon] v1.4.1
 23 Aug 16:31:02 - [nodemon] to restart at any time, enter `rs`
 23 Aug 16:31:02 - [nodemon] watching: *.*
@@ -115,7 +115,7 @@ Awesome. With the setup done, let's build something!
 
 Grab your favorite text editor (such as [Sublime](http://www.sublimetext.com/) or [Atom](https://atom.io/)), and then open the main file, *app.js*, which houses much of the business logic. Take a look at the routes:
 
-```javascript
+``` javascript
 app.use('/', routes);
 app.use('/users', users);
 ```
@@ -124,7 +124,7 @@ Understanding how routes work as well as how to trace all the files associated w
 
 Let's look at this route:
 
-```javascript
+``` javascript
 app.use('/users', users)
 ```
 
@@ -134,13 +134,13 @@ The end user navigates to that endpoint and expects *something* to happen. That 
 
 Also, within that route, you can see the variable `users`. Where is in this file? It's at the top, and it loads in another file within our app:
 
-```javascript
+``` javascript
 var users = require('./routes/users');
 ```
 
 Open that file:
 
-```javascript
+``` javascript
 var express = require('express');
 var router = express.Router();
 
@@ -162,7 +162,7 @@ Let's now add a new route that renders a HTML form to the end user.
 
 Start by adding the route handler in the *app.js* file:
 
-```javascript
+``` javascript
 app.use('/api', api);
 ```
 
@@ -170,7 +170,7 @@ app.use('/api', api);
 
 Use the `api` variable to require a JS file within our routes folder.
 
-```javascript
+``` javascript
 var api = require('./routes/api');
 ```
 
@@ -178,7 +178,7 @@ Take a look in the terminal. You should see an error, indicating Node can't find
 
 Create a new file called *api.js* in the "routes" directory. Add the following code:
 
-```javascript
+``` javascript
 var express = require('express');
 var router = express.Router();
 
@@ -202,8 +202,8 @@ Take a quick look at the *layout.jade*, *index.jade*, and *error.jade* files wit
 
 ***layout.html***
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 <!DOCTYPE html>
 <html>
   <head>
@@ -220,13 +220,13 @@ Take a quick look at the *layout.jade*, *index.jade*, and *error.jade* files wit
     <script type="text/javascript" src="/js/main.js"></script>
   </body>
 </html>
-```
-{% endraw %}
+{% endr
+{% endcodeblock %}aw %}
 
 ***index.html***
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 {% extends 'layout.html' %}
 
 {% block title %}{% endblock %}
@@ -242,13 +242,13 @@ Take a quick look at the *layout.jade*, *index.jade*, and *error.jade* files wit
   </div>
 
 {% endblock %}
-```
 {% endraw %}
+{% endcodeblock %}
 
 ***error.html***
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 {% extends 'layout.html' %}
 
 {% block title %}{% endblock %}
@@ -265,18 +265,18 @@ Take a quick look at the *layout.jade*, *index.jade*, and *error.jade* files wit
   </div>
 
 {% endblock %}
-```
 {% endraw %}
+{% endcodeblock %}
 
 Finally, update *app.js* by requiring the following dependency at the top of the file:
 
-```javascript
+``` javascript
 var swig = require('swig');
 ```
 
 Then set Swig as the template engine by replacing `app.set('view engine', 'jade');` with-
 
-```javascript
+``` javascript
 var swig = new swig.Swig();
 app.engine('html', swig.renderFile);
 app.set('view engine', 'html');
@@ -288,16 +288,16 @@ Do you see the `block` keyword?
 
 What really happens when the *index* file is rendered is that it first renders the base template because of the `extends` keyword. So, the *layout* template then gets rendered, which eventually pulls in the child template, overwriting the `block` keyword with:
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 <div class="container">
 
   <h1>{{ title }}</h1>
   <p>Welcome to {{ title }}</p>
 
 </div>
-```
-{% endraw %}
+{% end
+{% endcodeblock %}raw %}
 
 Hope that makes sense. If not, check out [this](http://mherman.org/blog/2015/08/23/primer-on-swig-templating/#template-inheritence) resource for more info on template inheritance.
 
@@ -305,8 +305,8 @@ Hope that makes sense. If not, check out [this](http://mherman.org/blog/2015/08/
 
 Create a new file called *api.html* in the "views" directory, and then add the following code:
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 {% extends 'layout.html' %}
 
 {% block title %}{% endblock %}
@@ -322,20 +322,20 @@ Create a new file called *api.html* in the "views" directory, and then add the f
   </div>
 
 {% endblock %}
-```
 {% endraw %}
+{% endcodeblock %}
 
 The same thing is happening here with inheritance. If you're unfamiliar with Swig syntax, {% raw %}`{{ title }}`{% endraw %} is essentially a variable, which we can pass in from `./routes/api.js`.
 
 Update `./routes/api.js` by changing-
 
-```javascript
+``` javascript
 res.send('Just a test');
 ```
 
 -to-
 
-```javascript
+``` javascript
 res.render('api', { title: 'Superhero API' });
 ```
 
@@ -351,8 +351,8 @@ Did it work? If yes, move on. If not, go back through this section and review.
 
 So, let's update the template to display a form:
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 {% extends 'layout.html' %}
 
 {% block title %}{% endblock %}
@@ -377,8 +377,8 @@ So, let's update the template to display a form:
   </div>
 
 {% endblock %}
-```
 {% endraw %}
+{% endcodeblock %}
 
 Refresh your browser. Do you see the form? Try clicking save. What happens? Well, you just tried to send a POST request to the `/api/superheros` endpoint, which does not exist - so you should see a 404 error. Let's set up the route handler.
 
@@ -386,7 +386,7 @@ Refresh your browser. Do you see the form? Try clicking save. What happens? Well
 
 Open *api.js* to add the logic for this new route:
 
-```javascript
+``` javascript
 var express = require('express');
 var router = express.Router();
 
@@ -413,7 +413,7 @@ Okay. So, we are handling the routes and rendering the right template, but we st
 
 Create a file called *database.js* in your app's root directory, then add the following code:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var Schema   = mongoose.Schema;
 
@@ -432,7 +432,7 @@ Here, we required/included the Mongoose library along with a reference to the `S
 
 Next, open *app.js* and require the Mongoose config at the very top of the file:
 
-```javascript
+``` javascript
 // mongoose config
 require('./database');
 ```
@@ -443,14 +443,14 @@ With Mongoose setup, we need to update *api.js* to create (via POST) and read (v
 
 Open *api.js*. Require Mongoose as well as the `superheros` model, which we already created:
 
-```javascript
+``` javascript
 var mongoose = require('mongoose');
 var Superhero = mongoose.model('superheros');
 ```
 
 Now, update the function handling GET requests:
 
-```javascript
+``` javascript
 router.get('/superheros', function(req, res) {
   Superhero.find(function(err, superheros){
     console.log(superheros)
@@ -468,8 +468,8 @@ router.get('/superheros', function(req, res) {
 
 Let's add a loop to iterate through the superheros and then display the `name` key from the collection.
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 {% extends 'layout.html' %}
 
 {% block title %}{% endblock %}
@@ -504,8 +504,8 @@ Let's add a loop to iterate through the superheros and then display the `name` k
   </div>
 
 {% endblock %}
-```
 {% endraw %}
+{% endcodeblock %}
 
 > Do you remember where we set the `name` key? Check out the database schema in *database.js*.
 
@@ -515,7 +515,7 @@ Before this will actually work - e.g., display superheros - we first need to add
 
 Back in *api.js*, update the function for handling POST requests:
 
-```javascript
+``` javascript
 router.post('/superheros', function(req, res) {
   new Superhero({name : req.body.name})
   .save(function(err, superhero) {
@@ -537,15 +537,15 @@ What about updates? And deletions? First, let's display a single superhero.
 
 Update the list item in the HTML file like so to give each item a unique URL.
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 <li><a href="superhero/{{superhero.id}}">{{superhero.name}}</a></li>
-```
 {% endraw %}
+{% endcodeblock %}
 
 Now, let's add a new route handler to *api.js* to display a single superhero:
 
-```javascript
+``` javascript
 router.get('/superhero/:id', function(req, res) {
   var query = {"_id": req.params.id};
   Superhero.findOne(query, function(err, superhero){
@@ -560,8 +560,8 @@ router.get('/superhero/:id', function(req, res) {
 
 What's next? A new template. *superhero.html*:
 
+{% codeblock lang:html %}
 {% raw %}
-```html
 {% extends 'layout.html' %}
 
 {% block title %}{% endblock %}
@@ -592,8 +592,8 @@ What's next? A new template. *superhero.html*:
   </div>
 
 {% endblock %}
-```
 {% endraw %}
+{% endcodeblock %}
 
 Test this out.
 
@@ -603,25 +603,25 @@ Since most browsers do not handle PUT or DELETE requests, we need to use the [me
 
 Install via NPM:
 
-```sh
+``` sh
 $ npm install method-override --save
 ```
 
 Add the requirement to *app.js*:
 
-```javascript
+``` javascript
 var methodOverride = require('method-override');
 ```
 
 Then define the middleware just below the view engine setup in *app.js*:
 
-```javascript
+``` javascript
 app.use(methodOverride('_method'))
 ```
 
 Finally, add the route handler to *api.js*:
 
-```javascript
+``` javascript
 router.put('/superhero/:id', function(req, res) {
   var query = {"_id": req.params.id};
   var update = {name : req.body.name};
@@ -642,7 +642,7 @@ Here, we are simply searching Mongo for the correct superhero via the Mongo ID a
 
 With the button already set up in the template, we just need to add the route handler to *api.js*:
 
-```javascript
+``` javascript
 router.delete('/superhero/:id', function(req, res) {
   var query = {"_id": req.params.id};
   Superhero.findOneAndRemove(query, function(err, superhero){

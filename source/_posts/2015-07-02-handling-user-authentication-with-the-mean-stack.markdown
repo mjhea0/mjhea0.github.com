@@ -38,13 +38,13 @@ That said, we need to enable the following workflow:
 
 First, grab the boilerplate code from the [project repo](https://github.com/mjhea0/mean-auth/releases/tag/v1), install the requirements, and then test out the app:
 
-```sh
+``` sh
 $ npm start
 ```
 
 Navigate to [http://localhost:3000/](http://localhost:3000/) and you should see a simple welcome message - "Yo!". Once you're finishing admiring the page, kill the server, and glance over the code within the project folder:
 
-```sh
+``` sh
 ├── client
 │   ├── index.html
 │   ├── main.js
@@ -70,7 +70,7 @@ Let's start with the back-end API. This is already built out, for your convenien
 
 Open the "routes" folder and locate the following code:
 
-```javascript
+``` javascript
 router.post('/register', function(req, res) {
   User.register(new User({ username: req.body.username }),
     req.body.password, function(err, account) {
@@ -92,7 +92,7 @@ Here, we grab the values from the payload sent with the POST request (from the c
 
 Let's test this via curl. Fire up the server, and then run the following command:
 
-```sh
+``` sh
 $ curl -H "Accept: application/json" -H \
 "Content-type: application/json" -X POST \
 -d '{"username": "test@test.com", "password": "test"}' \
@@ -101,7 +101,7 @@ http://localhost:3000/user/register
 
 You should see a success message:
 
-```sh
+``` sh
 {
   "status": "Registration successful!"
 }
@@ -109,7 +109,7 @@ You should see a success message:
 
 Try it again, with the exact same username and password, and you should see an error:
 
-```sh
+``` sh
 {
   "err": {
     "name": "UserExistsError",
@@ -122,7 +122,7 @@ On to the login...
 
 ### User Login
 
-```javascript
+``` javascript
 router.post('/login', function(req, res, next) {
   passport.authenticate('local', function(err, user, info) {
     if (err) {
@@ -151,7 +151,7 @@ This utilizes Passport's [local strategy](https://github.com/jaredhanson/passpor
 
 With the server running, test again with curl-
 
-```sh
+``` sh
 curl -H "Accept: application/json" -H \
 "Content-type: application/json" -X POST \
 -d '{"username": "test@test.com", "password": "test"}' \
@@ -160,7 +160,7 @@ http://localhost:3000/user/login
 
 -and you should see:
 
-```sh
+``` sh
 {
   "message": "Login successful!"
 }
@@ -168,7 +168,7 @@ http://localhost:3000/user/login
 
 Test again with curl, sending the wrong password, and you should see:
 
-```sh
+``` sh
 {
   "err": {
     "name": "IncorrectPasswordError",
@@ -183,7 +183,7 @@ Perfect!
 
 Finally, take a look at the logout:
 
-```javascript
+``` javascript
 router.get('/logout', function(req, res) {
   req.logout();
   res.status(200).json({
@@ -194,7 +194,7 @@ router.get('/logout', function(req, res) {
 
 This should be straightforward, and you can probably guess what the response will look like - but let's test it again to be sure:
 
-```sh
+``` sh
 $ curl -H "Accept: application/json" -H \
 "Content-type: application/json" -X GET \
 http://localhost:3000/user/logout
@@ -202,7 +202,7 @@ http://localhost:3000/user/logout
 
 You should see:
 
-```sh
+``` sh
 {
   "status": "Bye!"
 }
@@ -218,7 +218,7 @@ Before diving in, remember that since end users have full access to the power of
 
 Let's add the remainder of the client-side routes to the *main.js* file:
 
-```javascript
+``` javascript
 myApp.config(function ($routeProvider) {
   $routeProvider
     .when('/', {
@@ -253,7 +253,7 @@ Here, we created five new routes. Before we add the subsequent templates and con
 
 Start by adding the basic structure of the service to a new file called *services.js* in the "client" directory:
 
-```javascript
+``` javascript
 angular.module('myApp').factory('AuthService',
   ['$q', '$timeout', '$http',
   function ($q, $timeout, $http) {
@@ -277,15 +277,15 @@ Here, we simply defined the service name, `AuthService`, and then injected the d
 
 Make sure to add the script to the *index.html* file:
 
-```html
+{% codeblock lang:html %}
 <script src="./services.js"></script>
-```
+{% endcodeblock %}
 
 Let's create each function...
 
 **`isLoggedIn()`**
 
-```javascript
+``` javascript
 function isLoggedIn() {
   if(user) {
     return true;
@@ -299,7 +299,7 @@ This function returns `true` if `user` evaluates to `true` - a user is logged in
 
 **`getUserStatus()`**
 
-```javascript
+``` javascript
 function getUserStatus() {
   return user;
 }
@@ -307,7 +307,7 @@ function getUserStatus() {
 
 **`login()`**
 
-```javascript
+``` javascript
 function login(username, password) {
 
   // create a new instance of deferred
@@ -344,7 +344,7 @@ Based on the returned response, we either [resolve](https://code.angularjs.org/1
 
 **`logout()`**
 
-```javascript
+``` javascript
 function logout() {
 
   // create a new instance of deferred
@@ -373,7 +373,7 @@ Here, we followed the same formula as the `login()` function, except we sent a G
 
 **`register()`**
 
-```javascript
+``` javascript
 function register(username, password) {
 
   // create a new instance of deferred
@@ -409,7 +409,7 @@ That's it for the service. Keep in mind that we still have not "used" this servi
 
 Looking back at our routes, we need to setup two partials/templates and three controllers:
 
-```javascript
+``` javascript
 .when('/login', {
   templateUrl: 'partials/login.html',
   controller: 'loginController'
@@ -427,7 +427,7 @@ Looking back at our routes, we need to setup two partials/templates and three co
 
 First, add the following HTML to a new file called *login.html*:
 
-```html
+{% codeblock lang:html %}
 <div class="col-md-4">
   <h1>Login</h1>
   <div ng-show="error" class="alert alert-danger">{% raw %}{{errorMessage}}{% endraw %}</div>
@@ -445,7 +445,7 @@ First, add the following HTML to a new file called *login.html*:
       </div>
   </form>
 </div>
-```
+{% endcodeblock %}
 
 Add this file to the "partials" directory.
 
@@ -453,13 +453,13 @@ Take note of the form. We used the [ng-model](https://code.angularjs.org/1.4.9/d
 
 Next, within the "client" folder, add a new file called *controllers.js*. Yes, this will hold all of our Angular app's controllers. Don't forget to add the script to the *index.html* file:
 
-```html
+{% codeblock lang:html %}
 <script src="./controllers.js"></script>
-```
+{% endcodeblock %}
 
 Now, let's add the first controller:
 
-```javascript
+``` javascript
 angular.module('myApp').controller('loginController',
   ['$scope', '$location', 'AuthService',
   function ($scope, $location, AuthService) {
@@ -501,7 +501,7 @@ Fire up the server and navigate to [http://localhost:3000/#/login](http://localh
 
 Add the controller:
 
-```javascript
+``` javascript
 angular.module('myApp').controller('logoutController',
   ['$scope', '$location', 'AuthService',
   function ($scope, $location, AuthService) {
@@ -523,11 +523,11 @@ Here, we called `AuthService.logout()` and then redirected the user to the `/log
 
 Add a button to *home.html*:
 
-```html
+{% codeblock lang:html %}
 <div ng-controller="logoutController">
   <a ng-click='logout()' class="btn btn-default">Logout</a>
 </div>
-```
+{% endcodeblock %}
 
 And then test it out again.
 
@@ -535,7 +535,7 @@ And then test it out again.
 
 Add a new new file called *register.html* to the "partials" folder and add the following HTML:
 
-```html
+{% codeblock lang:html %}
 <div class="col-md-4">
   <h1>Register</h1>
   <div ng-show="error" class="alert alert-danger">{% raw %}{{errorMessage}}{% endraw %}</div>
@@ -553,11 +553,11 @@ Add a new new file called *register.html* to the "partials" folder and add the f
       </div>
   </form>
 </div>
-```
+{% endcodeblock %}
 
 Next, add the controller:
 
-```javascript
+``` javascript
 angular.module('myApp').controller('registerController',
   ['$scope', '$location', 'AuthService',
   function ($scope, $location, AuthService) {
@@ -599,7 +599,7 @@ Well, that's it for the templates and controllers. We now need to add in functio
 
 Start by adding the following code to *main.js*:
 
-```javascript
+``` javascript
 myApp.run(function ($rootScope, $location, $route, AuthService) {
   $rootScope.$on('$routeChangeStart',
     function (event, next, current) {
@@ -618,13 +618,13 @@ Right now all client-side routes require a user to be logged in. What if you wan
 
 You can add the following code to each route handler, replacing `true` with `false` for routes that you do not want to restrict:
 
-```javascript
+``` javascript
 access: {restricted: true}
 ```
 
 For example:
 
-```javascript
+``` javascript
 myApp.config(function ($routeProvider) {
   $routeProvider
     .when('/', {
@@ -661,7 +661,7 @@ myApp.config(function ($routeProvider) {
 
 Now just update the `$routeChangeStart` code in *main.js*:
 
-```javascript
+``` javascript
 myApp.run(function ($rootScope, $location, $route, AuthService) {
   $rootScope.$on('$routeChangeStart',
   function (event, next, current) {
@@ -683,7 +683,7 @@ The user is logged out, right? Why? Because the controller and services are call
 
 Fortunately, the fix is simple: Within the `$routeChangeStart` we need to ALWAYS check if a user is logged in. Right now, it's checking whether `isLoggedIn()` is `false`. Let's update `getUserStatus()` so that it checks the user status on the back-end:
 
-```javascript
+``` javascript
 function getUserStatus() {
   $http.get('/user/status')
   // handle success
@@ -703,7 +703,7 @@ function getUserStatus() {
 
 Then add the route handler:
 
-```javascript
+``` javascript
 router.get('/status', function(req, res) {
   if (!req.isAuthenticated()) {
     return res.status(200).json({
@@ -718,7 +718,7 @@ router.get('/status', function(req, res) {
 
 Finally, update the `$routeChangeStart`:
 
-```javascript
+``` javascript
 myApp.run(function ($rootScope, $location, $route, AuthService) {
   $rootScope.$on('$routeChangeStart',
     function (event, next, current) {

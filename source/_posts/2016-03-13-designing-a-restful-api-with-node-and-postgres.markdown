@@ -12,7 +12,7 @@ description: "This article details how to build a RESTful API with Node, Express
 **In this tutorial we'll create a RESTful web service with JavaScript, Node, Express, Postgres, and pg-promise.**
 
 <div style="text-align:center;">
-  <img src="/images/node-restful-api.png" style="max-width: 100%; border:0;" alt="node restful api">
+  <img src="/images/node-restful-api.png" style="max-width: 100%; border:0; box-shadow: none;" alt="node restful api">
 </div>
 
 <br><hr>
@@ -64,13 +64,13 @@ Our app will include the following endpoints:
 
 Install the Express Generator (if necessary):
 
-```sh
+``` sh
 $ npm install express-generator@4.13.1 -g
 ```
 
 Create a new project and install the required dependencies:
 
-```sh
+``` sh
 $ express node-postgres-promises
 $ cd node-postgres-promises
 $ npm install
@@ -78,7 +78,7 @@ $ npm install
 
 Test!
 
-```sh
+``` sh
 $ npm start
 ```
 
@@ -86,7 +86,7 @@ Navigate to [http://localhost:3000](http://localhost:3000) in your browser, and 
 
 Install `pg-promise`
 
-```sh
+``` sh
 $ npm install pg-promise@3.2.3 --save
 ```
 
@@ -94,7 +94,7 @@ Why `pg-promise` instead of `pg`? Put simply, pg-promise abstracts away much of 
 
 Finally, create a new file in the project root called *queries.js*:
 
-```javascript
+``` javascript
 var promise = require('bluebird');
 
 var options = {
@@ -125,7 +125,7 @@ Did you notice that we passed an object, `options`, during the initialization pr
 
 Don't forget to install Bluebird:
 
-```sh
+``` sh
 $ npm install bluebird@3.3.4 --save
 ```
 
@@ -137,7 +137,7 @@ Done!
 
 Create a new file also in the root called *puppies.sql* and then add the following code:
 
-```sql
+``` sql
 DROP DATABASE IF EXISTS puppies;
 CREATE DATABASE puppies;
 
@@ -157,7 +157,7 @@ INSERT INTO pups (name, breed, age, sex)
 
 Run the file to create the database, apply the schema, and add one row to the newly created database:
 
-```sh
+``` sh
 $ psql -f puppies.sql
 
 DROP DATABASE
@@ -170,7 +170,7 @@ INSERT 0 1
 
 Now we can set up the route handlers in *index.js*:
 
-```javascript
+``` javascript
 var express = require('express');
 var router = express.Router();
 
@@ -193,7 +193,7 @@ Next, let's add the SQL queries to the *queries.js* file...
 
 ### GET All Puppies
 
-```javascript
+``` javascript
 function getAllPuppies(req, res, next) {
   db.any('select * from pups')
     .then(function (data) {
@@ -221,7 +221,7 @@ Besides, `any`, you can use the following [Query Result Masks](https://www.npmjs
 
 Test the request out in the browser - [http://localhost:3000/api/puppies](http://localhost:3000/api/puppies):
 
-```json
+``` json
 {
   status: "success",
   data: [
@@ -239,7 +239,7 @@ Test the request out in the browser - [http://localhost:3000/api/puppies](http:/
 
 ### GET Single Puppy
 
-```javascript
+``` javascript
 function getSinglePuppy(req, res, next) {
   var pupID = parseInt(req.params.id);
   db.one('select * from pups where id = $1', pupID)
@@ -259,7 +259,7 @@ function getSinglePuppy(req, res, next) {
 
 Again, test in the browser: [http://localhost:3000/api/puppies/1](http://localhost:3000/api/puppies/1)
 
-```json
+``` json
 {
   status: "success",
   data: {
@@ -275,7 +275,7 @@ Again, test in the browser: [http://localhost:3000/api/puppies/1](http://localho
 
 ### POST
 
-```javascript
+``` javascript
 function createPuppy(req, res, next) {
   req.body.age = parseInt(req.body.age);
   db.none('insert into pups(name, breed, age, sex)' +
@@ -296,14 +296,14 @@ function createPuppy(req, res, next) {
 
 Test with curl in a new terminal window:
 
-```sh
+``` sh
 $ curl --data "name=Whisky&breed=annoying&age=3&sex=f" \
 http://127.0.0.1:3000/api/puppies
 ```
 
 You should see:
 
-```sh
+``` sh
 {
   "status": "success",
   "message": "Inserted one puppy"
@@ -314,7 +314,7 @@ Double check the GET ALL route in your browser to ensure that the new puppy is n
 
 ### PUT
 
-```javascript
+``` javascript
 function updatePuppy(req, res, next) {
   db.none('update pups set name=$1, breed=$2, age=$3, sex=$4 where id=$5',
     [req.body.name, req.body.breed, parseInt(req.body.age),
@@ -334,14 +334,14 @@ function updatePuppy(req, res, next) {
 
 Test!
 
-```sh
+``` sh
 $ curl -X PUT --data "name=Hunter&breed=annoying&age=33&sex=m" \
 http://127.0.0.1:3000/api/puppies/1
 ```
 
 ### Delete
 
-```javascript
+``` javascript
 function removePuppy(req, res, next) {
   var pupID = parseInt(req.params.id);
   db.result('delete from pups where id = $1', pupID)
@@ -362,13 +362,13 @@ function removePuppy(req, res, next) {
 
 So, we used the `result` [Query Result Mask](https://www.npmjs.com/package/pg-promise#query-result-mask), in order to get the number of records affected by the query.
 
-```sh
+``` sh
 $ curl -X DELETE http://127.0.0.1:3000/api/puppies/1
 ```
 
 Result:
 
-```sh
+``` sh
 {
   "status": "success",
   "message": "Removed 1 puppy"
@@ -379,7 +379,7 @@ Result:
 
 Update the error handlers in *app.js* to serve up JSON:
 
-```javascript
+``` javascript
 // development error handler
 // will print stacktrace
 if (app.get('env') === 'development') {

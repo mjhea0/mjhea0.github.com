@@ -13,7 +13,10 @@ After freelancing for nearly six years, I am now (as of June 2015) a Lead Instru
 1. [Starter Financial Model](http://www.starterfinancialmodel.com/)
 1. [GoScrape](http://www.goscrape.com)
 1. [DiscoverFlask](http://discoverflask.com)
-1. KickStarter - [Real Python](https://www.kickstarter.com/projects/fletcher/practical-python-learn-programming-for-the-real-wo), [Real Python: For the Web](http://www.kickstarter.com/projects/1369857650/real-python-for-web-development-featuring-web2py), and [Real Python: Advanced Web Development](https://www.kickstarter.com/projects/721054906/real-python-advanced-web-development-featuring-dja)
+1. KickStarter Projects
+    - [Real Python](https://www.kickstarter.com/projects/fletcher/practical-python-learn-programming-for-the-real-wo)
+    - [Real Python: For the Web](http://www.kickstarter.com/projects/1369857650/real-python-for-web-development-featuring-web2py)
+    - [Real Python: Advanced Web Development](https://www.kickstarter.com/projects/721054906/real-python-advanced-web-development-featuring-dja)
 
 #### Contact
 

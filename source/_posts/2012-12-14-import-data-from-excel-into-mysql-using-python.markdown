@@ -22,7 +22,7 @@ Assuming you have Python installed (I'm using version 2.7), download and install
 
 Then tailor the following script to fit your needs:
 
-```python
+``` python
 import xlrd
 import MySQLdb
 

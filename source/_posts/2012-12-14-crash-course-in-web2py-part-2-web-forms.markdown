@@ -36,7 +36,7 @@ Okay - Go ahead and start the web2py server, go to the admin interface, and then
 
 Open db.py in the Model's section and append the following code below, which defines the database schema. There are three required fields, plus a unique ID that is automatically created by web2py.
 
-```python
+``` python
 db = DAL('sqlite://webform.sqlite')
 db.define_table('register',
     Field('first_name', requires=IS_NOT_EMPTY()),
@@ -53,7 +53,7 @@ Create a new HTML file named default/display\_your\_form.html
 And then add the following code to call the form-
 
 
-```html
+``` html
 <center>
 <br /><br /><br />
 <h1>Web Form</h1>
@@ -70,7 +70,7 @@ And then add the following code to call the form-
 
 Finally, comment out all the current code in the default.py file and add in this new function to define the form-
 
-```python
+``` python
 def display_your_form():
     form = SQLFORM(db.register)
     return dict(form=form)

@@ -34,7 +34,7 @@ We need to add in some `Rules` objects to define how the crawler follows the lin
 
 Once updated, the final code looks like this:
 
-```python
+``` python
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
@@ -63,7 +63,7 @@ class MySpider(CrawlSpider):
 
 Now run the following command to release the spider and save the scraped data to a CSV file:
 
-```sh
+``` sh
 $ scrapy crawl craigs -o items.csv -t csv
 ```
 

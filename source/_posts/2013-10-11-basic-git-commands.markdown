@@ -13,13 +13,13 @@ Here you will find a quick, high-level overview of some of the major Git command
 
 Check to see which email address is associated to Git:
 
-```sh
+``` sh
 $ git config user.email
 ```
 
 You can update the email if necessary:
 
-```sh
+``` sh
 $ git config --global user.email "myemail@address.com"
 ```
 
@@ -29,14 +29,14 @@ As you probably know, Git is a [version control](http://en.wikipedia.org/wiki/Re
 
 - `git init` initializes a new empty repository on your local machine:
 
-```sh
+``` sh
 $ git init
 Initialized empty Git repository in /Users/michaelherman/Documents/repos/github/git-commands/.git/
 ```
 
 - `git clone <url>` clones (or copies) a git repository to your local machine. When you clone, you do not need to initialize a new repository because cloning copies all files, including the *actual* repository.
 
-```sh
+``` sh
 $ git clone git@github.com:mjhea0/sinatra-blog.git
 Cloning into 'sinatra-blog'...
 remote: Counting objects: 48, done.
@@ -48,7 +48,7 @@ Resolving deltas: 100% (14/14), done.
 
 To see the repo, navigate into the directory and then view all files. You'll see a hidden directory called ".git", which is the actual repository:
 
-```sh
+``` sh
 $ cd sinatra-blog
 $ ls -a
 ```
@@ -61,7 +61,7 @@ If saving the snapshot is the goal, then staging is the actual act of taking the
 
 - `git add <filename>` adds a new file to staging. This file is now ready to be committed. Remember, you have taken the snapshot but not saved it yet. It's in the queue waiting to be added (or committed) to your local repository.
 
-```sh
+``` sh
 $ git add readme.md
 ```
 
@@ -70,7 +70,7 @@ $ git add readme.md
 
 I added "readme.md" to staging. However, there's another file in the directory, "test.md", which has not been added. Let's see what `git status` has to say:
 
-```sh
+``` sh
 $ ls
 readme.md	test.md
 $ git status
@@ -91,7 +91,7 @@ $ git status
 
 So, while "readme.md" is in staging, ready to be committed, "test.md", is not being tracked.
 
-```sh
+``` sh
 $ git add .
 $ git status
 # On branch master
@@ -112,7 +112,7 @@ After taking a snapshot, you want to move the snapshot from staging to your actu
 
 - `git commit -am ‘<add note>’` commits new and updated files - moving them from the staging queue to your local repository. Make sure the note you add is relevant - that is, it summarizes the changes or updates you've made.
 
-```sh
+``` sh
 $ git commit -am "initial commit"
 [master 93127ee] initial commit
 2 files changed, 2 insertions(+)
@@ -120,7 +120,7 @@ $ git commit -am "initial commit"
 
 What does `git status` say now?
 
-```sh
+``` sh
 $ git status
 # On branch master
 nothing to commit (working directory clean)
@@ -130,7 +130,7 @@ nothing to commit (working directory clean)
 
 > Before you can push, you must add a remote repository to share your local repository with, which you'll see in the example.
 
-```sh
+``` sh
 $ git remote add origin git@github.com:mjhea0/git-commands.git
 $ git push origin master
 Counting objects: 6, done.
@@ -154,7 +154,7 @@ This section could easily be split into multiple sections, with five ot ten comm
 
 To demonstrate a basic pull, I made changes to the "readme.md" files on the remote repository. I want those changes to reflect locally, so I can simply pull them down.
 
-```sh
+``` sh
 $ git pull origin master
 remote: Counting objects: 5, done.
 remote: Compressing objects: 100% (3/3), done.
@@ -176,7 +176,7 @@ In the example, I changed the text within "test.md" both locally and remotely:
 
 If I just try to `push` or `pull` like normal, I will run into errors:
 
-```sh
+``` sh
 $ git pull origin master
 remote: Counting objects: 5, done.
 remote: Compressing objects: 100% (2/2), done.
@@ -201,7 +201,7 @@ hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 
 So neither command worked. You can see in the stack trace some helpful hints. Basically, I can do a fast forward in either direction (PUSH or PULL), which forces the changes by adding an `-f` to the end of either command:
 
-```sh
+``` sh
 $ git push origin master -f
 Total 0 (delta 0), reused 0 (delta 0)
 To git@github.com:mjhea0/git-commands.git
@@ -212,7 +212,7 @@ In small, trivial situations, it's perfectly fine to use this method of merging.
 
 - `git log` is used to view the history of your repository.
 
-```sh
+``` sh
 $ git log
 commit 15f4b6c44b3c8924caabfac9e4be11946e72acfb
 Author: Michael Herman <hermanmu@gmail.com>
@@ -233,7 +233,7 @@ Here we can see the local commits, along with the commit number, author info, da
 
 So I went ahead and made another change to "readme.md" and committed the files locally. I now have three commits according to the log:
 
-```sh
+``` sh
 $ git log
 commit 0f3165bf69b3d508431fa2fe2d5a0b8013637fd2
 Author: Michael Herman <hermanmu@gmail.com>
@@ -256,14 +256,14 @@ Date:   Thu Oct 10 22:45:14 2013 -0600
 
 Let's say I made that last commit on accident. How do I correct?
 
-```sh
+``` sh
 $ git reset --hard 15f4b6c44b3c8924caabfac9e4be11946e72acfb
 HEAD is now at 15f4b6c Update readme.md
 ```
 
 By using the 'reset' command I completely discarded the changes from the last commit. The file even reverted back. It's like the changes never happened:
 
-```sh
+``` sh
 $ git log
 commit 15f4b6c44b3c8924caabfac9e4be11946e72acfb
 Author: Michael Herman <hermanmu@gmail.com>
