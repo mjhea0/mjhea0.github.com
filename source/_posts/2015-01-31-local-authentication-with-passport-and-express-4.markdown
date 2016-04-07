@@ -509,34 +509,37 @@ Now run `make tests`. You should see that it passed - `1 passing (43ms)`.
 
 Right now we have some poorly handled errors that are confusing to the end user. For example, try to register a name that already exists, or login with a username that doesn't exist. This can and *should* be handled better.
 
-### Registration
-
-First, update the `/register` route so an error is thrown, which gets sent to the Jade template, if a user tries to register a username that already exists:
+First, update the `/register` route so an error is thrown:
 
 ``` javascript
-router.post('/register', function(req, res) {
+router.post('/register', function(req, res, next) {
     Account.register(new Account({ username : req.body.username }), req.body.password, function(err, account) {
         if (err) {
-          return res.render("register", {info: "Sorry. That username already exists. Try again."});
+          return res.render('register', { error : err.message });
         }
 
         passport.authenticate('local')(req, res, function () {
-            res.redirect('/');
+            req.session.save(function (err) {
+                if (err) {
+                    return next(err);
+                }
+                res.redirect('/');
+            });
         });
     });
 });
 ```
 
-Then add the following code to the bottom of the "register.jade" template:
+Then add the following code to the *layout.jade* template, just below the `body` tag:
 
 ``` jade
-br
-h4= info
+if (error && error.length > 0)
+  br
+  h4.error-msg= error
+  br
 ```
 
 Test this out.
-
-Next, if you try to login with a username and password combo that does not exist, the user is redirected to a page with just the word "Unauthorized" on it. This is confusing and unhelpful. See if you can fix this on your own. Check out [this](https://github.com/mjhea0/passport-local-express4/pull/3/files) pull request for help. Cheers!
 
 ## Conclusion
 
