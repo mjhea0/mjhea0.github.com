@@ -220,8 +220,8 @@ Take a quick look at the *layout.jade*, *index.jade*, and *error.jade* files wit
     <script type="text/javascript" src="/js/main.js"></script>
   </body>
 </html>
-{% endr
-{% endcodeblock %}aw %}
+{% endraw %}
+{% endcodeblock %}
 
 ***index.html***
 
@@ -296,8 +296,8 @@ What really happens when the *index* file is rendered is that it first renders t
   <p>Welcome to {{ title }}</p>
 
 </div>
-{% end
-{% endcodeblock %}raw %}
+{% endraw %}
+{% endcodeblock %}
 
 Hope that makes sense. If not, check out [this](http://mherman.org/blog/2015/08/23/primer-on-swig-templating/#template-inheritence) resource for more info on template inheritance.
 
