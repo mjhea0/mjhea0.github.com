@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Angular | Michael Herman]]></title>
   <link href="http://mherman.org/blog/categories/angular/atom.xml" rel="self"/>
   <link href="http://mherman.org/"/>
-  <updated>2016-04-11T06:52:03-06:00</updated>
+  <updated>2016-04-17T11:10:20-06:00</updated>
   <id>http://mherman.org/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -752,7 +752,7 @@ http://localhost:3000/user/logout
 <p>Fortunately, the fix is simple: Within the <code>$routeChangeStart</code> we need to ALWAYS check if a user is logged in. Right now, it&rsquo;s checking whether <code>isLoggedIn()</code> is <code>false</code>. Let&rsquo;s update <code>getUserStatus()</code> so that it checks the user status on the back-end:</p>
 
 <pre><code class="javascript">function getUserStatus() {
-  $http.get('/user/status')
+  return $http.get('/user/status')
   // handle success
   .success(function (data) {
     if(data.status){
@@ -787,12 +787,13 @@ http://localhost:3000/user/logout
 <pre><code class="javascript">myApp.run(function ($rootScope, $location, $route, AuthService) {
   $rootScope.$on('$routeChangeStart',
     function (event, next, current) {
-      AuthService.getUserStatus();
-      if (next.access.restricted &amp;&amp;
-          !AuthService.isLoggedIn()) {
-        $location.path('/login');
-        $route.reload();
-      }
+      AuthService.getUserStatus()
+      .then(function(){
+        if (next.access.restricted &amp;&amp; !AuthService.isLoggedIn()){
+          $location.path('/login');
+          $route.reload();
+        }
+      });
   });
 });
 </code></pre>
