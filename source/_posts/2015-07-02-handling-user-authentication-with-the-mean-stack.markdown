@@ -685,7 +685,7 @@ Fortunately, the fix is simple: Within the `$routeChangeStart` we need to ALWAYS
 
 ``` javascript
 function getUserStatus() {
-  $http.get('/user/status')
+  return $http.get('/user/status')
   // handle success
   .success(function (data) {
     if(data.status){
@@ -722,12 +722,13 @@ Finally, update the `$routeChangeStart`:
 myApp.run(function ($rootScope, $location, $route, AuthService) {
   $rootScope.$on('$routeChangeStart',
     function (event, next, current) {
-      AuthService.getUserStatus();
-      if (next.access.restricted &&
-          !AuthService.isLoggedIn()) {
-        $location.path('/login');
-        $route.reload();
-      }
+      AuthService.getUserStatus()
+      .then(function(){
+        if (next.access.restricted && !AuthService.isLoggedIn()){
+          $location.path('/login');
+          $route.reload();
+        }
+      });
   });
 });
 ```
