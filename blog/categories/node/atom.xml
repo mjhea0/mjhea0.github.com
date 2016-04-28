@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Node | Michael Herman]]></title>
   <link href="http://mherman.org/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mherman.org/"/>
-  <updated>2016-04-17T11:10:20-06:00</updated>
+  <updated>2016-04-28T08:44:46-06:00</updated>
   <id>http://mherman.org/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,1126 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Test Driven Development With Node, Postgres, and Knex (Red/Green/Refactor)]]></title>
+    <link href="http://mherman.org/blog/2016/04/28/test-driven-development-with-node/"/>
+    <updated>2016-04-28T08:07:39-06:00</updated>
+    <id>http://mherman.org/blog/2016/04/28/test-driven-development-with-node</id>
+    <content type="html"><![CDATA[<p><strong>Today we will be developing a RESTful API with <a href="https://nodejs.org">Node</a>, <a href="http://expressjs.com/">Express</a>, <a href="http://knexjs.org/">Knex</a> - a SQL query builder - and <a href="http://www.postgresql.org/">PostgreSQL</a> using test driven development (TDD).</strong></p>
+
+<p>This post assumes prior knowledge of:</p>
+
+<ul>
+<li>SQL</li>
+<li>Node/Express</li>
+<li>NPM Packages</li>
+</ul>
+
+
+<h2>Getting Started</h2>
+
+<p>Before we can start testing and writing code we need to set up our project, a database, and all the required dependencies&hellip;</p>
+
+<h3>Project Setup</h3>
+
+<p>First, we need to create a basic boilerplate Express application. To do this, first install the <a href="http://expressjs.com/en/starter/generator.html">Express-Generator</a> globally:</p>
+
+<pre><code class="sh">$ npm install express-generator@4.13.1 -g
+</code></pre>
+
+<p>We can now generate a basic Express application boilerplate:</p>
+
+<pre><code class="sh">$ express mocha-chai-knex
+$ cd mocha-chai-knex
+$ npm install
+</code></pre>
+
+<p>Run <code>npm start</code> to ensure the application works. Once the server is running, navigate to <a href="http://localhost:3000/">http://localhost:3000/</a>, and you should see &lsquo;Welcome to Express&rsquo; on the main page.</p>
+
+<h3>Database Setup</h3>
+
+<p>Start by installing <a href="http://www.postgresql.org/">PostgreSQL</a> from the official <a href="http://www.postgresql.org/download/">download page</a>.</p>
+
+<blockquote><p>If you&rsquo;re on a Mac we recommend using <a href="http://postgresapp.com/">Postgress.app</a>.</p></blockquote>
+
+<p>As noted, we&rsquo;ll be using <a href="http://knexjs.org/">Knex</a> to interact with our database. Knex is a SQL query builder that we can use with PostgreSQL to handle migrations, manage the schema, and query the database.</p>
+
+<p>Let&rsquo;s start by installing <a href="http://knexjs.org/">Knex</a> and <a href="https://github.com/brianc/node-postgres">pg</a>, a module for interacting with Postgres.</p>
+
+<pre><code class="sh">$ npm install pg@4.5.3 knex@0.10.0 --save
+$ npm install knex@0.10.0 -g
+</code></pre>
+
+<p>Next, we need to create two new databases, one for developing and the other for testing. Open <a href="http://www.postgresql.org/docs/9.5/static/app-psql.html">psql</a> in the terminal, and create a new database:</p>
+
+<pre><code class="sh">$ psql
+psql (9.4.5)
+Type "help" for help.
+
+# CREATE DATABASE mocha_chai_tv_shows;
+CREATE DATABASE
+# CREATE DATABASE mocha_chai_tv_shows_test;
+CREATE DATABASE
+# \q
+</code></pre>
+
+<p>With out database created we can initialize Knex.</p>
+
+<h3>Knex Setup</h3>
+
+<p>Run the following command to create <em>knexfile.js</em>, the <a href="http://knexjs.org/#knexfile">Knex configuration file</a>:</p>
+
+<pre><code class="sh">$ knex init
+Created ./knexfile.js
+</code></pre>
+
+<p>Update the default info to:</p>
+
+<pre><code class="javascript">module.exports = {
+  test: {
+    client: 'pg',
+    connection: 'postgres://localhost/mocha_chai_tv_shows_test',
+    migrations: {
+      directory: __dirname + '/db/migrations'
+    },
+    seeds: {
+      directory: __dirname + '/db/seeds/test'
+    }
+  },
+  development: {
+    client: 'pg',
+    connection: 'postgres://localhost/mocha_chai_tv_shows',
+    migrations: {
+      directory: __dirname + '/db/migrations'
+    },
+    seeds: {
+      directory: __dirname + '/db/seeds/development'
+    }
+  },
+  production: {
+    client: 'pg',
+    connection: process.env.DATABASE_URL,
+    migrations: {
+      directory: __dirname + '/db/migrations'
+    },
+    seeds: {
+      directory: __dirname + '/db/seeds/production'
+    }
+  }
+};
+</code></pre>
+
+<p>This sets up three different settings for our databases:</p>
+
+<ol>
+<li><code>test</code> - for testing on the local environment</li>
+<li><code>development</code> - for developing, again on the local environment</li>
+<li><code>production</code> - for the production environment</li>
+</ol>
+
+
+<p>Now, we can add schema migrations. <a href="https://en.wikipedia.org/wiki/Schema_migration">Migrations</a> allow us to define and update the database schema. We can create migrations in the terminal like so:</p>
+
+<pre><code class="sh">$ knex migrate:make tv_shows
+</code></pre>
+
+<p>Now, knex has automatically added in a &ldquo;db/migrations&rdquo; folder, with a timestamped file inside of it. Here is where we define our schema. It should just contain two empty functions at the moment.</p>
+
+<p> Let&rsquo;s add in our code to create and drop tables.</p>
+
+<pre><code class="javascript">exports.up = function(knex, Promise) {
+  return knex.schema.createTable('shows', function(table){
+    table.increments();
+    table.string('name').notNullable().unique();
+    table.string('channel').notNullable();
+    table.string('genre').notNullable();
+    table.integer('rating').notNullable();
+    table.boolean('explicit').notNullable();
+  });
+};
+
+exports.down = function(knex, Promise) {
+  return knex.schema.dropTable('shows');
+};
+</code></pre>
+
+<p>Here, the <code>up</code> function creates the <code>shows</code> table while the <code>down</code> function drops the table. So we now have a schema defined, and a migration file ready to create that schema.</p>
+
+<p>Create a new file called <em>knex.js</em> inside the &ldquo;db&rdquo; folder. In this file we specify the environment (<code>test</code>, <code>development</code>, or <code>production</code>), require the <em>knexfile.js</em>, and export the configuration (based on the environment) for our database:</p>
+
+<pre><code class="javascript">var environment = process.env.NODE_ENV || 'development';
+var config = require('../knexfile.js')[environment];
+
+module.exports = require('knex')(config);
+</code></pre>
+
+<p>Apply the migrations to both databases:</p>
+
+<pre><code class="sh">$ knex migrate:latest --env development
+$ knex migrate:latest --env test
+</code></pre>
+
+<h3>Knex Seeds</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Database_seeding">Seeding</a> is simply the process of populating the database with initial data. Knex utilizes <a href="http://knexjs.org/#Seeds-CLI">seed files</a> for this.</p>
+
+<p>Run the following in your terminal to create a seed for development:</p>
+
+<pre><code class="sh">$ knex seed:make shows_seed --env development
+</code></pre>
+
+<p>This will generate a folder called &ldquo;seeds/development&rdquo; in the &ldquo;db&rdquo; directory of your project, and in that file there will be a boilerplate setup for inserting data into the database:</p>
+
+<pre><code class="javascript">exports.seed = function(knex, Promise) {
+  return Promise.join(
+    // Deletes ALL existing entries
+    knex('table_name').del(),
+
+    // Inserts seed entries
+    knex('table_name').insert({id: 1, colName: 'rowValue'}),
+    knex('table_name').insert({id: 2, colName: 'rowValue2'}),
+    knex('table_name').insert({id: 3, colName: 'rowValue3'})
+  );
+};
+</code></pre>
+
+<p>Let&rsquo;s change the file so we&rsquo;re inserting relevant data. Notice how there&rsquo;s also built-in promises so that the data will be seeded in the order that we specify:</p>
+
+<pre><code class="javascript">exports.seed = function(knex, Promise) {
+  return Promise.join(
+    // Deletes ALL existing entries
+    knex('shows').del(),
+    // Inserts seed entries
+    knex('shows').insert({
+      name: 'Suits',
+      channel: 'USA Network',
+      genre: 'Drama',
+      rating: 3,
+      explicit: false
+    })
+    .then(function(response) {
+      return knex('shows').insert({
+        name: 'Game of Thrones',
+        channel: 'HBO',
+        genre: 'Fantasy',
+        rating: 5,
+        explicit: true
+      })
+      .then(function(response) {
+        return knex('shows').insert({
+          name: 'South Park',
+          channel: 'Comedy Central',
+          genre: 'Comedy',
+          rating: 4,
+          explicit: true
+        })
+        .then(function(response) {
+          return knex('shows').insert({
+            name: 'Mad Men',
+            channel: 'AMC',
+            genre: 'Drama',
+            rating: 3,
+            explicit: false
+          });
+        });
+      });
+    })
+  );
+};
+</code></pre>
+
+<p>Here, we are nesting promises so that each query only runs after the previous one has finished. This will prove very useful when we&rsquo;re testing the database later on. Because JavaScript is asynchronous, the order that data is inserted can sometimes change. We want to make sure that the data is in the same order each time we run our seed file(s).</p>
+
+<p>Run the seed file:</p>
+
+<pre><code class="sh">$ knex seed:run --env development
+</code></pre>
+
+<p>Before moving on, follow the same process for the test seed. Just use the same data as the development seed.</p>
+
+<h3>Mocha/Chai Setup</h3>
+
+<p>With the database set up with data in it, we can start setting up our tests. Start by installing <a href="http://mochajs.org/">Mocha</a> (test runner) and <a href="http://chaijs.com/">Chai</a> (<a href="https://en.wikipedia.org/wiki/Assertion_(software_development">assertion</a>) as well as <a href="https://github.com/chaijs/chai-http">ChaiHTTP</a> (HTTP request module for integration testing). Make sure to also install mocha globally, so that we can run tests from the command line.</p>
+
+<pre><code class="sh">$ npm install mocha@2.4.5 -g
+$ npm install mocha@2.4.5 chai@3.5.0 chai-http@2.0.1 --save-dev
+</code></pre>
+
+<p>By default, Mocha searches for tests with a &ldquo;test&rdquo; folder.</p>
+
+<blockquote><p>This configuration can be changed with a <a href="https://mochajs.org/#mochaopts">mocha.opts</a> file</p></blockquote>
+
+<p>Add a &ldquo;test&rdquo; folder to the root directory, and in that folder add a file called <em>routes.spec.js</em>. Then update <em>routes/index.js</em>:</p>
+
+<pre><code class="javascript">var express = require('express');
+var router = express.Router();
+
+
+// *** GET all shows *** //
+router.get('/shows', function(req, res, next) {
+  res.send('send shows back');
+});
+
+
+module.exports = router;
+</code></pre>
+
+<p>Then within <em>app.js</em> update this line-</p>
+
+<pre><code class="javascript">app.use('/', routes);
+</code></pre>
+
+<p>-to-</p>
+
+<pre><code class="javascript">app.use('/api/v1', routes);
+</code></pre>
+
+<p>Now every single route in that file will be prefixed with &lsquo;/api/v1&rsquo; Try it out. Fire up the server, and navigate to <a href="http://localhost:3000/api/v1/shows">http://localhost:3000/api/v1shows</a>. You should see the string &lsquo;send shows back&rsquo; in the browser.</p>
+
+<p>Finally, update this line in <em>app.js</em>-</p>
+
+<pre><code class="javascript">app.use(logger('dev'));
+</code></pre>
+
+<p>-to-</p>
+
+<pre><code class="javascript">if (process.env.NODE_ENV !== 'test') {
+  app.use(logger('dev'));
+}
+</code></pre>
+
+<p>This <a href="http://stackoverflow.com/a/22710649/1799408">prevents</a> application log messages from displaying in the stdout when the tests are ran, making it much easier to read the output.</p>
+
+<p>And make sure the error handlers return JSON:</p>
+
+<pre><code class="javascript">// error handlers
+
+// development error handler
+// will print stacktrace
+if (app.get('env') === 'development') {
+  app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.json({
+      message: err.message,
+      error: err
+    });
+  });
+}
+
+// production error handler
+// no stacktraces leaked to user
+app.use(function(err, req, res, next) {
+  res.status(err.status || 500);
+  res.json({
+    message: err.message,
+    error: {}
+  });
+});
+</code></pre>
+
+<h2>Developing via TDD</h2>
+
+<p>The premise behind Test Driven Development (TDD) is that you write tests first that fail which you then make pass. This process is often referred to as <a href="https://github.com/mjhea0/flaskr-tdd#test-driven-development">Red/Green/Refactor</a>.</p>
+
+<h3>Test Setup</h3>
+
+<p>In our test file, we&rsquo;ll need to start by including the necessary requirements for testing:</p>
+
+<pre><code class="javascript">process.env.NODE_ENV = 'test';
+
+var chai = require('chai');
+var should = chai.should();
+var chaiHttp = require('chai-http');
+var server = require('../app');
+
+
+
+chai.use(chaiHttp);
+
+describe('API Routes', function() {
+
+});
+</code></pre>
+
+<p>The first line sets the <code>NODE_ENV</code> to <code>test</code> so that the correct Knex config is used from <em>knexfile.js</em>. The next line requires <code>chai</code>, the assertion module, giving us access to all the <code>chai</code> methods - like <code>should()</code>.</p>
+
+<blockquote><p>By utilizing <code>should()</code> we are using the <a href="http://chaijs.com/guide/styles/#should">should</a> assertion style. This is a personal preference. You could also use <a href="http://chaijs.com/guide/styles/#expect">expect</a> or <a href="http://chaijs.com/guide/styles/#assert">assert</a>.</p></blockquote>
+
+<p>Then we require <code>chai-http</code>. This module allows us make http requests from within our test file. Next, we link to our app so that we can test the request-response cycle. Finally, the <code>describe</code> block underneath the requirements is the wrapper for the tests. Keep in mind that you can nest <code>describe</code> <a href="http://samwize.com/2014/02/08/a-guide-to-mochas-describe-it-and-setup-hooks/">blocks</a> to better organize your test structure by grouping similar tests together.</p>
+
+<h3>GET all shows</h3>
+
+<h4>Red</h4>
+
+<p>In the first test case, which is nested inside the first <code>describe</code> block, we want to get ALL shows in our database:</p>
+
+<pre><code class="javascript">describe('GET /api/v1/shows', function() {
+  it('should return all shows', function(done) {
+    chai.request(server)
+    .get('/api/v1/shows')
+    .end(function(err, res) {
+    res.should.have.status(200);
+    res.should.be.json; // jshint ignore:line
+    res.body.should.be.a('array');
+    res.body.length.should.equal(4);
+    res.body[0].should.have.property('name');
+    res.body[0].name.should.equal('Suits');
+    res.body[0].should.have.property('channel');
+    res.body[0].channel.should.equal('USA Network');
+    res.body[0].should.have.property('genre');
+    res.body[0].genre.should.equal('Drama');
+    res.body[0].should.have.property('rating');
+    res.body[0].rating.should.equal(3);
+    res.body[0].should.have.property('explicit');
+    res.body[0].explicit.should.equal(false);
+    done();
+    });
+  });
+});
+</code></pre>
+
+<p>So, we have a <code>describe</code> block, and within that block, we have a single <code>it</code> statement. An <code>it</code> statement defines a specific test case. Here we hit the route &lsquo;/api/v1/shows&rsquo; with a GET request and test that the actual response is the same as the expected response.</p>
+
+<p>Let&rsquo;s break this test down&hellip;</p>
+
+<p>First, by removing the test conditions, we can look at the basic test structure:</p>
+
+<pre><code class="javascript">it('should return all shows', function(done) {
+  chai.request(server)
+  .get('/api/v1/shows')
+  .end(function(err, res) {
+    done();
+  });
+});
+</code></pre>
+
+<p>Since this is an asynchronous test, we need some way of telling the callback function that the test is complete. This is where the <code>done()</code> callback method comes into play. Once called (or if a two second timer is exceeded), Mocha knows that the test is finished running, and it can move on to the next test.</p>
+
+<p>Now let&rsquo;s look at the assertions:</p>
+
+<pre><code class="javascript">res.should.have.status(200);
+res.should.be.json; // jshint ignore:line
+res.body.should.be.a('array');
+res.body.length.should.equal(4);
+res.body[0].should.have.property('name');
+res.body[0].name.should.equal('Suits');
+res.body[0].should.have.property('channel');
+res.body[0].channel.should.equal('USA Network');
+res.body[0].should.have.property('genre');
+res.body[0].genre.should.equal('Drama');
+res.body[0].should.have.property('rating');
+res.body[0].rating.should.equal(3);
+res.body[0].should.have.property('explicit');
+res.body[0].explicit.should.equal(false);
+</code></pre>
+
+<p>The first thing we generally want to do, is test that the response has a status of 200. After that, these tests will change depending on what we return in the route handler. In this case, we are expecting that the content type is JSON and that the response body will be an array (of objects) and have a length equal to four (since there are four rows in the database). Finally, we are testing the keys and values within the first object of the array.</p>
+
+<p>Try it out:</p>
+
+<pre><code class="sh">$ mocha
+</code></pre>
+
+<p>If all went well you should see this:</p>
+
+<pre><code class="sh">  API Routes
+    GET /api/v1/shows
+      1) should return all shows
+
+
+  0 passing (59ms)
+  1 failing
+
+  1) API Routes GET /api/v1/shows should return all shows:
+     Uncaught AssertionError: expected 'text/html; charset=utf-8'
+     to include 'application/json'
+</code></pre>
+
+<p>Essentially, the second assertion - <code>res.should.be.json;</code> - failed since we are sending plain text back. This is good! Remember: Red-Green-Refactor!</p>
+
+<p>We just need to update the route to get the test to pass.</p>
+
+<h4>Green</h4>
+
+<p>Before updating the route, let&rsquo;s create a queries module for handling, well, the database queries. Create a new file called <em>queries.js</em> with the &ldquo;db&rdquo; folder, and add the following code:</p>
+
+<pre><code class="javascript">var knex = require('./knex.js');
+
+function Shows() {
+  return knex('shows');
+}
+
+// *** queries *** //
+
+function getAll() {
+  return Shows().select();
+}
+
+
+module.exports = {
+  getAll: getAll
+};
+</code></pre>
+
+<p>Here, we made a reference to our database via the Knex config file, added a helper function for simplifying each individual query, and finally queried the database to get ALL shows.</p>
+
+<p>Update the route:</p>
+
+<pre><code class="javascript">var express = require('express');
+var router = express.Router();
+
+var queries = require('../db/queries');
+
+
+// *** GET all shows *** //
+router.get('/shows', function(req, res, next) {
+  queries.getAll()
+  .then(function(shows) {
+    res.status(200).json(shows);
+  })
+  .catch(function(error) {
+    next(error);
+  });
+});
+
+
+module.exports = router;
+</code></pre>
+
+<p>Run mocha again and see what happens:</p>
+
+<pre><code class="sh">API Routes
+  GET /api/v1/shows
+    ✓ should return all shows (128ms)
+
+
+1 passing (164ms)
+</code></pre>
+
+<p>Awesome! Just don&rsquo;t forget the last step - refactor.</p>
+
+<h4>Refactor</h4>
+
+<p>What&rsquo;s happening in the test database?</p>
+
+<pre><code class="sh"># psql
+psql (9.4.5)
+Type "help" for help.
+
+# \c mocha_chai_tv_shows_test
+You are now connected to database "mocha_chai_tv_shows".
+mocha_chai_tv_shows=# SELECT * FROM shows;
+ id |      name       |    channel     |  genre  | rating | explicit
+----+-----------------+----------------+---------+--------+----------
+  1 | Suits           | USA Network    | Drama   |      3 | f
+  2 | Game of Thrones | HBO            | Fantasy |      5 | t
+  3 | South Park      | Comedy Central | Comedy  |      4 | t
+  4 | Mad Men         | AMC            | Drama   |      3 | f
+(4 rows)
+
+#\q
+</code></pre>
+
+<p>Since we seeded the database earlier, there&rsquo;s data already in there, which could affect other tests (especially when rows are added, changed, and/or dropped). In the test, we are asserting that the length of the array is four. Well, if we add an item then that&rsquo;s going to change the length, and that first test will fail.</p>
+
+<p>Tests should be isolated from each other. So, we really should rollback the migrations before and after each test is ran, and then apply the migrations and re-seed the database before the next test is ran.</p>
+
+<p>This is where <code>beforeEach</code> and <code>afterEach</code> come into play:</p>
+
+<pre><code class="javascript">process.env.NODE_ENV = 'test';
+
+var chai = require('chai');
+var chaiHttp = require('chai-http');
+var server = require('../app');
+var knex = require('../db/knex');
+
+var should = chai.should();
+
+chai.use(chaiHttp);
+
+describe('API Routes', function() {
+
+  beforeEach(function(done) {
+    knex.migrate.rollback()
+    .then(function() {
+      knex.migrate.latest()
+      .then(function() {
+        return knex.seed.run()
+        .then(function() {
+          done();
+        });
+      });
+    });
+  });
+
+  afterEach(function(done) {
+    knex.migrate.rollback()
+    .then(function() {
+      done();
+    });
+  });
+
+  describe('Get all shows', function() {
+    it('should get all shows', function(done) {
+      chai.request(server)
+      .get('/api/v1/shows')
+      .end(function(err, res) {
+        res.should.have.status(200);
+        res.should.be.json; // jshint ignore:line
+        res.body.should.be.a('array');
+        res.body.length.should.equal(4);
+        res.body[0].should.have.property('name');
+        res.body[0].name.should.equal('Suits');
+        res.body[0].should.have.property('channel');
+        res.body[0].channel.should.equal('USA Network');
+        res.body[0].should.have.property('genre');
+        res.body[0].genre.should.equal('Drama');
+        res.body[0].should.have.property('rating');
+        res.body[0].rating.should.equal(3);
+        res.body[0].should.have.property('explicit');
+        res.body[0].explicit.should.equal(false);
+        done();
+      });
+    });
+  });
+
+});
+</code></pre>
+
+<p>Now, the migrations will run and the database will be re-seeded before each nested <code>describe</code> block, and the migrations will be rolled back after each block (which will also drop the data).</p>
+
+<blockquote><p>Why rollback before each test? If any errors occur during a test, it won&rsquo;t reach the <code>afterEach</code> block. So we want to make sure that if an error occurs we still rollback the database.</p></blockquote>
+
+<p>Run the tests again:</p>
+
+<pre><code class="sh">API Routes
+  GET /api/v1/shows
+    ✓ should return all shows (52ms)
+
+
+1 passing (325ms)
+</code></pre>
+
+<p>1 down, 4 to go!!!</p>
+
+<blockquote><p>Did you notice how the overall time is slightly slower? 325ms vs 164ms. This is because of the <code>beforeEach</code> and <code>afterEach</code>. Think about what&rsquo;s happening, and why this would slow down the tests.</p></blockquote>
+
+<h3>GET single show</h3>
+
+<p>We have our route and test built to get All shows, so the next step is to just get one show back.</p>
+
+<h4>Red</h4>
+
+<p>Based on our test seed, the first show that should (you never know for certain with async code) is <code>Suits</code>:</p>
+
+<pre><code class="javascript">{
+  name: 'Suits',
+  channel: 'USA Network',
+  genre: 'Drama',
+  rating: 3,
+  explicit: false
+}
+</code></pre>
+
+<p>We can write out a test for a new route that will return just a single show and the meta information about it. Remember our last test? It returned an array of objects. This time it should be a <em>single</em> object since we will be searching for a <em>single</em> item in the database.</p>
+
+<pre><code class="javascript">describe('GET /api/v1/shows/:id', function() {
+  it('should return a single show', function(done) {
+    chai.request(server)
+    .get('/api/v1/shows/1')
+    .end(function(err, res) {
+      res.should.have.status(200);
+      res.should.be.json; // jshint ignore:line
+      res.body.should.be.a('object');
+      res.body.should.have.property('name');
+      res.body.name.should.equal('Suits');
+      res.body.should.have.property('channel');
+      res.body.channel.should.equal('USA Network');
+      res.body.should.have.property('genre');
+      res.body.genre.should.equal('Drama');
+      res.body.should.have.property('rating');
+      res.body.rating.should.equal(3);
+      res.body.should.have.property('explicit');
+      res.body.explicit.should.equal(false);
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>This is very similar to the previous test. We&rsquo;re still testing for a status code of 200, and the response should be JSON. This time, we expect that <code>res.body</code> is an object. Each of the properties afterwards should be the properties of the item with id &lsquo;1&rsquo; in the database. So now if we run the tests, the first assertion should fail because we haven&rsquo;t written our route yet:</p>
+
+<pre><code class="sh">API Routes
+  GET /api/v1/shows
+    ✓ should return all shows
+  GET /api/v1/shows/:id
+    1) should return a single show
+
+
+1 passing (383ms)
+1 failing
+
+1) API Routes GET /api/v1/shows/:id should return a single show:
+   Uncaught AssertionError: expected { Object (domain, _events, ...) }
+   to have status code 200 but got 404
+</code></pre>
+
+<h4>Green</h4>
+
+<p>Add the query to <em>queries.js</em>, making sure to update <code>module.exports</code>:</p>
+
+<pre><code class="javascript">function getSingle(showID) {
+  return Shows().where('id', parseInt(showID)).first();
+}
+
+
+module.exports = {
+  getAll: getAll,
+  getSingle: getSingle
+};
+</code></pre>
+
+<p>Then build out the route:</p>
+
+<pre><code class="javascript">// *** GET single show *** //
+router.get('/shows/:id', function(req, res, next) {
+  queries.getSingle(req.params.id)
+  .then(function(show) {
+    res.status(200).json(show);
+  })
+  .catch(function(error) {
+    next(error);
+  });
+});
+</code></pre>
+
+<p>Now run mocha, and let&rsquo;s see if that worked:</p>
+
+<pre><code class="sh">API Routes
+  GET /api/v1/shows
+    ✓ should return all shows (54ms)
+  GET /api/v1/shows/:id
+    ✓ should return a single show
+
+
+2 passing (499ms)
+</code></pre>
+
+<p>Two routes down, two tests passing.</p>
+
+<h3>POST</h3>
+
+<p>We now want to add an item to our database.</p>
+
+<h4>Red</h4>
+
+<p>For time&rsquo;s sake, write the test assuming you will get a JSON object back that contains the data added to the database:</p>
+
+<pre><code class="javascript">describe('POST /api/v1/shows', function() {
+  it('should add a show', function(done) {
+    chai.request(server)
+    .post('/api/v1/shows')
+    .send({
+      name: 'Family Guy',
+      channel : 'Fox',
+      genre: 'Comedy',
+      rating: 4,
+      explicit: true
+    })
+    .end(function(err, res) {
+      res.should.have.status(200);
+      res.should.be.json; // jshint ignore:line
+      res.body.should.be.a('object');
+      res.body.should.have.property('name');
+      res.body.name.should.equal('Family Guy');
+      res.body.should.have.property('channel');
+      res.body.channel.should.equal('Fox');
+      res.body.should.have.property('genre');
+      res.body.genre.should.equal('Comedy');
+      res.body.should.have.property('rating');
+      res.body.rating.should.equal(4);
+      res.body.should.have.property('explicit');
+      res.body.explicit.should.equal(true);
+      done();
+    });
+  });
+  });
+</code></pre>
+
+<p>You can see here that our test block is slightly different than the previous two since we need to send information with the request to replicate how a client might send information to the server.</p>
+
+<h4>Green</h4>
+
+<p>With the test written and failing (did you remember to run the tests?), we can write the query and add the route (notice the pattern yet?).</p>
+
+<p>Query:</p>
+
+<pre><code class="javascript">function add() {
+  return Shows().insert(show, 'id');
+}
+</code></pre>
+
+<p>Route:</p>
+
+<pre><code class="javascript">// *** add show *** //
+router.post('/shows', function(req, res, next) {
+  queries.add(req.body)
+  .then(function(showID) {
+    queries.getSingle(showID)
+    .then(function(show) {
+      res.status(200).json(show);
+    })
+    .catch(function(error) {
+      next(error);
+    });
+  })
+  .catch(function(error) {
+    next(error);
+  });
+});
+</code></pre>
+
+<p><code>.insert()</code> returns an array containing the unique ID of the newly added item, so in order to return the actual data, we utilized the <code>getSingle()</code> query. This also ensures that the data has been inserted into the database correctly.</p>
+
+<p>Do the tests pass?</p>
+
+<pre><code class="sh">API Routes
+  GET /api/v1/shows
+    ✓ should return all shows (50ms)
+  GET /api/v1/shows/:id
+    ✓ should return a single show
+  POST /api/v1/shows
+    ✓ should add a show (71ms)
+
+
+3 passing (791ms)
+</code></pre>
+
+<p>Excellent. Just two routes left to go.</p>
+
+<h3>PUT</h3>
+
+<p>We need to test the edit route.</p>
+
+<h4>Red</h4>
+
+<p>Similar to our POST route we will need to send data to the server. In this case, we&rsquo;ll utilize the ID of an existing show in the database and send along an object with the updated fields. Then we&rsquo;ll assert that the show has been updated correctly.</p>
+
+<pre><code class="javascript">describe('PUT /api/v1/shows/:id', function() {
+  it('should update a show', function(done) {
+    chai.request(server)
+    .put('/api/v1/shows/1')
+    .send({
+      rating: 4,
+      explicit: true
+    })
+    .end(function(err, res) {
+      res.should.have.status(200);
+      res.should.be.json; // jshint ignore:line
+      res.body.should.be.a('object');
+      res.body.should.have.property('name');
+      res.body.name.should.equal('Suits');
+      res.body.should.have.property('channel');
+      res.body.channel.should.equal('USA Network');
+      res.body.should.have.property('genre');
+      res.body.genre.should.equal('Drama');
+      res.body.should.have.property('rating');
+      res.body.rating.should.equal(4);
+      res.body.should.have.property('explicit');
+      res.body.explicit.should.equal(true);
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>So here we are stating that the response body should contain the updated object from the database.</p>
+
+<h4>Green</h4>
+
+<p>You know the drill - Start with the query:</p>
+
+<pre><code class="javascript">function update(showID, updates) {
+  return Shows().where('id', parseInt(showID)).update(updates);
+}
+</code></pre>
+
+<p>Then update the route:</p>
+
+<pre><code class="javascript">// *** update show *** //
+router.put('/shows/:id', function(req, res, next) {
+  queries.update(req.params.id, req.body)
+  .then(function() {
+    queries.getSingle(req.params.id)
+    .then(function(show) {
+      res.status(200).json(show);
+    })
+    .catch(function(error) {
+      next(error);
+    });
+  }).catch(function(error) {
+    next(error);
+  });
+});
+</code></pre>
+
+<p>Here, we again make two calls to the database. Once we&rsquo;ve updated the item, we then nest another query to get that same item - which we then check to ensure that it has in fact been updated correctly.</p>
+
+<p>The tests should pass.</p>
+
+<h4>Refactor</h4>
+
+<p>What happens if we try to change the ID? Update the test:</p>
+
+<pre><code class="javascript">describe('PUT /api/v1/shows/:id', function() {
+  it('should update a show', function(done) {
+    chai.request(server)
+    .put('/api/v1/shows/1')
+    .send({
+      id: 20,
+      rating: 4,
+      explicit: true
+    })
+    .end(function(err, res) {
+      res.should.have.status(200);
+      res.should.be.json; // jshint ignore:line
+      res.body.should.be.a('object');
+      res.body.should.have.property('name');
+      res.body.name.should.equal('Suits');
+      res.body.should.have.property('channel');
+      res.body.channel.should.equal('USA Network');
+      res.body.should.have.property('genre');
+      res.body.genre.should.equal('Drama');
+      res.body.should.have.property('rating');
+      res.body.rating.should.equal(4);
+      res.body.should.have.property('explicit');
+      res.body.explicit.should.equal(true);
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Run the tests now and they should fail:</p>
+
+<pre><code class="sh">API Routes
+  GET /api/v1/shows
+    ✓ should return all shows (43ms)
+  GET /api/v1/shows/:id
+    ✓ should return a single show
+  POST /api/v1/shows
+    ✓ should add a show (50ms)
+  PUT /api/v1/shows/:id
+    1) should update a show
+
+
+3 passing (804ms)
+1 failing
+
+1) API Routes PUT /api/v1/shows/:id should update a show:
+   Uncaught AssertionError: expected '' to be an object
+</code></pre>
+
+<p>Why? Because the updated ID of the test does not equal the ID passed in as a query parameter. What does this all mean? The unique ID should never change (unless it&rsquo;s removed altogether).</p>
+
+<pre><code class="javascript">// *** update show *** //
+router.put('/shows/:id', function(req, res, next) {
+  if(req.body.hasOwnProperty('id')) {
+    return res.status(422).json({
+      error: 'You cannot update the id field'
+    });
+  }
+  queries.update(req.params.id, req.body)
+  .then(function() {
+    queries.getSingle(req.params.id)
+    .then(function(show) {
+      res.status(200).json(show);
+    })
+    .catch(function(error) {
+      next(error);
+    });
+  }).catch(function(error) {
+    next(error);
+  });
+});
+</code></pre>
+
+<p>Now, let&rsquo;s revert the changes in the test, by removing <code>id: 20,</code>,  and add a new test:</p>
+
+<pre><code class="javascript">describe('PUT /api/v1/shows/:id', function() {
+  it('should update a show', function(done) {
+    chai.request(server)
+    .put('/api/v1/shows/1')
+    .send({
+      rating: 4,
+      explicit: true
+    })
+    .end(function(err, res) {
+      res.should.have.status(200);
+      res.should.be.json; // jshint ignore:line
+      res.body.should.be.a('object');
+      res.body.should.have.property('name');
+      res.body.name.should.equal('Suits');
+      res.body.should.have.property('channel');
+      res.body.channel.should.equal('USA Network');
+      res.body.should.have.property('genre');
+      res.body.genre.should.equal('Drama');
+      res.body.should.have.property('rating');
+      res.body.rating.should.equal(4);
+      res.body.should.have.property('explicit');
+      res.body.explicit.should.equal(true);
+      done();
+    });
+  });
+  it('should NOT update a show if the id field is part of the request', function(done) {
+    chai.request(server)
+    .put('/api/v1/shows/1')
+    .send({
+      id: 20,
+      rating: 4,
+      explicit: true
+    })
+    .end(function(err, res) {
+      res.should.have.status(422);
+      res.should.be.json; // jshint ignore:line
+      res.body.should.be.a('object');
+      res.body.should.have.property('error');
+      res.body.error.should.equal('You cannot update the id field');
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Run the tests:</p>
+
+<pre><code class="sh">API Routes
+  GET /api/v1/shows
+    ✓ should return all shows (49ms)
+  GET /api/v1/shows/:id
+    ✓ should return a single show
+  POST /api/v1/shows
+    ✓ should add a show (51ms)
+  PUT /api/v1/shows/:id
+    ✓ should update a show
+    ✓ should NOT update a show if the id field is part of the request
+</code></pre>
+
+<p>Boom!</p>
+
+<h3>DELETE</h3>
+
+<p>Now on to the final test - the delete.</p>
+
+<h4>Red</h4>
+
+<p>Again, let&rsquo;s use the ID of the first item in our database as the starting point for the test:</p>
+
+<pre><code class="javascript">describe('DELETE /api/v1/shows/:id', function() {
+  it('should delete a show', function(done) {
+    chai.request(server)
+    .delete('/api/v1/shows/1')
+    .end(function(error, response) {
+      response.should.have.status(200);
+      response.should.be.json; // jshint ignore:line
+      response.body.should.be.a('object');
+      response.body.should.have.property('name');
+      response.body.name.should.equal('Suits');
+      response.body.should.have.property('channel');
+      response.body.channel.should.equal('USA Network');
+      response.body.should.have.property('genre');
+      response.body.genre.should.equal('Drama');
+      response.body.should.have.property('rating');
+      response.body.rating.should.equal(3);
+      response.body.should.have.property('explicit');
+      response.body.explicit.should.equal(false);
+      chai.request(server)
+      .get('/api/v1/shows')
+      .end(function(err, res) {
+        res.should.have.status(200);
+        res.should.be.json; // jshint ignore:line
+        res.body.should.be.a('array');
+        res.body.length.should.equal(3);
+        res.body[0].should.have.property('name');
+        res.body[0].name.should.equal('Game of Thrones');
+        res.body[0].should.have.property('channel');
+        res.body[0].channel.should.equal('HBO');
+        res.body[0].should.have.property('genre');
+        res.body[0].genre.should.equal('Fantasy');
+        res.body[0].should.have.property('rating');
+        res.body[0].rating.should.equal(5);
+        res.body[0].should.have.property('explicit');
+        res.body[0].explicit.should.equal(true);
+        done();
+      });
+    });
+  });
+});
+</code></pre>
+
+<p>The test ensure that the deleted show is returned and that the database no longer contains the show.</p>
+
+<h4>Green</h4>
+
+<p>Query:</p>
+
+<pre><code class="javascript">function deleteItem(showID) {
+  return Shows().where('id', parseInt(showID)).del();
+}
+</code></pre>
+
+<p>Route:</p>
+
+<pre><code class="javascript">// *** delete show *** //
+router.delete('/shows/:id', function(req, res, next) {
+  queries.getSingle(req.params.id)
+  .then(function(show) {
+    queries.deleteItem(req.params.id)
+    .then(function() {
+      res.status(200).json(show);
+    })
+    .catch(function(error) {
+      next(error);
+    });
+  }).catch(function(error) {
+    next(error);
+  });
+});
+</code></pre>
+
+<p>The Knex <code>delete()</code> function returns a number indicating the number of rows in the database that have been affected, so to return the deleted object, we must query for it first.</p>
+
+<p>Let&rsquo;s run those tests!!</p>
+
+<pre><code class="sh">API Routes
+  GET /api/v1/shows
+    ✓ should return all shows (69ms)
+  GET /api/v1/shows/:id
+    ✓ should return a single show
+  POST /api/v1/shows
+    ✓ should add a show (54ms)
+  PUT /api/v1/shows/:id
+    ✓ should update a show
+    ✓ should NOT update a show if the id field is part of the request
+  DELETE /api/v1/shows/:id
+    ✓ should delete a show
+
+
+6 passing (1s)
+</code></pre>
+
+<p>6 tests written. 5 routes built. All tests passing!</p>
+
+<h2>Conclusion</h2>
+
+<p>So there you have it: A test-first approach to developing a RESTful API. Are we done? Not quite since we are not handling or testing for all possible errors.</p>
+
+<p>For example, what would happen if we tried to POST an item without all the required fields? Or if we tried to delete an item that isn&rsquo;t in the database? Sure the <code>catch()</code> methods will handle these, but they are simply passing the request to the built-in error handlers. We should handle these better in the routes and throw back appropriate error messages and status codes.</p>
+
+<p>Try this out on your own. Be sure to grab the code from the <a href="https://github.com/mjhea0/mocha-chai-knex">repository</a>. Cheers!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Designing a RESTful API With Node and Postgres]]></title>
@@ -1727,770 +2847,6 @@ describe('Blobs', function() {
 <h2>Conclusion</h2>
 
 <p>Hopefully you can now see just how easy it is to test your code with Mocha and Chai. Keep practicing on your own, incorporating a true <a href="https://mochajs.org/#bdd">BDD</a> approach into your workflow. Grab the final code for this tutorial from the <a href="https://github.com/mjhea0/node-mocha-chai-tutorial">repository</a>.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Node, Express, Swig, and MongoDB - Getting Started With CRUD]]></title>
-    <link href="http://mherman.org/blog/2015/08/24/node-express-swig-mongo-primer/"/>
-    <updated>2015-08-24T08:11:00-06:00</updated>
-    <id>http://mherman.org/blog/2015/08/24/node-express-swig-mongo-primer</id>
-    <content type="html"><![CDATA[<p><strong>Let&rsquo;s create a basic CRUD app using Node, Express, Swig, and MongoDB.</strong></p>
-
-<div style="text-align:center;">
-  <img src="http://mherman.org/images/node-express.png" style="max-width: 100%; border:0;" alt="mean stack authentication">
-</div>
-
-
-<p><br></p>
-
-<blockquote><p>This tutorial utilizes <a href="http://nodejs.org/">Node</a> v0.12.5, <a href="http://expressjs.com/">Express</a> v4.13.1, <a href="http://paularmstrong.github.io/swig/">Swig</a> and <a href="http://mongoosejs.com/">Mongoose</a> v4.1.3.</p></blockquote>
-
-<h2>Getting started</h2>
-
-<p>Start by downloading the <a href="http://expressjs.com/starter/generator.html">Express application generator</a> (if you don&rsquo;t already have it) to create a basic Express project:</p>
-
-<pre><code class="sh">$ npm install express-generator -g
-</code></pre>
-
-<blockquote><p>The <code>-g</code> flag indicates that you want to install the package globally, on your entire system.</p></blockquote>
-
-<p>Navigate to a convenient directory, like your &ldquo;Desktop&rdquo; or &ldquo;Documents&rdquo;, then create the boilerplate:</p>
-
-<pre><code class="sh">$ express node-express-swig-mongo
-$ cd node-express-swig-mongo
-</code></pre>
-
-<p>Check out the project structure:</p>
-
-<pre><code class="sh">├── app.js
-├── bin
-│   └── www
-├── package.json
-├── public
-│   ├── images
-│   ├── javascripts
-│   └── stylesheets
-│       └── style.css
-├── routes
-│   ├── index.js
-│   └── users.js
-└── views
-    ├── error.jade
-    ├── index.jade
-    └── layout.jade
-</code></pre>
-
-<p>Don&rsquo;t worry about the files and folders for now. Just know that we have created a boilerplate that can be used for a number of Node/Express applications. This took care of the heavy lifting, adding common files, folders, and scripts generally associated with all apps.</p>
-
-<p>Notice the <em>package.json</em> file. This stores your project&rsquo;s dependencies, which we still need to install:</p>
-
-<pre><code class="sh">$ npm install
-</code></pre>
-
-<p>Now let&rsquo;s install Mongoose and Swig:</p>
-
-<pre><code class="sh">$ npm install mongoose swig --save
-</code></pre>
-
-<blockquote><p>The <code>--save</code> flag adds the dependencies and their versions to the <em>package.json</em> file. Take a look.</p></blockquote>
-
-<h2>Sanity check</h2>
-
-<p>Let&rsquo;s test our setup by running the app:</p>
-
-<pre><code class="sh">$ npm start
-</code></pre>
-
-<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser and you should see the &ldquo;Welcome to Express&rdquo; text. Once done, kill the server by pressing CTRL-C.</p>
-
-<h2>Nodemon</h2>
-
-<p>Before moving on, let&rsquo;s setup <a href="http://nodemon.io/">Nodemon</a> so that you can run your app and watch for code changes without having to manually restart the server. Check out the link above to learn more.</p>
-
-<pre><code class="sh">$ npm install nodemon -g
-</code></pre>
-
-<p>Let&rsquo;s test again:</p>
-
-<pre><code class="sh">$ nodemon
-</code></pre>
-
-<p>In your terminal you should see:</p>
-
-<pre><code class="sh">23 Aug 16:31:02 - [nodemon] v1.4.1
-23 Aug 16:31:02 - [nodemon] to restart at any time, enter `rs`
-23 Aug 16:31:02 - [nodemon] watching: *.*
-23 Aug 16:31:02 - [nodemon] starting `node ./bin/www`
-</code></pre>
-
-<p>Essentially, Nodemon is watching for code changes, and if they do occur, then it will refresh the local server for you so you don&rsquo;t have to constantly kill the server then start it back up. It saves a lot of time and keystrokes.</p>
-
-<p>Awesome. With the setup done, let&rsquo;s build something!</p>
-
-<h2>Routes</h2>
-
-<p>Grab your favorite text editor (such as <a href="http://www.sublimetext.com/">Sublime</a> or <a href="https://atom.io/">Atom</a>), and then open the main file, <em>app.js</em>, which houses much of the business logic. Take a look at the routes:</p>
-
-<pre><code class="javascript">app.use('/', routes);
-app.use('/users', users);
-</code></pre>
-
-<p>Understanding how routes work as well as how to trace all the files associated with an individual route is an important skill to learn. You&rsquo;ll be able to approach most applications and understand how they work just by starting with the routes.</p>
-
-<p>Let&rsquo;s look at this route:</p>
-
-<pre><code class="javascript">app.use('/users', users)
-</code></pre>
-
-<p>Here, we know that this route is associated with the <code>/users</code> endpoint. What&rsquo;s an endpoint? Simply navigate to <a href="http://localhost:3000/users">http://localhost:3000/users</a>.</p>
-
-<p>The end user navigates to that endpoint and expects <em>something</em> to happen. That could mean some HTML is rendered or perhaps JSON is returned. That&rsquo;s not important at this point. For now, let&rsquo;s look at how Node handles the logic for &ldquo;handling routes&rdquo;.</p>
-
-<p>Also, within that route, you can see the variable <code>users</code>. Where is in this file? It&rsquo;s at the top, and it loads in another file within our app:</p>
-
-<pre><code class="javascript">var users = require('./routes/users');
-</code></pre>
-
-<p>Open that file:</p>
-
-<pre><code class="javascript">var express = require('express');
-var router = express.Router();
-
-/* GET users listing. */
-router.get('/', function(req, res) {
-  res.send('respond with a resource');
-});
-
-module.exports = router;
-</code></pre>
-
-<p><strong>What&rsquo;s happening here?</strong> Essentially when that endpoint is hit, it responds by sending text in the form of a response to the end user - &ldquo;respond with a resource&rdquo;. Now, of course you don&rsquo;t always have to send text. You could respond with a template or view like a Jade or Swig template file that gets rendered into HTML. We&rsquo;ll look at how this works in just a minute when we add our own routes.</p>
-
-<p><strong>Make sure you understand everything in this section before moving on.</strong></p>
-
-<h3>Add a new route</h3>
-
-<p>Let&rsquo;s now add a new route that renders a HTML form to the end user.</p>
-
-<p>Start by adding the route handler in the <em>app.js</em> file:</p>
-
-<pre><code class="javascript">app.use('/api', api);
-</code></pre>
-
-<blockquote><p>Remember this simply means <code>app.use('/ENDPOINT', VARIABLE_NAME);</code>,</p></blockquote>
-
-<p>Use the <code>api</code> variable to require a JS file within our routes folder.</p>
-
-<pre><code class="javascript">var api = require('./routes/api');
-</code></pre>
-
-<p>Take a look in the terminal. You should see an error, indicating Node can&rsquo;t find the <code>./routes/api</code> module. We need to create it!</p>
-
-<p>Create a new file called <em>api.js</em> in the &ldquo;routes&rdquo; directory. Add the following code:</p>
-
-<pre><code class="javascript">var express = require('express');
-var router = express.Router();
-
-
-router.get('/superheros', function(req, res) {
-  res.send('Just a test');
-});
-
-module.exports = router;
-</code></pre>
-
-<blockquote><p>Do you remember what this code <code>res.send('Just a test');</code> will do? If not, review the previous section.</p></blockquote>
-
-<p>Navigate to <a href="http://localhost:3000/api/superheros">http://localhost:3000/api/superheros</a>. You should see the text &ldquo;Just a test&rdquo; on the page.</p>
-
-<h2>Swig</h2>
-
-<p>Swig is a templating language, which compiles down to HTML, making it easy to separate logic from markup. For more on Swig, check out the <a href="http://mherman.org/blog/2015/08/23/primer-on-swig-templating/#.VdpL_VNViko">Primer on Swig Templating</a>.</p>
-
-<p>Take a quick look at the <em>layout.jade</em>, <em>index.jade</em>, and <em>error.jade</em> files within the &ldquo;views&rdquo; folder. Right now these files are using <a href="http://jade-lang.com/">Jade</a> templating. Let&rsquo;s update these files to remove Jade and add Swig. First, remove the <em>.jade</em> extension from each file and add a <em>.html</em> extension. Now we can update the actual syntax&hellip;</p>
-
-<p><strong><em>layout.html</em></strong></p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="ni">&amp;lt;</span>!DOCTYPE html&gt;
-</span><span class='line'><span class="nt">&lt;html&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;head&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;title&gt;</span>{{ title }}<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;http://mherman.org/css/main.css&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;body&gt;</span>
-</span><span class='line'>    {% block content %}
-</span><span class='line'>    {% endblock %}
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src=</span><span class="s">&quot;//code.jquery.com/jquery-2.1.4.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src=</span><span class="s">&quot;http://mherman.org/js/main.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p><strong><em>index.html</em></strong></p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends <span class="ni">&amp;lsquo;</span>layout.html<span class="ni">&amp;rsquo;</span> %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block title %}{% endblock %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block content %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>h1<span class="ni">&amp;gt;</span>{{ title }}<span class="ni">&amp;lt;</span>/h1<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>p<span class="ni">&amp;gt;</span>Welcome to {{ title }}<span class="ni">&amp;lt;</span>/p<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;/div&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% endblock %}
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p><strong><em>error.html</em></strong></p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends <span class="ni">&amp;lsquo;</span>layout.html<span class="ni">&amp;rsquo;</span> %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block title %}{% endblock %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block content %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>h1<span class="ni">&amp;gt;</span>{{ message }}<span class="ni">&amp;lt;</span>/h1<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>h2<span class="ni">&amp;gt;</span>{{ error.status }}<span class="ni">&amp;lt;</span>/h2<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>pre<span class="ni">&amp;gt;</span>{{ error.stack }}<span class="ni">&amp;lt;</span>/pre<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;/div&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% endblock %}
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Finally, update <em>app.js</em> by requiring the following dependency at the top of the file:</p>
-
-<pre><code class="javascript">var swig = require('swig');
-</code></pre>
-
-<p>Then set Swig as the template engine by replacing <code>app.set('view engine', 'jade');</code> with-</p>
-
-<pre><code class="javascript">var swig = new swig.Swig();
-app.engine('html', swig.renderFile);
-app.set('view engine', 'html');
-</code></pre>
-
-<p>Jump back to the &ldquo;views&rdquo;, and take a look at <em>layout.html</em> and <em>index.html</em>. There&rsquo;s a relationship between those two files. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
-
-<p>Do you see the <code>block</code> keyword?</p>
-
-<p>What really happens when the <em>index</em> file is rendered is that it first renders the base template because of the <code>extends</code> keyword. So, the <em>layout</em> template then gets rendered, which eventually pulls in the child template, overwriting the <code>block</code> keyword with:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nt">&lt;h1&gt;</span>{{ title }}<span class="nt">&lt;/h1&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;p&gt;</span>Welcome to {{ title }}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;/div&gt;</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Hope that makes sense. If not, check out <a href="http://mherman.org/blog/2015/08/23/primer-on-swig-templating/#template-inheritence">this</a> resource for more info on template inheritance.</p>
-
-<h3>Setup <em>api.html</em></h3>
-
-<p>Create a new file called <em>api.html</em> in the &ldquo;views&rdquo; directory, and then add the following code:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends <span class="ni">&amp;lsquo;</span>layout.html<span class="ni">&amp;rsquo;</span> %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block title %}{% endblock %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block content %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>h1<span class="ni">&amp;gt;</span>{{ title }}<span class="ni">&amp;lt;</span>/h1<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>p<span class="ni">&amp;gt;</span>Welcome to {{ title }}<span class="ni">&amp;lt;</span>/p<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;/div&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% endblock %}
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>The same thing is happening here with inheritance. If you&rsquo;re unfamiliar with Swig syntax, <code>{{ title }}</code> is essentially a variable, which we can pass in from <code>./routes/api.js</code>.</p>
-
-<p>Update <code>./routes/api.js</code> by changing-</p>
-
-<pre><code class="javascript">res.send('Just a test');
-</code></pre>
-
-<p>-to-</p>
-
-<pre><code class="javascript">res.render('api', { title: 'Superhero API' });
-</code></pre>
-
-<p>This just says, &ldquo;When a user hits the <code>/api/superheros</code> endpoint, render the <em>api.html</em> file and pass in <code>Superhero API</code> as the title.&rdquo;</p>
-
-<blockquote><p>Keep in mind that all Swig files are converted to HTML since browsers can&rsquo;t read the Swig templating syntax.</p></blockquote>
-
-<p>Ready to test? Simple refresh <a href="http://localhost:3000/api/superheros">http://localhost:3000/api/superheros</a>.</p>
-
-<p>Did it work? If yes, move on. If not, go back through this section and review.</p>
-
-<h3>Update <em>api.html</em></h3>
-
-<p>So, let&rsquo;s update the template to display a form:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends <span class="ni">&amp;lsquo;</span>layout.html<span class="ni">&amp;rsquo;</span> %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block title %}{% endblock %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block content %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>h1<span class="ni">&amp;gt;</span>{{ title }}<span class="ni">&amp;lt;</span>/h1<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>br<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>form method=&quot;post&quot; action=&quot;/api/superheros&quot; class=&quot;form-inline&quot;<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>div class=&quot;form-group&quot;<span class="ni">&amp;gt;</span>
-</span><span class='line'>    <span class="ni">&amp;lt;</span>label<span class="ni">&amp;gt;</span>Superhero name<span class="ni">&amp;lt;</span>/label<span class="ni">&amp;gt;</span>
-</span><span class='line'>    <span class="ni">&amp;lt;</span>input type=&quot;text&quot; name=&quot;name&quot; class=&quot;form-control&quot; required<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>/div<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>button type=&quot;submit&quot; class=&quot;btn btn-default&quot;<span class="ni">&amp;gt;</span>Save<span class="ni">&amp;lt;</span>/button<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>/form<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;/div&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% endblock %}
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Refresh your browser. Do you see the form? Try clicking save. What happens? Well, you just tried to send a POST request to the <code>/api/superheros</code> endpoint, which does not exist - so you should see a 404 error. Let&rsquo;s set up the route handler.</p>
-
-<h2>POST requests (part 1)</h2>
-
-<p>Open <em>api.js</em> to add the logic for this new route:</p>
-
-<pre><code class="javascript">var express = require('express');
-var router = express.Router();
-
-
-router.get('/superheros', function(req, res) {
-  res.render('api', { title: 'Superhero API' });
-});
-
-router.post('/superheros', function(req, res) {
-  console.log(req.body.name);
-  res.redirect('/api/superheros');
-});
-
-module.exports = router;
-</code></pre>
-
-<p>Test this out again. Now, when you submit the form, we have the <code>/api/superheros</code> endpoint setup, which then grabs the text from the input box via <code>req.body.name</code>. Make sure the text is consoled in your terminal.</p>
-
-<p>Okay. So, we are handling the routes and rendering the right template, but we still need to setup Mongoose to save the data from our form before we can finish with the POST request.</p>
-
-<h2>Mongoose</h2>
-
-<p><a href="http://mongoosejs.com/">Mongoose</a> is used for interacting with MongoDB. Start with defining the Schema, which then maps to a collection in Mongo.</p>
-
-<p>Create a file called <em>database.js</em> in your app&rsquo;s root directory, then add the following code:</p>
-
-<pre><code class="javascript">var mongoose = require('mongoose');
-var Schema   = mongoose.Schema;
-
-var Superhero = new Schema(
-  {name : String}
-);
-
-mongoose.model('superheros', Superhero);
-
-mongoose.connect('mongodb://localhost/node-superhero');
-</code></pre>
-
-<p>Here, we required/included the Mongoose library along with a reference to the <code>Schema()</code> method. As said, you always start with defining the schema, then we linked it to collection called &ldquo;superheros&rdquo;. Finally, we opened a connection to an instance of our local MongoDB.</p>
-
-<blockquote><p>If you don&rsquo;t have the MongoDB server running. Do so now. Open a new terminal window, and run the command <code>sudo mongod</code>. If you need to set up MongoDB, follow the Installation steps <a href="http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/">here</a>.</p></blockquote>
-
-<p>Next, open <em>app.js</em> and require the Mongoose config at the very top of the file:</p>
-
-<pre><code class="javascript">// mongoose config
-require('./database');
-</code></pre>
-
-<p>With Mongoose setup, we need to update <em>api.js</em> to create (via POST) and read (via GET) data from the Mongo collection.</p>
-
-<h2>GET requests (all resources)</h2>
-
-<p>Open <em>api.js</em>. Require Mongoose as well as the <code>superheros</code> model, which we already created:</p>
-
-<pre><code class="javascript">var mongoose = require('mongoose');
-var Superhero = mongoose.model('superheros');
-</code></pre>
-
-<p>Now, update the function handling GET requests:</p>
-
-<pre><code class="javascript">router.get('/superheros', function(req, res) {
-  Superhero.find(function(err, superheros){
-    console.log(superheros)
-    res.render(
-      'api',
-      {title : 'Superhero API', superheros : superheros}
-    );
-  });
-});
-</code></pre>
-
-<p><code>Superhero.find()</code> grabs all superheros from the Mongo collection, which we assign to the variable <code>superheros</code>. We can now use that variable in the Swig template.</p>
-
-<h3>Update <em>api.html</em> to display superheros</h3>
-
-<p>Let&rsquo;s add a loop to iterate through the superheros and then display the <code>name</code> key from the collection.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends <span class="ni">&amp;lsquo;</span>layout.html<span class="ni">&amp;rsquo;</span> %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block title %}{% endblock %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block content %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>h1<span class="ni">&amp;gt;</span>{{ title }}<span class="ni">&amp;lt;</span>/h1<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>br<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>form method=&quot;post&quot; action=&quot;/api/superheros&quot; class=&quot;form-inline&quot;<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>div class=&quot;form-group&quot;<span class="ni">&amp;gt;</span>
-</span><span class='line'>    <span class="ni">&amp;lt;</span>label<span class="ni">&amp;gt;</span>Superhero name<span class="ni">&amp;lt;</span>/label<span class="ni">&amp;gt;</span>
-</span><span class='line'>    <span class="ni">&amp;lt;</span>input type=&quot;text&quot; name=&quot;name&quot; class=&quot;form-control&quot; required<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>/div<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>button type=&quot;submit&quot; class=&quot;btn btn-default&quot;<span class="ni">&amp;gt;</span>Save<span class="ni">&amp;lt;</span>/button<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>/form<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>hr<span class="ni">&amp;gt;&amp;lt;</span>br<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>h2<span class="ni">&amp;gt;</span>All Superheros<span class="ni">&amp;lt;</span>/h2<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>ul<span class="ni">&amp;gt;</span>
-</span><span class='line'>{% for superhero in superheros %}
-</span><span class='line'>  <span class="ni">&amp;lt;</span>li<span class="ni">&amp;gt;</span>{{superhero.name}}<span class="ni">&amp;lt;</span>/li<span class="ni">&amp;gt;</span>
-</span><span class='line'>{% endfor %}
-</span><span class='line'><span class="ni">&amp;lt;</span>/ul<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;/div&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% endblock %}
-</span></code></pre></td></tr></table></div></figure></p>
-
-<blockquote><p>Do you remember where we set the <code>name</code> key? Check out the database schema in <em>database.js</em>.</p></blockquote>
-
-<p>Before this will actually work - e.g., display superheros - we first need to add the logic to insert data into the Mongo collection.</p>
-
-<h2>POST requests (part 2)</h2>
-
-<p>Back in <em>api.js</em>, update the function for handling POST requests:</p>
-
-<pre><code class="javascript">router.post('/superheros', function(req, res) {
-  new Superhero({name : req.body.name})
-  .save(function(err, superhero) {
-    console.log(superhero)
-    res.redirect('/api/superheros');
-  });
-});
-</code></pre>
-
-<p>This simply saves a new superhero, which again is grabbed from the form via <code>req.body.name</code>.</p>
-
-<h2>Sanity Check</h2>
-
-<p>Refresh you app. Add some superheros. If you&rsquo;ve done everything correctly, the superheros should be displayed beneath the form.</p>
-
-<p>What about updates? And deletions? First, let&rsquo;s display a single superhero.</p>
-
-<h2>GET requests (single resource)</h2>
-
-<p>Update the list item in the HTML file like so to give each item a unique URL.</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;superhero/{{superhero.id}}&quot;</span><span class="nt">&gt;</span>{{superhero.name}}<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Now, let&rsquo;s add a new route handler to <em>api.js</em> to display a single superhero:</p>
-
-<pre><code class="javascript">router.get('/superhero/:id', function(req, res) {
-  var query = {"_id": req.params.id};
-  Superhero.findOne(query, function(err, superhero){
-    console.log(superhero)
-    res.render(
-      'superhero',
-      {title : 'Superhero API - ' + superhero.name, superhero : superhero}
-    );
-  });
-});
-</code></pre>
-
-<p>What&rsquo;s next? A new template. <em>superhero.html</em>:</p>
-
-<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends <span class="ni">&amp;lsquo;</span>layout.html<span class="ni">&amp;rsquo;</span> %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block title %}{% endblock %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block content %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>h1<span class="ni">&amp;gt;</span>{{ title }}<span class="ni">&amp;lt;</span>/h1<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>br<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>form method=&quot;post&quot; action=&quot;/api/superhero/{{superhero.id}}?_method=PUT&quot;<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>div class=&quot;form-group&quot;<span class="ni">&amp;gt;</span>
-</span><span class='line'>    <span class="ni">&amp;lt;</span>label<span class="ni">&amp;gt;</span>Superhero name<span class="ni">&amp;lt;</span>/label<span class="ni">&amp;gt;</span>
-</span><span class='line'>    <span class="ni">&amp;lt;</span>input type=&quot;text&quot; name=&quot;name&quot; class=&quot;form-control&quot; value=&quot;{{superhero.name}}&quot; required<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>/div<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>button type=&quot;submit&quot; class=&quot;btn btn-default&quot;<span class="ni">&amp;gt;</span>Update<span class="ni">&amp;lt;</span>/button<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>/form<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>br<span class="ni">&amp;gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="ni">&amp;lt;</span>form method=&quot;post&quot; action=&quot;/api/superhero/{{superhero.id}}?_method=DELETE&quot; class=&quot;form-inline&quot;<span class="ni">&amp;gt;</span>
-</span><span class='line'>  <span class="ni">&amp;lt;</span>button type=&quot;submit&quot; class=&quot;btn btn-default&quot;<span class="ni">&amp;gt;</span>Delete<span class="ni">&amp;lt;</span>/button<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>/form<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;/div&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% endblock %}
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>Test this out.</p>
-
-<h2>PUT requests</h2>
-
-<p>Since most browsers do not handle PUT or DELETE requests, we need to use the <a href="https://github.com/expressjs/method-override">method-override</a> middleware to handle such requests.</p>
-
-<p>Install via NPM:</p>
-
-<pre><code class="sh">$ npm install method-override --save
-</code></pre>
-
-<p>Add the requirement to <em>app.js</em>:</p>
-
-<pre><code class="javascript">var methodOverride = require('method-override');
-</code></pre>
-
-<p>Then define the middleware just below the view engine setup in <em>app.js</em>:</p>
-
-<pre><code class="javascript">app.use(methodOverride('_method'))
-</code></pre>
-
-<p>Finally, add the route handler to <em>api.js</em>:</p>
-
-<pre><code class="javascript">router.put('/superhero/:id', function(req, res) {
-  var query = {"_id": req.params.id};
-  var update = {name : req.body.name};
-  var options = {new: true};
-  Superhero.findOneAndUpdate(query, update, options, function(err, superhero){
-    console.log(superhero)
-    res.render(
-      'superhero',
-      {title : 'Superhero API - ' + superhero.name, superhero : superhero}
-    );
-  });
-});
-</code></pre>
-
-<p>Here, we are simply searching Mongo for the correct superhero via the Mongo ID and then updating the superhero name, which comes from the form, <code>req.body.name</code>. By setting <code>new</code> to <code>true</code>, we&rsquo;re able to grab the updated superhero information after the changes are made in Mongo. Try removing this option. What happens?</p>
-
-<h2>DELETE requests</h2>
-
-<p>With the button already set up in the template, we just need to add the route handler to <em>api.js</em>:</p>
-
-<pre><code class="javascript">router.delete('/superhero/:id', function(req, res) {
-  var query = {"_id": req.params.id};
-  Superhero.findOneAndRemove(query, function(err, superhero){
-    console.log(superhero)
-    res.redirect('/api/superheros');
-  });
-});
-</code></pre>
-
-<p>Again, we&rsquo;re querying the database by the Mongo ID and then removing it. Simple, right?</p>
-
-<h2>Conclusion</h2>
-
-<p>That&rsquo;s it. Post your questions below. Grab the code from the <a href="https://github.com/mjhea0/node-express-swig-mongo">repository</a>. Cheers!</p>
 ]]></content>
   </entry>
   
