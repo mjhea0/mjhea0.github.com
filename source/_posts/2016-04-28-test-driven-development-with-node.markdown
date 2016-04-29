@@ -197,49 +197,44 @@ Let's change the file so we're inserting relevant data. Notice how there's also 
 
 ```javascript
 exports.seed = function(knex, Promise) {
-  return Promise.join(
-    // Deletes ALL existing entries
-    knex('shows').del(),
-    // Inserts seed entries
-    knex('shows').insert({
-      name: 'Suits',
-      channel: 'USA Network',
-      genre: 'Drama',
-      rating: 3,
-      explicit: false
-    })
-    .then(function(response) {
+  return knex('shows').del() // Deletes ALL existing entries
+    .then(function() { // Inserts seed entries one by one in series
+      return knex('shows').insert({
+        name: 'Suits',
+        channel: 'USA Network',
+        genre: 'Drama',
+        rating: 3,
+        explicit: false
+      });
+    }).then(function () {
       return knex('shows').insert({
         name: 'Game of Thrones',
         channel: 'HBO',
         genre: 'Fantasy',
         rating: 5,
         explicit: true
-      })
-      .then(function(response) {
-        return knex('shows').insert({
-          name: 'South Park',
-          channel: 'Comedy Central',
-          genre: 'Comedy',
-          rating: 4,
-          explicit: true
-        })
-        .then(function(response) {
-          return knex('shows').insert({
-            name: 'Mad Men',
-            channel: 'AMC',
-            genre: 'Drama',
-            rating: 3,
-            explicit: false
-          });
-        });
       });
-    })
-  );
+    }).then(function () {
+      return knex('shows').insert({
+        name: 'South Park',
+        channel: 'Comedy Central',
+        genre: 'Comedy',
+        rating: 4,
+        explicit: true
+      });
+    }).then(function () {
+      return knex('shows').insert({
+        name: 'Mad Men',
+        channel: 'AMC',
+        genre: 'Drama',
+        rating: 3,
+        explicit: false
+      });
+    });
 };
 ```
 
-Here, we are nesting promises so that each query only runs after the previous one has finished. This will prove very useful when we're testing the database later on. Because JavaScript is asynchronous, the order that data is inserted can sometimes change. We want to make sure that the data is in the same order each time we run our seed file(s).
+Since JavaScript is asynchronous, the order that data is inserted can sometimes change. We want to make sure that the data is in the same order each time we run our seed file(s).
 
 Run the seed file:
 
@@ -1171,3 +1166,9 @@ So there you have it: A test-first approach to developing a RESTful API. Are we 
 For example, what would happen if we tried to POST an item without all the required fields? Or if we tried to delete an item that isn't in the database? Sure the `catch()` methods will handle these, but they are simply passing the request to the built-in error handlers. We should handle these better in the routes and throw back appropriate error messages and status codes.
 
 Try this out on your own. Be sure to grab the code from the [repository](https://github.com/mjhea0/mocha-chai-knex). Cheers!
+
+<br>
+
+<p style="font-size: 14px;">
+  <em>Edits made by <a href="https://www.linkedin.com/in/bbouley">Bradley Bouley</a>. Thank you!</em>
+</p>
