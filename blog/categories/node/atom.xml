@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Node | Michael Herman]]></title>
   <link href="http://mherman.org/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mherman.org/"/>
-  <updated>2016-04-28T08:44:46-06:00</updated>
+  <updated>2016-04-29T07:14:05-06:00</updated>
   <id>http://mherman.org/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -199,49 +199,44 @@ $ knex migrate:latest --env test
 <p>Let&rsquo;s change the file so we&rsquo;re inserting relevant data. Notice how there&rsquo;s also built-in promises so that the data will be seeded in the order that we specify:</p>
 
 <pre><code class="javascript">exports.seed = function(knex, Promise) {
-  return Promise.join(
-    // Deletes ALL existing entries
-    knex('shows').del(),
-    // Inserts seed entries
-    knex('shows').insert({
-      name: 'Suits',
-      channel: 'USA Network',
-      genre: 'Drama',
-      rating: 3,
-      explicit: false
-    })
-    .then(function(response) {
+  return knex('shows').del() // Deletes ALL existing entries
+    .then(function() { // Inserts seed entries one by one in series
+      return knex('shows').insert({
+        name: 'Suits',
+        channel: 'USA Network',
+        genre: 'Drama',
+        rating: 3,
+        explicit: false
+      });
+    }).then(function () {
       return knex('shows').insert({
         name: 'Game of Thrones',
         channel: 'HBO',
         genre: 'Fantasy',
         rating: 5,
         explicit: true
-      })
-      .then(function(response) {
-        return knex('shows').insert({
-          name: 'South Park',
-          channel: 'Comedy Central',
-          genre: 'Comedy',
-          rating: 4,
-          explicit: true
-        })
-        .then(function(response) {
-          return knex('shows').insert({
-            name: 'Mad Men',
-            channel: 'AMC',
-            genre: 'Drama',
-            rating: 3,
-            explicit: false
-          });
-        });
       });
-    })
-  );
+    }).then(function () {
+      return knex('shows').insert({
+        name: 'South Park',
+        channel: 'Comedy Central',
+        genre: 'Comedy',
+        rating: 4,
+        explicit: true
+      });
+    }).then(function () {
+      return knex('shows').insert({
+        name: 'Mad Men',
+        channel: 'AMC',
+        genre: 'Drama',
+        rating: 3,
+        explicit: false
+      });
+    });
 };
 </code></pre>
 
-<p>Here, we are nesting promises so that each query only runs after the previous one has finished. This will prove very useful when we&rsquo;re testing the database later on. Because JavaScript is asynchronous, the order that data is inserted can sometimes change. We want to make sure that the data is in the same order each time we run our seed file(s).</p>
+<p>Since JavaScript is asynchronous, the order that data is inserted can sometimes change. We want to make sure that the data is in the same order each time we run our seed file(s).</p>
 
 <p>Run the seed file:</p>
 
@@ -1130,6 +1125,13 @@ router.delete('/shows/:id', function(req, res, next) {
 <p>For example, what would happen if we tried to POST an item without all the required fields? Or if we tried to delete an item that isn&rsquo;t in the database? Sure the <code>catch()</code> methods will handle these, but they are simply passing the request to the built-in error handlers. We should handle these better in the routes and throw back appropriate error messages and status codes.</p>
 
 <p>Try this out on your own. Be sure to grab the code from the <a href="https://github.com/mjhea0/mocha-chai-knex">repository</a>. Cheers!</p>
+
+<p><br></p>
+
+<p style="font-size: 14px;">
+  <em>Edits made by <a href="https://www.linkedin.com/in/bbouley">Bradley Bouley</a>. Thank you!</em>
+</p>
+
 ]]></content>
   </entry>
   
