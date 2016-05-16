@@ -240,7 +240,7 @@ module.exports = function(sequelize, DataTypes) {
 
 ### Sync
 
-Finally, before we sync, let's add an additional attribute to the `complete` filed in the *todo.js* file:
+Finally, before we sync, let's add an additional attribute to the `complete` field in the *todo.js* file:
 
 ``` javascript
 'use strict';
