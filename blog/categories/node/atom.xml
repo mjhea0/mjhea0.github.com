@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Node | Michael Herman]]></title>
   <link href="http://mherman.org/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mherman.org/"/>
-  <updated>2016-05-16T07:39:09-06:00</updated>
+  <updated>2016-05-26T08:13:32-06:00</updated>
   <id>http://mherman.org/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,363 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Swagger and NodeJS]]></title>
+    <link href="http://mherman.org/blog/2016/05/26/swagger-and-nodejs/"/>
+    <updated>2016-05-26T07:22:46-06:00</updated>
+    <id>http://mherman.org/blog/2016/05/26/swagger-and-nodejs</id>
+    <content type="html"><![CDATA[<p><strong>This tutorial details how to describe a RESTFul API using <a href="http://swagger.io/">Swagger</a> along with Node and Express.</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mherman.org/images/node-swagger.png" style="max-width: 100%; border:0; box-shadow: none;" alt="node swagger api">
+</div>
+
+
+<p><br></p>
+
+<p>By the end of this tutorial, you will be able to&hellip;</p>
+
+<ol>
+<li>Describe the purpose of Swagger</li>
+<li>Generate a <a href="http://swagger.io/specification/">Swagger Spec</a> based on an existing RESTful API developed with Node, Express, and Postgres</li>
+<li>Set up the <a href="https://github.com/swagger-api/swagger-ui">Swagger UI</a> for testing and interacting with the API</li>
+</ol>
+
+
+<h2>Swagger</h2>
+
+<p>Swagger is a <a href="http://swagger.io/specification/">specification</a> for describing, producing, consuming, testing, and visualizing a RESTful API. It provides a number of <a href="http://swagger.io/tools/">tools</a> for automatically generating documentation based on a given endpoint.</p>
+
+<p>Now when you make changes to your code, your documentation is updated and synchronized with the API so that consumers can quickly learn which resources are available, how to access them, and what to expect (status code, content-type, etc.) when interacting with the various endpoints.</p>
+
+<h2>Getting Started</h2>
+
+<h3>Starting a New Project</h3>
+
+<p>If you&rsquo;re starting a new project, you can easily generate the <a href="http://swagger.io/specification/">Swagger Specification</a> and project boilerplate using the <a href="http://swagger.io/swagger-editor/">Swagger Editor</a>. Test it out <a href="http://editor.swagger.io/#/">here</a>.</p>
+
+<p>If you don&rsquo;t like the generated project structure, you can just export the JSON (or YAML) spec file and then use a custom generator, like <a href="https://github.com/krakenjs/swaggerize-express">Swaggerize Express</a>, to generate the boilerplate. Then when you need to make changes to the API, you can just update the spec file. Simple.</p>
+
+<h3>Updating an Existing Project</h3>
+
+<p>For this tutorial, we will be generating the Swagger spec based on the code from a previously created project that has the following RESTful endpoints:</p>
+
+<table style="font-size:18px;border-spacing:12px 0px;border-collapse:separate;border:1px solid black;">
+<thead>
+<tr>
+<th style="text-align:center"><strong>URL</strong></th>
+<th style="text-align:center"><strong>HTTP Verb</strong></th>
+<th style="text-align:center"><strong>Action</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/puppies</td>
+<td>GET</td>
+<td>Return ALL puppies</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>GET</td>
+<td>Return a SINGLE puppy</td>
+</tr>
+<tr>
+<td>/api/puppies</td>
+<td>POST</td>
+<td>Add a puppy</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>PUT</td>
+<td>Update a puppy</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>DELETE</td>
+<td>Delete a puppy</td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Clone down the project:</p>
+
+<pre><code class="sh">$ git clone https://github.com/mjhea0/node-postgres-promises.git node-swagger-api
+$ cd node-swagger-api
+$ git checkout tags/v1 -b swagger
+$ npm install
+</code></pre>
+
+<blockquote><p>Want to learn how this project was created? Check out the <a href="http://mherman.org/blog/2016/03/13/designing-a-restful-api-with-node-and-postgres/#.V0N4PZMrJE4">Designing a RESTful API With Node and Postgres</a> post.</p></blockquote>
+
+<p>This project uses Postgres, so run create the database and apply the schema:</p>
+
+<pre><code class="sh">$ psql -f puppies.sql
+</code></pre>
+
+<p>Run the server, and then navigate to <a href="http://localhost:3000/api/puppies">http://localhost:3000/api/puppies</a> in your browser of choice. You should see:</p>
+
+<pre><code class="json">{
+  status: "success",
+  data: [
+    {
+      id: 1,
+      name: "Tyler",
+      breed: "Shih-tzu",
+      age: 3,
+      sex: "M"
+    }
+  ],
+  message: "Retrieved ALL puppies"
+}
+</code></pre>
+
+<p>Test out each endpoint to make sure everything works before moving on.</p>
+
+<h2>Generating the Swagger Spec</h2>
+
+<p>To generate the <a href="http://swagger.io/specification/">Swagger specification</a>, we will be using <a href="https://github.com/Surnet/swagger-jsdoc">swagger-jsdoc</a>.</p>
+
+<p>Install swagger-jsdoc:</p>
+
+<pre><code class="sh">$ npm install swagger-jsdoc@1.3.0 --save
+</code></pre>
+
+<p>Add the requirement to <em>app.js</em>:</p>
+
+<pre><code class="javascript">var swaggerJSDoc = require('swagger-jsdoc');
+</code></pre>
+
+<p>Then add the following code to <em>app.js</em> just below <code>var app = express();</code>:</p>
+
+<pre><code class="javascript">// swagger definition
+var swaggerDefinition = {
+  info: {
+    title: 'Node Swagger API',
+    version: '1.0.0',
+    description: 'Demonstrating how to describe a RESTful API with Swagger',
+  },
+  host: 'localhost:3000',
+  basePath: '/',
+};
+
+// options for the swagger docs
+var options = {
+  // import swaggerDefinitions
+  swaggerDefinition: swaggerDefinition,
+  // path to the API docs
+  apis: ['./routes/*.js'],
+};
+
+// initialize swagger-jsdoc
+var swaggerSpec = swaggerJSDoc(options);
+</code></pre>
+
+<p>Take note of the comments above. This code essentially initializes swagger-jsdoc and adds the appropriate metadata to the Swagger specification.</p>
+
+<p>Add the route to serve up the Swagger spec:</p>
+
+<pre><code class="javascript">// serve swagger
+app.get('/swagger.json', function(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+</code></pre>
+
+<p>Fire up the server and navigate to <a href="http://localhost:3000/swagger.json">http://localhost:3000/swagger.json</a> to see the basic spec:</p>
+
+<pre><code class="json">{
+  info: {
+    title: "Node Swagger API",
+    version: "1.0.0",
+    description: "Demonstrating how to describe a RESTful API with Swagger"
+  },
+  host: "localhost:3000",
+  basePath: "/",
+  swagger: "2.0",
+  paths: { },
+  definitions: { },
+  responses: { },
+  parameters: { },
+  securityDefinitions: { }
+}
+</code></pre>
+
+<p>Now we need to update the routes&hellip;</p>
+
+<h2>Updating the Route Handlers</h2>
+
+<p>swagger-jsdoc uses <a href="http://usejsdoc.org/">JSDoc</a>-style comments to generate the Swagger spec. So, add such comments, in YAML, to the route handlers that describe their functionality.</p>
+
+<h3>GET ALL</h3>
+
+<p>Add the comments in <em>/routes/index.js</em> just above the handler, like so:</p>
+
+<pre><code class="javascript">/**
+ * @swagger
+ * /api/puppies:
+ *   get:
+ *     tags:
+ *       - Puppies
+ *     description: Returns all puppies
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: An array of puppies
+ *         schema:
+ *           $ref: '#/definitions/Puppy'
+ */
+router.get('/api/puppies', db.getAllPuppies);
+</code></pre>
+
+<p>This should be fairly self-explanatory. We have an <code>/api/puppies</code> endpoint that returns a 200 response to a GET request. The <code>$ref</code> is used to re-use definitions to keep the code DRY.</p>
+
+<p>Add the following code above the previous code:</p>
+
+<pre><code class="javascript">/**
+ * @swagger
+ * definition:
+ *   Puppy:
+ *     properties:
+ *       name:
+ *         type: string
+ *       breed:
+ *         type: string
+ *       age:
+ *         type: integer
+ *       sex:
+ *         type: string
+ */
+</code></pre>
+
+<p>Now we can use that definition for each of the HTTP methods.</p>
+
+<p>For more information and examples, please see the <a href="http://swagger.io/specification/">Swagger Specification</a>.</p>
+
+<h3>GET Single</h3>
+
+<pre><code class="javascript">/**
+ * @swagger
+ * /api/puppies/{id}:
+ *   get:
+ *     tags:
+ *       - Puppies
+ *     description: Returns a single puppy
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         description: Puppy's id
+ *         in: path
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: A single puppy
+ *         schema:
+ *           $ref: '#/definitions/Puppy'
+ */
+</code></pre>
+
+<h3>POST</h3>
+
+<pre><code class="javascript">/**
+ * @swagger
+ * /api/puppies:
+ *   post:
+ *     tags:
+ *       - Puppies
+ *     description: Creates a new puppy
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: puppy
+ *         description: Puppy object
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Puppy'
+ *     responses:
+ *       200:
+ *         description: Successfully created
+ */
+</code></pre>
+
+<h3>PUT</h3>
+
+<pre><code class="javascript">/**
+ * @swagger
+ * /api/puppies/{id}:
+ *   put:
+ *     tags: Puppies
+ *     description: Updates a single puppy
+ *     produces: application/json
+ *     parameters:
+ *       name: puppy
+ *       in: body
+ *       description: Fields for the Puppy resource
+ *       schema:
+ *         type: array
+ *         $ref: '#/definitions/Puppy'
+ *     responses:
+ *       200:
+ *         description: Successfully updated
+ */
+</code></pre>
+
+<h3>DELETE</h3>
+
+<pre><code class="javascript">/**
+ * @swagger
+ * /api/puppies/{id}:
+ *   delete:
+ *     tags:
+ *       - Puppies
+ *     description: Deletes a single puppy
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         description: Puppy's id
+ *         in: path
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: Successfully deleted
+ */
+</code></pre>
+
+<p>Check out the updated spec at <a href="http://localhost:3000/swagger.json">http://localhost:3000/swagger.json</a>.</p>
+
+<h2>Adding Swagger UI</h2>
+
+<p>Finally, download the <a href="https://github.com/swagger-api/swagger-ui">Swagger UI repo</a>, add the &ldquo;dist&rdquo; folder from the downloaded repo to the &ldquo;public&rdquo; folder in the project directory, and then rename the directory to &ldquo;api-docs&rdquo;.</p>
+
+<p>Now within <em>index.html</em> inside the &ldquo;api-docs&rdquo; directory just update this line-</p>
+
+<pre><code class="html">url = "http://petstore.swagger.io/v2/swagger.json";
+</code></pre>
+
+<p>To-</p>
+
+<pre><code class="html">url = "http://localhost:3000/swagger.json";
+</code></pre>
+
+<p>Finally, navigate to <a href="http://localhost:3000/api-docs/">http://localhost:3000/api-docs/</a> in your browser to test out the API endpoints:</p>
+
+<div style="text-align:center;">
+  <img src="http://mherman.org/images/swagger-ui.png" style="max-width: 100%; border:0; box-shadow: none;" alt="Swagger UI">
+</div>
+
+
+<p><br><hr><br></p>
+
+<p>Download the <a href="https://github.com/mjhea0/node-swagger-api">code</a> from the repo. Cheers!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Test Driven Development With Node, Postgres, and Knex (Red/Green/Refactor)]]></title>
@@ -2462,386 +2819,6 @@ router.get('/auth/twitter/callback',
 <p>Try adding some additional <a href="https://github.com/jaredhanson/passport#strategies">strategies</a>, comment below if you have questions, and grab the final code from the <a href="https://github.com/mjhea0/passport-social-auth">repo</a>.</p>
 
 <p>Thanks for reading!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Testing Node.js With Mocha and Chai]]></title>
-    <link href="http://mherman.org/blog/2015/09/10/testing-node-js-with-mocha-and-chai/"/>
-    <updated>2015-09-10T10:52:00-06:00</updated>
-    <id>http://mherman.org/blog/2015/09/10/testing-node-js-with-mocha-and-chai</id>
-    <content type="html"><![CDATA[<p><strong>This post serves as an introduction to testing a Node.js RESTful API with <a href="http://mochajs.org/">Mocha</a> (v2.3.1). a JavaScript testing framework.</strong></p>
-
-<div style="text-align:center;">
-  <img src="http://mherman.org/images/mocha-chaijs.png" style="max-width: 100%; border:0;" alt="mocha and chai.js">
-</div>
-
-
-<h2>Why Test?</h2>
-
-<p>Before diving in it&rsquo;s important that you understand <em>why</em> tests are necessary.</p>
-
-<p>Grab the Node/Express sample CRUD application from the <a href="https://github.com/mjhea0/node-mocha-chai-tutorial">repository</a>:</p>
-
-<pre><code class="sh">$ git clone https://github.com/mjhea0/node-mocha-chai-tutorial.git
-$ git checkout tags/v1
-</code></pre>
-
-<p>Once you have <em>v1</em> of the app, manually go through it and test each of the CRUD functions via cURL (or <a href="http://httpie.org/">HTTPie</a> or <a href="https://www.getpostman.com/">Postman</a>):</p>
-
-<ol>
-<li>Add new blobs</li>
-<li>View all blobs</li>
-<li>View a single blob</li>
-<li>Update a single blob</li>
-<li>Delete a single blob</li>
-</ol>
-
-
-<p>This is a tedious process. What if you had to go through this same manual process <em>every</em> single time a new feature got added to the application? That would not only be a massive misuse of time - but unreliable as well. Hence the need for setting up a testing framework for automating the testing of the application, so you can run hundreds of tests in a matter of seconds.</p>
-
-<p>With that, install Mocha:</p>
-
-<pre><code class="sh">$ npm install -g mocha@2.3.1
-</code></pre>
-
-<blockquote><p>We installed this globally so we&rsquo;ll be able to run <code>mocha</code> from the terminal.</p></blockquote>
-
-<h2>Structure</h2>
-
-<p>To set up the basic tests, create a new folder called &ldquo;test&rdquo; in the project root, then within that folder add a file called <em>test-server.js</em>. Your file/folder structure should now look like:</p>
-
-<pre><code class="sh">├── package.json
-├── server
-│   ├── app.js
-│   ├── models
-│   │   └── blob.js
-│   └── routes
-│       └── index.js
-└── test
-    └── test-server.js
-</code></pre>
-
-<p>Now add the following code to the new file:</p>
-
-<pre><code class="javascript">describe('Blobs', function() {
-  it('should list ALL blobs on /blobs GET');
-  it('should list a SINGLE blob on /blob/&lt;id&gt; GET');
-  it('should add a SINGLE blob on /blobs POST');
-  it('should update a SINGLE blob on /blob/&lt;id&gt; PUT');
-  it('should delete a SINGLE blob on /blob/&lt;id&gt; DELETE');
-});
-</code></pre>
-
-<p>Although this is just boilerplate, pay attention to the <code>describe()</code> block and <code>it()</code> statements. <code>describe()</code> is used for grouping tests in a logical manner. Meanwhile, the <code>it()</code> statements contain each individual test case, which generally (err, <em>should</em>) test a single feature or edge case.</p>
-
-<h2>Logic</h2>
-
-<p>To add the necessary logic, we&rsquo;ll utilize <a href="http://chaijs.com/">Chai</a> (v3.2.0), an assertion library, and <a href="http://chaijs.com/plugins/chai-http">chai-http</a> (v 1.0.0), for making the actual HTTP requests and then testing the responses.</p>
-
-<p>Install them both now:</p>
-
-<pre><code class="sh">$ npm install chai@3.2.0 chai-http@1.0.0 --save-dev
-</code></pre>
-
-<p>Then update <em>test-server.js</em>, like so:</p>
-
-<pre><code class="javascript">var chai = require('chai');
-var chaiHttp = require('chai-http');
-var server = require('../server/app');
-var should = chai.should();
-
-chai.use(chaiHttp);
-
-
-describe('Blobs', function() {
-  it('should list ALL blobs on /blobs GET');
-  it('should list a SINGLE blob on /blob/&lt;id&gt; GET');
-  it('should add a SINGLE blob on /blobs POST');
-  it('should update a SINGLE blob on /blob/&lt;id&gt; PUT');
-  it('should delete a SINGLE blob on /blob/&lt;id&gt; DELETE');
-});
-</code></pre>
-
-<p>Here, we required the new packages, <code>chai</code> and <code>chai-http</code>, and our <em>app.js</em> file in order to make requests to the app. We also used the <code>should</code> assertion library so we can utilize <a href="http://chaijs.com/api/bdd/">BDD-style assertions</a>.</p>
-
-<blockquote><p>One of the powerful aspects of Chai is that it allows you to choose the type of assertion style you&rsquo;d like to use. Check out the <a href="http://chaijs.com/guide/styles/">Assertion Style Guide</a> for more info. Also, aside for the assertion libraries included with Chai, there are a number of other libraries available via <a href="https://github.com/mochajs/mocha/wiki#assertion-libraries">NPM</a> and <a href="https://github.com/search?utf8=%E2%9C%93&amp;q=chai+assertion&amp;type=Repositories&amp;ref=searchresults">Github</a>.</p></blockquote>
-
-<p>Now we can write our tests&hellip;</p>
-
-<h2>Test - GET (all)</h2>
-
-<p>Update the first <code>it()</code> statement:</p>
-
-<pre><code class="javascript">it('should list ALL blobs on /blobs GET', function(done) {
-  chai.request(server)
-    .get('/blobs')
-    .end(function(err, res){
-      res.should.have.status(200);
-      done();
-    });
-});
-</code></pre>
-
-<p>So, we passed an anonymous function with a single argument of <code>done</code> (a function) to the <code>it()</code> statement. This argument ends the test case when called - e.g., <code>done()</code>. The test itself is simple: We made a GET request to the <code>/blobs</code> endpoint and then asserted that the response contained a 200 HTTP status code.</p>
-
-<p>Simple, right?</p>
-
-<p>To test, simply run <code>mocha</code>; and if all went well, you should see:</p>
-
-<pre><code class="sh">$ mocha
-
-
-  Blobs
-Connected to Database!
-GET /blobs 200 19.621 ms - 2
-    ✓ should list ALL blobs on /blobs GET (43ms)
-    - should list a SINGLE blob on /blob/&lt;id&gt; GET
-    - should add a SINGLE blob on /blobs POST
-    - should update a SINGLE blob on /blob/&lt;id&gt; PUT
-    - should delete a SINGLE blob on /blob/&lt;id&gt; DELETE
-
-
-  1 passing (72ms)
-  4 pending
-</code></pre>
-
-<p>Since testing the status code alone isn&rsquo;t very significant, let&rsquo;s add some more assertions:</p>
-
-<pre><code class="javascript">it('should list ALL blobs on /blobs GET', function(done) {
-  chai.request(server)
-    .get('/blobs')
-    .end(function(err, res){
-      res.should.have.status(200);
-      res.should.be.json;
-      res.body.should.be.a('array');
-      done();
-    });
-});
-</code></pre>
-
-<p>This should be straightforward, since these assertions read like plain English. Run the test suite again. It passes, right? This test still isn&rsquo;t complete, since we&rsquo;re not testing any of the <em>actual</em> data being returned. We&rsquo;ll get to that shortly.</p>
-
-<p>How about testing a POST request&hellip;</p>
-
-<h2>Test - POST</h2>
-
-<p>Based on the code within <em>index.js</em>, when a new &ldquo;blob&rdquo; is successfully added, we should see the following response:</p>
-
-<pre><code class="sh">{
-  "SUCCESS": {
-    "__v": 0,
-    "name": "name",
-    "lastName": "lastname",
-    "_id": "some-unique-id"
-  }
-}
-</code></pre>
-
-<blockquote><p>Need proof? Test this out by logging <code>{'SUCCESS': newBlob}</code> to the console, and then run a manual test to see what gets logged.</p></blockquote>
-
-<p>With that, think about how you would write/structure your assertions to test this&hellip;</p>
-
-<pre><code class="javascript">it('should add a SINGLE blob on /blobs POST', function(done) {
-  chai.request(server)
-    .post('/blobs')
-    .send({'name': 'Java', 'lastName': 'Script'})
-    .end(function(err, res){
-      res.should.have.status(200);
-      res.should.be.json;
-      res.body.should.be.a('object');
-      res.body.should.have.property('SUCCESS');
-      res.body.SUCCESS.should.be.a('object');
-      res.body.SUCCESS.should.have.property('name');
-      res.body.SUCCESS.should.have.property('lastName');
-      res.body.SUCCESS.should.have.property('_id');
-      res.body.SUCCESS.name.should.equal('Java');
-      res.body.SUCCESS.lastName.should.equal('Script');
-      done();
-    });
-});
-</code></pre>
-
-<p>Need help understanding what&rsquo;s happening here? Add <code>console.log(res.body)</code> just before the first assert. Run the test to see the data contained within the response body. The test we wrote tests the actual structure and data from the response body, broken down by each individual key/value pair.</p>
-
-<h2>Hooks</h2>
-
-<p>Up to this point we have been using the main database for testing purposes, which is not ideal since we&rsquo;re polluting the database with test data. Instead, let&rsquo;s utilize a test database and add a dummy blob to it to assert against. To do this, we can use the <code>beforeEach()</code> and <code>afterEach()</code> <a href="http://mochajs.org/#hooks">hooks</a> - which, as the names suggest, add and remove a dummy document to the database before and after each test case is ran.</p>
-
-<p>This sounds a bit difficult, but with Mocha it&rsquo;s super easy!</p>
-
-<p>Start by adding a configuration file called <em>_config.js</em> to the &ldquo;server&rdquo; folder in order to specify a different database URI for testing purposes:</p>
-
-<pre><code class="javascript">var config = {};
-
-config.mongoURI = {
-  development: 'mongodb://localhost/node-testing',
-  test: 'mongodb://localhost/node-test'
-};
-
-module.exports = config;
-</code></pre>
-
-<p>Next, update <em>app.js</em> to utilize the test database when the environment variable <code>app.settings.env</code> evaluates to <code>test</code>. (The default is <code>development</code>.)</p>
-
-<pre><code class="javascript">// *** config file *** //
-var config = require('./_config');
-
-// *** mongoose *** ///
-mongoose.connect(config.mongoURI[app.settings.env], function(err, res) {
-  if(err) {
-    console.log('Error connecting to the database. ' + err);
-  } else {
-    console.log('Connected to Database: ' + config.mongoURI[app.settings.env]);
-  }
-});
-</code></pre>
-
-<p>Finally, update the requirements and add the hooks to the testing script:</p>
-
-<pre><code class="javascript">process.env.NODE_ENV = 'test';
-
-var chai = require('chai');
-var chaiHttp = require('chai-http');
-var mongoose = require("mongoose");
-
-var server = require('../server/app');
-var Blob = require("../server/models/blob");
-
-var should = chai.should();
-chai.use(chaiHttp);
-
-
-describe('Blobs', function() {
-
-  Blob.collection.drop();
-
-  beforeEach(function(done){
-    var newBlob = new Blob({
-      name: 'Bat',
-      lastName: 'man'
-    });
-    newBlob.save(function(err) {
-      done();
-    });
-  });
-  afterEach(function(done){
-    Blob.collection.drop();
-    done();
-  });
-
-...snip...
-</code></pre>
-
-<p>Now, before each test case, the database is cleared and a new blob is added; then, after each test, the database is cleared before the next test case is ran.</p>
-
-<p>Run the tests again to ensure they still pass.</p>
-
-<h2>Test - GET (all)</h2>
-
-<p>With the hooks set up, let&rsquo;s refactor the first test to assert that the blob from the <code>beforeEach()</code> is part of the collection:</p>
-
-<pre><code class="javascript">it('should list ALL blobs on /blobs GET', function(done) {
-  chai.request(server)
-    .get('/blobs')
-    .end(function(err, res){
-      res.should.have.status(200);
-      res.should.be.json;
-      res.body.should.be.a('array');
-      res.body[0].should.have.property('_id');
-      res.body[0].should.have.property('name');
-      res.body[0].should.have.property('lastName');
-      res.body[0].name.should.equal('Bat');
-      res.body[0].lastName.should.equal('man');
-      done();
-    });
-});
-</code></pre>
-
-<p>Let&rsquo;s look at the final three tests&hellip;</p>
-
-<h2>Test - GET (single)</h2>
-
-<pre><code class="javascript">it('should list a SINGLE blob on /blob/&lt;id&gt; GET', function(done) {
-    var newBlob = new Blob({
-      name: 'Super',
-      lastName: 'man'
-    });
-    newBlob.save(function(err, data) {
-      chai.request(server)
-        .get('/blob/'+data.id)
-        .end(function(err, res){
-          res.should.have.status(200);
-          res.should.be.json;
-          res.body.should.be.a('object');
-          res.body.should.have.property('_id');
-          res.body.should.have.property('name');
-          res.body.should.have.property('lastName');
-          res.body.name.should.equal('Super');
-          res.body.lastName.should.equal('man');
-          res.body._id.should.equal(data.id);
-          done();
-        });
-    });
-});
-</code></pre>
-
-<p>In this test case, we first added a new blob, and then used the newly created <code>_id</code> to make the request and then test the subsequent response.</p>
-
-<h2>Test - PUT</h2>
-
-<pre><code class="javascript">it('should update a SINGLE blob on /blob/&lt;id&gt; PUT', function(done) {
-  chai.request(server)
-    .get('/blobs')
-    .end(function(err, res){
-      chai.request(server)
-        .put('/blob/'+res.body[0]._id)
-        .send({'name': 'Spider'})
-        .end(function(error, response){
-          response.should.have.status(200);
-          response.should.be.json;
-          response.body.should.be.a('object');
-          response.body.should.have.property('UPDATED');
-          response.body.UPDATED.should.be.a('object');
-          response.body.UPDATED.should.have.property('name');
-          response.body.UPDATED.should.have.property('_id');
-          response.body.UPDATED.name.should.equal('Spider');
-          done();
-      });
-    });
-});
-</code></pre>
-
-<p>Here, we hit the <code>/blobs</code> endpoint with a GET request to grab the blob added from the <code>beforeEach()</code> hook, then we simply added the <code>_id</code> to the URL for the PUT request and updated the name to <code>Spider</code>.</p>
-
-<h2>Test - DELETE</h2>
-
-<p>Finally&hellip;</p>
-
-<pre><code class="javascript">it('should delete a SINGLE blob on /blob/&lt;id&gt; DELETE', function(done) {
-  chai.request(server)
-    .get('/blobs')
-    .end(function(err, res){
-      chai.request(server)
-        .delete('/blob/'+res.body[0]._id)
-        .end(function(error, response){
-          response.should.have.status(200);
-          response.should.be.json;
-          response.body.should.be.a('object');
-          response.body.should.have.property('REMOVED');
-          response.body.REMOVED.should.be.a('object');
-          response.body.REMOVED.should.have.property('name');
-          response.body.REMOVED.should.have.property('_id');
-          response.body.REMOVED.name.should.equal('Bat');
-          done();
-      });
-    });
-});
-</code></pre>
-
-<h2>Conclusion</h2>
-
-<p>Hopefully you can now see just how easy it is to test your code with Mocha and Chai. Keep practicing on your own, incorporating a true <a href="https://mochajs.org/#bdd">BDD</a> approach into your workflow. Grab the final code for this tutorial from the <a href="https://github.com/mjhea0/node-mocha-chai-tutorial">repository</a>.</p>
 ]]></content>
   </entry>
   

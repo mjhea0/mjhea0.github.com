@@ -4,7 +4,7 @@
   <title><![CDATA[Michael Herman]]></title>
   <link href="http://mherman.org/atom.xml" rel="self"/>
   <link href="http://mherman.org/"/>
-  <updated>2016-05-16T07:39:09-06:00</updated>
+  <updated>2016-05-26T08:13:32-06:00</updated>
   <id>http://mherman.org/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,550 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Swagger and NodeJS]]></title>
+    <link href="http://mherman.org/blog/2016/05/26/swagger-and-nodejs/"/>
+    <updated>2016-05-26T07:22:46-06:00</updated>
+    <id>http://mherman.org/blog/2016/05/26/swagger-and-nodejs</id>
+    <content type="html"><![CDATA[<p><strong>This tutorial details how to describe a RESTFul API using <a href="http://swagger.io/">Swagger</a> along with Node and Express.</strong></p>
+
+<div style="text-align:center;">
+  <img src="http://mherman.org/images/node-swagger.png" style="max-width: 100%; border:0; box-shadow: none;" alt="node swagger api">
+</div>
+
+
+<p><br></p>
+
+<p>By the end of this tutorial, you will be able to&hellip;</p>
+
+<ol>
+<li>Describe the purpose of Swagger</li>
+<li>Generate a <a href="http://swagger.io/specification/">Swagger Spec</a> based on an existing RESTful API developed with Node, Express, and Postgres</li>
+<li>Set up the <a href="https://github.com/swagger-api/swagger-ui">Swagger UI</a> for testing and interacting with the API</li>
+</ol>
+
+
+<h2>Swagger</h2>
+
+<p>Swagger is a <a href="http://swagger.io/specification/">specification</a> for describing, producing, consuming, testing, and visualizing a RESTful API. It provides a number of <a href="http://swagger.io/tools/">tools</a> for automatically generating documentation based on a given endpoint.</p>
+
+<p>Now when you make changes to your code, your documentation is updated and synchronized with the API so that consumers can quickly learn which resources are available, how to access them, and what to expect (status code, content-type, etc.) when interacting with the various endpoints.</p>
+
+<h2>Getting Started</h2>
+
+<h3>Starting a New Project</h3>
+
+<p>If you&rsquo;re starting a new project, you can easily generate the <a href="http://swagger.io/specification/">Swagger Specification</a> and project boilerplate using the <a href="http://swagger.io/swagger-editor/">Swagger Editor</a>. Test it out <a href="http://editor.swagger.io/#/">here</a>.</p>
+
+<p>If you don&rsquo;t like the generated project structure, you can just export the JSON (or YAML) spec file and then use a custom generator, like <a href="https://github.com/krakenjs/swaggerize-express">Swaggerize Express</a>, to generate the boilerplate. Then when you need to make changes to the API, you can just update the spec file. Simple.</p>
+
+<h3>Updating an Existing Project</h3>
+
+<p>For this tutorial, we will be generating the Swagger spec based on the code from a previously created project that has the following RESTful endpoints:</p>
+
+<table style="font-size:18px;border-spacing:12px 0px;border-collapse:separate;border:1px solid black;">
+<thead>
+<tr>
+<th style="text-align:center"><strong>URL</strong></th>
+<th style="text-align:center"><strong>HTTP Verb</strong></th>
+<th style="text-align:center"><strong>Action</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/puppies</td>
+<td>GET</td>
+<td>Return ALL puppies</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>GET</td>
+<td>Return a SINGLE puppy</td>
+</tr>
+<tr>
+<td>/api/puppies</td>
+<td>POST</td>
+<td>Add a puppy</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>PUT</td>
+<td>Update a puppy</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>DELETE</td>
+<td>Delete a puppy</td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Clone down the project:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git clone https://github.com/mjhea0/node-postgres-promises.git node-swagger-api
+</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>node-swagger-api
+</span><span class='line'><span class="nv">$ </span>git checkout tags/v1 -b swagger
+</span><span class='line'><span class="nv">$ </span>npm install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Want to learn how this project was created? Check out the <a href="http://mherman.org/blog/2016/03/13/designing-a-restful-api-with-node-and-postgres/#.V0N4PZMrJE4">Designing a RESTful API With Node and Postgres</a> post.</p></blockquote>
+
+<p>This project uses Postgres, so run create the database and apply the schema:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>psql -f puppies.sql
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run the server, and then navigate to <a href="http://localhost:3000/api/puppies">http://localhost:3000/api/puppies</a> in your browser of choice. You should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="err">status:</span> <span class="nt">&quot;success&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="err">data:</span> <span class="err">[</span>
+</span><span class='line'>    <span class="err">{</span>
+</span><span class='line'>      <span class="err">id:</span> <span class="err">1,</span>
+</span><span class='line'>      <span class="err">name:</span> <span class="nt">&quot;Tyler&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="err">breed:</span> <span class="nt">&quot;Shih-tzu&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="err">age:</span> <span class="err">3,</span>
+</span><span class='line'>      <span class="err">sex:</span> <span class="nt">&quot;M&quot;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="err">],</span>
+</span><span class='line'>  <span class="err">message:</span> <span class="s2">&quot;Retrieved ALL puppies&quot;</span>
+</span><span class='line'><span class="err">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Test out each endpoint to make sure everything works before moving on.</p>
+
+<h2>Generating the Swagger Spec</h2>
+
+<p>To generate the <a href="http://swagger.io/specification/">Swagger specification</a>, we will be using <a href="https://github.com/Surnet/swagger-jsdoc">swagger-jsdoc</a>.</p>
+
+<p>Install swagger-jsdoc:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install swagger-jsdoc@1.3.0 --save
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Add the requirement to <em>app.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">swaggerJSDoc</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;swagger-jsdoc&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then add the following code to <em>app.js</em> just below <code>var app = express();</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// swagger definition</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">swaggerDefinition</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">info</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;Node Swagger API&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">version</span><span class="o">:</span> <span class="s1">&#39;1.0.0&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">description</span><span class="o">:</span> <span class="s1">&#39;Demonstrating how to describe a RESTful API with Swagger&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="nx">host</span><span class="o">:</span> <span class="s1">&#39;localhost:3000&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">basePath</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// options for the swagger docs</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// import swaggerDefinitions</span>
+</span><span class='line'>  <span class="nx">swaggerDefinition</span><span class="o">:</span> <span class="nx">swaggerDefinition</span><span class="p">,</span>
+</span><span class='line'>  <span class="c1">// path to the API docs</span>
+</span><span class='line'>  <span class="nx">apis</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;./routes/*.js&#39;</span><span class="p">],</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// initialize swagger-jsdoc</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">swaggerSpec</span> <span class="o">=</span> <span class="nx">swaggerJSDoc</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Take note of the comments above. This code essentially initializes swagger-jsdoc and adds the appropriate metadata to the Swagger specification.</p>
+
+<p>Add the route to serve up the Swagger spec:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// serve swagger</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/swagger.json&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;application/json&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">swaggerSpec</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Fire up the server and navigate to <a href="http://localhost:3000/swagger.json">http://localhost:3000/swagger.json</a> to see the basic spec:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="err">info:</span> <span class="err">{</span>
+</span><span class='line'>    <span class="err">title:</span> <span class="nt">&quot;Node Swagger API&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">version:</span> <span class="nt">&quot;1.0.0&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="err">description:</span> <span class="nt">&quot;Demonstrating how to describe a RESTful API with Swagger&quot;</span>
+</span><span class='line'>  <span class="p">}</span><span class="err">,</span>
+</span><span class='line'>  <span class="err">host:</span> <span class="s2">&quot;localhost:3000&quot;</span><span class="err">,</span>
+</span><span class='line'>  <span class="err">basePath:</span> <span class="s2">&quot;/&quot;</span><span class="err">,</span>
+</span><span class='line'>  <span class="err">swagger:</span> <span class="s2">&quot;2.0&quot;</span><span class="err">,</span>
+</span><span class='line'>  <span class="err">paths:</span> <span class="p">{</span> <span class="p">}</span><span class="err">,</span>
+</span><span class='line'>  <span class="err">definitions:</span> <span class="p">{</span> <span class="p">}</span><span class="err">,</span>
+</span><span class='line'>  <span class="err">responses:</span> <span class="p">{</span> <span class="p">}</span><span class="err">,</span>
+</span><span class='line'>  <span class="err">parameters:</span> <span class="p">{</span> <span class="p">}</span><span class="err">,</span>
+</span><span class='line'>  <span class="err">securityDefinitions:</span> <span class="p">{</span> <span class="p">}</span>
+</span><span class='line'><span class="err">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now we need to update the routes&hellip;</p>
+
+<h2>Updating the Route Handlers</h2>
+
+<p>swagger-jsdoc uses <a href="http://usejsdoc.org/">JSDoc</a>-style comments to generate the Swagger spec. So, add such comments, in YAML, to the route handlers that describe their functionality.</p>
+
+<h3>GET ALL</h3>
+
+<p>Add the comments in <em>/routes/index.js</em> just above the handler, like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * @swagger</span>
+</span><span class='line'><span class="cm"> * /api/puppies:</span>
+</span><span class='line'><span class="cm"> *   get:</span>
+</span><span class='line'><span class="cm"> *     tags:</span>
+</span><span class='line'><span class="cm"> *       - Puppies</span>
+</span><span class='line'><span class="cm"> *     description: Returns all puppies</span>
+</span><span class='line'><span class="cm"> *     produces:</span>
+</span><span class='line'><span class="cm"> *       - application/json</span>
+</span><span class='line'><span class="cm"> *     responses:</span>
+</span><span class='line'><span class="cm"> *       200:</span>
+</span><span class='line'><span class="cm"> *         description: An array of puppies</span>
+</span><span class='line'><span class="cm"> *         schema:</span>
+</span><span class='line'><span class="cm"> *           $ref: &#39;#/definitions/Puppy&#39;</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/puppies&#39;</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">getAllPuppies</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This should be fairly self-explanatory. We have an <code>/api/puppies</code> endpoint that returns a 200 response to a GET request. The <code>$ref</code> is used to re-use definitions to keep the code DRY.</p>
+
+<p>Add the following code above the previous code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * @swagger</span>
+</span><span class='line'><span class="cm"> * definition:</span>
+</span><span class='line'><span class="cm"> *   Puppy:</span>
+</span><span class='line'><span class="cm"> *     properties:</span>
+</span><span class='line'><span class="cm"> *       name:</span>
+</span><span class='line'><span class="cm"> *         type: string</span>
+</span><span class='line'><span class="cm"> *       breed:</span>
+</span><span class='line'><span class="cm"> *         type: string</span>
+</span><span class='line'><span class="cm"> *       age:</span>
+</span><span class='line'><span class="cm"> *         type: integer</span>
+</span><span class='line'><span class="cm"> *       sex:</span>
+</span><span class='line'><span class="cm"> *         type: string</span>
+</span><span class='line'><span class="cm"> */</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now we can use that definition for each of the HTTP methods.</p>
+
+<p>For more information and examples, please see the <a href="http://swagger.io/specification/">Swagger Specification</a>.</p>
+
+<h3>GET Single</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * @swagger</span>
+</span><span class='line'><span class="cm"> * /api/puppies/{id}:</span>
+</span><span class='line'><span class="cm"> *   get:</span>
+</span><span class='line'><span class="cm"> *     tags:</span>
+</span><span class='line'><span class="cm"> *       - Puppies</span>
+</span><span class='line'><span class="cm"> *     description: Returns a single puppy</span>
+</span><span class='line'><span class="cm"> *     produces:</span>
+</span><span class='line'><span class="cm"> *       - application/json</span>
+</span><span class='line'><span class="cm"> *     parameters:</span>
+</span><span class='line'><span class="cm"> *       - name: id</span>
+</span><span class='line'><span class="cm"> *         description: Puppy&#39;s id</span>
+</span><span class='line'><span class="cm"> *         in: path</span>
+</span><span class='line'><span class="cm"> *         required: true</span>
+</span><span class='line'><span class="cm"> *         type: integer</span>
+</span><span class='line'><span class="cm"> *     responses:</span>
+</span><span class='line'><span class="cm"> *       200:</span>
+</span><span class='line'><span class="cm"> *         description: A single puppy</span>
+</span><span class='line'><span class="cm"> *         schema:</span>
+</span><span class='line'><span class="cm"> *           $ref: &#39;#/definitions/Puppy&#39;</span>
+</span><span class='line'><span class="cm"> */</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>POST</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * @swagger</span>
+</span><span class='line'><span class="cm"> * /api/puppies:</span>
+</span><span class='line'><span class="cm"> *   post:</span>
+</span><span class='line'><span class="cm"> *     tags:</span>
+</span><span class='line'><span class="cm"> *       - Puppies</span>
+</span><span class='line'><span class="cm"> *     description: Creates a new puppy</span>
+</span><span class='line'><span class="cm"> *     produces:</span>
+</span><span class='line'><span class="cm"> *       - application/json</span>
+</span><span class='line'><span class="cm"> *     parameters:</span>
+</span><span class='line'><span class="cm"> *       - name: puppy</span>
+</span><span class='line'><span class="cm"> *         description: Puppy object</span>
+</span><span class='line'><span class="cm"> *         in: body</span>
+</span><span class='line'><span class="cm"> *         required: true</span>
+</span><span class='line'><span class="cm"> *         schema:</span>
+</span><span class='line'><span class="cm"> *           $ref: &#39;#/definitions/Puppy&#39;</span>
+</span><span class='line'><span class="cm"> *     responses:</span>
+</span><span class='line'><span class="cm"> *       200:</span>
+</span><span class='line'><span class="cm"> *         description: Successfully created</span>
+</span><span class='line'><span class="cm"> */</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>PUT</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * @swagger</span>
+</span><span class='line'><span class="cm"> * /api/puppies/{id}:</span>
+</span><span class='line'><span class="cm"> *   put:</span>
+</span><span class='line'><span class="cm"> *     tags: Puppies</span>
+</span><span class='line'><span class="cm"> *     description: Updates a single puppy</span>
+</span><span class='line'><span class="cm"> *     produces: application/json</span>
+</span><span class='line'><span class="cm"> *     parameters:</span>
+</span><span class='line'><span class="cm"> *       name: puppy</span>
+</span><span class='line'><span class="cm"> *       in: body</span>
+</span><span class='line'><span class="cm"> *       description: Fields for the Puppy resource</span>
+</span><span class='line'><span class="cm"> *       schema:</span>
+</span><span class='line'><span class="cm"> *         type: array</span>
+</span><span class='line'><span class="cm"> *         $ref: &#39;#/definitions/Puppy&#39;</span>
+</span><span class='line'><span class="cm"> *     responses:</span>
+</span><span class='line'><span class="cm"> *       200:</span>
+</span><span class='line'><span class="cm"> *         description: Successfully updated</span>
+</span><span class='line'><span class="cm"> */</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>DELETE</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * @swagger</span>
+</span><span class='line'><span class="cm"> * /api/puppies/{id}:</span>
+</span><span class='line'><span class="cm"> *   delete:</span>
+</span><span class='line'><span class="cm"> *     tags:</span>
+</span><span class='line'><span class="cm"> *       - Puppies</span>
+</span><span class='line'><span class="cm"> *     description: Deletes a single puppy</span>
+</span><span class='line'><span class="cm"> *     produces:</span>
+</span><span class='line'><span class="cm"> *       - application/json</span>
+</span><span class='line'><span class="cm"> *     parameters:</span>
+</span><span class='line'><span class="cm"> *       - name: id</span>
+</span><span class='line'><span class="cm"> *         description: Puppy&#39;s id</span>
+</span><span class='line'><span class="cm"> *         in: path</span>
+</span><span class='line'><span class="cm"> *         required: true</span>
+</span><span class='line'><span class="cm"> *         type: integer</span>
+</span><span class='line'><span class="cm"> *     responses:</span>
+</span><span class='line'><span class="cm"> *       200:</span>
+</span><span class='line'><span class="cm"> *         description: Successfully deleted</span>
+</span><span class='line'><span class="cm"> */</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Check out the updated spec at <a href="http://localhost:3000/swagger.json">http://localhost:3000/swagger.json</a>.</p>
+
+<h2>Adding Swagger UI</h2>
+
+<p>Finally, download the <a href="https://github.com/swagger-api/swagger-ui">Swagger UI repo</a>, add the &ldquo;dist&rdquo; folder from the downloaded repo to the &ldquo;public&rdquo; folder in the project directory, and then rename the directory to &ldquo;api-docs&rdquo;.</p>
+
+<p>Now within <em>index.html</em> inside the &ldquo;api-docs&rdquo; directory just update this line-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>url = &quot;http://petstore.swagger.io/v2/swagger.json&quot;;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To-</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'>url = &quot;http://localhost:3000/swagger.json&quot;;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Finally, navigate to <a href="http://localhost:3000/api-docs/">http://localhost:3000/api-docs/</a> in your browser to test out the API endpoints:</p>
+
+<div style="text-align:center;">
+  <img src="http://mherman.org/images/swagger-ui.png" style="max-width: 100%; border:0; box-shadow: none;" alt="Swagger UI">
+</div>
+
+
+<p><br><hr><br></p>
+
+<p>Download the <a href="https://github.com/mjhea0/node-swagger-api">code</a> from the repo. Cheers!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Test Driven Development With Node, Postgres, and Knex (Red/Green/Refactor)]]></title>
@@ -13708,602 +14252,6 @@
 
 
 <p>Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Handling AJAX Calls With Node.js and Express (Part 5)]]></title>
-    <link href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5/"/>
-    <updated>2014-04-15T20:34:00-06:00</updated>
-    <id>http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5</id>
-    <content type="html"><![CDATA[<p>Articles in the series:</p>
-
-<ul>
-<li>Part 1: <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">Scraping Craigslist</a></li>
-<li>Part 2: <a href="http://mherman.org/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Adding Handlebars</a></li>
-<li>Part 3: <a href="http://mherman.org/blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/">User Authentication with Passport and MongoDB</a></li>
-<li>Part 4: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Refactoring, Adding styles</a></li>
-<li>Part 5: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5">Saving Jobs</a> <strong>&lt;&lt; CURRENT</strong></li>
-</ul>
-
-
-<p>Last <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">time</a> we refactored our code to make it more modular as well as added some styles. This time we&rsquo;ll add our next feature: <em>The ability to save jobs so that users can apply to them later.</em></p>
-
-<h2>User Workflow</h2>
-
-<p>From an end user&rsquo;s perspective, after logging in and then searching for jobs, one can simply click a button next to each job to save the job to a new Mongo collection. That job is then removed from the list of jobs retrieved from the search. Let&rsquo;s start with that.</p>
-
-<h3>What do we need to do?</h3>
-
-<ol>
-<li>Add a &ldquo;save&rdquo; button next to each job.</li>
-<li>Develop the necessary code to &ldquo;grab&rdquo; the job when the button is clicked, sending it to the server side.</li>
-<li>Create a new collection in the database.</li>
-<li>Insert the data in the newly created Mongo collection.</li>
-<li>Use jQuery to remove the job from the DOM and alert the user that job has been added.</li>
-</ol>
-
-
-<p>Let&rsquo;s get started.</p>
-
-<h2>Add a save button</h2>
-
-<p>Start by adding the &ldquo;save&rdquo; button to the Handlebars template:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">id=</span><span class="s">&quot;search-results&quot;</span> <span class="na">type=</span><span class="s">&quot;text/x-handlebars-template&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="p">{{</span><span class="err">#</span><span class="nx">each</span> <span class="nx">resultsArray</span><span class="p">}}</span>
-</span><span class='line'>      <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;btn btn-primary btn-xs save-btn&quot;</span><span class="o">&gt;</span><span class="nx">Save</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
-</span><span class='line'>        <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{{</span><span class="nx">about</span><span class="p">}}</span><span class="o">&gt;</span><span class="p">{{</span><span class="nx">title</span><span class="p">}}</span><span class="o">&lt;</span><span class="err">/a&gt;&lt;br&gt;{{desc}}&gt;</span>
-</span><span class='line'>      <span class="o">&lt;</span><span class="err">/li&gt;</span>
-</span><span class='line'>    <span class="p">{{</span><span class="err">/each}}</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="nx">br</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="err">/ul&gt;</span>
-</span><span class='line'><span class="nt">&lt;/script&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Moving right along &hellip;</p>
-
-<h2>Client Side Javascript</h2>
-
-<p>Next, let&rsquo;s add an event handler to <em>main.js</em> that captures the button when clicked:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.save-btn&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;whee!&quot;</span><span class="p">)</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Your file should now look like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">source</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#search-results&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">();</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">dataTemplate</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="nx">source</span><span class="p">);</span>
-</span><span class='line'>  <span class="nx">$results</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#results&#39;</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#search&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;keyup&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span> <span class="o">===</span> <span class="mi">13</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="kd">var</span> <span class="nx">parameters</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">search</span><span class="o">:</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="p">};</span>
-</span><span class='line'>      <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="k">instanceof</span> <span class="nb">Array</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">$results</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">dataTemplate</span><span class="p">({</span><span class="nx">resultsArray</span><span class="o">:</span><span class="nx">data</span><span class="p">}));</span>
-</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>          <span class="nx">$results</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">};</span>
-</span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">};</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.save-btn&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;whee!&quot;</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Do a quick sanity check. Fire up the server. Login. Search for some jobs. You should see the &ldquo;save&rdquo; button next to each job. Open up your Javascript console so you can see the console log when it fires. Now try to click a button.</p>
-
-<p>Nothing. Right? What&rsquo;s going on? We have the right selector. The event is a click. It should be working.</p>
-
-<p>The problem is fairly simple: On the initial loading of the DOM, those selectors - <code>.save-btn</code> - are not present. In fact, they only become present after we append all the jobs to the DOM. Since the selectors are not present to begin with though, our event handler in its current state won&rsquo;t find them. Fortunately, this is an easy fix.</p>
-
-<p>We can simply attach a listener to a parent element, then once the event is fired, it will search for the child selector, <code>.save-btn</code>. It will obviously only find that selector once it exists in the DOM.</p>
-
-<p>This is called event delegation. If interested, check <a href="https://learn.jquery.com/events/event-delegation/">this</a> article out for more info.</p>
-
-<p>Update the code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#results&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="s1">&#39;.save-btn&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;whee!&quot;</span><span class="p">)</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So, the listener is set to the <code>#results</code> selector, which when fired (by the button click), searches the DOM for the child selector, <code>.save-btn</code>. Test it out. It should work.</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/delegated-events.png" alt="delegated-events" /></p>
-
-<p>Next, instead of just outputting the text &ldquo;whee!&rdquo;, we need to grab the job title and URL by replacing the current console log with:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">jobTitle</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">next</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">()</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">jobURL</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">next</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">)</span>
-</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">jobTitle</span><span class="p">,</span> <span class="nx">jobURL</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Notice the <code>this</code> keyword? It&rsquo;s extremely powerful yet it can be difficult to use. In this case, it refers to the DOM element that the event handler is triggered on.</p>
-
-<p>Don&rsquo;t believe me? Test it out: update the <code>console.log()</code> to <code>console.log($(this))</code>. Test it out.</p>
-
-<p>To learn more about <code>this</code>, check out the jQuery <a href="https://learn.jquery.com/javascript-101/this-keyword/">docs</a> and Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this">docs</a>.</p>
-
-<p>Now what happens when you click the save button?</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/this-keyword.png" alt="this-keyword" /></p>
-
-<p>Finally, we need to pass the data to the server.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">parameters</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">jobTitle</span><span class="p">,</span> <span class="nx">url</span><span class="o">:</span> <span class="nx">jobURL</span> <span class="p">};</span>
-</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">parameters</span><span class="p">)</span>
-</span><span class='line'><span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span> <span class="s1">&#39;/save&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;whee!&quot;</span><span class="p">)</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>You should remember how to do this, and understand what&rsquo;s happening here. If not, review <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/#.U1AdiuZdWYU">Part 1</a> of this series.</p>
-
-<h2>Server Side Javascript</h2>
-
-<p>On the server side, we need to setup a <code>/save</code> route. Again, if you have questions on this, check out <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/#.U1AdiuZdWYU">Part 1</a>.</p>
-
-<p>Update <code>app.js</code>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/save&#39;</span><span class="p">,</span> <span class="nx">ensureAuthenticated</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">save</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now update the routes file, <code>index.js</code>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">title</span><span class="p">,</span> <span class="nx">url</span><span class="p">);</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Test this out. You should see:</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/back-end.png" alt="backend" /></p>
-
-<h2>Update Mongo</h2>
-
-<p>Now that we have the data in our possession, let&rsquo;s add it to the database.</p>
-
-<h3>Add a new schema</h3>
-
-<p>Create a new file in the &ldquo;models&rdquo; directory called <em>job.js</em>, then add the following code to the file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mongoose&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// create a job model</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">userSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">({</span>
-</span><span class='line'>  <span class="nx">title</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">url</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
-</span><span class='line'><span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Job&#39;</span><span class="p">,</span> <span class="nx">jobSchema</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Insert Data</h3>
-
-<p>With the schema set up, we can now add our data to the Mongo collection. Within your routes, add the following code to the <code>/save</code> route:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">title</span><span class="p">,</span> <span class="nx">url</span><span class="p">);</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">newJob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">job</span><span class="p">();</span>
-</span><span class='line'>  <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">newJob</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newJob</span><span class="p">);</span>
-</span><span class='line'>  <span class="nx">newJob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Here, we are simply creating a new record assigned to the variable <code>newJob</code>, then adding the appropriate data, and finally saving the job to our job collection within Mongo.</p>
-
-<p>Make sure to require the config and Mongoose schema files:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">job</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models/job&#39;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Test it out!</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/save_job_to_mongo.png" alt="save_job_to_mongo" /></p>
-
-<p>Now check out the results in Mongo:</p>
-
-<p><img src="https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/img/saved_job_mongo.png" alt="saved_job_mongo" /></p>
-
-<p>Before moving on, let&rsquo;s add a line of code to search the Mongo collection to see if a job exists, then within a conditional we can setup logic for only adding a job if it doesn&rsquo;t already exist in the collection:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">title</span><span class="p">,</span> <span class="nx">url</span><span class="p">);</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">newJob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">job</span><span class="p">();</span>
-</span><span class='line'>  <span class="nx">job</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="s1">&#39;title&#39;</span><span class="o">:</span> <span class="nx">title</span><span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Job already in database.&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">;</span>
-</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newJob</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
-</span><span class='line'>          <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">};</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So, we search the database for the job - <code>job.findOne({'title': title}</code> - then if it&rsquo;s found we output a message to the console - <code>console.log('Job already in database.');</code>. And if it&rsquo;s not found, we obviously add the data to the database. We should alert the user if a job is already in the database in a more direct way than just a message to the console. After all, how many users browse the Internet with their console open? We&rsquo;ll address that in a bit. Right now, let&rsquo;s finish with Mongo first.</p>
-
-<h3>One to Many Relationship</h3>
-
-<p>We need set up a one to many relationship (one user, many jobs) using <a href="http://docs.mongodb.org/manual/tutorial/model-referenced-one-to-many-relationships-between-documents/">document references</a> within Mongo to associate a job to a user. This takes literally two lines of code.</p>
-
-<p>Update the jobs schema:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models/user&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">jobSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">({</span>
-</span><span class='line'>  <span class="nx">title</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">url</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
-</span><span class='line'>  <span class="nx">user</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">.</span><span class="nx">Types</span><span class="p">.</span><span class="nx">ObjectId</span><span class="p">,</span> <span class="nx">ref</span><span class="o">:</span> <span class="nx">user</span><span class="p">}</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then updated <em>index.js</em> so that when you add a job it includes the currently logged in user:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">;</span>
-</span><span class='line'><span class="nx">newJob</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
-</span><span class='line'><span class="nx">newJob</span><span class="p">.</span><span class="nx">user</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">_id</span>
-</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newJob</span><span class="p">);</span>
-</span><span class='line'><span class="nx">newJob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
-</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
-</span><span class='line'>    <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
-</span><span class='line'>  <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Test this out, then check out the object in Mongo:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span> <span class="s2">&quot;user&quot;</span> <span class="o">:</span> <span class="nx">ObjectId</span><span class="p">(</span><span class="s2">&quot;534cb94fd4b72d7618000001&quot;</span><span class="p">),</span> <span class="s2">&quot;url&quot;</span> <span class="o">:</span> <span class="s2">&quot;http://sfbay.craigslist.org/sfc/eng/4423216760.html&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span> <span class="o">:</span> <span class="s2">&quot;Principal Web Engineer&quot;</span><span class="p">,</span> <span class="s2">&quot;_id&quot;</span> <span class="o">:</span> <span class="nx">ObjectId</span><span class="p">(</span><span class="s2">&quot;5351f3a1cc6813119e000001&quot;</span><span class="p">),</span> <span class="s2">&quot;__v&quot;</span> <span class="o">:</span> <span class="mi">0</span> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The object now includes the user id.</p>
-
-<h2>Client Side Javascript Redux</h2>
-
-<p>Okay. Back on the client side, we need to do three things before we&rsquo;re finally done:</p>
-
-<ol>
-<li>Remove the job the user saved</li>
-<li>Display messages from the server side, indicating whether the job was added to the database or not</li>
-<li>Display all saved jobs to the user</li>
-</ol>
-
-
-<h3>Remove job from the DOM</h3>
-
-<p>Add the following line of code to <em>main.js</em> right before we send the data to the server side:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">parent</span><span class="p">().</span><span class="nx">remove</span><span class="p">()</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Updated code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#results&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="s1">&#39;.save-btn&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">jobTitle</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">next</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">()</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">jobURL</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">next</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">)</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">parameters</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">title</span><span class="o">:</span> <span class="nx">jobTitle</span><span class="p">,</span> <span class="nx">url</span><span class="o">:</span> <span class="nx">jobURL</span> <span class="p">};</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">parameters</span><span class="p">)</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">parent</span><span class="p">().</span><span class="nx">remove</span><span class="p">()</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span> <span class="s1">&#39;/save&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="nx">data</span><span class="p">)</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Display Messages</h3>
-
-<p>First, within <em>index.js</em> update the following two lines of code.</p>
-
-<p>From:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Job already in database.&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>To:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;Job already in database.&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Updated function:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">exports</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">title</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">title</span><span class="p">,</span> <span class="nx">url</span><span class="p">);</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">newJob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">job</span><span class="p">();</span>
-</span><span class='line'>  <span class="nx">job</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="s1">&#39;title&#39;</span><span class="o">:</span> <span class="nx">title</span><span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;Job already in database.&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">title</span><span class="p">;</span>
-</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newJob</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">newJob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
-</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
-</span><span class='line'>          <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&quot;New job, &quot;</span> <span class="o">+</span> <span class="nx">newJob</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s2">&quot;, was added to mongo&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">};</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The <code>res.send()</code> method is used to send a response back to the client side. You can read more <a href="http://expressjs.com/4x/api.html#res.send">here</a>. Now, we need to capture that reponse and append the actual message to the DOM.</p>
-
-<p>First, add a new element, <code>p#alert</code>, to <em>search.jade</em> where you want the message to go:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>extends layout
-</span><span class='line'>
-</span><span class='line'>block content
-</span><span class='line'>    h1 Search SF Jobs
-</span><span class='line'>    .lead Welcome, #{user}
-</span><span class='line'>    form(METHOD=&quot;LINK&quot;, ACTION=&quot;logout&quot;)
-</span><span class='line'>        input(type=&quot;submit&quot;, value=&quot;Logout&quot;, class=&#39;btn btn-sm btn-primary&#39;)
-</span><span class='line'>    br
-</span><span class='line'>    br
-</span><span class='line'>    p#alert
-</span><span class='line'>    input#search(type=&quot;search&quot;, placeholder=&quot;search...&quot;)
-</span><span class='line'>    br
-</span><span class='line'>    br
-</span><span class='line'>    ul#results
-</span><span class='line'>    include template.html
-</span><span class='line'>
-</span><span class='line'>    script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js&quot;)
-</span><span class='line'>    script(src=&quot;//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.0.0/handlebars.min.js&quot;)
-</span><span class='line'>    script(src=&quot;/javascripts/main.js&quot;)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Next update <em>main.js</em>:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span> <span class="s1">&#39;/save&#39;</span><span class="p">,</span> <span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#alert&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
-</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><code>$('#alert').html(data)</code> adds the message to the DOM between the <code>&lt;p&gt;</code> tags that have the id &ldquo;results&rdquo;.</p>
-
-<p>Check it out live.</p>
-
-<h3>Display saved jobs</h3>
-
-<p>This is actually a fairly large task, so we&rsquo;ll tackle this in the next part, along with re-organizing the entire search page and adding some more styles.</p>
-
-<p>You can grab the code <a href="https://github.com/mjhea0/node-express-ajax-craigslist">here</a>.</p>
-
-<p>See you next time!</p>
 ]]></content>
   </entry>
   
