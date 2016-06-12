@@ -7,6 +7,8 @@ sidebar: false
 
 After freelancing for nearly six years, I am now (as of June 2015) a Lead Instructor at [Galvanize](http://www.galvanize.com/). I’ve worked in various industries, companies large and small, wearing multiple hats. My languages/weapons of choice are Python, Ruby, and JavaScript. Besides development, I enjoy building financial models, tech writing, content marketing, and teaching.
 
+I like this quote: *Programming languages are all different ways of expressing the same thing. A software developer should be able to understand all of them.*
+
 #### Major Projects
 
 1. [Real Python](http://www.realpython.com)
@@ -24,7 +26,7 @@ Email: michael at mherman dot org
 
 Connect with me on [LinkedIn](http://www.linkedin.com/pub/michael-herman/3b/a94/4), [GitHub](https://github.com/mjhea0/), and [YouTube](http://www.youtube.com/hermanmu). Also, check out [this](https://gist.github.com/mjhea0/6763725) ever growing list of personal and professional projects. Cheers!
 
-**I am *NOT* currently accepting new projects.**
+**I am *NOT* currently accepting new projects.** Tech recruiters: please use "i am the walrus" in your cold email so I know you actually read this.
 
 [![pair-with-me](http://pairprogramwith.me/badge.png "Pair program with me!")](mailto:michael@mherman.org)
 
@@ -44,3 +46,8 @@ Besides my posts on [this site](/) and [Real Python](http://www.realpython.com/b
 - [How to take on a large Django project](http://gun.io/blog/how-to-take-on-a-large-Django-project/) (#6 on HackerNews)
 - [Simple Goods + Zapier & MySQL](https://www.simplegoods.co/blog/simple-goods-zapier-and-mysql/)
 - [Adding a web interface to our image search engine with Flask](http://www.pyimagesearch.com/2014/12/08/adding-web-interface-image-search-engine-flask/)
+
+#### Articles about me
+
+- [PyDev of the Week: Michael Herman](http://www.blog.pythonlibrary.org/2014/11/17/pydev-of-the-week-michael-herman/)
+- [Employee Spotlight: Jeff & Michael of Galvanize](https://www.coursereport.com/schools/galvanize#/news/employee-spotlight-jeff-michael-of-galvanize)
