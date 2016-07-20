@@ -21,7 +21,7 @@ Let's have some fun.
 3. Handle the Event
 4. Append the text to the DOM
 5. Update the Form and Add the Story
-6. Update the
+6. Update the jQuery
 7. Handle Another Event
 
 <hr>
