@@ -34,7 +34,7 @@ Remember: The goal is to never take your hands off the keyboard!
 1. **Highlight an entire line** (*CMD-L*)
 1. **Duplicate line** (*CMD-SHIFT-D*)
 1. **Move line Up or Down** (*CMD-CTRL-Up/Down Arrow*)
-1. **Multi-Edit** (*CMD-D*) - Simply select the word you want to edit, and press *CMD-D* repeatedly until you have selected all the words you want to update. Go to far? Use *CMD-U* to unselect.
+1. **Multi-Edit** (*CMD-D*) - Simply select the word you want to edit, and press *CMD-D* repeatedly until you have selected all the words you want to update. Go too far? Use *CMD-U* to unselect.
 1. **Change the language** (*CTRL-SHIFT-L*)
 1. **Settings** (*CMD-,*) - Opens the *Settings* menu where you can update settings, download and configure packages, and change themes.
 
@@ -62,7 +62,7 @@ Again, like Sublime Text, Atom's core features can be extended via the powerful 
 
 ### Linter
 
-[Linter](https://atom.io/packages/linter) is the base package for a [number of language-specific linters](http://atomlinter.github.io/). There's support for all the main languages. Start with the following linters to start checking for style and syntactic errors:
+[Linter](https://atom.io/packages/linter) is the base package (and API) for a [number of language-specific linters](http://atomlinter.github.io/). There's support for all the main languages. Start with the following linters to start checking for style and syntactic errors:
 
 1. [linter-jshint](https://atom.io/packages/linter-jshint)
 1. [linter-csslint](https://atom.io/packages/linter-csslint)
