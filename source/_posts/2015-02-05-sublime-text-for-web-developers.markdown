@@ -6,7 +6,7 @@ date: 2015-02-05 19:07
 comments: true
 categories: sublime
 keywords: "sublime text, sublime-text 3, sublime, sublime setup"
-description: "This article details how to setup Sublime Text for web development."
+description: "This article details how to set up Sublime Text for web development."
 ---
 
 [Sublime Text 3](http://www.sublimetext.com/3) (ST3) is a powerful editor just as it is. But if you want to step up your game, you need to take advantage of all that ST3 has to offer by learning the keyboard shortcuts and customizing the editor to meet your individual needs...
