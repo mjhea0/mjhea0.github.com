@@ -14,10 +14,10 @@ description: "Here we look at the basics of using Swig, a template engine for No
 
 <hr><br>
 
-First off, a templating engine creates web pages (or views) dynamically by combining variables and programming logic with HTML. Essentially, you can add placeholders (or tags) to your HTML that are replaced by *actual* code defined from your router or controller. In general, tags, for the majority of templating engines, fall within one of two categores-
+First off, a templating engine creates web pages (or views) dynamically by combining variables and programming logic with HTML. Essentially, you can add placeholders (or tags) to your HTML that are replaced by *actual* code defined from your router or controller. In general, tags, for the majority of templating engines, fall within one of two categories-
 
 1. *Variables/Output Tags* - surrounded by double curly brackets `{{ ... }}`, these output the results of a logic tag or a variable to the end user
-1. *Logic Tags* - surrouded by {% raw %}`{% ... %}`{% endraw %}, these handle programming logic, like loops and conditionals
+1. *Logic Tags* - surrounded by {% raw %}`{% ... %}`{% endraw %}, these handle programming logic, like loops and conditionals
 
 > Before diving in, grab the basic project structure from [Github](https://github.com/mjhea0/swig-primer/releases/tag/v1), install the dependencies via NPM - `npm install` - and then run the server. Pay attention to where we initialize Swig and set it as the templating language in *app.js*:
     ```
@@ -88,7 +88,7 @@ app.get('/', function(req, res) {
 });
 ```
 
-Keep in mind that all variable outputs are [automtomatically escaped](http://paularmstrong.github.io/swig/docs/api/#SwigOpts) except for function outputs:
+Keep in mind that all variable outputs are [automatically escaped](http://paularmstrong.github.io/swig/docs/api/#SwigOpts) except for function outputs:
 
 ``` javascript
 // *** main routes *** //
@@ -292,7 +292,7 @@ Try some of these out:
 ```
 {% endraw %}
 
-## Template Inheritence
+## Template Inheritance
 
 Logic tags can also be used to extend common code from a base template to child templates. You can use the `block` tag to accomplish this.
 
