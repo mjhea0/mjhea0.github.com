@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Node | Michael Herman]]></title>
   <link href="http://mherman.org/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mherman.org/"/>
-  <updated>2016-08-30T15:08:50-06:00</updated>
+  <updated>2016-09-12T07:16:18-06:00</updated>
   <id>http://mherman.org/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,1258 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Testing Node and Express]]></title>
+    <link href="http://mherman.org/blog/2016/09/12/testing-node-and-express/"/>
+    <updated>2016-09-12T07:09:13-06:00</updated>
+    <id>http://mherman.org/blog/2016/09/12/testing-node-and-express</id>
+    <content type="html"><![CDATA[<p>This tutorial looks at how to test an <a href="https://expressjs.com/">Express</a> CRUD app with <a href="http://mochajs.org/">Mocha</a> and <a href="http://chaijs.com/">Chai</a>. Although we&rsquo;ll be writing both <a href="http://stackoverflow.com/questions/5357601/whats-the-difference-between-unit-tests-and-integration-tests">unit and integration tests</a>, the focus will be on the latter so that the tests run against the database in order to test the full functionality of our app. Postgres will be used, but feel free to use your favorite relational database.</p>
+
+<p>Let&rsquo;s get to it!</p>
+
+<h2>Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to&hellip;</p>
+
+<ol>
+<li>Discuss the benefits of automating tests</li>
+<li>Set up a project with knex.js</li>
+<li>Write schema migration files with knex to create new database tables</li>
+<li>Generate <a href="https://en.wikipedia.org/wiki/Database_seeding">database seed</a> files with knex and apply the seeds to the database</li>
+<li>Utilize the knex methods to perform the basic CRUD functions on a RESTful resource</li>
+<li>Set up the testing structure with Mocha and Chai</li>
+<li>Write integration tests</li>
+<li>Write unit tests</li>
+<li>Write tests, and then write just enough code to pass the tests</li>
+<li>Create <a href="https://expressjs.com/en/guide/routing.html">Express routes</a></li>
+<li>Practice test driven development</li>
+<li>Create a CRUD app, following RESTful best practices</li>
+<li>Generate fake test data (<a href="https://en.wikipedia.org/wiki/Test_fixture">test fixtures</a>) with <a href="https://github.com/marak/Faker.js/">faker.js</a></li>
+<li><p>Validate request parameters with <a href="https://github.com/ctavan/express-validator">express-validator</a></p></li>
+<li><p>Generate a Swagger Spec based on an existing RESTful API developed with Node, Express, and Postgres</p></li>
+<li>Set up the Swagger UI for testing and interacting with the API</li>
+</ol>
+
+
+<h2>Why Test?</h2>
+
+<p>Are you currently manually testing your app?</p>
+
+<p>When you push new code do you manually test all features in your app to ensure the new code doesn&rsquo;t break existing functionality? How about when you&rsquo;re fixing a bug? Do you manually test your app? How many times - ten, twenty, thirty?</p>
+
+<p>Stop wasting time!</p>
+
+<p>If you do any sort of manual testing write an automated test instead. Your future self will thank you.</p>
+
+<p>Need more convincing? Testing&hellip;</p>
+
+<ol>
+<li>Helps break down problems into manageable pieces</li>
+<li>Forces you to write cleaner code</li>
+<li>Prevents over coding</li>
+<li>Let&rsquo;s you sleep at night (because you <em>actually</em> know that your code works)</li>
+</ol>
+
+
+<h2>Getting Started</h2>
+
+<h3>Project Setup</h3>
+
+<p>To quickly create an app boilerplate install the following <a href="https://www.npmjs.com/package/generator-galvanize-express">generator</a>:</p>
+
+<pre><code class="sh">$ npm install -g generator-galvanize-express@1.0.5
+</code></pre>
+
+<p>Make sure you have <a href="http://mochajs.org/">Mocha</a>, <a href="http://chaijs.com/">Chai</a>, <a href="http://gulpjs.com/">Gulp</a>, and <a href="http://yeoman.io/">Yeoman</a> installed globally as well:</p>
+
+<pre><code class="sh">$ npm install -g mocha@3.0.2 chai@3.5.0 yo@1.8.5 gulp@3.9.1
+</code></pre>
+
+<p>Create a new project directory, and then run the generator to scaffold a new app:</p>
+
+<pre><code class="sh">$ yo galvanize-express
+</code></pre>
+
+<blockquote><p><strong>NOTE:</strong> Add your name for the MIT License and opt not to add Gulp Notify.</p></blockquote>
+
+<p>Open the project in your favorite text editor, and then review the project structure as the dependencies are installed:</p>
+
+<pre><code class="sh">$ npm install
+</code></pre>
+
+<p>Finally, let&rsquo;s run the app to make sure all is well:</p>
+
+<pre><code class="sh">$ gulp
+</code></pre>
+
+<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your favorite browser. You should see:</p>
+
+<pre><code>Welcome to Express!
+The sum is 3
+</code></pre>
+
+<h3>Database Setup</h3>
+
+<p>Make sure the Postgres database server is running, and then create two new databases in <a href="http://postgresguide.com/utilities/psql.html">psql</a>, for development and testing:</p>
+
+<pre><code class="sh"># create database express_tdd;
+CREATE DATABASE
+# create database express_tdd_testing;
+CREATE DATABASE
+#
+</code></pre>
+
+<p>Install Knex and <a href="https://github.com/brianc/node-postgres">pg</a>:</p>
+
+<pre><code class="sh">$ npm install knex@0.11.10 pg@6.1.0 --save-dev
+</code></pre>
+
+<p>Run <code>knex init</code> to generate a new <em><a href="http://knexjs.org/#knexfile">knexfile.js</a></em> file in the project root, which is used to store database config. Update the file like so:</p>
+
+<pre><code class="javascript">module.exports = {
+  development: {
+    client: 'postgresql',
+    connection: 'postgres://localhost:5432/express_tdd',
+    migrations: {
+      directory: __dirname + '/src/server/db/migrations'
+    },
+    seeds: {
+      directory: __dirname + '/src/server/db/seeds'
+    }
+  },
+  test: {
+    client: 'postgresql',
+    connection: 'postgres://localhost:5432/express_tdd_testing',
+    migrations: {
+      directory: __dirname + '/src/server/db/migrations'
+    },
+    seeds: {
+      directory: __dirname + '/src/server/db/seeds'
+    }
+  }
+};
+</code></pre>
+
+<p>Here, different database configuration is used based on the app&rsquo;s environment, either <code>development</code> or <code>test</code>. The <a href="https://en.wikipedia.org/wiki/Environment_variable">environment variable</a> <code>NODE_ENV</code> is used to change the environment. <code>NODE_ENV</code> defaults to <code>development</code>, so when we run our tests, we&rsquo;ll need to update the variable to <code>test</code> in order to pull in the proper config.</p>
+
+<p>Next, let&rsquo;s init the database connection. Create a new folder within &ldquo;server&rdquo; called &ldquo;db&rdquo; and then add a file called <em>knex.js</em>:</p>
+
+<pre><code class="javascript">const environment = process.env.NODE_ENV;
+const config = require('../../../knexfile.js')[environment];
+module.exports = require('knex')(config);
+</code></pre>
+
+<p>The database connection is established by passing the proper environment (via the environment variable <code>NODE_ENV</code>) to <em>knexfile.js</em> which returns the associated object that is passed to the <code>knex</code> library in the third line above.</p>
+
+<blockquote><p><strong>NOTE</strong>: Now is a great time to init a new git repo and make your first commit!</p></blockquote>
+
+<h3>Test Structure</h3>
+
+<p>With that complete, let&rsquo;s look at the current test structure. In the &ldquo;src&rdquo; directory, you&rsquo;ll notice a &ldquo;test&rdquo; directory, which as you probably guessed contains the test specs. Two sample tests have been created, plus there is some basic configuration set up for <a href="https://github.com/jshint/jshint">JSHint</a> and <a href="http://jscs.info/">JSCS</a> so that the code is linted against the style config and conventions defined in the <em>.jscsrc</em>  and <em>jshintrc</em> files, respectively.</p>
+
+<p>Run the tests:</p>
+
+<pre><code class="sh">$ npm test
+</code></pre>
+
+<p>They all should pass:</p>
+
+<pre><code class="sh">jscs
+  ✓ should pass for working directory (357ms)
+
+routes : index
+  GET /
+    ✓ should render the index (88ms)
+  GET /404
+    ✓ should throw an error
+
+jshint
+  ✓ should pass for working directory (247ms)
+
+controllers : index
+  sum()
+    ✓ should return a total
+    ✓ should return an error
+
+
+6 passing (724ms)
+</code></pre>
+
+<p>Glance at the sample tests. Notice how we updated the environment variable at the top of each test:</p>
+
+<pre><code class="javascript">process.env.NODE_ENV = 'test';
+</code></pre>
+
+<p>Remember what this does? Scroll back up to the previous section if you forgot. Now, when we run the tests, knex is initialized with the <code>test</code> config.</p>
+
+<h3>Schema Migrations</h3>
+
+<p>To keep the code simple, let&rsquo;s use one CRUD resource - <code>users</code>:</p>
+
+<table>
+<thead>
+<tr>
+<th> Endpoint  </th>
+<th> HTTP   </th>
+<th> Result               </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> users     </td>
+<td> GET    </td>
+<td> get all users        </td>
+</tr>
+<tr>
+<td> users/:id </td>
+<td> GET    </td>
+<td> get a single user    </td>
+</tr>
+<tr>
+<td> users     </td>
+<td> POST   </td>
+<td> add a single user    </td>
+</tr>
+<tr>
+<td> users/:id </td>
+<td> PUT    </td>
+<td> update a single user </td>
+</tr>
+<tr>
+<td> users/:id </td>
+<td> DELETE </td>
+<td> delete a single user </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Init a new knex migration:</p>
+
+<pre><code class="sh">$ knex migrate:make users
+</code></pre>
+
+<p>This command created a new migration file in the &ldquo;src/server/db/migrations&rdquo; folder. Now we can create the table along with the individual fields:</p>
+
+<table>
+<thead>
+<tr>
+<th> Field Name  </th>
+<th> Data Type </th>
+<th> Constraints                                 </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> id          </td>
+<td> integer   </td>
+<td> not null, unique                            </td>
+</tr>
+<tr>
+<td> username    </td>
+<td> string    </td>
+<td> not null, unique                            </td>
+</tr>
+<tr>
+<td> email       </td>
+<td> string    </td>
+<td> not null, unique                            </td>
+</tr>
+<tr>
+<td> created_at  </td>
+<td> timestamp </td>
+<td> Not null, default to current date and time  </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Add the following code to the migration file:</p>
+
+<pre><code class="javascript">exports.up = (knex, Promise) =&gt; {
+  return knex.schema.createTable('users', (table) =&gt; {
+    table.increments();
+    table.string('username').unique().notNullable();
+    table.string('email').unique().notNullable();
+    table.timestamp('created_at').defaultTo(knex.fn.now());
+  });
+};
+
+exports.down = (knex, Promise) =&gt; {
+  return knex.schema.dropTable('users');
+};
+</code></pre>
+
+<p>Apply the migration:</p>
+
+<pre><code class="sh">$ knex migrate:latest --env development
+</code></pre>
+
+<p>Make sure the schema was applied within psql:</p>
+
+<pre><code class="sh"># \c express_tdd
+You are now connected to database "express_tdd".
+# \dt
+                   List of relations
+ Schema |         Name         | Type  |     Owner
+--------+----------------------+-------+---------------
+ public | knex_migrations      | table | michaelherman
+ public | knex_migrations_lock | table | michaelherman
+ public | users                | table | michaelherman
+(3 rows)
+
+# select * from users;
+ id | username | email | created_at
+----+----------+-------+------------
+(0 rows)
+</code></pre>
+
+<h2>Seed</h2>
+
+<p>We need to <a href="https://en.wikipedia.org/wiki/Database_seeding">seed</a> the database to add dummy data to the database so we have something to work with. Init a new seed, which will add a new seed file to &ldquo;src/server/db/seeds/&rdquo;:</p>
+
+<pre><code class="sh">$ knex seed:make users
+</code></pre>
+
+<p>Update the file:</p>
+
+<pre><code class="sh">exports.seed = (knex, Promise) =&gt; {
+  // Deletes ALL existing entries
+  return knex('users').del()
+  .then(() =&gt; {
+    return Promise.all([
+      // Inserts seed entries
+      knex('users').insert({
+        username: 'michael',
+        email: 'michael@mherman.org'
+      }),
+      knex('users').insert({
+        username: 'michaeltwo',
+        email: 'michael@realpython.org'
+      })
+    ]);
+  });
+};
+</code></pre>
+
+<p>Run the seed:</p>
+
+<pre><code class="sh">$ knex seed:run --env development
+</code></pre>
+
+<p>Then make sure the data is in the database:</p>
+
+<pre><code class="sh"># select * from users;
+ id |  username  |         email          |          created_at
+----+------------+------------------------+-------------------------------
+  1 | michael    | michael@mherman.org    | 2016-09-08 15:08:00.31772-06
+  2 | michaeltwo | michael@realpython.org | 2016-09-08 15:08:00.320299-06
+(2 rows)
+</code></pre>
+
+<p>Set up complete.</p>
+
+<h2>Integration Tests</h2>
+
+<p>We&rsquo;ll be taking a test first approach to development, roughly following these steps for each endpoint:</p>
+
+<ol>
+<li>Write test</li>
+<li>Run the test (it should fail)</li>
+<li>Write code</li>
+<li>Run the test (it should pass)</li>
+</ol>
+
+
+<p>Start by thinking about the expected input (JSON payload) and output (JSON object) for each RESTful endpoint:</p>
+
+<table>
+<thead>
+<tr>
+<th> Endpoint  </th>
+<th> HTTP   </th>
+<th> Input       </th>
+<th> Output           </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> users     </td>
+<td> GET    </td>
+<td> none        </td>
+<td> array of objects </td>
+</tr>
+<tr>
+<td> users/:id </td>
+<td> GET    </td>
+<td> none        </td>
+<td> single object    </td>
+</tr>
+<tr>
+<td> users     </td>
+<td> POST   </td>
+<td> user object </td>
+<td> single object    </td>
+</tr>
+<tr>
+<td> users/:id </td>
+<td> PUT    </td>
+<td> user object </td>
+<td> single object    </td>
+</tr>
+<tr>
+<td> users/:id </td>
+<td> DELETE </td>
+<td> none        </td>
+<td> single object    </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>The input user object will always look something like:</p>
+
+<pre><code class="json">{
+  "username": "michael",
+  "email": "michael@herman.com"
+}
+</code></pre>
+
+<p>Likewise, the output will always have the following structure:</p>
+
+<pre><code class="json">{
+  "status": "success",
+  "data": "either an array of objects or a single object"
+}
+</code></pre>
+
+<p>Create a new file in the &ldquo;test/integration&rdquo; directory called &ldquo;routes.users.test.js&rdquo; and add the following code:</p>
+
+<pre><code class="javascript">process.env.NODE_ENV = 'test';
+
+const chai = require('chai');
+const should = chai.should();
+const chaiHttp = require('chai-http');
+chai.use(chaiHttp);
+
+const server = require('../../src/server/app');
+const knex = require('../../src/server/db/knex');
+
+describe('routes : users', () =&gt; {
+
+  beforeEach((done) =&gt; {
+    knex.migrate.rollback()
+    .then(() =&gt; {
+      knex.migrate.latest()
+      .then(() =&gt; {
+        knex.seed.run()
+        .then(() =&gt; {
+          done();
+        })
+      });
+    });
+  });
+
+  afterEach((done) =&gt; {
+    knex.migrate.rollback()
+    .then(() =&gt; {
+      done();
+    });
+  });
+
+});
+</code></pre>
+
+<p>What&rsquo;s happening here? Think about it on your own. Turn to Google if necessary. Still have questions? Comment below.</p>
+
+<p>With that, let&rsquo;s start writing some code&hellip;</p>
+
+<h3>GET ALL Users</h3>
+
+<p>Add the first test:</p>
+
+<pre><code class="javascript">describe('GET /api/v1/users', () =&gt; {
+  it('should respond with all users', (done) =&gt; {
+    chai.request(server)
+    .get('/api/v1/users')
+    .end((err, res) =&gt; {
+      // there should be no errors
+      should.not.exist(err);
+      // there should be a 200 status code
+      res.status.should.equal(200);
+      // the response should be JSON
+      res.type.should.equal('application/json');
+      // the JSON response body should have a
+      // key-value pair of {"status": "success"}
+      res.body.status.should.eql('success');
+      // the JSON response body should have a
+      // key-value pair of {"data": [2 user objects]}
+      res.body.data.length.should.eql(2);
+      // the first object in the data array should
+      // have the right keys
+      res.body.data[0].should.include.keys(
+        'id', 'username', 'email', 'created_at'
+      );
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Take note of the inline code comments. Need more explanation? Read over <a href="http://mherman.org/blog/2015/09/10/testing-node-js-with-mocha-and-chai/#.V9W8aJMrJE4">Testing Node.js With Mocha and Chai</a>. Run the test to make sure it fails. Now write the code to get the test pass, following these steps:</p>
+
+<h4>Update the route config (src/server/config/route-config.js)</h4>
+
+<pre><code class="javascript">(function (routeConfig) {
+
+  'use strict';
+
+  routeConfig.init = function (app) {
+
+    // *** routes *** //
+    const routes = require('../routes/index');
+    const userRoutes = require('../routes/users');
+
+    // *** register routes *** //
+    app.use('/', routes);
+    app.use('/api/v1/users', userRoutes);
+
+  };
+
+})(module.exports);
+</code></pre>
+
+<p>Now we have a new set of routes set up that we can use within <em>src/server/routes/users.js</em>, which we need to add&hellip;</p>
+
+<h4>Set up new routes</h4>
+
+<p>Create the <em>users.js</em> file in &ldquo;src/server/routes/&rdquo;, and then add in the route boilerplate:</p>
+
+<pre><code class="javascript">const express = require('express');
+const router = express.Router();
+
+const knex = require('../db/knex');
+
+module.exports = router;
+</code></pre>
+
+<p>Now we can add in the route handler with the knex methods for retrieving all users from the <code>users</code> table:</p>
+
+<pre><code class="javascript">router.get('/', (req, res, next) =&gt; {
+  knex('users').select('*')
+  .then((users) =&gt; {
+    res.status(200).json({
+      status: 'success',
+      data: users
+    });
+  })
+  .catch((err) =&gt; {
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
+</code></pre>
+
+<p>Run the tests:</p>
+
+<pre><code class="sh">$ npm test
+</code></pre>
+
+<p>You should see the test passing:</p>
+
+<pre><code class="sh">routes : users
+  GET /api/v1/users
+    ✓ should respond with all users
+</code></pre>
+
+<h3>GET Single User</h3>
+
+<p>Moving on, we can just copy and paste the previous test and use that boilerplate to write the next test:</p>
+
+<pre><code class="javascript">describe('GET /api/v1/users/:id', () =&gt; {
+  it('should respond with a single user', (done) =&gt; {
+    chai.request(server)
+    .get('/api/v1/users/1')
+    .end((err, res) =&gt; {
+      // there should be no errors
+      should.not.exist(err);
+      // there should be a 200 status code
+      res.status.should.equal(200);
+      // the response should be JSON
+      res.type.should.equal('application/json');
+      // the JSON response body should have a
+      // key-value pair of {"status": "success"}
+      res.body.status.should.eql('success');
+      // the JSON response body should have a
+      // key-value pair of {"data": 1 user object}
+      res.body.data[0].should.include.keys(
+        'id', 'username', 'email', 'created_at'
+      );
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Run the test. Watch it fail. Write the code to get it to pass:</p>
+
+<pre><code class="javascript">router.get('/:id', (req, res, next) =&gt; {
+  const userID = parseInt(req.params.id);
+  knex('users')
+  .select('*')
+  .where({
+    id: userID
+  })
+  .then((users) =&gt; {
+    res.status(200).json({
+      status: 'success',
+      data: users
+    });
+  })
+  .catch((err) =&gt; {
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
+</code></pre>
+
+<h3>POST</h3>
+
+<p>Test:</p>
+
+<pre><code class="javascript">describe('POST /api/v1/users', () =&gt; {
+  it('should respond with a success message along with a single user that was added', (done) =&gt; {
+    chai.request(server)
+    .post('/api/v1/users')
+    .send({
+      username: 'ryan',
+      email: 'ryan@ryan.com'
+    })
+    .end((err, res) =&gt; {
+      // there should be no errors
+      should.not.exist(err);
+      // there should be a 201 status code
+      // (indicating that something was "created")
+      res.status.should.equal(201);
+      // the response should be JSON
+      res.type.should.equal('application/json');
+      // the JSON response body should have a
+      // key-value pair of {"status": "success"}
+      res.body.status.should.eql('success');
+      // the JSON response body should have a
+      // key-value pair of {"data": 1 user object}
+      res.body.data[0].should.include.keys(
+        'id', 'username', 'email', 'created_at'
+      );
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Code:</p>
+
+<pre><code class="javascript">// *** add a user *** //
+router.post('/', (req, res, next) =&gt; {
+  const newUsername = req.body.username;
+  const newEmail = req.body.email;
+  knex('users')
+  .insert({
+    username: newUsername,
+    email: newEmail
+  })
+  .returning('*')
+  .then((user) =&gt; {
+    res.status(201).json({
+      status: 'success',
+      data: user
+    });
+  })
+  .catch((err) =&gt; {
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
+</code></pre>
+
+<h3>PUT</h3>
+
+<p>Test:</p>
+
+<pre><code class="javascript">describe('PUT /api/v1/users', () =&gt; {
+  it('should respond with a success message along with a single user that was updated', (done) =&gt; {
+    knex('users')
+    .select('*')
+    .then((user) =&gt; {
+      const userObject = user[0];
+      chai.request(server)
+      .put(`/api/v1/users/${userObject.id}`)
+      .send({
+        username: 'updatedUser',
+        email: 'updated@user.com'
+      })
+      .end((err, res) =&gt; {
+        // there should be no errors
+        should.not.exist(err);
+        // there should be a 200 status code
+        res.status.should.equal(200);
+        // the response should be JSON
+        res.type.should.equal('application/json');
+        // the JSON response body should have a
+        // key-value pair of {"status": "success"}
+        res.body.status.should.eql('success');
+        // the JSON response body should have a
+        // key-value pair of {"data": 1 user object}
+        res.body.data[0].should.include.keys(
+          'id', 'username', 'email', 'created_at'
+        );
+        // ensure the user was in fact updated
+        var newUserObject = res.body.data[0];
+        newUserObject.username.should.not.eql(userObject.username);
+        newUserObject.email.should.not.eql(userObject.email);
+        // redundant
+        newUserObject.username.should.eql('updatedUser');
+        newUserObject.email.should.eql('updated@user.com');
+        done();
+      });
+    });
+  });
+});
+</code></pre>
+
+<p>Code:</p>
+
+<pre><code class="javascript">// *** update a user *** //
+router.put('/:id', (req, res, next) =&gt; {
+  const userID = parseInt(req.params.id);
+  const updatedUsername = req.body.username;
+  const updatedEmail = req.body.email;
+  knex('users')
+  .update({
+    username: updatedUsername,
+    email: updatedEmail
+  })
+  .where({
+    id: userID
+  })
+  .returning('*')
+  .then((user) =&gt; {
+    res.status(200).json({
+      status: 'success',
+      data: user
+    });
+  })
+  .catch((err) =&gt; {
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
+</code></pre>
+
+<h3>DELETE</h3>
+
+<p>Test:</p>
+
+<pre><code class="javascript">describe('DELETE /api/v1/users/:id', () =&gt; {
+  it('should respond with a success message along with a single user that was deleted', (done) =&gt; {
+    knex('users')
+    .select('*')
+    .then((users) =&gt; {
+      const userObject = users[0];
+      const lengthBeforeDelete = users.length;
+      chai.request(server)
+      .delete(`/api/v1/users/${userObject.id}`)
+      .end((err, res) =&gt; {
+        // there should be no errors
+        should.not.exist(err);
+        // there should be a 200 status code
+        res.status.should.equal(200);
+        // the response should be JSON
+        res.type.should.equal('application/json');
+        // the JSON response body should have a
+        // key-value pair of {"status": "success"}
+        res.body.status.should.eql('success');
+        // the JSON response body should have a
+        // key-value pair of {"data": 1 user object}
+        res.body.data[0].should.include.keys(
+          'id', 'username', 'email', 'created_at'
+        );
+        // ensure the user was in fact deleted
+        knex('users').select('*')
+        .then((updatedUsers) =&gt; {
+          updatedUsers.length.should.eql(lengthBeforeDelete - 1);
+          done();
+        });
+      });
+    });
+  });
+});
+</code></pre>
+
+<p>Code:</p>
+
+<pre><code class="javascript">// *** delete a user *** //
+router.delete('/:id', (req, res, next) =&gt; {
+  const userID = parseInt(req.params.id);
+  knex('users')
+  .del()
+  .where({
+    id: userID
+  })
+  .returning('*')
+  .then((user) =&gt; {
+    res.status(200).json({
+      status: 'success',
+      data: user
+    });
+  })
+  .catch((err) =&gt; {
+    res.status(500).json({
+      status: 'error',
+      data: err
+    });
+  });
+});
+</code></pre>
+
+<p>Run all your tests. All should pass.</p>
+
+<h2>Unit Tests</h2>
+
+<p>New business requirement!</p>
+
+<p>We need a route to return all users created after a certain date. Since we already know how to write routes, let&rsquo;s add a helper function that takes an array of users and a year that then returns an array of users created on or after the specified date. We can then use this function in a future route handler.</p>
+
+<p>Steps:</p>
+
+<ol>
+<li>Write a unit test</li>
+<li>Run the tests (the unit test should fail)</li>
+<li>Write the code to pass the test</li>
+<li>Run the tests (all should pass!)</li>
+</ol>
+
+
+<h3>Write a unit test</h3>
+
+<p>Create a new file called <em>controllers.users.test.js</em> within the &ldquo;test/unit/&rdquo; directory:</p>
+
+<pre><code class="javascript">process.env.NODE_ENV = 'test';
+
+const chai = require('chai');
+const should = chai.should();
+
+const usersController = require('../../src/server/controllers/users');
+
+describe('controllers : users', () =&gt; {
+
+  describe('filterByYear()', () =&gt; {
+    // add code here
+  });
+
+});
+</code></pre>
+
+<p>Now add the body of the test:</p>
+
+<pre><code class="javascript">const userArray = [
+  {
+    id: 1,
+    username: 'michael',
+    email: 'michael@mherman.org',
+    created_at: '2016-09-10T16:44:28.015Z'
+  },
+  {
+    id: 2,
+    username: 'mike',
+    email: 'mike@mherman.org',
+    created_at: '2015-09-10T16:44:28.015Z'
+  },
+  {
+    id: 3,
+    username: 'mike',
+    email: 'mike@mherman.org',
+    created_at: '2014-09-10T16:44:28.015Z'
+  }
+];
+it('should return all users created on or after (&gt;=) specified year',
+(done) =&gt; {
+  usersController.filterByYear(userArray, 2015, (err, total) =&gt; {
+    should.not.exist(err);
+    total.length.should.eql(2);
+    done();
+  });
+});
+</code></pre>
+
+<h4>What&rsquo;s happening?</h4>
+
+<p>Within the <code>it</code> block we passed in the <code>userArray</code>, a year, and a callback function to a function called <code>filterByYear()</code>. This then asserts that a error does not exist and that the length of the response (<code>total</code>) is 2.</p>
+
+<p>Run the tests. Watch them fail. Add the code&hellip;</p>
+
+<h3>Write the code to pass the unit test</h3>
+
+<p>Create a new controller within &ldquo;src/server/controllers&rdquo; called <em>users.js</em>:</p>
+
+<pre><code class="javascript">function filterByYear(arrayOfUsers, year, callback) {
+  const response = arrayOfUsers.filter((user) =&gt; {
+    const date = new Date(user.created_at);
+    return date.getFullYear() &gt;= year;
+  });
+  callback(null, response);
+}
+
+module.exports = {
+  filterByYear
+};
+</code></pre>
+
+<p>Confused? Add an inline comment above each line, describing <em>what</em> the code does and, in some cases, <em>why</em> the code does what it does.</p>
+
+<p>Run the tests. Do they pass? They should.</p>
+
+<p>Now you can use that function in a new route to finish the business requirement. Do this on your own. Be sure to write the integration test first!</p>
+
+<h2>Fixtures</h2>
+
+<p><a href="https://github.com/marak/Faker.js/">faker.js</a> is a powerful library for generating fake data. In our case, we can use faker to generate test data
+for our unit tests. Such data is often called a <a href="https://en.wikipedia.org/wiki/Test_fixture">test fixture</a>.</p>
+
+<p>Install faker:</p>
+
+<pre><code class="sh">npm install faker@3.1.0 --save-dev
+</code></pre>
+
+<h3>Code</h3>
+
+<p>Since we don&rsquo;t really (or maybe <em>really</em> don&rsquo;t?) know what the test is going to look like, let&rsquo;s start with writing a quick script to generate test data. Create a new file within the &ldquo;test&rdquo; directory called <em>generate.test.data.js</em>, and then add the following code to it:</p>
+
+<pre><code class="javascript">const faker = require('faker');
+
+function createUserObject(
+  yearOne, yearTwo, amountToCreate, callback) {
+  const userArray = [];
+  for (var i = 1; i &lt;= amountToCreate; i++) {
+    userArray.push({
+      id: faker.random.uuid(),
+      username: faker.internet.userName(),
+      email: faker.internet.email(),
+      created_at: faker.date.between(yearOne, yearTwo)
+    });
+  }
+  callback(null, userArray);
+}
+</code></pre>
+
+<p>This function generates an array of user objects, each object is generated randomly using faker.js <a href="https://github.com/marak/Faker.js/#api">methods</a>. We could use that data directly in the test, but let&rsquo;s first save the data to a fixture file for easy use. Update the file like so:</p>
+
+<pre><code class="javascript">const faker = require('faker');
+const fs = require('fs');
+const path = require('path');
+
+function createUserObject(
+  yearOne, yearTwo, amountToCreate, callback) {
+  const userArray = [];
+  for (var i = 1; i &lt;= amountToCreate; i++) {
+    userArray.push({
+      id: faker.random.uuid(),
+      username: faker.internet.userName(),
+      email: faker.internet.email(),
+      created_at: faker.date.between(yearOne, yearTwo)
+    });
+  }
+  callback(null, userArray);
+}
+
+createUserObject(2010, 2014, 10, (err, beforeDates) =&gt; {
+  if (!err) {
+    createUserObject(2015, 2016, 5, (err, onOrAfterDates) =&gt; {
+      const userArray = beforeDates.concat(onOrAfterDates);
+      fs.writeFile(
+        path.join(__dirname, 'test.data.json'),
+        JSON.stringify(userArray, null, 2),
+        (err) =&gt; {
+        if (!err) {
+          return true;
+        }
+      });
+    });
+  }
+  return false;
+});
+</code></pre>
+
+<p>Now we can generate two arrays -</p>
+
+<ol>
+<li>One with data <em>before</em> a specific date</li>
+<li>The other with data <em>on or after</em> that specific date</li>
+</ol>
+
+
+<p>Before saving to a file, we concatenated the two arrays into one. You&rsquo;ll see why this was necessary when the test is created. For now, run the script from the project root:</p>
+
+<pre><code class="sh">$ node test/generate.test.data.js
+</code></pre>
+
+<p>You should see a new fixture file called <em>test.data.json</em> in the &ldquo;test&rdquo; folder. The data in this file can now be used in a test.</p>
+
+<h3>Test</h3>
+
+<p>Add the following test to <em>controllers.users.test.js</em>:</p>
+
+<pre><code class="javascript">describe('filterByYear() with helper', () =&gt; {
+  it('should return all users created on or after (&gt;=) specified year',
+  (done) =&gt; {
+    const testDataFile = path.join(
+      __dirname, '..', 'test.data.json');
+    fs.readFile(testDataFile, 'utf8', (err, data) =&gt; {
+      usersController.filterByYear(
+        JSON.parse(data), 2015, (err, total) =&gt; {
+        should.not.exist(err);
+        total.length.should.eql(5);
+        done();
+      });
+    });
+  });
+});
+</code></pre>
+
+<p>Make sure to require in <code>fs</code> and <code>path</code> at the top:</p>
+
+<pre><code class="javascript">const fs = require('fs');
+const path = require('path');
+</code></pre>
+
+<p>Run the tests again!</p>
+
+<h2>Validation</h2>
+
+<p>Thus far we have not tested for possible errors. For example, what happens if the email address provided with a POST request is not properly formatted? Or if an invalid ID is used with a PUT request?</p>
+
+<p>We can start by validating parameters with <a href="https://github.com/ctavan/express-validator">express-validator</a>.</p>
+
+<h3>Install</h3>
+
+<pre><code class="sh">$ npm install express-validator@2.20.8 --save
+</code></pre>
+
+<p>Then <code>require</code> the module at the top of <em>src/server/config/main-config.js</em>:</p>
+
+<pre><code class="javascript">const expressValidator = require('express-validator');
+</code></pre>
+
+<p>Mount the validator to the app middleware just below the body parser:</p>
+
+<pre><code class="javascript">app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(expressValidator());
+</code></pre>
+
+<h3>Test</h3>
+
+<p>Add the first test to the <code>GET /api/v1/users/:id'</code> describe block:</p>
+
+<pre><code class="javascript">it('should throw an error if the user id is null', (done) =&gt; {
+  chai.request(server)
+  .get(`/api/v1/users/${null}`)
+  .end((err, res) =&gt; {
+    res.status.should.equal(400);
+    res.body.message.should.eql('Validation failed');
+    res.body.failures.length.should.eql(1);
+    done();
+  });
+});
+</code></pre>
+
+<p>Add the second test to the <code>POST /api/v1/users</code> describe block:</p>
+
+<pre><code class="javascript">it('should throw an error when a username is not provided', (done) =&gt; {
+  chai.request(server)
+  .post('/api/v1/users')
+  .send({
+    username: null,
+    email: '111111'
+  })
+  .end((err, res) =&gt; {
+    res.status.should.equal(400);
+    res.body.message.should.eql('Validation failed');
+    res.body.failures.length.should.eql(2);
+    // ensure the user was not added
+    knex('users')
+    .select('*')
+    .where({
+      email: '111111'
+    })
+    .then((user) =&gt; {
+      user.length.should.eql(0);
+      done();
+    });
+  });
+});
+</code></pre>
+
+<h3>Code</h3>
+
+<p>To add the proper validation, create a new file called <em>validation.js</em> within the &ldquo;routes&rdquo; directory:</p>
+
+<pre><code class="javascript">function validateUserResources(req, res, next) {
+  if (req.method === 'GET') {
+    req.checkParams('id', 'Must be valid').notEmpty().isInt();
+  } else if (req.method === 'POST') {
+    req.checkBody('username', 'Username cannot be empty').notEmpty();
+    req.checkBody('email', 'Must be a valid email').isEmail();
+  } else if (req.method === 'PUT') {
+    req.checkParams('id', 'Must be valid').notEmpty().isInt();
+    req.checkBody('username', 'Username cannot be empty').notEmpty();
+    req.checkBody('email', 'Must be a valid email').isEmail();
+  } else if (req.method === 'DELETE') {
+    req.checkParams('id', 'Must be valid').notEmpty().isInt();
+  }
+  const errors = req.validationErrors();
+  if (errors) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      failures: errors
+    });
+  } else {
+    return next();
+  }
+}
+
+module.exports = validateUserResources;
+</code></pre>
+
+<p>Here, with express-validator, parameters are validated using either <code>req.checkParams</code> or <code>req.checkBody</code> and then errors are aggregated together with <code>req.validationErrors()</code>.</p>
+
+<p>Require this module in the user routes:</p>
+
+<pre><code class="javascript">const userQueries = require('../db/queries.users');
+</code></pre>
+
+<p>Add the <code>validateUserResources</code> to all the route handlers except the handler to GET ALL users, like so:</p>
+
+<pre><code class="javascript">// *** GET SINGLE user *** //
+router.get('/:id',
+  validate.validateUserResources,
+  (req, res, next) =&gt; {
+    ...
+  })
+</code></pre>
+
+<p>Finish the remaining route handlers, and then run the tests. All should pass:</p>
+
+<pre><code class="shell">jscs
+  ✓ should pass for working directory (633ms)
+
+routes : index
+  GET /
+    ✓ should render the index (71ms)
+  GET /404
+    ✓ should throw an error
+
+routes : users
+  GET /api/v1/users
+    ✓ should respond with all users (53ms)
+  GET /api/v1/users/:id
+    ✓ should respond with a single user
+    ✓ should throw an error if the user id is null
+  POST /api/v1/users
+    ✓ should respond with a success message along with a single user that was added (129ms)
+    ✓ should throw an error when a username is not provided
+  PUT /api/v1/users/:id
+    ✓ should respond with a success message along with a single user that was updated
+  DELETE /api/v1/users/:id
+    ✓ should respond with a success message along with a single user that was deleted
+
+jshint
+  ✓ should pass for working directory (661ms)
+
+controllers : index
+  sum()
+    ✓ should return a total
+    ✓ should return an error
+
+controllers : users
+  filterByYear()
+    ✓ should return all users created on or after (&gt;=) specified year
+  filterByYear() with helper
+    ✓ should return all users created on or after (&gt;=) specified year
+
+15 passing (3s)
+</code></pre>
+
+<p>We are still not handling all errors. What else could go wrong? Think about edge cases. Then write tests. Do this on your own.</p>
+
+<h2>Refactor</h2>
+
+<p>Finally, let&rsquo;s make our code a bit more modular by refactoring out unnecessary logic from the route handlers.</p>
+
+<p>Within the &ldquo;db&rdquo; folder, add a file called <em>queries.users.js</em>:</p>
+
+<pre><code class="javascript">const knex = require('./knex');
+
+function getAllUsers(callback) {
+  return knex('users').select('*')
+  .then((users) =&gt; {
+    callback(null, users);
+  })
+  .catch((err) =&gt; {
+    callback(err);
+  });
+}
+
+module.exports = {
+  getAllUsers
+};
+</code></pre>
+
+<p>This function now handles all the knex logic, and it can now be used anywhere in the project. Be sure to update the route handler:</p>
+
+<pre><code class="javascript">// *** GET ALL users *** //
+router.get('/', (req, res, next) =&gt; {
+  userQueries.getAllUsers((err, users) =&gt; {
+    if (err) {
+      res.status(500).json({
+        status: 'error',
+        data: err
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: users
+      });
+    }
+  });
+});
+</code></pre>
+
+<p>Don&rsquo;t forget to add the requirement:</p>
+
+<pre><code class="javascript">const userQueries = require('../db/queries.users');
+</code></pre>
+
+<p>Run the tests again. They all should still pass! Notice how we were able to refactor with confidence (without fear of the code breaking) since we had proper test coverage. Finish refactoring out all of the knex logic to <em>queries.users.js</em>. Test again when done.</p>
+
+<h2>Conclusion</h2>
+
+<p>Turn back to the objectives. Read each aloud to yourself. Can you put each one into action?</p>
+
+<p>The testing process may seem daunting and unnecessary at first, but you will soon just how necessary they are as your projects grow and become more complex. Continue to practice testing by incorporating tests whenever you begin a new project.</p>
+
+<p>The full code can be found in the <a href="https://github.com/mjhea0/express-testing-mocha-knex">express-testing-mocha-knex</a> repository.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Swagger and NodeJS]]></title>
@@ -2299,526 +3551,6 @@ router.delete('/todo/:id', function(req, res) {
 <p>That&rsquo;s it for the basic server-side code. You now have a database, models, and migrations set up. Whenever you want to update the state of your database, just add additional migrations and then run them as necessary.</p>
 
 <p>Grab the code from the <a href="https://github.com/mjhea0/node-postgres-sequelize">Github repo</a>. Comment below with questions. Cheers!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Social Authentication in Node.js With Passport]]></title>
-    <link href="http://mherman.org/blog/2015/09/26/social-authentication-in-node-dot-js-with-passport/"/>
-    <updated>2015-09-26T13:37:00-06:00</updated>
-    <id>http://mherman.org/blog/2015/09/26/social-authentication-in-node-dot-js-with-passport</id>
-    <content type="html"><![CDATA[<p><a href="https://github.com/jaredhanson/passport">Passport</a> is a library that provides a mechanism for easily setting up an authentication/registration system with support for <a href="https://github.com/jaredhanson/passport#strategies">several frameworks and auth providers</a>. <strong>In this tutorial, we’ll demonstrate in detail how to integrate this library into a Node.JS/Express 4 application to provide user authentication through LinkedIn, Github, and Twitter using OAuth 2.0.</strong></p>
-
-<div style="text-align:center;">
-  <img src="http://mherman.org/images/passport-social-auth.png" style="max-width: 100%; border:0;" alt="passport social auth">
-</div>
-
-
-<p>We will be using:</p>
-
-<ul>
-<li>NodeJS v<a href="https://nodejs.org/docs/v4.1.1/api/all.html">4.1.1</a></li>
-<li>ExpressJS v<a href="http://expressjs.com/4x/api.html">4.13.1</a></li>
-<li>Mongoose v<a href="http://mongoosejs.com/docs/guide.html">4.1.8</a></li>
-<li>Passport Strategies:
-
-<ul>
-<li>passport: v<a href="https://github.com/jaredhanson/passport">0.3.0</a></li>
-<li>passport-linkedin: v<a href="https://github.com/jaredhanson/passport-linkedin">1.0.0</a></li>
-<li>passport-github2: v<a href="https://github.com/cfsghost/passport-github">0.1.9</a></li>
-<li>passport-twitter: v<a href="https://github.com/jaredhanson/passport-twitter">1.0.3</a></li>
-</ul>
-</li>
-</ul>
-
-
-<blockquote><p>For all dependencies, please view the <em>package.json</em> file in the <a href="https://github.com/mjhea0/passport-social-auth">repo</a>.</p></blockquote>
-
-<h2>OAuth 2.0?</h2>
-
-<p><a href="http://oauth.net/2/">OAuth 2.0</a> is the successor of the OAuth protocol (<a href="https://en.wikipedia.org/wiki/OAuth">open standard for authorization</a>), which enables third-party applications, such as the one we&rsquo;ll be building, access to an HTTP service without having to share secure credentials.</p>
-
-<h2>Project Setup</h2>
-
-<p>Let&rsquo;s get started!</p>
-
-<h3>Boilerplate</h3>
-
-<p>Start by downloading the project structure from the <a href="https://github.com/mjhea0/passport-social-auth/releases/tag/v1">Github repo</a>.</p>
-
-<p>You should have:</p>
-
-<pre><code class="sh">├── client
-│   └── public
-│       ├── css
-│       │   └── main.css
-│       └── js
-│           └── main.js
-├── package.json
-└── server
-    ├── app.js
-    ├── bin
-    │   └── www
-    ├── routes
-    │   └── index.js
-    └── views
-        ├── error.html
-        ├── index.html
-        └── layout.html
-</code></pre>
-
-<h2>Passport</h2>
-
-<p>Install Passport as well as the specific <a href="https://github.com/jaredhanson/passport#search-all-strategies">Passport Strategies</a>:</p>
-
-<pre><code class="sh">$ npm install passport@0.3.0 --save
-$ npm install passport-github2@0.1.9 passport-linkedin@1.0.0 passport-twitter@1.0.3 --save
-</code></pre>
-
-<p>Create an &ldquo;auth&rdquo; directory in the &ldquo;server&rdquo; and add the following files:</p>
-
-<pre><code class="sh">└── auth
-  ├── github.js
-  ├── linkedin.js
-  └── twitter.js
-</code></pre>
-
-<p>Add the Passport dependency to <em>app.js</em>:</p>
-
-<pre><code class="javascript">var passport = require('passport');
-</code></pre>
-
-<p>Install the <a href="https://github.com/expressjs/session">express session</a> middleware:</p>
-
-<pre><code class="sh">$ npm install express-session@1.11.3 --save
-</code></pre>
-
-<p>And add it as a dependency:</p>
-
-<pre><code class="javascript">var session = require('express-session');
-</code></pre>
-
-<p>Then add the required middleware:</p>
-
-<pre><code class="javascript">app.use(session({
-  secret: 'keyboard cat',
-  resave: true,
-  saveUninitialized: true
-}));
-app.use(passport.initialize());
-app.use(passport.session());
-</code></pre>
-
-<h3>Configuration</h3>
-
-<p>Add a <em>_config.js</em> file to the &ldquo;server&rdquo; and add the following:</p>
-
-<pre><code class="javascript">var ids = {
-  github: {
-    clientID: 'get_your_own',
-    clientSecret: 'get_your_own',
-    callbackURL: "http://127.0.0.1:3000/auth/github/callback"
-  },
-  linkedin: {
-    clientID: 'get_your_own',
-    clientSecret: 'get_your_own',
-    callbackURL: "http://127.0.0.1:3000/auth/linkedin/callback"
-  },
-  twitter: {
-    consumerKey: 'get_your_own',
-    consumerSecret: 'get_your_own',
-    callbackURL: "http://127.0.0.1:3000/auth/twitter/callback"
-  }
-};
-
-module.exports = ids;
-</code></pre>
-
-<p>Make sure to add this file to your <em>.gitignore</em> since this will contain sensitive info.</p>
-
-<h3>MongoDB and Mongoose</h3>
-
-<p>Install <a href="http://mongoosejs.com/">Mongoose</a>:</p>
-
-<pre><code class="sh">$ npm install mongoose@4.1.8 --save
-</code></pre>
-
-<p>Require the dependency in <em>app.js</em>:</p>
-
-<pre><code class="javascript">var mongoose = require('mongoose');
-</code></pre>
-
-<p>Then establish the connection to MongoDB within <em>app.js</em>:</p>
-
-<pre><code class="javascript">// *** mongoose *** //
-mongoose.connect('mongodb://localhost/passport-social-auth');
-</code></pre>
-
-<p>Add a Mongoose Schema to a new file called <em>user.js</em> in a new folder, within &ldquo;server&rdquo;, called &ldquo;models&rdquo;:</p>
-
-<pre><code class="javascript">var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-
-
-// create User Schema
-var User = new Schema({
-  name: String,
-  someID: String
-});
-
-
-module.exports = mongoose.model('users', User);
-</code></pre>
-
-<h3>Serialize and Deserialize</h3>
-
-<p>Passport needs to serialize and deserialize user instances from a session store to support login sessions. To add this funcionality, create an <em>init.js</em> file within the &ldquo;auth&rdquo; directory, and then add the following code:</p>
-
-<pre><code class="javascript">var passport = require('passport');
-var User = require('../models/user');
-
-
-module.exports = function() {
-
-  passport.serializeUser(function(user, done) {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(function(id, done) {
-    User.findById(id, function (err, user) {
-      done(err, user);
-    });
-  });
-
-};
-</code></pre>
-
-<h3>Routes and Views</h3>
-
-<p>Before we test, add the following route-</p>
-
-<pre><code class="javascript">router.get('/login', function(req, res, next) {
-  res.send('Go back and register!');
-});
-</code></pre>
-
-<p>-and update the <em>index.html</em> file:</p>
-
-<p>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'>{% extends <span class="ni">&amp;lsquo;</span>layout.html<span class="ni">&amp;rsquo;</span> %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block title %}{% endblock %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% block content %}<span class="nt">&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span><span class="ni">&amp;lt;</span>h1<span class="ni">&amp;gt;</span>{{ title }}<span class="ni">&amp;lt;</span>/h1<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>p<span class="ni">&amp;gt;</span>Welcome! Please Login.<span class="ni">&amp;lt;</span>/p<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>hr<span class="ni">&amp;gt;&amp;lt;</span>br<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>a href=&quot;http://mherman.org/auth/linkedin&quot; class=&quot;btn btn-default&quot;<span class="ni">&amp;gt;</span>LinkedIn<span class="ni">&amp;lt;</span>/a<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>a href=&quot;http://mherman.org/auth/github&quot; class=&quot;btn btn-default&quot;<span class="ni">&amp;gt;</span>Github<span class="ni">&amp;lt;</span>/a<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="ni">&amp;lt;</span>a href=&quot;http://mherman.org/auth/twitter&quot; class=&quot;btn btn-default&quot;<span class="ni">&amp;gt;</span>Twitter<span class="ni">&amp;lt;</span>/a<span class="ni">&amp;gt;</span>
-</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>  <span class="nt">&lt;/div&gt;&lt;/p&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;p&gt;</span>{% endblock %}
-</span></code></pre></td></tr></table></div></figure>
-</p>
-
-<h3>Sanity Check</h3>
-
-<p>Test this code to make sure all is well:</p>
-
-<pre><code class="sh">$ npm start
-</code></pre>
-
-<p>Once done, kill the server, and then commit your code and push to Github.</p>
-
-<blockquote><p>Need the updated code? Grab it <a href="https://github.com/mjhea0/passport-social-auth/releases/tag/v2">here</a>.</p></blockquote>
-
-<h2>LinkedIn Auth</h2>
-
-<blockquote><p><a href="https://github.com/jaredhanson/passport-linkedin">https://github.com/jaredhanson/passport-linkedin</a></p></blockquote>
-
-<p>For almost all of the strategies, you will need to-</p>
-
-<ol>
-<li>Create an app through the auth provider</li>
-<li>Update the config file with the required IDs and keys as well as a callback URL</li>
-<li>Configure the Passport strategy</li>
-<li>Add the required routes</li>
-<li>Update the view</li>
-</ol>
-
-
-<h3>Create an App</h3>
-
-<p>Navigate to <a href="https://www.linkedin.com/developer/apps/">LinkedIn Developers</a> to register a new application. Just enter dummy info, make sure to add the callback - <a href="http://127.0.0.1:3000/auth/linkedin/callback">http://127.0.0.1:3000/auth/linkedin/callback</a> - and update the config within the app:</p>
-
-<pre><code class="javascript">linkedin: {
- clientID: 'ADD YOUR ID HERE',
- clientSecret: 'ADD YOUR SECRET HERE',
- callbackURL: "http://127.0.0.1:3000/auth/linkedin/callback"
-},
-</code></pre>
-
-<h3>Configure Strategy</h3>
-
-<blockquote><p><a href="https://github.com/jaredhanson/passport-linkedin#usage">https://github.com/jaredhanson/passport-linkedin#usage</a></p></blockquote>
-
-<p>Add the following code to <em>linkedin.js</em>:</p>
-
-<pre><code class="javascript">var passport = require('passport');
-var LinkedInStrategy = require('passport-linkedin');
-
-var User = require('../models/user');
-var config = require('../_config');
-var init = require('./init');
-
-passport.use(new LinkedInStrategy({
-    consumerKey: config.linkedin.clientID,
-    consumerSecret: config.linkedin.clientSecret,
-    callbackURL: config.linkedin.callbackURL
-  },
-  // linkedin sends back the tokens and progile info
-  function(token, tokenSecret, profile, done) {
-
-    var searchQuery = {
-      name: profile.displayName
-    };
-
-    var updates = {
-      name: profile.displayName,
-      someID: profile.id
-    };
-
-    var options = {
-      upsert: true
-    };
-
-    // update the user if s/he exists or add a new user
-    User.findOneAndUpdate(searchQuery, updates, options, function(err, user) {
-      if(err) {
-        return done(err);
-      } else {
-        return done(null, user);
-      }
-    });
-  }
-
-));
-
-// serialize user into the session
-init();
-
-
-module.exports = passport;
-</code></pre>
-
-<p>Aside for the Passport magic, you can see that we&rsquo;re either updating the user, if the user is found, or creating a new user, if a user is not found.</p>
-
-<h3>Add Routes</h3>
-
-<blockquote><p><a href="https://github.com/jaredhanson/passport-linkedin#authenticate-requests">https://github.com/jaredhanson/passport-linkedin#authenticate-requests</a></p></blockquote>
-
-<p>Update the routes with:</p>
-
-<pre><code class="javascript">router.get('/auth/linkedin', passportLinkedIn.authenticate('linkedin'));
-
-router.get('/auth/linkedin/callback',
-  passportLinkedIn.authenticate('linkedin', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication
-    res.json(req.user);
-  });
-</code></pre>
-
-<p>Add in the dependency as well:</p>
-
-<pre><code class="javascript">var passportLinkedIn = require('../auth/linkedin');
-</code></pre>
-
-<h3>Sanity Check</h3>
-
-<p>Test this out. <em>Be sure to use <a href="http://127.0.0.1:3000/">http://127.0.0.1:3000/</a> rather than <a href="http://localhost:3000/">http://localhost:3000/</a>.</em></p>
-
-<p>Now, let&rsquo;s just duplicate that workflow for the remaining providers&hellip;</p>
-
-<h2>Github Auth</h2>
-
-<blockquote><p><a href="https://github.com/cfsghost/passport-github">https://github.com/cfsghost/passport-github</a></p></blockquote>
-
-<h3>Create an App</h3>
-
-<p>Again, create an app, adding in the correct callback URL, and add the given client ID and Secret Key to the <em>_config.js</em> file.</p>
-
-<h3>Configure Strategy</h3>
-
-<blockquote><p><a href="https://github.com/cfsghost/passport-github#configure-strategy">https://github.com/cfsghost/passport-github#configure-strategy</a></p></blockquote>
-
-<pre><code class="javascript">var passport = require('passport');
-var GitHubStrategy = require('passport-github2').Strategy;
-
-var User = require('../models/user');
-var config = require('../_config');
-var init = require('./init');
-
-
-passport.use(new GitHubStrategy({
-  clientID: config.github.clientID,
-  clientSecret: config.github.clientSecret,
-  callbackURL: config.github.callbackURL
-  },
-  function(accessToken, refreshToken, profile, done) {
-
-    var searchQuery = {
-      name: profile.displayName
-    };
-
-    var updates = {
-      name: profile.displayName,
-      someID: profile.id
-    };
-
-    var options = {
-      upsert: true
-    };
-
-    // update the user if s/he exists or add a new user
-    User.findOneAndUpdate(searchQuery, updates, options, function(err, user) {
-      if(err) {
-        return done(err);
-      } else {
-        return done(null, user);
-      }
-    });
-  }
-
-));
-
-// serialize user into the session
-init();
-
-
-module.exports = passport;
-</code></pre>
-
-<h3>Add Routes</h3>
-
-<blockquote><p><a href="https://github.com/cfsghost/passport-github#authenticate-requests">https://github.com/cfsghost/passport-github#authenticate-requests</a></p></blockquote>
-
-<pre><code class="javascript">var passportGithub = require('../auth/github');
-
-router.get('/auth/github', passportGithub.authenticate('github', { scope: [ 'user:email' ] }));
-
-router.get('/auth/github/callback',
-  passportGithub.authenticate('github', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication
-    res.json(req.user);
-  });
-</code></pre>
-
-<h2>Twitter Auth</h2>
-
-<blockquote><p><a href="https://github.com/jaredhanson/passport-twitter">https://github.com/jaredhanson/passport-twitter</a></p></blockquote>
-
-<h3>Create an App</h3>
-
-<p>Create an app on the <a href="https://apps.twitter.com/">Twitter Developer page</a>, and grab the Consumer Key and Secret.</p>
-
-<h3>Configure Strategy</h3>
-
-<blockquote><p><a href="https://github.com/jaredhanson/passport-twitter#configure-strategy">https://github.com/jaredhanson/passport-twitter#configure-strategy</a></p></blockquote>
-
-<pre><code class="javascript">var passport = require('passport');
-var TwitterStrategy = require('passport-twitter').Strategy;
-
-var User = require('../models/user');
-var config = require('../_config');
-var init = require('./init');
-
-passport.use(new TwitterStrategy({
-    consumerKey: config.twitter.consumerKey,
-    consumerSecret: config.twitter.consumerSecret,
-    callbackURL: config.twitter.callbackURL
-  },
-  function(accessToken, refreshToken, profile, done) {
-
-    var searchQuery = {
-      name: profile.displayName
-    };
-
-    var updates = {
-      name: profile.displayName,
-      someID: profile.id
-    };
-
-    var options = {
-      upsert: true
-    };
-
-    // update the user if s/he exists or add a new user
-    User.findOneAndUpdate(searchQuery, updates, options, function(err, user) {
-      if(err) {
-        return done(err);
-      } else {
-        return done(null, user);
-      }
-    });
-  }
-
-));
-
-// serialize user into the session
-init();
-
-
-module.exports = passport;
-</code></pre>
-
-<h3>Add Routes</h3>
-
-<blockquote><p><a href="https://github.com/jaredhanson/passport-twitter#authenticate-requests">https://github.com/jaredhanson/passport-twitter#authenticate-requests</a></p></blockquote>
-
-<pre><code class="javascript">var passportTwitter = require('../auth/twitter');
-
-router.get('/auth/twitter', passportTwitter.authenticate('twitter'));
-
-router.get('/auth/twitter/callback',
-  passportTwitter.authenticate('twitter', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication
-    res.json(req.user);
-  });
-</code></pre>
-
-<h2>Conclusion</h2>
-
-<p>Try adding some additional <a href="https://github.com/jaredhanson/passport#strategies">strategies</a>, comment below if you have questions, and grab the final code from the <a href="https://github.com/mjhea0/passport-social-auth">repo</a>.</p>
-
-<p>Thanks for reading!</p>
 ]]></content>
   </entry>
   
