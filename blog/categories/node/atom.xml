@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Node | Michael Herman]]></title>
   <link href="http://mherman.org/blog/categories/node/atom.xml" rel="self"/>
   <link href="http://mherman.org/"/>
-  <updated>2016-09-12T10:08:26-06:00</updated>
+  <updated>2016-09-25T13:41:09-06:00</updated>
   <id>http://mherman.org/</id>
   <author>
     <name><![CDATA[Michael Herman]]></name>
@@ -12,6 +12,1056 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Node, Passport, and Postgres]]></title>
+    <link href="http://mherman.org/blog/2016/09/25/node-passport-and-postgres/"/>
+    <updated>2016-09-25T13:10:34-06:00</updated>
+    <id>http://mherman.org/blog/2016/09/25/node-passport-and-postgres</id>
+    <content type="html"><![CDATA[<p>This tutorial takes a test-first approach to implementing authentication in a Node app using Passport and Postgres.</p>
+
+<h2>Contents</h2>
+
+<ol>
+<li>Objectives</li>
+<li>Project Setup</li>
+<li>Database Setup</li>
+<li>Passport Config</li>
+<li>Passport Local Config</li>
+<li>Password Hashing</li>
+<li>Auth Routes</li>
+<li>Validation</li>
+</ol>
+
+
+<h2>Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to&hellip;</p>
+
+<ol>
+<li>Add <a href="https://github.com/jaredhanson/passport">Passport</a> and <a href="https://github.com/jaredhanson/passport-local">passport-local</a> to an Express app</li>
+<li>Configure <a href="https://www.npmjs.com/package/bcryptjs">bcrypt.js</a> for salting and hashing passwords</li>
+<li>Practice test driven development</li>
+<li>Register and authenticate a user</li>
+<li>Utilize sessions to store user information</li>
+<li>Use middleware to validate JSON payloads</li>
+</ol>
+
+
+<h2>Project Setup</h2>
+
+<p>Start by creating an Express boilerplate with the following <a href="https://www.npmjs.com/package/generator-galvanize-express">generator</a>:</p>
+
+<pre><code class="sh">$ npm install -g generator-galvanize-express@1.2.3
+</code></pre>
+
+<p>Once installed, create a new project directory, and then scaffold a new app:</p>
+
+<pre><code class="sh">$ yo galvanize-express
+? Your name (for the LICENSE)? Michael Herman
+? Project name (for package.json)? Change Me
+? Do you want to use Gulp Notify? No
+? Do you want to use pg-promise or Knex? knex
+? Database name? passport_local_knex
+</code></pre>
+
+<p>Install the dependencies, and then fire up the app by running <code>gulp</code> to make sure all is well.</p>
+
+<h2>Database Setup</h2>
+
+<p>We&rsquo;ll be using <a href="http://knexjs.org/">Knex.js</a> to interact with the database.</p>
+
+<blockquote><p><strong>NOTE</strong>: New to <a href="http://knexjs.org/">Knex.js</a>? Check out the <a href="http://knexjs.org/">documentation</a> along with the &ldquo;Database Setup&rdquo; section of the <a href="http://mherman.org/blog/2016/09/12/testing-node-and-express/">Testing Node and Express</a> blog post for more information on how to use it to interact with Postgres.</p></blockquote>
+
+<h3>Migrations</h3>
+
+<p>First, fire up your local Postgres server and create two new databases:</p>
+
+<pre><code class="sh">$ psql
+# create database passport_local_knex;
+CREATE DATABASE
+# create database passport_local_knex_test;
+CREATE DATABASE
+</code></pre>
+
+<p>Generate a new migration template:</p>
+
+<pre><code class="sh">$ knex migrate:make users
+</code></pre>
+
+<p>Then update the newly created file:</p>
+
+<pre><code class="javascript">exports.up = (knex, Promise) =&gt; {
+  return knex.schema.createTable('users', (table) =&gt; {
+    table.increments();
+    table.string('username').unique().notNullable();
+    table.string('password').notNullable();
+    table.boolean('admin').notNullable().defaultTo(false);
+    table.timestamp('created_at').notNullable().defaultTo(knex.raw('now()'));
+  });
+};
+
+exports.down = (knex, Promise) =&gt; {
+  return knex.schema.dropTable('users');
+};
+</code></pre>
+
+<p>Apply the migration:</p>
+
+<pre><code class="sh">knex migrate:latest --env development
+</code></pre>
+
+<h3>Sanity Check</h3>
+
+<p>Did it work?</p>
+
+<pre><code class="sh">$ psql
+# \c passport_local_knex
+# \d
+
+                     List of relations
+ Schema |          Name          |   Type   |     Owner
+--------+------------------------+----------+---------------
+ public | knex_migrations        | table    | michaelherman
+ public | knex_migrations_id_seq | sequence | michaelherman
+ public | knex_migrations_lock   | table    | michaelherman
+ public | users                  | table    | michaelherman
+ public | users_id_seq           | sequence | michaelherman
+(5 rows)
+</code></pre>
+
+<h2>Passport Config</h2>
+
+<p>Install <a href="https://github.com/jaredhanson/passport">Passport</a>:</p>
+
+<pre><code class="sh">$ npm install passport@0.3.2 --save
+</code></pre>
+
+<p>Update <em>src/server/config/main-config.js</em> to mount Passport to the app middleware and utilize <a href="https://www.npmjs.com/package/express-session">express-session</a> in order to save sessions server-side:</p>
+
+<pre><code class="javascript">// *** app middleware *** //
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('dev'));
+}
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+// uncomment if using express-session
+app.use(session({
+  secret: process.env.SECRET_KEY,
+  resave: false,
+  saveUninitialized: true
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+app.use(express.static(path.join(__dirname, '..', '..', 'client')));
+</code></pre>
+
+<p>Don&rsquo;t forget the dependency:</p>
+
+<pre><code class="javascript">const passport = require('passport');
+</code></pre>
+
+<p>Make sure to add a secret key to the <em>.env</em> file. You can use Python to generate a secure key:</p>
+
+<pre><code class="sh">$ python
+&gt;&gt;&gt; import os
+&gt;&gt;&gt; os.urandom(24)
+"\x02\xf3\xf7r\t\x9f\xee\xbbu\xb1\xe1\x90\xfe'\xab\xa6L6\xdd\x8d[\xccO\xfe"
+</code></pre>
+
+<p>Next, we need to handle serializing and de-serializing the user information into the session cookie. Create a new directory called &ldquo;auth&rdquo; in the &ldquo;server&rdquo; and add the following code into a new file called <em>passport.js</em>:</p>
+
+<pre><code class="javascript">const passport = require('passport');
+const knex = require('../db/connection');
+
+module.exports = () =&gt; {
+
+  passport.serializeUser((user, done) =&gt; {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser((id, done) =&gt; {
+    knex('users').where({id}).first()
+    .then((user) =&gt; { done(null, user); })
+    .catch((err) =&gt; { done(err,null); });
+  });
+
+};
+</code></pre>
+
+<h2>Passport Local Config</h2>
+
+<p>With Passport configured, we can now set up the  <a href="https://github.com/jaredhanson/passport-local">passport-local</a> strategy for authenticating with a username and password.</p>
+
+<p>Install:</p>
+
+<pre><code class="sh">$ npm install passport-local@1.0.0 --save
+</code></pre>
+
+<p>Create a new file in &ldquo;auth&rdquo; called <em>local.js</em>:</p>
+
+<pre><code class="javascript">const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+
+const init = require('./passport');
+const knex = require('../db/connection');
+
+const options = {};
+
+passport.use(new LocalStrategy(options, (username, password, done) =&gt; {
+  // check to see if the username exists
+  knex('users').where({ username }).first()
+  .then((user) =&gt; {
+    if (!user) return done(null, false);
+    if (!authHelpers.comparePass(password, user.password)) {
+      return done(null, false);
+    } else {
+      return done(null, user);
+    }
+  })
+  .catch((err) =&gt; { return done(err); });
+}));
+
+module.exports = passport;
+</code></pre>
+
+<p>  Here, we check if the username exists in the database and then pass the appropriate results back to Passport via the callback.</p>
+
+<p>  Flow:</p>
+
+<ul>
+<li>Does the username exist?
+
+<ul>
+<li>No? <code>false</code> is returned</li>
+<li>Yes? Does the password match?
+
+<ul>
+<li>No? <code>false</code> is returned</li>
+<li>Yes? The user object is returned</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>Take note of the <code>comparePass()</code> function This helper function will be used to compare the provided password with the password in the database. Let&rsquo;s write that helper&hellip;</p>
+
+<h2>Password Hashing</h2>
+
+<p>Since you should never store plain text passwords, install <a href="https://www.npmjs.com/package/bcryptjs">bcrypt.js</a> for salting and hashing:</p>
+
+<pre><code class="sh">$ npm install bcryptjs@2.3.0 --save
+</code></pre>
+
+<p>Add a new file called <em>_helpers.js</em> to the &ldquo;auth&rdquo; folder:</p>
+
+<pre><code class="javascript">const bcrypt = require('bcryptjs');
+
+function comparePass(userPassword, databasePassword) {
+  return bcrypt.compareSync(userPassword, databasePassword);
+}
+
+module.exports = {
+  comparePass
+};
+</code></pre>
+
+<p>Back in the <em>local.js</em> file add the requirement:</p>
+
+<pre><code class="javascript">const authHelpers = require('./_helpers');
+</code></pre>
+
+<p>With that, we can now add the routes for handling authentication.</p>
+
+<h2>Auth Routes</h2>
+
+<p>Let&rsquo;s take a test-first approach to writing our routes:</p>
+
+<ul>
+<li><code>/auth/register</code></li>
+<li><code>/auth/login</code></li>
+<li><code>/auth/logout</code></li>
+<li><code>/user</code></li>
+<li><code>/admin</code></li>
+</ul>
+
+
+<p>Add the following code to a new file called <em>routes.auth.test.js</em> in &ldquo;test/integration&rdquo;:</p>
+
+<pre><code class="javascript">process.env.NODE_ENV = 'test';
+
+const chai = require('chai');
+const should = chai.should();
+const chaiHttp = require('chai-http');
+chai.use(chaiHttp);
+
+const server = require('../../src/server/app');
+const knex = require('../../src/server/db/connection');
+
+describe('routes : auth', () =&gt; {
+
+  beforeEach(() =&gt; {
+    return knex.migrate.rollback()
+    .then(() =&gt; { return knex.migrate.latest(); });
+  });
+
+  afterEach(() =&gt; {
+    return knex.migrate.rollback();
+  });
+
+});
+</code></pre>
+
+<p>This is a common boilerplate for integration tests with <a href="http://chaijs.com/">Chai</a> assertions and <a href="https://github.com/chaijs/chai-http">Chai HTTP</a> for simulating user requests. For more info, check out <a href="http://mherman.org/blog/2016/04/28/test-driven-development-with-node/#.V-U1PZMrJE4">Test Driven Development With Node, Postgres, and Knex (Red/Green/Refactor)</a>.</p>
+
+<h3>Register</h3>
+
+<p>Start with a test:</p>
+
+<pre><code class="javascript">describe('POST /auth/register', () =&gt; {
+  it('should register a new user', (done) =&gt; {
+    chai.request(server)
+    .post('/auth/register')
+    .send({
+      username: 'michael',
+      password: 'herman'
+    })
+    .end((err, res) =&gt; {
+      should.not.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(200);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('success');
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Init a new git repo and commit, and then run the tests. You should see the following error:</p>
+
+<pre><code class="sh">Uncaught AssertionError: expected [Error: Not Found] to not exist
+</code></pre>
+
+<p>Now let&rsquo;s write the code to get the test to pass. First, register the new set of auth routes in <em>route-config.js</em>:</p>
+
+<pre><code class="javascript">(function (routeConfig) {
+
+  'use strict';
+
+  routeConfig.init = function (app) {
+
+    // *** routes *** //
+    const routes = require('../routes/index');
+    const authRoutes = require('../routes/auth');
+
+    // *** register routes *** //
+    app.use('/', routes);
+    app.use('/auth', authRoutes);
+
+  };
+
+})(module.exports);
+</code></pre>
+
+<p>Then add a new file to the &ldquo;route&rdquo; folder called <em>auth.js</em>:</p>
+
+<pre><code class="javascript">const express = require('express');
+const router = express.Router();
+
+const authHelpers = require('../auth/_helpers');
+
+router.post('/register', (req, res, next)  =&gt; {
+  return authHelpers.createUser(req, res)
+  .then((user) =&gt; { handleLogin(res, user[0]); })
+  .then(() =&gt; { handleResponse(res, 200, 'success'); })
+  .catch((err) =&gt; { handleResponse(res, 500, 'error'); });
+});
+
+function handleLogin(req, user) {
+  return new Promise((resolve, reject) =&gt; {
+    req.login(user, (err) =&gt; {
+      if (err) reject(err);
+      resolve();
+    });
+  });
+}
+
+function handleResponse(res, code, statusMsg) {
+  res.status(code).json({status: statusMsg});
+}
+
+module.exports = router;
+</code></pre>
+
+<p>This route simply handles the creation of a new user. To finish, add a <code>createUser()</code> function to <em>src/server/auth/_helpers.js</em>:</p>
+
+<pre><code class="javascript">function createUser (req) {
+  const salt = bcrypt.genSaltSync();
+  const hash = bcrypt.hashSync(req.body.password, salt);
+  return knex('users')
+  .insert({
+    username: req.body.username,
+    password: hash
+  })
+  .returning('*');
+}
+</code></pre>
+
+<p>Require Knex:</p>
+
+<pre><code class="javascript">const knex = require('../db/connection');
+</code></pre>
+
+<p>Export the function:</p>
+
+<pre><code class="javascript">module.exports = {
+  comparePass,
+  createUser
+};
+</code></pre>
+
+<p>Now let&rsquo;s test! All should pass:</p>
+
+<pre><code class="sh">npm test
+
+jscs
+  ✓ should pass for working directory (360ms)
+
+routes : auth
+  POST /auth/register
+    ✓ should register a new user (396ms)
+
+routes : index
+  GET /
+    ✓ should render the index
+  GET /404
+    ✓ should throw an error
+
+jshint
+  ✓ should pass for working directory (311ms)
+
+controllers : index
+  sum()
+    ✓ should return a total
+    ✓ should return an error
+
+
+7 passing (1s)
+</code></pre>
+
+<h3>Login</h3>
+
+<p>This time, let&rsquo;s look at how to handle both a success and an error&hellip;</p>
+
+<h4>Handle Success</h4>
+
+<p>Again, start with a test:</p>
+
+<pre><code class="javascript">describe('POST /auth/login', () =&gt; {
+  it('should login a user', (done) =&gt; {
+    chai.request(server)
+    .post('/auth/login')
+    .send({
+      username: 'jeremy',
+      password: 'johnson123'
+    })
+    .end((err, res) =&gt; {
+      should.not.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(200);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('success');
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>You should see the following failure after running the test:</p>
+
+<pre><code class="sh">Uncaught AssertionError: expected [Error: Not Found] to not exist
+</code></pre>
+
+<p>Now, let&rsquo;s update the code. Start by adding the route handler:</p>
+
+<pre><code class="javascript">router.post('/login', (req, res, next) =&gt; {
+  passport.authenticate('local', (err, user, info) =&gt; {
+    if (err) { handleResponse(res, 500, 'error'); }
+    if (!user) { handleResponse(res, 404, 'User not found'); }
+    if (user) { handleResponse(res, 200, 'success'); }
+  })(req, res, next);
+});
+</code></pre>
+
+<p>Require Passport:</p>
+
+<pre><code class="javascript">const passport = require('../auth/local');
+</code></pre>
+
+<p>Run the test. You should see:</p>
+
+<pre><code class="sh">Uncaught AssertionError: expected [Error: Not Found] to not exist
+</code></pre>
+
+<p>Why? Well, the user does not exist in the database. To fix this, we just need to seed the database before the tests are ran. Create a new seed file:</p>
+
+<pre><code class="sh">$ knex seed:make users
+</code></pre>
+
+<p>Then add the following code:</p>
+
+<pre><code class="javascript">const bcrypt = require('bcryptjs');
+
+exports.seed = (knex, Promise) =&gt; {
+  return knex('users').del()
+  .then(() =&gt; {
+    const salt = bcrypt.genSaltSync();
+    const hash = bcrypt.hashSync('johnson123', salt);
+    return Promise.join(
+      knex('users').insert({
+        username: 'jeremy',
+        password: hash
+      })
+    );
+  });
+};
+</code></pre>
+
+<p>Run the tests again. They should pass.</p>
+
+<h4>Handle Errors</h4>
+
+<p>Add another <code>it</code> block:</p>
+
+<pre><code class="javascript">it('should not login an unregistered user', (done) =&gt; {
+  chai.request(server)
+  .post('/auth/login')
+  .send({
+    username: 'michael',
+    password: 'johnson123'
+  })
+  .end((err, res) =&gt; {
+    should.exist(err);
+    res.redirects.length.should.eql(0);
+    res.status.should.eql(404);
+    res.type.should.eql('application/json');
+    res.body.status.should.eql('User not found');
+    done();
+  });
+});
+</code></pre>
+
+<p>The tests should still pass. What other errors should we handle? Think about this for a moment, and then write the tests. Once done, move on to logging out a user&hellip;</p>
+
+<h3>Logout</h3>
+
+<p>Test:</p>
+
+<pre><code class="javascript">describe('GET /auth/logout', () =&gt; {
+  it('should logout a user', (done) =&gt; {
+    chai.request(server)
+    .get('/auth/logout')
+    .end((err, res) =&gt; {
+      should.not.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(200);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('success');
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Route handler:</p>
+
+<pre><code class="javascript">router.get('/logout', (req, res, next) =&gt; {
+  req.logout();
+  handleResponse(res, 200, 'success');
+});
+</code></pre>
+
+<p>What if the user is not logged in? They should not be able to access that endpoint. Let&rsquo;s rewrite the test. First, install <a href="https://github.com/gtramontina/passport-stub">passport-stub</a> for mocking an authenticated user:</p>
+
+<pre><code class="sh">$ npm install passport-stub@1.1.1 --save
+</code></pre>
+
+<p>Add the requirement to <em>test/integration/routes.auth.test.js</em>:</p>
+
+<pre><code class="javascript">process.env.NODE_ENV = 'test';
+
+const chai = require('chai');
+const should = chai.should();
+const chaiHttp = require('chai-http');
+const passportStub = require('passport-stub');
+
+const server = require('../../src/server/app');
+const knex = require('../../src/server/db/connection');
+
+chai.use(chaiHttp);
+passportStub.install(server);
+</code></pre>
+
+<p>Update the <code>afterEach()</code>:</p>
+
+<pre><code class="javascript">afterEach(() =&gt; {
+  passportStub.logout();
+  return knex.migrate.rollback();
+});
+</code></pre>
+
+<p>Then update the test:</p>
+
+<pre><code class="javascript">describe('GET /auth/logout', () =&gt; {
+  it('should logout a user', (done) =&gt; {
+    passportStub.login({
+      username: 'jeremy',
+      password: 'johnson123'
+    });
+    chai.request(server)
+    .get('/auth/logout')
+    .end((err, res) =&gt; {
+      should.not.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(200);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('success');
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Now add a new test:</p>
+
+<pre><code class="javascript">it('should throw an error if a user is not logged in', (done) =&gt; {
+  chai.request(server)
+  .get('/auth/logout')
+  .end((err, res) =&gt; {
+    should.exist(err);
+    res.redirects.length.should.eql(0);
+    res.status.should.eql(401);
+    res.type.should.eql('application/json');
+    res.body.status.should.eql('Please log in');
+    done();
+  });
+});
+</code></pre>
+
+<p>Add a <code>loginRequired()</code> function to <em>src/server/auth/_helpers.js</em>:</p>
+
+<pre><code class="javascript">function loginRequired(req, res, next) {
+  if (!req.user) return res.status(401).json({status: 'Please log in'});
+  return next();
+}
+</code></pre>
+
+<p>Finally, update the route handler:</p>
+
+<pre><code class="javascript">router.get('/logout', authHelpers.loginRequired, (req, res, next) =&gt; {
+  req.logout();
+  handleResponse(res, 200, 'success');
+});
+</code></pre>
+
+<p>The tests should pass.</p>
+
+<h3>User</h3>
+
+<p>Once logged in, users should have access to the <code>/user</code> endpoint. Start with the tests:</p>
+
+<pre><code class="javascript">describe('GET /user', () =&gt; {
+  it('should return a success', (done) =&gt; {
+    passportStub.login({
+      username: 'jeremy',
+      password: 'johnson123'
+    });
+    chai.request(server)
+    .get('/user')
+    .end((err, res) =&gt; {
+      should.not.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(200);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('success');
+      done();
+    });
+  });
+  it('should throw an error if a user is not logged in', (done) =&gt; {
+    chai.request(server)
+    .get('/user')
+    .end((err, res) =&gt; {
+      should.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(401);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('Please log in');
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Add a new set of routes to <em>src/server/config/route-config.js</em>:</p>
+
+<pre><code class="javascript">(function (routeConfig) {
+
+  'use strict';
+
+  routeConfig.init = function (app) {
+
+    // *** routes *** //
+    const routes = require('../routes/index');
+    const authRoutes = require('../routes/auth');
+    const userRoutes = require('../routes/user');
+
+    // *** register routes *** //
+    app.use('/', routes);
+    app.use('/auth', authRoutes);
+    app.use('/', userRoutes);
+
+  };
+
+})(module.exports);
+</code></pre>
+
+<p>The tests should now pass.</p>
+
+<h3>Admin</h3>
+
+<p>Add the tests:</p>
+
+<pre><code class="javascript">describe('GET /admin', () =&gt; {
+  it('should return a success', (done) =&gt; {
+    passportStub.login({
+      username: 'kelly',
+      password: 'bryant123'
+    });
+    chai.request(server)
+    .get('/admin')
+    .end((err, res) =&gt; {
+      should.not.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(200);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('success');
+      done();
+    });
+  });
+  it('should throw an error if a user is not logged in', (done) =&gt; {
+    chai.request(server)
+    .get('/user')
+    .end((err, res) =&gt; {
+      should.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(401);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('Please log in');
+      done();
+    });
+  });
+  it('should throw an error if a user is not an admin', (done) =&gt; {
+    passportStub.login({
+      username: 'jeremy',
+      password: 'johnson123'
+    });
+    chai.request(server)
+    .get('/admin')
+    .end((err, res) =&gt; {
+      should.exist(err);
+      res.redirects.length.should.eql(0);
+      res.status.should.eql(401);
+      res.type.should.eql('application/json');
+      res.body.status.should.eql('You are not authorized');
+      done();
+    });
+  });
+});
+</code></pre>
+
+<p>Add the route handler:</p>
+
+<pre><code class="javascript">router.get('/admin', authHelpers.adminRequired, (req, res, next)  =&gt; {
+  handleResponse(res, 200, 'success');
+});
+</code></pre>
+
+<p>Add the helper function:</p>
+
+<pre><code class="javascript">function adminRequired(req, res, next) {
+  if (!req.user) res.status(401).json({status: 'Please log in'});
+  return knex('users').where({username: req.user.username}).first()
+  .then((user) =&gt; {
+    if (!user.admin) res.status(401).json({status: 'You are not authorized'});
+    return next();
+  })
+  .catch((err) =&gt; {
+    res.status(500).json({status: 'Something bad happened'});
+  });
+}
+</code></pre>
+
+<p>Export the function:</p>
+
+<pre><code class="javascript">module.exports = {
+  comparePass,
+  createUser,
+  loginRequired,
+  adminRequired
+};
+</code></pre>
+
+<p>Update the seed file:</p>
+
+<pre><code class="javascript">const bcrypt = require('bcryptjs');
+
+exports.seed = (knex, Promise) =&gt; {
+  return knex('users').del()
+  .then(() =&gt; {
+    const salt = bcrypt.genSaltSync();
+    const hash = bcrypt.hashSync('johnson123', salt);
+    return Promise.join(
+      knex('users').insert({
+        username: 'jeremy',
+        password: hash
+      })
+    );
+  })
+  .then(() =&gt; {
+    const salt = bcrypt.genSaltSync();
+    const hash = bcrypt.hashSync('bryant123', salt);
+    return Promise.join(
+      knex('users').insert({
+        username: 'kelly',
+        password: hash,
+        admin: true
+      })
+    );
+  });
+};
+</code></pre>
+
+<p>The tests should now pass.</p>
+
+<h3>Helper</h3>
+
+<p>Take a quick look at the <code>/auth/register</code> and <code>/auth/login</code> endpoints. What happens if there is a user already logged in? As of now, the user can still access those routes, so add another helper function to prevent access:</p>
+
+<pre><code class="javascript">function loginRedirect(req, res, next) {
+  if (req.user) return res.status(401).json(
+    {status: 'You are already logged in'});
+  return next();
+}
+</code></pre>
+
+<p>Update the route handlers:</p>
+
+<pre><code class="javascript">router.post('/register', authHelpers.loginRedirect, (req, res, next)  =&gt; {
+  return authHelpers.createUser(req, res)
+  .then((user) =&gt; {
+    handleLogin(res, user[0]);
+  })
+  .then(() =&gt; { handleResponse(res, 200, 'success'); })
+  .catch((err) =&gt; { handleResponse(res, 500, 'error'); });
+});
+
+router.post('/login', authHelpers.loginRedirect, (req, res, next) =&gt; {
+  passport.authenticate('local', (err, user, info) =&gt; {
+    if (err) { handleResponse(res, 500, 'error'); }
+    if (!user) { handleResponse(res, 404, 'User not found'); }
+    if (user) { handleResponse(res, 200, 'success'); }
+  })(req, res, next);
+});
+</code></pre>
+
+<p>Add a new test to <code>describe('POST /auth/register', () =&gt; {</code>:</p>
+
+<pre><code class="javascript">it('should throw an error if a user is logged in', (done) =&gt; {
+  passportStub.login({
+    username: 'jeremy',
+    password: 'johnson123'
+  });
+  chai.request(server)
+  .post('/auth/register')
+  .send({
+    username: 'michael',
+    password: 'herman'
+  })
+  .end((err, res) =&gt; {
+    should.exist(err);
+    res.redirects.length.should.eql(0);
+    res.status.should.eql(401);
+    res.type.should.eql('application/json');
+    res.body.status.should.eql('You are already logged in');
+    done();
+  });
+});
+</code></pre>
+
+<p>And add a new test to <code>describe('POST /auth/login', () =&gt; {</code>:</p>
+
+<pre><code class="javascript">it('should throw an error if a user is logged in', (done) =&gt; {
+  passportStub.login({
+    username: 'jeremy',
+    password: 'johnson123'
+  });
+  chai.request(server)
+  .post('/auth/login')
+  .send({
+    username: 'jeremy',
+    password: 'johnson123'
+  })
+  .end((err, res) =&gt; {
+    should.exist(err);
+    res.redirects.length.should.eql(0);
+    res.status.should.eql(401);
+    res.type.should.eql('application/json');
+    res.body.status.should.eql('You are already logged in');
+    done();
+  });
+});
+</code></pre>
+
+<p>Run the tests again. All should pass. Write some unit tests before moving on.</p>
+
+<h2>Validation</h2>
+
+<p>At this point we&rsquo;ve covered most of the basic functionality. We can add some additional validation rules by first adding the helper function to <em>src/server/auth/_helpers.js</em>:</p>
+
+<pre><code class="javascript">function handleErrors(req) {
+  return new Promise((resolve, reject) =&gt; {
+    if (req.body.username.length &lt; 6) {
+      reject({
+        message: 'Username must be longer than 6 characters'
+      });
+    }
+    else if (req.body.password.length &lt; 6) {
+      reject({
+        message: 'Password must be longer than 6 characters'
+      });
+    } else {
+      resolve();
+    }
+  });
+}
+</code></pre>
+
+<p>And then update <code>createUser()</code>:</p>
+
+<pre><code class="javascript">function createUser(req, res) {
+  return handleErrors(req)
+  .then(() =&gt; {
+    const salt = bcrypt.genSaltSync();
+    const hash = bcrypt.hashSync(req.body.password, salt);
+    return knex('users')
+    .insert({
+      username: req.body.username,
+      password: hash
+    })
+    .returning('*');
+  })
+  .catch((err) =&gt; {
+    res.status(400).json({status: err.message});
+  });
+}
+</code></pre>
+
+<p>Finally, add two new tests to <code>POST /auth/register</code>:</p>
+
+<pre><code class="javascript">it('should throw an error if the username is &lt; 6 characters', (done) =&gt; {
+  chai.request(server)
+  .post('/auth/register')
+  .send({
+    username: 'six',
+    password: 'herman'
+  })
+  .end((err, res) =&gt; {
+    should.exist(err);
+    res.redirects.length.should.eql(0);
+    res.status.should.eql(400);
+    res.type.should.eql('application/json');
+    res.body.status.should.eql('Username must be longer than 6 characters');
+    done();
+  });
+});
+it('should throw an error if the password is &lt; 6 characters', (done) =&gt; {
+  chai.request(server)
+  .post('/auth/register')
+  .send({
+    username: 'michael',
+    password: 'six'
+  })
+  .end((err, res) =&gt; {
+    should.exist(err);
+    res.redirects.length.should.eql(0);
+    res.status.should.eql(400);
+    res.type.should.eql('application/json');
+    res.body.status.should.eql('Password must be longer than 6 characters');
+    done();
+  });
+});
+</code></pre>
+
+<p>Run the tests:</p>
+
+<pre><code class="sh">$ npm test
+
+  jscs
+    ✓ should pass for working directory (752ms)
+
+  routes : auth
+    POST /auth/register
+      ✓ should register a new user (498ms)
+      ✓ should throw an error if a user is logged in
+      ✓ should throw an error if the username is &lt; 6 characters
+      ✓ should throw an error if the password is &lt; 6 characters
+    POST /auth/login
+      ✓ should login a user (291ms)
+      ✓ should not login an unregistered user
+      ✓ should throw an error if a user is logged in
+    GET /auth/logout
+      ✓ should logout a user
+      ✓ should throw an error if a user is not logged in
+    GET /user
+      ✓ should return a success
+      ✓ should throw an error if a user is not logged in
+    GET /admin
+      ✓ should return a success
+      ✓ should throw an error if a user is not logged in
+      ✓ should throw an error if a user is not an admin
+
+  routes : index
+    GET /
+      ✓ should render the index
+    GET /404
+      ✓ should throw an error
+
+  jshint
+    ✓ should pass for working directory (493ms)
+
+  controllers : index
+    sum()
+      ✓ should return a total
+      ✓ should return an error
+
+
+  20 passing (13s)
+</code></pre>
+
+<p>Yay!</p>
+
+<hr />
+
+<p><br></p>
+
+<p>Grab the code from the <a href="https://github.com/mjhea0/passport-local-knex">repo</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Testing Node and Express]]></title>
@@ -3145,433 +4195,6 @@ app.use(function(err, req, res, next) {
 <p>We now have a basic RESTful API built with Node, Express, and pg-promise. Be sure to comment below if you have any questions.</p>
 
 <p>Grab the code from the <a href="https://github.com/mjhea0/node-postgres-promises">repo</a>.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Node, Postgres, and Sequelize]]></title>
-    <link href="http://mherman.org/blog/2015/10/22/node-postgres-sequelize/"/>
-    <updated>2015-10-22T10:52:00-06:00</updated>
-    <id>http://mherman.org/blog/2015/10/22/node-postgres-sequelize</id>
-    <content type="html"><![CDATA[<p><strong>Let&rsquo;s build a CRUD app with Node (v4.1.1), Express (v4.13.1), Sequelize (v3.12.2), and PostgreSQL (9.4.4).</strong></p>
-
-<div style="text-align:center;">
-  <img src="http://mherman.org/images/node-sequelize.png" style="max-width: 100%; border:0;" alt="node sequelize">
-</div>
-
-
-<p><strong>Updates</strong>:
-  - <em>November 1st, 2015</em> - Added Database Migrations</p>
-
-<blockquote><p>This a follow-up to <a href="http://mherman.org/blog/2015/02/12/postgresql-and-nodejs/#.ViVUDxNViko">PostgreSQL and NodeJS</a>.</p></blockquote>
-
-<h2>Getting Started</h2>
-
-<p>Grab the initial boilerplate and install the dependencies:</p>
-
-<pre><code class="sh">$ git clone git@github.com:mjhea0/node-postgres-sequelize.git
-$ git checkout tags/v1
-$ npm install
-</code></pre>
-
-<p>Now run a quick sanity check:</p>
-
-<pre><code class="sh">$ gulp
-</code></pre>
-
-<p>If all went well, a new browser window should have opened to <a href="http://localhost:5000/">http://localhost:5000/</a> and you should see the &ldquo;Welcome to Express.&rdquo; text.</p>
-
-<h2>Sequelize</h2>
-
-<p>With Postgres listening on port 5432, we can make a connection to it using the <a href="http://docs.sequelizejs.com/en/latest/">Sequelize</a> library, <em>an Object Relational Mapper (ORM), written in JavaScript, which supports MySQL, PostgreSQL, SQLite, and MariaDB</em>.</p>
-
-<blockquote><p>Need to set up Postgres? On a Mac? Check out <a href="http://postgresapp.com/">Postgres.app</a>.</p></blockquote>
-
-<p>Install Sequelize, <a href="https://www.npmjs.com/package/pg">pg</a> (for making the database connection), and <a href="https://www.npmjs.com/package/pg-hstore">pg-hstore</a> (for serializing and deserializing JSON into the <a href="http://www.postgresql.org/docs/9.0/static/hstore.html">Postgres hstore key/value pair format</a>):</p>
-
-<pre><code class="sh">$ npm install sequelize@3.12.2 pg@4.4.3 pg-hstore@2.3.2 --save
-</code></pre>
-
-<h2>Migrations</h2>
-
-<p>The <a href="https://github.com/sequelize/cli">Sequelize CLI</a> is used to bootstrap a new project and handle <a href="https://en.wikipedia.org/wiki/Schema_migration">database migrations</a> directly from the terminal.</p>
-
-<blockquote><p>Read more about the Sequelize CLI from the official <a href="http://docs.sequelizejs.com/en/latest/docs/migrations/">documentation</a>.</p></blockquote>
-
-<h3>Init</h3>
-
-<p>Start by installing the package:</p>
-
-<pre><code class="sh">$ npm install sequelize-cli@2.1.0 --save
-</code></pre>
-
-<p>Next, create a config file called <em>.sequelizerc</em> in your project root to specify the paths to specific files required by Sequelize:</p>
-
-<pre><code class="javascript">var path = require('path');
-
-module.exports = {
-  'config': path.resolve('./server', 'config.json'),
-  'migrations-path': path.resolve('./server', 'migrations'),
-  'models-path': path.resolve('./server', 'models'),
-  'seeders-path': path.resolve('./server', 'seeders')
-}
-</code></pre>
-
-<p>Now, run the init command to create the files (<em>config.json</em>) and folders (&ldquo;migrations&rdquo;, &ldquo;models&rdquo;, and &ldquo;seeders&rdquo;):</p>
-
-<pre><code class="sh">$ node_modules/.bin/sequelize init
-</code></pre>
-
-<p>Take a look at the <em>index.js</em> file within the &ldquo;models&rdquo; directory:</p>
-
-<pre><code class="javascript">'use strict';
-
-var fs        = require('fs');
-var path      = require('path');
-var Sequelize = require('sequelize');
-var basename  = path.basename(module.filename);
-var env       = process.env.NODE_ENV || 'development';
-var config    = require(__dirname + '/../config.json')[env];
-var db        = {};
-
-if (config.use_env_variable) {
-  var sequelize = new Sequelize(process.env[config.use_env_variable]);
-} else {
-  var sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
-
-fs
-  .readdirSync(__dirname)
-  .filter(function(file) {
-    return (file.indexOf('.') !== 0) &amp;&amp; (file !== basename);
-  })
-  .forEach(function(file) {
-    if (file.slice(-3) !== '.js') return;
-    var model = sequelize['import'](path.join(__dirname, file));
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach(function(modelName) {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-module.exports = db;
-</code></pre>
-
-<p>Here, we establish a connection to the database, grab all the model files from the current directory, add them to the <code>db</code> object, and apply any relations between each model (if any).</p>
-
-<h3>Config</h3>
-
-<p>Be sure to also update the <em>config.js</em> file for your development, test, and production databases:</p>
-
-<pre><code class="javascript">{
-  "development": {
-    "username": "update me",
-    "password": "update me",
-    "database": "todos",
-    "host": "127.0.0.1",
-    "port": "5432",
-    "dialect": "postgres"
-  },
-  "test": {
-    "username": "update me",
-    "password": "update me",
-    "database": "update_me",
-    "host": "update me",
-    "dialect": "update me"
-  },
-  "production": {
-    "username": "update me",
-    "password": "update me",
-    "database": "update me",
-    "host": "update me",
-    "dialect": "update me"
-  }
-}
-</code></pre>
-
-<blockquote><p>If you are just running this locally, using the basic development server, then just update the <code>development</code> config.</p></blockquote>
-
-<p>Go ahead and create a database named &ldquo;todos&rdquo;.</p>
-
-<h3>Create Migration</h3>
-
-<p>Now let&rsquo;s create a model along with a migration. Since we&rsquo;re working with todos, run the following command:</p>
-
-<pre><code class="sh">$ node_modules/.bin/sequelize model:create --name Todo --attributes "title:string, complete:boolean,UserId:integer"
-</code></pre>
-
-<p>Take a look a the newly created model file, <em>todo.js</em> in the models directory:</p>
-
-<pre><code class="javascript">'use strict';
-module.exports = function(sequelize, DataTypes) {
-  var Todo = sequelize.define('Todo', {
-    title: DataTypes.STRING,
-    complete: DataTypes.BOOLEAN
-  }, {
-    classMethods: {
-      associate: function(models) {
-        // associations can be defined here
-      }
-    }
-  });
-  return Todo;
-};
-</code></pre>
-
-<p>The corresponding migration file can be found in the &ldquo;migrations&rdquo; folder. Take a look. Next, let&rsquo;s associate a user to a todo. First, we need to define a new migration:</p>
-
-<pre><code class="sh">$ node_modules/.bin/sequelize model:create --name User --attributes "email:string"
-</code></pre>
-
-<p>Now we need to set up the relationship between the two models&hellip;</p>
-
-<h3>Associations</h3>
-
-<p>To associate the models (one user can have many todos), make the following updates&hellip;</p>
-
-<p><strong>todo.js</strong>:</p>
-
-<pre><code class="javascript">'use strict';
-module.exports = function(sequelize, DataTypes) {
-  var Todo = sequelize.define('Todo', {
-    title: DataTypes.STRING,
-    complete: DataTypes.BOOLEAN
-  }, {
-    classMethods: {
-      associate: function(models) {
-        Todo.belongsTo(models.User);
-      }
-    }
-  });
-  return Todo;
-};
-</code></pre>
-
-<p><strong>user.js</strong>:</p>
-
-<pre><code class="javascript">'use strict';
-module.exports = function(sequelize, DataTypes) {
-  var User = sequelize.define('User', {
-    email: DataTypes.STRING
-  }, {
-    classMethods: {
-      associate: function(models) {
-        User.hasMany(models.Todo);
-      }
-    }
-  });
-  return User;
-};
-</code></pre>
-
-<h3>Sync</h3>
-
-<p>Finally, before we sync, let&rsquo;s add an additional attribute to the <code>complete</code> field in the <em>todo.js</em> file:</p>
-
-<pre><code class="javascript">'use strict';
-module.exports = function(sequelize, DataTypes) {
-  var Todo = sequelize.define('Todo', {
-    title: DataTypes.STRING,
-    complete: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    }
-  }, {
-    classMethods: {
-      associate: function(models) {
-        Todo.belongsTo(models.User);
-      }
-    }
-  });
-  return Todo;
-};
-</code></pre>
-
-<p>Run the migration to create the tables:</p>
-
-<pre><code class="sh">$ node_modules/.bin/sequelize db:migrate
-
-Sequelize [Node: 4.1.1, CLI: 2.1.0, ORM: 3.12.2]
-
-Loaded configuration file "server/config.json".
-Using environment "development".
-Using gulpfile ~/node_modules/sequelize-cli/lib/gulpfile.js
-Starting 'db:migrate'...
-== 20151101052127-create-todo: migrating =======
-== 20151101052127-create-todo: migrated (0.049s)
-
-== 20151101052148-create-user: migrating =======
-== 20151101052148-create-user: migrated (0.042s)
-</code></pre>
-
-<h2>CRUD</h2>
-
-<p>With Sequelize set up and the models defined, we can now set up our RESTful routing structure for the todo resource. First, within <em>index.js</em> in the &ldquo;routes&rdquo; folder add the following requirement:</p>
-
-<pre><code class="javascript">var models = require('../models/index');
-</code></pre>
-
-<p>Then add a route for creating a new user:</p>
-
-<pre><code class="javascript">router.post('/users', function(req, res) {
-  models.User.create({
-    email: req.body.email
-  }).then(function(user) {
-    res.json(user);
-  });
-});
-</code></pre>
-
-<p>To add a new user, run the server - <code>gulp</code> - and then run the following in a new terminal window:</p>
-
-<pre><code class="sh">$ curl --data "email=michael@mherman.org" http://127.0.0.1:3000/users
-</code></pre>
-
-<p>You should see:</p>
-
-<pre><code class="json">{
-  "id":1,
-  "email":"michael@mherman.org",
-  "updatedAt":"2015-11-01T12:24:20.375Z",
-  "createdAt":"2015-11-01T12:24:20.375Z"
-}
-</code></pre>
-
-<p>Now we can add the todo routes&hellip;</p>
-
-<h3>GET all todos</h3>
-
-<pre><code class="javascript">// get all todos
-router.get('/todos', function(req, res) {
-  models.Todo.findAll({}).then(function(todos) {
-    res.json(todos);
-  });
-});
-</code></pre>
-
-<p>When you hit that route you should see an empty array since we have not added any todos. Let&rsquo;s do that now.</p>
-
-<h3>POST</h3>
-
-<pre><code class="javascript">// add new todo
-router.post('/todos', function(req, res) {
-  models.Todo.create({
-    title: req.body.title,
-    UserId: req.body.user_id
-  }).then(function(todo) {
-    res.json(todo);
-  });
-});
-</code></pre>
-
-<p>Now let&rsquo;s test:</p>
-
-<pre><code class="sh">$ curl --data "title=test&amp;user_id=1" http://127.0.0.1:3000/todos
-$ curl --data "title=test2&amp;user_id=1" http://127.0.0.1:3000/todos
-</code></pre>
-
-<p>Then if you go back and hit <a href="http://127.0.0.1:3000/todos">http://127.0.0.1:3000/todos</a> in our browser, you should see:</p>
-
-<pre><code class="json">[
-  {
-    id: 1,
-    title: "test",
-    complete: false,
-    createdAt: "2015-11-01T12:31:56.451Z",
-    updatedAt: "2015-11-01T12:31:56.451Z",
-    UserId: 1
-  },
-  {
-    id: 2,
-    title: "test2",
-    complete: false,
-    createdAt: "2015-11-01T12:32:09.000Z",
-    updatedAt: "2015-11-01T12:32:09.000Z",
-    UserId: 1
-  }
-]
-</code></pre>
-
-<h3>GET single todo</h3>
-
-<p>How about getting a single todo?</p>
-
-<pre><code class="javascript">// get single todo
-router.get('/todo/:id', function(req, res) {
-  models.Todo.find({
-    where: {
-      id: req.params.id
-    }
-  }).then(function(todo) {
-    res.json(todo);
-  });
-});
-</code></pre>
-
-<p>Navigate to <a href="http://localhost:3000/todo/1">http://localhost:3000/todo/1</a> in your browser. You should the single todo.</p>
-
-<h3>PUT</h3>
-
-<p>Need to update a todo?</p>
-
-<pre><code class="javascript">// update single todo
-router.put('/todo/:id', function(req, res) {
-  models.Todo.find({
-    where: {
-      id: req.params.id
-    }
-  }).then(function(todo) {
-    if(todo){
-      todo.updateAttributes({
-        title: req.body.title,
-        complete: req.body.complete
-      }).then(function(todo) {
-        res.send(todo);
-      });
-    }
-  });
-});
-</code></pre>
-
-<p>And now for a test, of course:</p>
-
-<pre><code class="sh">$ curl -X PUT --data "complete=true" http://127.0.0.1:3000/todo/2
-</code></pre>
-
-<h3>DELETE</h3>
-
-<p>Want to delete a todo?</p>
-
-<pre><code class="javascript">// delete a single todo
-router.delete('/todo/:id', function(req, res) {
-  models.Todo.destroy({
-    where: {
-      id: req.params.id
-    }
-  }).then(function(todo) {
-    res.json(todo);
-  });
-});
-</code></pre>
-
-<p>Test:</p>
-
-<pre><code class="sh">$ curl -X DELETE http://127.0.0.1:3000/todo/1
-</code></pre>
-
-<p>Again, navigate to <a href="http://localhost:3000/todos">http://localhost:3000/todos</a> in your browser. You should now only see one todo.</p>
-
-<h2>Conclusion</h2>
-
-<p>That&rsquo;s it for the basic server-side code. You now have a database, models, and migrations set up. Whenever you want to update the state of your database, just add additional migrations and then run them as necessary.</p>
-
-<p>Grab the code from the <a href="https://github.com/mjhea0/node-postgres-sequelize">Github repo</a>. Comment below with questions. Cheers!</p>
 ]]></content>
   </entry>
   
