@@ -535,6 +535,16 @@ exports.seed = (knex, Promise) => {
 };
 ```
 
+Update the `beforeEach()`:
+
+```javascript
+beforeEach(() => {
+  return knex.migrate.rollback()
+  .then(() => { return knex.migrate.latest(); })
+  .then(() => { return knex.seed.run(); });
+});
+```
+
 Run the tests again. They should pass.
 
 #### Handle Errors
