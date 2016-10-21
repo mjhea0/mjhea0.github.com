@@ -1097,7 +1097,7 @@ Here, with express-validator, parameters are validated using either `req.checkPa
 Require this module in the user routes:
 
 ```javascript
-const userQueries = require('../db/queries.users');
+const validate = require('./validation');
 ```
 
 Add the `validateUserResources` to all the route handlers except the handler to GET ALL users, like so:
