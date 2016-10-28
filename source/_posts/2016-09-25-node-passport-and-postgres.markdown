@@ -98,7 +98,7 @@ exports.down = (knex, Promise) => {
 Apply the migration:
 
 ```sh
-knex migrate:latest --env development
+$ knex migrate:latest --env development
 ```
 
 ### Sanity Check
@@ -753,6 +753,25 @@ Add a new set of routes to *src/server/config/route-config.js*:
   };
 
 })(module.exports);
+```
+
+Add the route handler:
+
+```javascript
+const express = require('express');
+const router = express.Router();
+
+const authHelpers = require('../auth/_helpers');
+
+router.get('/user', authHelpers.loginRequired, (req, res, next)  => {
+  handleResponse(res, 200, 'success');
+});
+
+function handleResponse(res, code, statusMsg) {
+  res.status(code).json({status: statusMsg});
+}
+
+module.exports = router;
 ```
 
 The tests should now pass.
