@@ -310,7 +310,7 @@ Here's a quick rundown:
 - `App.middleware` configures our Express middleware. Right now we're using the [`morgan`](https://github.com/expressjs/morgan) logger and [`body-parser`](https://github.com/expressjs/body-parser).
 - `App.routes` will be used to link up our API endpoints and route handlers.
 
-> **NOTE**: If you have a text editor rich TypeScript support, the error in *index.ts* should have disappeared.
+> **NOTE**: If you have a text editor with rich TypeScript support, the error in *index.ts* should have disappeared.
 
 Currently, there's a simple placeholder handler for the base URL that should return a JSON payload with `{ "message": "Hello World!" }`. Before writing more code, let's make sure that we're starting with a working, listening, and hopefully responding server. We're going to use [httpie](https://httpie.org/) for this quick sanity check.
 
@@ -346,7 +346,7 @@ The server is listening! Now we can start building the API.
 
 ## The API
 
-Since we're good developers (and citizens), let's utilize TDD (test-driven development) while we build out the API. That means want to set up a testing environment. We'll be writing our test files in TypeScript, and using [Mocha](http://mochajs.org/) and [Chai](http://chaijs.com/) to create the tests. Let's start by installing these to our `devDependencies`:
+Since we're good developers (and citizens), let's utilize TDD (test-driven development) while we build out the API. That means we want to set up a testing environment. We'll be writing our test files in TypeScript, and using [Mocha](http://mochajs.org/) and [Chai](http://chaijs.com/) to create the tests. Let's start by installing these to our `devDependencies`:
 
 ```sh
 $ npm install mocha@3.1.2 chai@3.5.0 chai-http@3.0.0 --save-dev
@@ -405,7 +405,7 @@ In the terminal, run `npm test` you should see both test pass for the `baseRoute
 
 ## First Endpoint
 
-Our API will be delivering data on superheros, so we'll need to have a datastore for the API to access. Rather than setting up a full database, for this example let's use a JSON file as our "database". Grad the data [here](https://raw.githubusercontent.com/mjhea0/typescript-node-api/master/src/data.json) and save it to a new file called *data.json* in the "src" folder.
+Our API will be delivering data on superheros, so we'll need to have a datastore for the API to access. Rather than setting up a full database, for this example let's use a JSON file as our "database". Grab the data [here](https://raw.githubusercontent.com/mjhea0/typescript-node-api/master/src/data.json) and save it to a new file called *data.json* in the "src" folder.
 
 With this little store of data, we'll implement a CRUD interface for the superhero resource. To start, let's implement an endpoint that returns all of our superheros. Here's a test for this endpoint:
 
