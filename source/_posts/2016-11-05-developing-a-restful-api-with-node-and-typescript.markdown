@@ -109,9 +109,9 @@ Now that the compiler is installed and working, let's change up the config to ma
 }
 ```
 
-Remove the *test.ts* file from the "src" folder. Now, run the compiler again, and you'll see that `test.js` is delivered to the `dist` directory.
+Remove the *test.js* file from the "src" folder. Now, run the compiler again, and you'll see that `test.js` is delivered to the `dist` directory.
 
-This is much nicer, but let's take it one step further. Instead returning to the terminal after each change and manually running the compiler each time let's automate the process with Gulp:
+This is much nicer, but let's take it one step further. Instead of returning to the terminal after each change and manually running the compiler each time let's automate the process with Gulp:
 
 ```sh
 $ npm install gulp@3.9.1 gulp-typescript@3.1.1 --save-dev
