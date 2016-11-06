@@ -15,8 +15,9 @@ description: "This article details how to build a basic CRUD app with Node, Expr
   <img src="/images/node-sequelize.png" style="max-width: 100%; border:0;" alt="node sequelize">
 </div>
 
-**Updates**:
-  - *November 1st, 2015* - Added Database Migrations
+<br>
+
+**Updates**: *November 1st, 2015* - Added Database Migrations
 
 > This a follow-up to [PostgreSQL and NodeJS](http://mherman.org/blog/2015/02/12/postgresql-and-nodejs/#.ViVUDxNViko).
 
