@@ -208,6 +208,8 @@ const knex = require('../db/connection');
 
 const options = {};
 
+init();
+
 passport.use(new LocalStrategy(options, (username, password, done) => {
   // check to see if the username exists
   knex('users').where({ username }).first()
@@ -225,15 +227,15 @@ passport.use(new LocalStrategy(options, (username, password, done) => {
 module.exports = passport;
 ```
 
-  Here, we check if the username exists in the database and then pass the appropriate results back to Passport via the callback.
+Here, we check if the username exists in the database and then pass the appropriate results back to Passport via the callback.
 
-  Flow:
+Flow:
 
-  - Does the username exist?
+- Does the username exist?
+  - No? `false` is returned
+  - Yes? Does the password match?
     - No? `false` is returned
-    - Yes? Does the password match?
-      - No? `false` is returned
-      - Yes? The user object is returned
+    - Yes? The user object is returned
 
 Take note of the `comparePass()` function This helper function will be used to compare the provided password with the password in the database. Let's write that helper...
 
@@ -367,21 +369,15 @@ const router = express.Router();
 
 const authHelpers = require('../auth/_helpers');
 
-router.post('/register', (req, res, next)  => {
+router.post('/register', authHelpers.loginRedirect, (req, res, next)  => {
   return authHelpers.createUser(req, res)
-  .then((user) => { handleLogin(res, user[0]); })
-  .then(() => { handleResponse(res, 200, 'success'); })
+  .then((response) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (user) { handleResponse(res, 200, 'success'); }
+    })(req, res, next);
+  })
   .catch((err) => { handleResponse(res, 500, 'error'); });
 });
-
-function handleLogin(req, user) {
-  return new Promise((resolve, reject) => {
-    req.login(user, (err) => {
-      if (err) reject(err);
-      resolve();
-    });
-  });
-}
 
 function handleResponse(res, code, statusMsg) {
   res.status(code).json({status: statusMsg});
