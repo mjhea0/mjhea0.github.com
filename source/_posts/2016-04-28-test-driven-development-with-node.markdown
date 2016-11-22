@@ -68,7 +68,7 @@ CREATE DATABASE
 # \q
 ```
 
-With out database created we can initialize Knex.
+With our database created we can initialize Knex.
 
 ### Knex Setup
 
