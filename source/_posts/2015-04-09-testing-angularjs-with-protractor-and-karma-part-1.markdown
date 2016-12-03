@@ -20,6 +20,8 @@ description: "Let's look at how to test an AngularJS application with Protractor
 - Part 1 - In the first part we'll look at unit tests, which ensure that small, isolated pieces of code (e.g., a unit) behave as expected **(current)**.
 - [Part 2](http://mherman.org/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2) - In part two we'll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation.
 
+> *Updates*: December 3rd, 2016 - bumped dependencies
+
 To accomplish this we will be using [Karma](http://karma-runner.github.io/) v0.12.31 (test runner) and [Chai](http://chaijs.com/) v2.2.0 (assertions) for the unit tests (along with [Karma-Mocha](https://github.com/karma-runner/karma-mocha)) and [Protractor](http://angular.github.io/protractor/#/) v2.0.0 for the E2E tests. This article also uses [Angular](https://angularjs.org/) v1.3.15. Be sure to take note of all dependencies and their versions in the *package.json* and *bower.json* files in the [repo](https://github.com/mjhea0/angular-testing-tutorial).
 
 The repo includes the following tags:

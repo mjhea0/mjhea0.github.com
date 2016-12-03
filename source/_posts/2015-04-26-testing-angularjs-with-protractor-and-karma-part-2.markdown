@@ -20,6 +20,8 @@ description: "In Part 2 of Testing AngularJS with Protractor and Karma we'll loo
 - [Part 1](http://mherman.org/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1) - In the first part we'll look at unit tests, which ensure that small, isolated pieces of code (e.g., a unit) behave as expected.
 - Part 2 - In part two we'll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation. **(current)**
 
+> *Updates*: December 3rd, 2016 - bumped dependencies
+
 Having finished up unit testing, let's now turn our attention to e2e testing using [Protractor](http://angular.github.io/protractor/#/), which is a testing framework built specifically for AngularJS apps. Essentially, it runs tests against an app in the browser via [Selenium Webdriver](http://seleniumhq.github.io/selenium/docs/api/javascript/), interacting with the app from an end user’s perspective.
 
 <div style="text-align:center;">
