@@ -166,7 +166,7 @@ The database connection is established by passing the proper environment (via th
 
 ## Test Structure
 
-With that complete, let's look at the current test structure. In the "src" directory, you'll notice a "test" directory, which as you probably guessed contains the test specs. Two sample tests have been created, plus there is some basic configuration set up for [JSHint](https://github.com/jshint/jshint) and [JSCS](http://jscs.info/) so that the code is linted against the style config and conventions defined in the *.jscsrc*  and *jshintrc* files, respectively.
+With that complete, let's look at the current test structure. In the project root, you'll notice a "test" directory, which as you probably guessed contains the test specs. Two sample tests have been created, plus there is some basic configuration set up for [JSHint](https://github.com/jshint/jshint) and [JSCS](http://jscs.info/) so that the code is linted against the style config and conventions defined in the *.jscsrc*  and *jshintrc* files, respectively.
 
 Run the tests:
 
@@ -603,7 +603,6 @@ describe('POST /api/v1/users', () => {
 Code:
 
 ```javascript
-// *** add a user *** //
 router.post('/', (req, res, next) => {
   const newUsername = req.body.username;
   const newEmail = req.body.email;
@@ -677,7 +676,6 @@ describe('PUT /api/v1/users', () => {
 Code:
 
 ```javascript
-// *** update a user *** //
 router.put('/:id', (req, res, next) => {
   const userID = parseInt(req.params.id);
   const updatedUsername = req.body.username;
@@ -750,7 +748,6 @@ describe('DELETE /api/v1/users/:id', () => {
 Code:
 
 ```javascript
-// *** delete a user *** //
 router.delete('/:id', (req, res, next) => {
   const userID = parseInt(req.params.id);
   knex('users')
@@ -1103,7 +1100,6 @@ const validate = require('./validation');
 Add the `validateUserResources` to all the route handlers except the handler to GET ALL users, like so:
 
 ```javascript
-// *** GET SINGLE user *** //
 router.get('/:id',
   validate.validateUserResources,
   (req, res, next) => {
@@ -1183,7 +1179,6 @@ module.exports = {
 This function now handles all the knex logic, and it can now be used anywhere in the project. Be sure to update the route handler:
 
 ```javascript
-// *** GET ALL users *** //
 router.get('/', (req, res, next) => {
   userQueries.getAllUsers((err, users) => {
     if (err) {
