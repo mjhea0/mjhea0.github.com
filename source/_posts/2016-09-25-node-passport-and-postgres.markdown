@@ -368,6 +368,7 @@ const express = require('express');
 const router = express.Router();
 
 const authHelpers = require('../auth/_helpers');
+const passport = require('../auth/local');
 
 router.post('/register', (req, res, next)  => {
   return authHelpers.createUser(req, res)
@@ -491,12 +492,6 @@ router.post('/login', (req, res, next) => {
     if (user) { handleResponse(res, 200, 'success'); }
   })(req, res, next);
 });
-```
-
-Require Passport:
-
-```javascript
-const passport = require('../auth/local');
 ```
 
 Run the test. You should see:
