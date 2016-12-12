@@ -369,7 +369,7 @@ const router = express.Router();
 
 const authHelpers = require('../auth/_helpers');
 
-router.post('/register', authHelpers.loginRedirect, (req, res, next)  => {
+router.post('/register', (req, res, next)  => {
   return authHelpers.createUser(req, res)
   .then((response) => {
     passport.authenticate('local', (err, user, info) => {
