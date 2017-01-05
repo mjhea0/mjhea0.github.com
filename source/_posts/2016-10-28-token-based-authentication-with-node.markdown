@@ -4,7 +4,7 @@ title: "Token-Based Authentication with Node"
 date: 2016-10-28 07:36:51 -0600
 comments: true
 categories: [node]
-keywords: "node, express, authentication, postgres"
+keywords: "node, express, authentication, postgres, jwts, tokens"
 description: "This tutorial takes a test-first approach to implementing token-based authentication in a NodeJS app using JSON Web Tokens (JWTs)."
 ---
 
@@ -685,6 +685,10 @@ Next time, we will incorporate the client to show the full auth process:
 1. Client receives and stores the token
 1. Client then sends token to server on subsequent requests
 
+*New post is up, showing the client-side workflow: [Token-Based Authentication With Angular](http://mherman.org/blog/2017/01/05/token-based-authentication-with-angular)!*
+
 Feel free to share your comments, questions, or tips in the comments below. The full code can be found in the [node-token-auth](https://github.com/mjhea0/node-token-auth) repository. Cheers!
+
+> Check out the [HN Discussion](https://news.ycombinator.com/item?id=13301105) as well!
 
 Did you enjoy this post? Please share. Sharing is caring.

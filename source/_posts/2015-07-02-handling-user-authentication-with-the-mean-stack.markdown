@@ -42,7 +42,7 @@ First, grab the boilerplate code from the [project repo](https://github.com/mjhe
 $ npm start
 ```
 
-Navigate to [http://localhost:3000/](http://localhost:3000/) and you should see a simple welcome message - "Yo!". Once you're finishing admiring the page, kill the server, and glance over the code within the project folder:
+Navigate to [http://localhost:3000/](http://localhost:3000/) and you should see a simple welcome message - "Yo!". Once you're finished admiring the page, kill the server, and glance over the code within the project folder:
 
 ``` sh
 ├── client
