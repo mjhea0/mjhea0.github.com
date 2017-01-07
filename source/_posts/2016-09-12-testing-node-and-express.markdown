@@ -1208,6 +1208,6 @@ Run the tests again. They all should still pass! Notice how we were able to refa
 
 Turn back to the objectives. Read each aloud to yourself. Can you put each one into action?
 
-The testing process may seem daunting and unnecessary at first, but you will soon just how necessary they are as your projects grow and become more complex. Continue to practice testing by incorporating tests whenever you begin a new project.
+The testing process may seem daunting and unnecessary at first, but you will see just how necessary it is as your projects grow and become more complex. Continue to practice by incorporating tests whenever you begin a new project.
 
 The full code can be found in the [express-testing-mocha-knex](https://github.com/mjhea0/express-testing-mocha-knex) repository.
