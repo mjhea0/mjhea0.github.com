@@ -21,6 +21,8 @@ This tutorial takes a test-first approach to implementing authentication in a No
 1. Auth Routes
 1. Validation
 
+> Updated *January 20th, 2017* - Refactored the `login()` route handler
+
 ## Objectives
 
 By the end of this tutorial, you will be able to...
@@ -489,7 +491,12 @@ router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) { handleResponse(res, 500, 'error'); }
     if (!user) { handleResponse(res, 404, 'User not found'); }
-    if (user) { handleResponse(res, 200, 'success'); }
+    if (user) {
+      req.logIn(user, function (err) {
+        if (err) { handleResponse(res, 500, 'error'); }
+        handleResponse(res, 200, 'success');
+      });
+    }
   })(req, res, next);
 });
 ```
@@ -916,7 +923,12 @@ router.post('/login', authHelpers.loginRedirect, (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) { handleResponse(res, 500, 'error'); }
     if (!user) { handleResponse(res, 404, 'User not found'); }
-    if (user) { handleResponse(res, 200, 'success'); }
+    if (user) {
+      req.logIn(user, function (err) {
+        if (err) { handleResponse(res, 500, 'error'); }
+        handleResponse(res, 200, 'success');
+      });
+    }
   })(req, res, next);
 });
 ```
