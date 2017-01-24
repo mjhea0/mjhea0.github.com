@@ -776,6 +776,6 @@ You've reached the end. Now what?
 
 1. You should handle those errors in each `.catch`.
 1. Check out [Satellizer](https://github.com/sahat/satellizer). It's a nice token-based auth module for Angular. You can find sample code in the following repos - [mean-token-auth](https://github.com/mjhea0/mean-token-auth) and [mean-social-token-auth](https://github.com/mjhea0/mean-social-token-auth).
-1. Try using this app with a different back-end. Since this app is just the client, you can literally use any language/framework to write a RESTful API in.
+1. Try using this app with a different back-end. Since this app is just the client, you can literally use any language/framework to write a RESTful API in. Want to try Python and Flask? Check out [Token-Based Authentication With Flask](https://realpython.com/blog/python/token-based-authentication-with-flask/). 
 
 Grab the final code from the [angular-token-auth](https://github.com/mjhea0/angular-token-auth) repo. Comment below. Cheers!
