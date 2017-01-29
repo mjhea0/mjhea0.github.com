@@ -58,9 +58,9 @@ Our app will include the following endpoints:
 
 <br>
 
-> This tutorial uses the following tools and technologies - Node.js v[4.x](https://nodejs.org/dist/v4.7.2/), express-generator v4.x, [pg-promise v5.x](https://github.com/vitaly-t/pg-promise), PostgreSQL v[9.4](http://www.postgresql.org/docs/9.4/static/release.html), and [Bluebird v3.x](http://bluebirdjs.com)
+> This tutorial uses the following tools and technologies - Node.js v[4.x](https://nodejs.org/dist/v4.7.2/), [express-generator v4.x](https://github.com/expressjs/generator), [pg-promise v5.x](https://github.com/vitaly-t/pg-promise), PostgreSQL v[9.4](http://www.postgresql.org/docs/9.4/static/release.html), and [Bluebird v3.x](http://bluebirdjs.com)
 
-See [pg-promise-demo](https://github.com/vitaly-t/pg-promise-demo) for a more comprehensive example of setting up your database layer.
+See also [pg-promise-demo](https://github.com/vitaly-t/pg-promise-demo) for a more comprehensive example of setting up your database layer.
 
 ## Project setup
 
