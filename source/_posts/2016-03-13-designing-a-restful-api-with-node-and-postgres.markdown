@@ -128,7 +128,7 @@ Did you notice that we passed an object, `options`, during the initialization pr
 Don't forget to install Bluebird:
 
 ``` sh
-$ npm install bluebird@3.3.4 --save
+$ npm install bluebird@3 --save
 ```
 
 Next, we defined a connection string, and then passed it to the pg-promise instance to create a global connection instance.
