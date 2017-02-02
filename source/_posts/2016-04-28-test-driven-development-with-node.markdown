@@ -789,7 +789,7 @@ With the test written and failing (did you remember to run the tests?), we can w
 Query:
 
 ```javascript
-function add() {
+function add(show) {
   return Shows().insert(show, 'id');
 }
 ```
