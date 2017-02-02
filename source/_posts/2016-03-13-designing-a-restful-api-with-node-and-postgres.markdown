@@ -58,14 +58,16 @@ Our app will include the following endpoints:
 
 <br>
 
-> This tutorial uses the following tools and technologies - Node.js v[4.3.1](https://nodejs.org/en/blog/release/v4.3.1/), express-generator v[4.13.1](https://github.com/expressjs/generator/releases/tag/v4.13.1), pg-promise v[3.2.3](https://github.com/vitaly-t/pg-promise/releases/tag/v.3.2.3), PostgreSQL v[9.4](http://www.postgresql.org/docs/9.4/static/release.html), and Bluebird v[3.3.4](http://bluebirdjs.com)
+> This tutorial uses the following tools and technologies - Node.js v[4.x](https://nodejs.org/dist/v4.7.2/), [express-generator v4.x](https://github.com/expressjs/generator), [pg-promise v5.x](https://github.com/vitaly-t/pg-promise), PostgreSQL v[9.4](http://www.postgresql.org/docs/9.4/static/release.html), and [Bluebird v3.x](http://bluebirdjs.com)
+
+See also [pg-promise-demo](https://github.com/vitaly-t/pg-promise-demo) for a more comprehensive example of setting up your database layer.
 
 ## Project setup
 
 Install the Express Generator (if necessary):
 
 ``` sh
-$ npm install express-generator@4.13.1 -g
+$ npm install express-generator@4 -g
 ```
 
 Create a new project and install the required dependencies:
@@ -87,7 +89,7 @@ Navigate to [http://localhost:3000](http://localhost:3000) in your browser, and 
 Install `pg-promise`
 
 ``` sh
-$ npm install pg-promise@3.2.3 --save
+$ npm install pg-promise@5 --save
 ```
 
 Why `pg-promise` instead of `pg`? Put simply, pg-promise abstracts away much of the difficult, low-level connection management, allowing you to focus on the business logic. Further, the library includes a powerful [query formatting engine](https://www.npmjs.com/package/pg-promise#queries-and-parameters) and support for [automated transactions](https://www.npmjs.com/package/pg-promise#transactions).
@@ -126,7 +128,7 @@ Did you notice that we passed an object, `options`, during the initialization pr
 Don't forget to install Bluebird:
 
 ``` sh
-$ npm install bluebird@3.3.4 --save
+$ npm install bluebird@3 --save
 ```
 
 Next, we defined a connection string, and then passed it to the pg-promise instance to create a global connection instance.
