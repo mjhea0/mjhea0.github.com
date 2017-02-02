@@ -60,8 +60,6 @@ Our app will include the following endpoints:
 
 > This tutorial uses the following tools and technologies - Node.js v[4.x](https://nodejs.org/dist/v4.7.2/), [express-generator v4.x](https://github.com/expressjs/generator), [pg-promise v5.x](https://github.com/vitaly-t/pg-promise), PostgreSQL v[9.4](http://www.postgresql.org/docs/9.4/static/release.html), and [Bluebird v3.x](http://bluebirdjs.com)
 
-See also [pg-promise-demo](https://github.com/vitaly-t/pg-promise-demo) for a more comprehensive example of setting up your database layer.
-
 ## Project setup
 
 Install the Express Generator (if necessary):
@@ -225,17 +223,17 @@ Test the request out in the browser - [http://localhost:3000/api/puppies](http:/
 
 ``` json
 {
-  status: "success",
-  data: [
+  "status": "success",
+  "data": [
     {
-      id: 1,
-      name: "Tyler",
-      breed: "Shih-tzu",
-      age: 3,
-      sex: "M"
+      "id": 1,
+      "name": "Tyler",
+      "breed": "Shih-tzu",
+      "age": 3,
+      "sex": "M"
     }
   ],
-  message: "Retrieved ALL puppies"
+  "message": "Retrieved ALL puppies"
 }
 ```
 
@@ -263,15 +261,15 @@ Again, test in the browser: [http://localhost:3000/api/puppies/1](http://localho
 
 ``` json
 {
-  status: "success",
-  data: {
-    id: 1,
-    name: "Tyler",
-    breed: "Shih-tzu",
-    age: 3,
-    sex: "M"
+  "status": "success",
+  "data": {
+    "id": 1,
+    "name": "Tyler",
+    "breed": "Shih-tzu",
+    "age": 3,
+    "sex": "M"
   },
-  message: "Retrieved ONE puppy"
+  "message": "Retrieved ONE puppy"
 }
 ```
 
@@ -410,3 +408,5 @@ app.use(function(err, req, res, next) {
 We now have a basic RESTful API built with Node, Express, and pg-promise. Be sure to comment below if you have any questions.
 
 Grab the code from the [repo](https://github.com/mjhea0/node-postgres-promises).
+
+> **NOTE**: Check out [pg-promise-demo](https://github.com/vitaly-t/pg-promise-demo) for a more comprehensive example of setting up your database layer.
