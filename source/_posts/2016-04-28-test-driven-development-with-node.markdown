@@ -285,7 +285,7 @@ app.use('/', routes);
 app.use('/api/v1', routes);
 ```
 
-Now every single route in that file will be prefixed with '/api/v1' Try it out. Fire up the server, and navigate to [http://localhost:3000/api/v1shows](http://localhost:3000/api/v1/shows). You should see the string 'send shows back' in the browser.
+Now every single route in that file will be prefixed with '/api/v1' Try it out. Fire up the server, and navigate to [http://localhost:3000/api/v1/shows](http://localhost:3000/api/v1/shows). You should see the string 'send shows back' in the browser.
 
 Finally, update this line in *app.js*-
 
