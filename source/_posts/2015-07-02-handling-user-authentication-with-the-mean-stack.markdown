@@ -21,7 +21,8 @@ description: "Here we look at how to handle user authentication with the MEAN st
 > Much of this post is ported from [Handling User Authentication with Angular and Flask](https://realpython.com/blog/python/handling-user-authentication-with-angular-and-flask/) from [Real Python](https://realpython.com).
 
 *Updates:*
-- 02/28/2016: Updated to the latest versions of NodeJS, ExpressJS, MongoDB, and AngularJS; added a section on persistant logins.
+
+- 02/28/2016: Updated to the latest versions of NodeJS, ExpressJS, MongoDB, and AngularJS; added a section on persistent logins.
 
 Keep in mind that this solution posed in this tutorial is not the *only* solution to the question at hand, and it may not even be the *right* solution for your situation. Regardless of the solution you implement, it is important to note that since end users have full control of the browser as well as access to the front-end code, sensitive data living in your server-side API must be secure. *In other words, make certain that you implement an authentication strategy on the server-side to protect sensitive API endpoints.*
 

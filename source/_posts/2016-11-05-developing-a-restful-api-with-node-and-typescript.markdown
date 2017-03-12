@@ -18,6 +18,10 @@ We will be using:
 
 Additionally, we will use *[tsconfig.json](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html)* to configure the project, [Gulp](http://gulpjs.com/) to automate [transpilation](https://en.wikipedia.org/wiki/Source-to-source_compiler), and [d.ts](https://github.com/typings/typings) for managing typings with `npm`.
 
+Updates:
+
+  - 03/12/2017: Updated the *gulpfile.js* and *package.json*
+
 ## Contents
 
 1. Project Setup
@@ -130,6 +134,7 @@ Add the code:
 ```javascript
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
+const JSON_FILES = ['src/*.json', 'src/**/*.json'];
 
 // pull in the project TypeScript config
 const tsProject = ts.createProject('tsconfig.json');
@@ -144,7 +149,12 @@ gulp.task('watch', ['scripts'], () => {
   gulp.watch('src/**/*.ts', ['scripts']);
 });
 
-gulp.task('default', ['watch']);
+gulp.task('assets', function() {
+  return gulp.src(JSON_FILES)
+  .pipe(gulp.dest('dist'));
+});
+
+gulp.task('default', ['watch', 'assets']);
 ```
 
 To test this out, remove *dist/test.js* and run `gulp` from the project root. You'll see Gulp start up, and *test.js* should be compiled again and placed into "dist". Awesome! Our project is now configured.
@@ -366,7 +376,7 @@ Now, in `package.json`, add a `test` script to run mocha with the `ts-node` regi
 ```json
 "scripts": {
   "start": "node dist/index.js",
-  "test": "mocha --reporter spec --compilers ts:ts-node/register test/**/*.test.ts"
+  "test": "mocha --reporter spec --compilers ts:ts-node/register 'test/**/*.test.ts'"
 },
 ```
 
