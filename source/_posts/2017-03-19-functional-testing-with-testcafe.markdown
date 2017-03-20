@@ -119,7 +119,7 @@ Getting Started
 
 Make sense? No? Continue to run the test and review the above steps until it does. Make sure you understand what's happening before moving on.
 
-## Tests
+## Writing Tests
 
 Add a new file called *jobs.js* to the "tests" folder:
 
