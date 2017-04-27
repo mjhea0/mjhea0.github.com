@@ -213,7 +213,7 @@ def collection():
         pass  # Handle POST request
 
 
-@app.route('/api/song<song_id>', methods=['GET', 'PUT', 'DELETE'])
+@app.route('/api/song/<song_id>', methods=['GET', 'PUT', 'DELETE'])
 def resource(song_id):
     if request.method == 'GET':
         pass  # Handle GET single request
