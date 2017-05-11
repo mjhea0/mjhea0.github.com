@@ -26,6 +26,8 @@ This post assumes prior knowledge of the following topics. Refer to the resource
 | Docker Compose   | [Get started with Docker Compose](https://docs.docker.com/compose/gettingstarted/) |
 | Node/Express API | [Testing Node and Express](http://mherman.org/blog/2016/09/12/testing-node-and-express) |
 
+> **NOTE**: Looking for a more advanced implementation with React? Check out my other post - [Developing Microservices - Node, React, and Docker](ADD URL).
+
 ## Contents
 
 1. Objectives
@@ -54,7 +56,7 @@ By the end of this tutorial, you should be able to...
 
 ## Project Setup
 
-Start by cloning the base project and the checking out the first tag:
+Start by cloning the base project and then checking out the first tag:
 
 ```sh
 $ git clone https://github.com/mjhea0/node-docker-api
@@ -168,7 +170,7 @@ version: '2.1'
 
 > **NOTE:** Why 2.1? [Answer](https://docs.docker.com/compose/compose-file/compose-file-v2/#version-21).
 
-Then add a *.dockerignore* to the "services/locations", ""services/locations/src/db", "services/users", ""services/users/src/db", "tests", and "web" directories:
+Then add a *.dockerignore* to the "services/locations", "services/locations/src/db", "services/users", "services/users/src/db", "tests", and "web" directories:
 
 ```
 .git
@@ -600,4 +602,4 @@ What's next?
 1. **Error handling**: Right now errors are being thrown, but there really isn't much info in the response as to why, which makes debugging difficult. Be a good citizen and handle your errors properly since you may not always have access to the code base from a different service.
 1. **DRY**: The code could be refactored in places, especially the tests.
 
-Grab the final code from the [node-docker-api](https://github.com/mjhea0/node-docker-api) repo. Comment below. Cheers
+Grab the final code from the [node-docker-api](https://github.com/mjhea0/node-docker-api) repo. Comment below. Cheers!
