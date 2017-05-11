@@ -26,7 +26,7 @@ This post assumes prior knowledge of the following topics. Refer to the resource
 | Docker Compose   | [Get started with Docker Compose](https://docs.docker.com/compose/gettingstarted/) |
 | Node/Express API | [Testing Node and Express](http://mherman.org/blog/2016/09/12/testing-node-and-express) |
 
-> **NOTE**: Looking for a more advanced implementation with React? Check out my other post - [Developing Microservices - Node, React, and Docker](ADD URL).
+> **NOTE**: Looking for a more advanced implementation with React? Check out my other post - [Developing Microservices - Node, React, and Docker](http://mherman.org/blog/2017/05/11/developing-microservices-node-react-docker).
 
 ## Contents
 
