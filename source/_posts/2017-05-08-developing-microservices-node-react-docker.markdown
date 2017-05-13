@@ -650,11 +650,11 @@ testcafe firefox tests/**/*.js
 To simplify the test workflow, add a *test.sh* file to the project root:
 
 ```sh
-#!/bin/sh
+#!/bin/bash
 
 fails=''
 
-function inspect() {
+inspect() {
   if [ $1 -ne 0 ] ; then
     fails="${fails} $2"
   fi
@@ -669,7 +669,7 @@ inspect $? movies-service
 testcafe firefox tests/**/*.js
 inspect $? e2e
 
-if [[ -n "${fails}" ]];
+if [ -n "${fails}" ];
   then
     echo "Tests failed: ${fails}"
     exit 1
