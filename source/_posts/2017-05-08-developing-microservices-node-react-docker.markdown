@@ -105,6 +105,7 @@ Before we add Docker, be sure to review the code so that you have a basic unders
 
 - Navigate to "services/users"
 - `npm install`
+- update the `start` script within *package.json* to `"gulp --gulpfile gulpfile.js"`
 - `npm start`
 - Open [http://localhost:3000/users/ping](http://localhost:3000/users/ping) in your browser
 
@@ -112,6 +113,7 @@ Before we add Docker, be sure to review the code so that you have a basic unders
 
 - Navigate to "services/movies"
 - `npm install`
+- update the `start` script within *package.json* to `"gulp --gulpfile gulpfile.js"`
 - `npm start`
 - Open [http://localhost:3001/movies/ping](http://localhost:3001/movies/ping) in your browser
 
