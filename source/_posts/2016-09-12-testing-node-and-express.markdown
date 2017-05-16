@@ -1086,7 +1086,9 @@ function validateUserResources(req, res, next) {
   }
 }
 
-module.exports = validateUserResources;
+module.exports = {
+  validateUserResources
+};
 ```
 
 Here, with express-validator, parameters are validated using either `req.checkParams` or `req.checkBody` and then errors are aggregated together with `req.validationErrors()`.
