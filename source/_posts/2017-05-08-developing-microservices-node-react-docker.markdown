@@ -617,7 +617,7 @@ Continue to experiment with adding and updating the React app until you feel com
 
 ## Test Setup
 
-Thus far we've only tested each individual microservice with unit and integration tests. Let's turn our attention to functional, end-to-end tests to test the entire system. For this, we'll use [TestCafe](https://testcafe.devexpress.com/).
+Thus far we've only tested each individual microservice with unit and integration tests. Let's turn our attention to functional, end-to-end tests to test the entire system. For this, we'll use [TestCafe](https://devexpress.github.io/testcafe/).
 
 > **NOTE:** Don't want to use TestCafe? Check out the [code](https://github.com/mjhea0/node-docker-api/tree/master/tests) for using Mocha, Chai, Request, and Cheerio (all within a container) for testing.
 
