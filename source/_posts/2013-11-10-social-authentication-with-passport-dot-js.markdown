@@ -10,22 +10,24 @@ categories: node
 **In this post we'll add social authentication - Facebook, Twitter, Github, Google, and Instagram - to Node.js.**
 
 **Updates**:
-  - *November 27th, 2015* - Refactored and added Instagram Authentication
+
+- *November 27th, 2015* - Refactored and added Instagram Authentication
 
 This post uses the following dependencies:
-  - chai v3.4.1
-  - express v3.3.4
-  - jade v0.34.1
-  - mocha v2.3.4
-  - mongodb v1.3.23
-  - mongoose v3.8.37
-  - passport v0.3.2
-  - passport-facebook v2.0.0
-  - passport-github2 v0.1.9
-  - passport-google-oauth2 v0.1.6
-  - passport-instagram v1.0.0
-  - passport-twitter v1.0.3
-  - should v7.1
+
+- chai v3.4.1
+- express v3.3.4
+- jade v0.34.1
+- mocha v2.3.4
+- mongodb v1.3.23
+- mongoose v3.8.37
+- passport v0.3.2
+- passport-facebook v2.0.0
+- passport-github2 v0.1.9
+- passport-google-oauth2 v0.1.6
+- passport-instagram v1.0.0
+- passport-twitter v1.0.3
+- should v7.1
 
 ## Setup
 
