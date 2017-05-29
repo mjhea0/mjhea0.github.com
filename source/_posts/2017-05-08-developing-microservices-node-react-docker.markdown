@@ -381,7 +381,13 @@ RUN npm install react-scripts@0.9.5 -g
 CMD ["npm", "start"]
 ```
 
-And update the *docker-compose.yml* file like so:
+As of 05/10/2017 the [OMDb API](http://www.omdbapi.com/) is private, so you have to donate at least $1 to gain access. Once you have an API Key, update the `API_URL` in *services/web/src/App.jsx*:
+
+```javascript
+const API_URL = 'http://www.omdbapi.com/?apikey=addyourkey&s='
+```
+
+Then update the *docker-compose.yml* file like so:
 
 ```
 web-service:
@@ -410,7 +416,6 @@ $ docker-compose up --build -d web-service
 ```
 
 > **NOTE:** To avoid dealing with too much configuration (babel and webpack), the React app uses [Create React App](https://github.com/facebookincubator/create-react-app).
-
 
 Open your browser and navigate to [http://localhost:3007](http://localhost:3007). You should see the login page:
 
