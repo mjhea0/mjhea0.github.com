@@ -1,11 +1,13 @@
 ---
 layout: page
-title: "Talks"
+title: "Talks and Tranings"
 footer: true
 sidebar: false
 ---
 
-Here's a list of talks I've given over the years...
+Here's a list of talks and trainings I've given over the years...
+
+### Talks
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
@@ -13,15 +15,20 @@ Here's a list of talks I've given over the years...
 | May 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [HTML5 Denver Users Group][4] |
 | April 26, 2017  | [Flask for Node Developers][9] | [Galvanize Guest Speaker][8] |
 | April 12, 2017  | [Developing and Testing Microservices With Docker][7] | [Galvanize Guest Speaker][8] |
-| March 21, 2017  | [Python Web Development for Data Scientists - part 5][12] | [PyData Denver Meetup][13] |
 | March 20, 2017  | [End-to-End Testing with TestCafe][1] | [Denver JavaScript Meetup][2] |
+| March 10, 2015   | [Rapid Development with Flask and Docker][10] | [Boulder Python Meetup group][11] |
+| March 5, 2015   | [Node on Docker - from development to delivery][5] | [NodeJS Denver/Boulder Meetup group][6] |
+| February 8, 2015   | [Docker in Action - fitter, happier, more productive][14] | [PyTennessee 2017][15] |
+
+### Trainings
+
+| Date            | Title                                 | Event |
+|-----------------|---------------------------------------|-------|
+| March 21, 2017  | [Python Web Development for Data Scientists - part 5][12] | [PyData Denver Meetup][13] |
 | March 7, 2017  | [Python Web Development for Data Scientists - part 4][12] | [PyData Denver Meetup][13] |
 | February 21, 2017  | [Python Web Development for Data Scientists - part 3][12] | [PyData Denver Meetup][13] |
 | February 7, 2017  | [Python Web Development for Data Scientists - part 2][12] | [PyData Denver Meetup][13] |
 | January 24, 2017  | [Python Web Development for Data Scientists - part 1][12] | [PyData Denver Meetup][13] |
-| March 10, 2015   | [Rapid Development with Flask and Docker][10] | [Boulder Python Meetup group][11] |
-| March 5, 2015   | [Node on Docker - from development to delivery][5] | [NodeJS Denver/Boulder Meetup group][6] |
-| February 8, 2015   | [Docker in Action - fitter, happier, more productive][14] | [PyTennessee 2017][15] |
 
 [1]: http://mherman.org/testcafe-example
 [2]: https://www.meetup.com/HTML5-Denver-Users-Group/
