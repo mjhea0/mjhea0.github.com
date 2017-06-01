@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Talks and Tranings"
+title: "Talks and Trainings"
 footer: true
 sidebar: false
 ---
@@ -22,13 +22,11 @@ Here's a list of talks and trainings I've given over the years...
 
 ### Trainings
 
-| Date            | Title                                 | Event |
+| Date(s)            | Title                                 | Event/Venue |
 |-----------------|---------------------------------------|-------|
-| March 21, 2017  | [Python Web Development for Data Scientists - part 5][12] | [PyData Denver Meetup][13] |
-| March 7, 2017  | [Python Web Development for Data Scientists - part 4][12] | [PyData Denver Meetup][13] |
-| February 21, 2017  | [Python Web Development for Data Scientists - part 3][12] | [PyData Denver Meetup][13] |
-| February 7, 2017  | [Python Web Development for Data Scientists - part 2][12] | [PyData Denver Meetup][13] |
-| January 24, 2017  | [Python Web Development for Data Scientists - part 1][12] | [PyData Denver Meetup][13] |
+| February - April 2017  | [Node Workshop][18] (6 sessions) | N/A |
+| January March 2017  | [Python Web Development for Data Scientists][12] (5 sessions) | [PyData Denver Meetup][13] |
+| January - February 2017  | [Node Workshop][17] (4 sessions) | Twitter Boulder |
 
 [1]: http://mherman.org/testcafe-example
 [2]: https://www.meetup.com/HTML5-Denver-Users-Group/
@@ -46,3 +44,5 @@ Here's a list of talks and trainings I've given over the years...
 [14]: http://realpython.github.io/fitter-happier-docker/
 [15]: https://www.pytennessee.org/
 [16]: http://mherman.org/node-workshop/slides/react-intro
+[17]: https://github.com/mjhea0/node-workshop/tree/master/w1
+[18]: https://github.com/mjhea0/node-workshop/tree/master/w2
