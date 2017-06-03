@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| June 2, 2017    | [Introduction to React][16] | [Galvanize Guest Speaker][8] |
 | May 26, 2017    | [Introduction to React][16] | [Galvanize Guest Speaker][8] |
 | May 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [HTML5 Denver Users Group][4] |
 | April 26, 2017  | [Flask for Node Developers][9] | [Galvanize Guest Speaker][8] |
