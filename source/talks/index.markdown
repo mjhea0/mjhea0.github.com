@@ -11,12 +11,14 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| June 9, 2017    | [Introduction to Redux][19] | [Galvanize Guest Speaker][8] |
 | June 2, 2017    | [Introduction to React][16] | [Galvanize Guest Speaker][8] |
 | May 26, 2017    | [Introduction to React][16] | [Galvanize Guest Speaker][8] |
 | May 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [HTML5 Denver Users Group][4] |
 | April 26, 2017  | [Flask for Node Developers][9] | [Galvanize Guest Speaker][8] |
 | April 12, 2017  | [Developing and Testing Microservices With Docker][7] | [Galvanize Guest Speaker][8] |
 | March 20, 2017  | [End-to-End Testing with TestCafe][1] | [Denver JavaScript Meetup][2] |
+| March 11, 2017  | [Learning to Learn][20] | [Weekly Python Chat][21] |
 | March 10, 2015   | [Rapid Development with Flask and Docker][10] | [Boulder Python Meetup group][11] |
 | March 5, 2015   | [Node on Docker - from development to delivery][5] | [NodeJS Denver/Boulder Meetup group][6] |
 | February 8, 2015   | [Docker in Action - fitter, happier, more productive][14] | [PyTennessee 2017][15] |
@@ -47,3 +49,6 @@ Here's a list of talks and trainings I've given over the years...
 [16]: http://mherman.org/node-workshop/slides/react-intro
 [17]: https://github.com/mjhea0/node-workshop/tree/master/w1
 [18]: https://github.com/mjhea0/node-workshop/tree/master/w2
+[19]: http://mherman.org/node-workshop/slides/redux-intro
+[20]: https://www.crowdcast.io/e/learning
+[21]: http://www.weeklypython.chat/
