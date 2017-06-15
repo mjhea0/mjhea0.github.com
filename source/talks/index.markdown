@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| June 12, 2017  | [Developing React with Docker][22] | [ReactJS-Denver][23] |
 | June 9, 2017    | [Introduction to Redux][19] | [Galvanize Guest Speaker][8] |
 | June 2, 2017    | [Introduction to React][16] | [Galvanize Guest Speaker][8] |
 | May 26, 2017    | [Introduction to React][16] | [Galvanize Guest Speaker][8] |
@@ -52,3 +53,5 @@ Here's a list of talks and trainings I've given over the years...
 [19]: http://mherman.org/node-workshop/slides/redux-intro
 [20]: https://www.crowdcast.io/e/learning
 [21]: http://www.weeklypython.chat/
+[22]: http://mherman.org/node-workshop/slides/react-docker
+[23]: https://www.meetup.com/ReactJS-Denver/
