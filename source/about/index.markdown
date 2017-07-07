@@ -7,7 +7,11 @@ sidebar: false
 
 After freelancing for nearly six years, I am now (as of June 2015) a Lead Instructor at [Galvanize](http://www.galvanize.com/). I’ve worked in various industries, companies large and small, wearing multiple hats. My languages/weapons of choice are Python, Ruby, and JavaScript. Besides development, I enjoy building financial models, tech writing, content marketing, and teaching.
 
+#### Quotes
+
 *Programming languages are all different ways of expressing the same thing. A software developer should be able to understand all of them.*
+
+*Open source software is free as in free house. If you want to fix or improve something, either learn to do it yourself or pay a contractor.*
 
 #### Major Projects
 
