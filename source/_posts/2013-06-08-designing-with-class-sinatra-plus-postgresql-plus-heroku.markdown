@@ -173,7 +173,7 @@ When you create a new post, you only need to specify the title and body; the rem
 
 ### Use tux in order to add some data to the database.
 
-``` sh
+```
 $ tux
 >> Post.create(title: 'Testing the title', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum venenatis eros eget lectus hendrerit, sed mattis quam pretium. Aenean accumsan eget leo non cursus. Aliquam sagittis luctus mi, quis suscipit neque venenatis et. Pellentesque vitae elementum diam. Quisque iaculis eget neque mattis fermentum. Donec et luctus eros. Suspendisse egestas pharetra elit vel bibendum.')
 >>
@@ -212,7 +212,7 @@ get "/" do
 end
 ```
 
-This maps the `/` url to the template *index.html* (or *index.erb* in Ruby terms), found in ""views/posts/" directory.
+This maps the `/` url to the template *index.html* (or *index.erb* in Ruby terms), found in "views/posts/" directory.
 
 > Note: The *app.rb* file is the controller in MVC-style architecture.
 
@@ -312,7 +312,7 @@ end
 
 Template (called *create.erb*):
 
-``` html
+```html
 <h2>Create Post</h2>
 <br/>
 <form action="/posts" method="post"role="form">
@@ -741,14 +741,4 @@ Links:
 
 ## Add a captcha
 
-Help elimiante spam by adding a captcha to the new post form. View the blog post - [Adding a Captcha to Sinatra to Minimize Spam](http://mherman.org/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/).
-
-
-
-
-
-
-
-
-
-
+Help eliminate spam by adding a captcha to the new post form. View the blog post - [Adding a Captcha to Sinatra to Minimize Spam](http://mherman.org/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/).

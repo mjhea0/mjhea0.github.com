@@ -11,14 +11,17 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| July 27, 2017   | [Front-end Face-Off - Angular vs React vs Ember][26] | [NodeJS Denver/Boulder Meetup group][6] |
+| July 26, 2017   | [Docker Workshop: What's under the Hood?][25] | [NodeJS Denver/Boulder Meetup group][6] |
+| July 11, 2017   | [Developing and Testing Microservices with Docker, Flask, and React][24] | [Boulder Python Meetup group][11] |
 | June 12, 2017  | [Developing React with Docker][22] | [ReactJS-Denver][23] |
 | June 9, 2017    | [Introduction to Redux][19] | [Galvanize Guest Speaker][8] |
 | June 2, 2017    | [Introduction to React][16] | [Galvanize Guest Speaker][8] |
 | May 26, 2017    | [Introduction to React][16] | [Galvanize Guest Speaker][8] |
-| May 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [HTML5 Denver Users Group][4] |
+| May 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [Denver JavaScript Meetup][4] |
 | April 26, 2017  | [Flask for Node Developers][9] | [Galvanize Guest Speaker][8] |
 | April 12, 2017  | [Developing and Testing Microservices With Docker][7] | [Galvanize Guest Speaker][8] |
-| March 20, 2017  | [End-to-End Testing with TestCafe][1] | [Denver JavaScript Meetup][2] |
+| March 20, 2017  | [HTML5 Denver Users Group][2]  | [Denver JavaScript Meetup][2] |
 | March 11, 2017  | [Learning to Learn][20] | [Weekly Python Chat][21] |
 | March 10, 2015   | [Rapid Development with Flask and Docker][10] | [Boulder Python Meetup group][11] |
 | March 5, 2015   | [Node on Docker - from development to delivery][5] | [NodeJS Denver/Boulder Meetup group][6] |
@@ -55,3 +58,6 @@ Here's a list of talks and trainings I've given over the years...
 [21]: http://www.weeklypython.chat/
 [22]: http://mherman.org/node-workshop/slides/react-docker
 [23]: https://www.meetup.com/ReactJS-Denver/
+[24]: http://mherman.org/presentations/microservices-flask-docker/
+[25]: http://mherman.org/docker-workshop
+[26]: http://mherman.org/presentations/front-end-face-off
