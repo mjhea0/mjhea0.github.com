@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| August 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [Develop Denver][27] |
 | July 27, 2017   | [Front-end Face-Off - Angular vs React vs Ember][26] | [NodeJS Denver/Boulder Meetup group][6] |
 | July 26, 2017   | [Docker Workshop: What's under the Hood?][25] | [NodeJS Denver/Boulder Meetup group][6] |
 | July 11, 2017   | [Developing and Testing Microservices with Docker, Flask, and React][24] | [Boulder Python Meetup group][11] |
@@ -61,3 +62,4 @@ Here's a list of talks and trainings I've given over the years...
 [24]: http://mherman.org/presentations/microservices-flask-docker/
 [25]: http://mherman.org/docker-workshop
 [26]: http://mherman.org/presentations/front-end-face-off
+[27]: https://developdenver.org/
