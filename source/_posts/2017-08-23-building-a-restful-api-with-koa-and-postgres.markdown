@@ -1115,4 +1115,6 @@ Add end-to-end tests with [TestCafe](http://mherman.org/blog/2017/03/19/function
 
 Finally, this tutorial took advantage of async/await functions in Koa version 2. If you're interested in comparing this pattern to the generator pattern found in Koa 1, review the code in the [Koa API](https://github.com/mjhea0/koa-api) repo.
 
-Grab the final code from the [node-koa-api](https://github.com/mjhea0/node-koa-api) repo. Please add questions and/or comments below. Cheers!
+Grab the final code from the [node-koa-api](https://github.com/mjhea0/node-koa-api) repo. There's [slides](http://mherman.org/presentations/node-koa-api) as well.
+
+Please add questions and/or comments below. Cheers!

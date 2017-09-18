@@ -479,7 +479,7 @@ Set up for the movies service is nearly the same as the users service. Try this 
     - apply migrations and seeds
     - test
 
-> **NOTE:** Need help? Grab the code from the [microservices-movies](https://github.com/mjhea0/microservice-movies) repo.
+> **NOTE:** Need help? Grab the code from the [v2](https://github.com/mjhea0/microservice-movies/releases/tag/v2) tag of the [microservice-movies](https://github.com/mjhea0/microservice-movies) repo.
 
 The movies database image should take much less time to build than the users database. Why?
 
@@ -758,5 +758,6 @@ What's next?
 1. *React App* - The React app could use some love. Add styles. Fix bugs. Update the flash messages so that only one is displayed at a time. Write tests. Build new features. Add Redux. The sky's the limit. Contact me if you'd like to pair!
 1. *Swagger* - Add JWT-based auth and add additional endpoints from the movies service.
 1. *Dockerfiles* - Read [Best practices for writing Dockerfiles](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/), by the Docker team, and refactor as necessary.
+1. *Production* - Want to deploy on AWS? Check out the [On-Demand Environments With Docker and AWS ECS](http://mherman.org/blog/2017/09/18/on-demand-test-environments-with-docker-and-aws-ecs) blog post.
 
-Grab the final code from the [microservice-movies](https://github.com/mjhea0/microservice-movies) repo. Please add questions and/or comments below. There’s slides too! Check them out [here](http://mherman.org/microservice-movies), if interested.
+Grab the final code from the [v2](https://github.com/mjhea0/microservice-movies/releases/tag/v2) tag of the [microservice-movies](https://github.com/mjhea0/microservice-movies) repo. Please add questions and/or comments below. There’s slides too! Check them out [here](http://mherman.org/microservice-movies), if interested.
