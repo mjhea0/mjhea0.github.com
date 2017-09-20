@@ -5,9 +5,9 @@ footer: true
 sidebar: false
 ---
 
-After freelancing for nearly six years, I am now (as of June 2015) a Lead Instructor at [Galvanize](http://www.galvanize.com/). I’ve worked in various industries, companies large and small, wearing multiple hats. My languages/weapons of choice are Python, Ruby, and JavaScript. Besides development, I enjoy building financial models, tech writing, content marketing, and teaching.
+I’ve worked in various industries, companies large and small, wearing multiple hats. My languages/weapons of choice are Python and JavaScript. Besides development, I enjoy building financial models, tech writing, content marketing, and teaching.
 
-[Resume](http://mherman.org/herman-resume.json)
+You can view my full resume in JSON @ [http://mherman.org/herman-resume.json](http://mherman.org/herman-resume.json).
 
 #### Quotes
 
@@ -18,6 +18,7 @@ After freelancing for nearly six years, I am now (as of June 2015) a Lead Instru
 #### Major Projects
 
 1. [Real Python](http://www.realpython.com)
+1. [Microservices with Docker, Flask, and React](http://testdriven.io/)
 1. [Starter Financial Model](http://www.starterfinancialmodel.com/)
 1. [GoScrape](http://www.goscrape.com)
 1. [DiscoverFlask](http://discoverflask.com)
@@ -32,9 +33,9 @@ Email: michael at mherman dot org
 
 Connect with me on [LinkedIn](http://www.linkedin.com/pub/michael-herman/3b/a94/4), [GitHub](https://github.com/mjhea0/), and [YouTube](http://www.youtube.com/hermanmu). Also, check out [this](https://gist.github.com/mjhea0/6763725) ever growing list of personal and professional projects. Cheers!
 
-**I am *NOT* currently accepting new projects.** Tech recruiters: please use "i am the walrus" in your cold email so I know you actually read this.
+I am *NOT* currently accepting new projects.
 
-[![pair-with-me](http://pairprogramwith.me/badge.png "Pair program with me!")](mailto:michael@mherman.org)
+Tech recruiters: please use "i am the walrus" in your cold email so I know you actually read this.
 
 #### Articles I've written
 
