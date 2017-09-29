@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| September 27, 2017 | [Docker Workshop: What's under the Hood?][25] | [Colorado Springs Docker Meetup][28] |
 | August 22, 2017    | [Building a RESTful API With Koa][29] | [Fort Collins Coders Meetup][28] |
 | August 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [Develop Denver][27] |
 | July 27, 2017   | [Front-end Face-Off - Angular vs React vs Ember][26] | [NodeJS Denver/Boulder Meetup][6] |
@@ -66,3 +67,4 @@ Here's a list of talks and trainings I've given over the years...
 [27]: https://developdenver.org/
 [28]: https://www.meetup.com/Fort-Collins-Coders/
 [29]: http://mherman.org/presentations/node-koa-api
+[30]: https://www.meetup.com/Docker-Colorado-Springs
