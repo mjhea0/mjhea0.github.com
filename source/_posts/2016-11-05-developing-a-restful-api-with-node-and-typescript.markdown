@@ -157,17 +157,15 @@ gulp.task('assets', function() {
 gulp.task('default', ['watch', 'assets']);
 ```
 
-To test this out, remove *dist/test.js*, add build script in package.json:
+To test this out, remove *dist/test.js*, and then add build script to *package.json*:
 
-```
-  "scripts": {
-       ...
-       "build": "gulp scripts",
-       ...
-  },
+```json
+"scripts": {
+  "build": "gulp scripts"
+},
 ```
 
-and run `npm run build` or just execute `gulp scripts` from the project root. You'll see Gulp start up, and *test.js* should be compiled again and placed into "dist". Awesome! Our project is now configured.
+Then, run `npm run build` from the project root. You'll see Gulp start up and *test.js* should be compiled again and placed into "dist". Awesome! Our project is now configured.
 
 Let's move on to working with Express...
 
@@ -256,7 +254,8 @@ Since this file will start the app, let's also add a `"start"` script to `packag
 
 ```json
 "scripts": {
-  "start": "node dist/index.js"
+  "start": "node dist/index.js",
+  "build": "gulp scripts"
 },
 ```
 
@@ -386,7 +385,8 @@ Now, in `package.json`, add a `test` script to run mocha with the `ts-node` regi
 ```json
 "scripts": {
   "start": "node dist/index.js",
-  "test": "mocha --reporter spec --compilers ts:ts-node/register 'test/**/*.test.ts'"
+  "test": "mocha --reporter spec --compilers ts:ts-node/register 'test/**/*.test.ts'",
+  "build": "gulp scripts"
 },
 ```
 
