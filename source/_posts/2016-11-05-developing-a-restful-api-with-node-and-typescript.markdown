@@ -157,7 +157,17 @@ gulp.task('assets', function() {
 gulp.task('default', ['watch', 'assets']);
 ```
 
-To test this out, remove *dist/test.js* and run `gulp` from the project root. You'll see Gulp start up, and *test.js* should be compiled again and placed into "dist". Awesome! Our project is now configured.
+To test this out, remove *dist/test.js*, add build script in package.json:
+
+```
+  "scripts": {
+       ...
+       "build": "gulp scripts",
+       ...
+  },
+```
+
+and run `npm run build` or just execute `gulp scripts` from the project root. You'll see Gulp start up, and *test.js* should be compiled again and placed into "dist". Awesome! Our project is now configured.
 
 Let's move on to working with Express...
 
