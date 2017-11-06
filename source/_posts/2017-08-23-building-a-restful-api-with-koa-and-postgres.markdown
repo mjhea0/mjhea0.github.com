@@ -13,7 +13,7 @@ In this tutorial, you'll learn how to develop a RESTful API with [Koa](http://ko
 > This tutorial requires Node v[7.6.0](https://nodejs.org/en/blog/release/v7.6.0/) or greater.
 
 <div style="text-align:center;">
-  <img src="/images/blog/node-koa-api.png" style="max-width: 90%; border:0; box-shadow: none;" alt="architecture">
+  <img src="/images/blog/node-koa-api.png" style="max-width: 90%; border:0; box-shadow: none;" alt="node koa">
 </div><br>
 
 #### NPM Dependencies
