@@ -11,7 +11,8 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
-| September 27, 2017 | [Docker Workshop: What's under the Hood?][25] | [Colorado Springs Docker Meetup][28] |
+| November 15, 2017 | [Docker on AWS: from EC2 to ECS][31] | [AWS Greater Denver][32] |
+| September 27, 2017 | [Docker Workshop: What's under the Hood?][25] | [Colorado Springs Docker Meetup][30] |
 | August 22, 2017    | [Building a RESTful API With Koa][29] | [Fort Collins Coders Meetup][28] |
 | August 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [Develop Denver][27] |
 | July 27, 2017   | [Front-end Face-Off - Angular vs React vs Ember][26] | [NodeJS Denver/Boulder Meetup][6] |
@@ -24,7 +25,7 @@ Here's a list of talks and trainings I've given over the years...
 | May 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [Denver JavaScript Meetup][4] |
 | April 26, 2017  | [Flask for Node Developers][9] | [Galvanize Guest Speaker][8] |
 | April 12, 2017  | [Developing and Testing Microservices With Docker][7] | [Galvanize Guest Speaker][8] |
-| March 20, 2017  | [HTML5 Denver Users Group][2]  | [Denver JavaScript Meetup][2] |
+| March 20, 2017  | [End-to-End Testing with TestCafe][1]  | [HTML5 Denver Users Group][2] |
 | March 11, 2017  | [Learning to Learn][20] | [Weekly Python Chat][21] |
 | March 10, 2015   | [Rapid Development with Flask and Docker][10] | [Boulder Python Meetup][11] |
 | March 5, 2015   | [Node on Docker - from development to delivery][5] | [NodeJS Denver/Boulder Meetup][6] |
@@ -68,3 +69,5 @@ Here's a list of talks and trainings I've given over the years...
 [28]: https://www.meetup.com/Fort-Collins-Coders/
 [29]: http://mherman.org/presentations/node-koa-api
 [30]: https://www.meetup.com/Docker-Colorado-Springs
+[31]: http://mherman.org/presentations/microservice-ping-pong
+[32]: https://www.meetup.com/AWS-Boulder-Denver/
