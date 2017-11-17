@@ -5,7 +5,7 @@ date: 2017-11-16 08:23:24 -0700
 comments: true
 categories: [aws]
 keywords: "aws, aws ecs, amazon ecs, docker, amazon ec2 container service, microservice, microservices, node, react, reactjs, javascript, containerization, orchestration, ec2"
-description: "This tutorial details how to spin up reproducible, on-demand test environments with Docker, Amazon EC2 Container Service (ECS), and Circle CI."
+description: "This tutorial details how to take a number of containerized microservices running on a single EC2 instance and scale them out to Amazon's container orchestration service, EC2 Container Service (ECS)."
 ---
 
 In this post, we'll take a number of containerized microservices running on a single EC2 instance and scale them out to Amazon's container orchestration service, [EC2 Container Service](https://aws.amazon.com/ecs/) (ECS).
@@ -30,7 +30,7 @@ We'll be using the following tools...
 1. Project Setup
 1. Containerization
 1. Orchestration
-1. Conclusion
+1. Next Steps
 
 ## Prerequisites
 
