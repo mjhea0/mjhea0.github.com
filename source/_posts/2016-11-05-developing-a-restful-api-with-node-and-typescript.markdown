@@ -377,7 +377,7 @@ If we write out tests in *.ts* files, we'll need to make sure that Mocha can und
 Start by installing `ts-node`:
 
 ```sh
-$ npm install ts-node@1.6.1 --save-dev
+$ npm install ts-node@3.3.0 --save-dev
 ```
 
 Now, in `package.json`, add a `test` script to run mocha with the `ts-node` register:
