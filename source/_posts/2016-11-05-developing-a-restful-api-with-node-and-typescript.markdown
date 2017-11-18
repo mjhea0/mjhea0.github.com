@@ -20,6 +20,7 @@ Additionally, we will use *[tsconfig.json](https://www.typescriptlang.org/docs/h
 
 Updates:
 
+  - 11/18/2017: Updated *ts-node* to the latest version
   - 03/12/2017: Updated the *gulpfile.js* and *package.json*
 
 ## Contents
