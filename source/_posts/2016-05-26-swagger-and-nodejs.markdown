@@ -23,6 +23,10 @@ By the end of this tutorial, you will be able to...
 2. Generate a [Swagger Spec](http://swagger.io/specification/) based on an existing RESTful API developed with Node, Express, and Postgres
 - Set up the [Swagger UI](https://github.com/swagger-api/swagger-ui) for testing and interacting with the API
 
+*Updates:*
+
+- 11/20/2017: Updated to align with the Swagger v2.0 spec.
+
 ## Swagger
 
 Swagger is a [specification](http://swagger.io/specification/) for describing, producing, consuming, testing, and visualizing a RESTful API. It provides a number of [tools](http://swagger.io/tools/) for automatically generating documentation based on a given endpoint.
@@ -225,7 +229,7 @@ Add the following code above the previous code:
 ```javascript
 /**
  * @swagger
- * definition:
+ * definitions:
  *   Puppy:
  *     properties:
  *       name:
