@@ -23,6 +23,10 @@ We'll be using the following tools...
 | Docker  | Containerization and distribution      | [17.09.0-ce](https://docs.docker.com/release-notes/docker-ce/#17090-ce-2017-09-26)    |
 | AWS ECS | Container orchestration and management  | [1.15.0](https://github.com/aws/amazon-ecs-agent/releases/tag/v1.15.0) (service agent) |
 
+*Updates:*
+
+- Nov 25, 2017: Updated the Inbound Rules on the Security Group.
+
 ## Contents
 
 1. Prerequisites
@@ -446,7 +450,7 @@ First, Update the "Task Definition Name" to `microservice-ping-pong-client-td` a
 - "Memory Limits (MB)": `300` soft limit
 - "Port mappings": `0` host, `3000` container
 
-> We set the host port for the users service to 0 so that a port is dynamically assigned when the Task is spun up.
+> We set the host port for the client service to 0 so that a port is dynamically assigned when the Task is spun up.
 
 - "Log configuration": It's a good idea to configure logs, via [LogConfiguration](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_LogConfiguration.html), to pipe logs to [CloudWatch](https://console.aws.amazon.com/cloudwatch/). To set up, we need to create a new Log Group. Simply navigate to [CloudWatch](https://console.aws.amazon.com/cloudwatch), click "Logs" on the navigation pane, click the "Actions" drop-down button, and then select "Create log group". Name the group `microservice-ping-pong-client`.
 
@@ -535,7 +539,21 @@ Click "Add to load balancer".
 
 ### Sanity Check
 
-Navigate to the [EC2 Dashboard](https://console.aws.amazon.com/ec2), and click "Target Groups". Make sure `microservice-ping-pong-client-tg` and `microservice-ping-pong-node-tg` have a single registered instance each. Both instances should also be healthy.
+Navigate to the [EC2 Dashboard](https://console.aws.amazon.com/ec2), and click "Target Groups". Make sure `microservice-ping-pong-client-tg` and `microservice-ping-pong-node-tg` have a single registered instance each. Both instances should also be *unhealthy* because they failed their respective health checks.
+
+To get them to pass the health checks, we need to add another inbound rule to the Security Group associated with the containers (which we defined when we configured the Cluster), [allowing](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/create-application-load-balancer.html#alb-sec-group) traffic from the Load Balancer to reach the containers.
+
+### Inbound Rule
+
+Within the [EC2 Dashboard](https://console.aws.amazon.com/ec2), click "Security Groups" and select the Security group associated with the containers, which is the same group assigned to the Load Balancer). Click the "Inbound" tab and then click "Edit"
+
+Add a new rule:
+
+1. "Type": `All traffic`
+1. "Port Range": `0 - 65535`
+1. "Source": Choose `Custom`, then add the Security Group ID
+
+Once added, the next time a container is added to each of the Target Groups, the instance should be *healthy*:
 
 [![aws target groups](/images/blog/docker-aws/target-groups.png)](/images/blog/docker-aws/target-groups.png)
 
@@ -617,6 +635,7 @@ That's it!
 
 1. Add CI/CD (via [Circle CI](http://mherman.org/blog/2017/09/18/on-demand-test-environments-with-docker-and-aws-ecs) or [AWS Lambda](https://medium.com/@YadavPrakshi/automate-zero-downtime-deployment-with-amazon-ecs-and-lambda-c4e49953273d)) and Postgres via RDS ([example](https://testdriven.io/part-five-ec2-relational-database-service/))
 1. Turn back to the feature wish-list. Implement anything not covered.
+1. Did you notice that we didn't add any of the environment variables from the Docker Compose file to the Task Definitions? Why does the app still work? Update the Task Definitions on your own.
 
 ### Resources
 
