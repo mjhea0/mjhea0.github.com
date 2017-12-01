@@ -613,7 +613,7 @@ You can scale up or down at both the Cluster (adding additional EC2 instances) a
 
 To manually scale, navigate to the Cluster and click the "ECS Instances" tab. Then, click the "Scale ECS Instances" button and provide the desired number of instances you'd like to scale up (or down) to.
 
-[![scale by cluster ](/images/blog/docker-aws/service-auto-scaling.png)](/images/blog/docker-aws/scale-by-cluster.png)
+[![scale by cluster ](/images/blog/docker-aws/scale-by-cluster.png)](/images/blog/docker-aws/scale-by-cluster.png)
 
 You can automate this process by setting up an [Auto Scaling Group](http://docs.aws.amazon.com/autoscaling/latest/userguide/AutoScalingGroup.html). Review the [Scaling Container Instances with CloudWatch Alarms](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch_alarm_autoscaling.html) tutorial for more info.
 
