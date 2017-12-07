@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Testing AngularJS with Protractor and Karma - part 1</title>
+  <meta name="description" content="Let&#39;s look at how to test an AngularJS application with Protractor and Karma!">
+  
+    
+    <meta name="keywords" content="angular, angularJS, testing, karma, protractor, e2e tests, unit tests, mocha, chai">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2015/04/09/testing-angularjs-with-protractor-and-karma-part-1/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Testing AngularJS with Protractor and Karma - part 1">
+  <meta name="twitter:description" content="Let&#39;s look at how to test an AngularJS application with Protractor and Karma!">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Testing AngularJS with Protractor and Karma - part 1</h1>
+    
+    <p class="post-meta"><time datetime="2015-04-09T09:06:00-06:00" itemprop="datePublished">Apr 9, 2015</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/angular/">angular</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This article details how to test a simple AngularJS application using unit tests and end-to-end (E2E) tests.</p>
+
+<div style="text-align:center;">
+  <img src="https://raw.githubusercontent.com/mjhea0/angular-testing-tutorial/master/img/angular-karma.png" style="max-width: 100%; border:0;" alt="angular + karma" />
+</div>
+
+<p><br /></p>
+
+<ul>
+  <li>Part 1 - In the first part we’ll look at unit tests, which ensure that small, isolated pieces of code (e.g., a unit) behave as expected <strong>(current)</strong>.</li>
+  <li><a href="http://mherman.org/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2">Part 2</a> - In part two we’ll address E2E tests, which verify that all the pieces of code (units) fit together by simulating the user experience through browser automation.</li>
+</ul>
+
+<p><em>Updates</em>:</p>
+
+<ul>
+  <li>December 3rd, 2016 - bumped dependencies</li>
+</ul>
+
+<p>To accomplish this we will be using <a href="http://karma-runner.github.io/">Karma</a> v0.12.31 (test runner) and <a href="http://chaijs.com/">Chai</a> v2.2.0 (assertions) for the unit tests (along with <a href="https://github.com/karma-runner/karma-mocha">Karma-Mocha</a>) and <a href="http://angular.github.io/protractor/#/">Protractor</a> v2.0.0 for the E2E tests. This article also uses <a href="https://angularjs.org/">Angular</a> v1.3.15. Be sure to take note of all dependencies and their versions in the <em>package.json</em> and <em>bower.json</em> files in the <a href="https://github.com/mjhea0/angular-testing-tutorial">repo</a>.</p>
+
+<p>The repo includes the following tags:</p>
+
+<ol>
+  <li><em>v1</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v1">project boilerplate</a></li>
+  <li><em>v2</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v2">adds testing boilerplate/configuration</a></li>
+  <li><em>v3</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v3">adds unit tests</a></li>
+  <li><em>v4</em> - <a href="https://github.com/mjhea0/angular-testing-tutorial/releases/tag/v4">adds E2E tests</a></li>
+</ol>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#configuration-files" id="markdown-toc-configuration-files">Configuration Files</a></li>
+  <li><a href="#unit-tests" id="markdown-toc-unit-tests">Unit Tests</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Start by cloning the repo, checkout out the first tag, and then install the dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/mjhea0/angular-testing-tutorial.git
+<span class="nv">$ </span><span class="nb">cd </span>angular-testing-tutorial
+<span class="nv">$ </span>git checkout tags/v1
+<span class="nv">$ </span>npm install <span class="o">&amp;&amp;</span> bower install
+</code></pre></div></div>
+
+<p>Run the app:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp
+</code></pre></div></div>
+
+<p>Navigate to <a href="http://localhost:8888">http://localhost:8888</a> to view the live app.</p>
+
+<div style="text-align:center;">
+  <img src="https://raw.githubusercontent.com/mjhea0/angular-testing-tutorial/master/img/live-app.png" style="max-width: 100%; border:0;" alt="angular app" />
+</div>
+
+<p><br /></p>
+
+<p>Test it out. Once done, kill the server and checkout the second tag:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git checkout tags/v2
+</code></pre></div></div>
+
+<p>There should now be a “tests” folder and a few more tasks in the Gulpfile.</p>
+
+<p>Run the unit tests:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp unit
+</code></pre></div></div>
+
+<p>They should pass:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>05:28:02] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+<span class="o">[</span>05:28:02] Starting <span class="s1">'unit'</span>...
+INFO <span class="o">[</span>karma]: Karma v0.12.31 server started at http://localhost:9876/
+INFO <span class="o">[</span>launcher]: Starting browser Chrome
+INFO <span class="o">[</span>Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)]</span>: Connected on socket JBQp0aEyu8KSqUfGoxsd with id 94772581
+Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)</span>: Executed 2 of 2 SUCCESS <span class="o">(</span>0.061 secs / 0.002 secs<span class="o">)</span>
+<span class="o">[</span>05:28:05] Finished <span class="s1">'unit'</span> after 3.23 s
+</code></pre></div></div>
+
+<p>Now for the e2e tests:</p>
+
+<ol>
+  <li>1st terminal window: <code class="highlighter-rouge">webdriver-manager start</code></li>
+  <li>2nd terminal window (within the project directory): <code class="highlighter-rouge">gulp</code></li>
+  <li>3rd terminal window (within the project directory): <code class="highlighter-rouge">gulp e2e</code></li>
+</ol>
+
+<p>They should pass as well:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>05:29:45] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+<span class="o">[</span>05:29:45] Starting <span class="s1">'e2e'</span>...
+Using the selenium server at http://localhost:4444/wd/hub
+<span class="o">[</span>launcher] Running 1 instances of WebDriver
+<span class="nb">.</span>
+
+Finished <span class="k">in </span>0.921 seconds
+1 <span class="nb">test</span>, 1 assertion, 0 failures
+
+<span class="o">[</span>launcher] 0 instance<span class="o">(</span>s<span class="o">)</span> of WebDriver still running
+<span class="o">[</span>launcher] chrome <span class="c">#1 passed</span>
+</code></pre></div></div>
+
+<p>So, what’s happening here…</p>
+
+<h2 id="configuration-files">Configuration Files</h2>
+
+<p>There are two configuration files in the “tests” folder - one for Karma and the other for Protractor.</p>
+
+<h3 id="karma">Karma</h3>
+
+<p><a href="http://karma-runner.github.io/">Karma</a> is a test runner built by the AngularJS team that executes the unit tests and reports the results.</p>
+
+<p>Let’s look the config file, <em>karma.conf.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">config</span><span class="p">.</span><span class="kd">set</span><span class="p">({</span>
+
+    <span class="c1">// base path that will be used to resolve all patterns</span>
+    <span class="na">basePath</span><span class="p">:</span> <span class="s1">'.'</span><span class="p">,</span>
+
+    <span class="c1">// frameworks to use</span>
+    <span class="na">frameworks</span><span class="p">:</span> <span class="p">[</span><span class="s1">'mocha'</span><span class="p">,</span> <span class="s1">'chai'</span><span class="p">],</span>
+
+    <span class="c1">// list of files / patterns to load in the browser</span>
+    <span class="na">files</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s1">'../app/bower_components/angular/angular.js'</span><span class="p">,</span>
+      <span class="s1">'../app/bower_components/jquery/dist/jquery.js'</span><span class="p">,</span>
+      <span class="s1">'../app/bower_components/angular-strap/dist/angular-strap.js'</span><span class="p">,</span>
+      <span class="s1">'../app/bower_components/angular-strap/dist/angular-strap.tpl.js'</span><span class="p">,</span>
+      <span class="s1">'../app/bower_components/angular-mocks/angular-mocks.js'</span><span class="p">,</span>
+      <span class="s1">'../app/bower_components/angular-route/angular-route.js'</span><span class="p">,</span>
+      <span class="s1">'./unit/*.js'</span><span class="p">,</span>
+      <span class="s1">'../app/app.js'</span>
+    <span class="p">],</span>
+
+    <span class="c1">// test result reporter</span>
+    <span class="na">reporters</span><span class="p">:</span> <span class="p">[</span><span class="s1">'progress'</span><span class="p">],</span>
+
+    <span class="c1">// web server port</span>
+    <span class="na">port</span><span class="p">:</span> <span class="mi">9876</span><span class="p">,</span>
+
+    <span class="c1">// enable / disable colors in the output (reporters and logs)</span>
+    <span class="na">colors</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+
+    <span class="c1">// level of logging</span>
+    <span class="na">logLevel</span><span class="p">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">LOG_INFO</span><span class="p">,</span>
+
+    <span class="c1">// enable / disable watching file and executing tests whenever any file changes</span>
+    <span class="na">autoWatch</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+
+    <span class="c1">// start these browsers</span>
+    <span class="na">browsers</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Chrome'</span><span class="p">],</span>
+
+    <span class="c1">// Continuous Integration mode</span>
+    <span class="na">singleRun</span><span class="p">:</span> <span class="kc">false</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>You can also run <code class="highlighter-rouge">karma init</code> to be guided through the creation of a config file.</p>
+</blockquote>
+
+<p>Be sure to read over the comments for an overview of each config option. For more information, review the <a href="http://karma-runner.github.io/0.12/config/configuration-file.html">official documentation</a>.</p>
+
+<h3 id="protractor">Protractor</h3>
+
+<p><a href="http://angular.github.io/protractor/#/">Protractor</a> provides a nice wrapper around <a href="https://github.com/SeleniumHQ/selenium/wiki/WebDriverJs">WebDriverJS</a>, the JavaScript bindings for <a href="http://seleniumhq.github.io/selenium/docs/api/javascript/">Selenium Webdriver</a>, to run tests against an AngularJS application running live in a browser.</p>
+
+<p>Turn your attention to the Protractor config file, <em>protractor.conf.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">seleniumAddress</span><span class="p">:</span> <span class="s1">'http://localhost:4444/wd/hub'</span><span class="p">,</span>
+  <span class="na">specs</span><span class="p">:</span> <span class="p">[</span><span class="s1">'tests/e2e/*.js'</span><span class="p">]</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>This tells protractor where to find the test files (called specs) and specifies the address that the Selenium server is running on. Simple.</p>
+
+<p>Ready to start testing?</p>
+
+<h2 id="unit-tests">Unit Tests</h2>
+
+<p>We’ll start with unit tests since they are much easier to write, debug, and maintain.</p>
+
+<p>Keep in mind that unit tests, by definition, only test isolated units of code so they rely heavily on mocking fake data. This can add much complexity to your tests and can decrease the effectiveness of the actual tests. For example, if you’re mocking out an HTTP request to a back-end API, then you’re not really testing your application. Instead you’re simulating the request and then using fake JSON data to simulate the response back. The tests may run faster, but they are much less effective.</p>
+
+<p>When starting out, mock out only the most expensive requests and make the actual API call in other situations. Over time you will develop a better sense of which requests should be mocked and which should not.</p>
+
+<p>Finally, if you decide not to mock a request in a specific test, then the test is no longer a unit test since it’s not testing an isolated unit of code. Instead you are testing multiple units, which is an integration test. For simplicity, we will continue to refer to such tests as unit tests.</p>
+
+<p>With that, let’s create some tests, broken up by controller!</p>
+
+<h3 id="testonecontroller">TestOneController</h3>
+
+<p>Take a look at the code in the first controller:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">myApp</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'TestOneController'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="s2">"Hello, World!"</span><span class="p">;</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">newText</span> <span class="o">=</span> <span class="kc">undefined</span><span class="p">;</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">changeGreeting</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">newText</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>What’s happening here? Confirm your answer by running your app and watching what happens. Now, what can/should we test?</p>
+
+<ol>
+  <li><code class="highlighter-rouge">greeting</code> has an initial value of <code class="highlighter-rouge">"Hello, World!"</code>, and</li>
+  <li>The <code class="highlighter-rouge">changeGreeting</code> function updates <code class="highlighter-rouge">greeting</code>.</li>
+</ol>
+
+<p>You probably noticed that we are already testing this in the spec:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'TestOneController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+  <span class="kd">var</span> <span class="nx">controller</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="nx">$scope</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">module</span><span class="p">(</span><span class="s1">'myApp'</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="nx">inject</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$controller</span><span class="p">,</span> <span class="nx">$rootScope</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span> <span class="o">=</span> <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span>
+    <span class="nx">controller</span> <span class="o">=</span> <span class="nx">$controller</span><span class="p">(</span><span class="s1">'TestOneController'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">$scope</span><span class="p">:</span> <span class="nx">$scope</span>
+    <span class="p">});</span>
+  <span class="p">}));</span>
+
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'initially has a greeting'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span><span class="p">,</span> <span class="s2">"Hello, World!"</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'clicking the button changes the greeting'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">newText</span> <span class="o">=</span> <span class="s2">"Hi!"</span><span class="p">;</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">changeGreeting</span><span class="p">();</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span><span class="p">,</span> <span class="s2">"Hi!"</span><span class="p">);</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>What’s happening?</p>
+
+<ol>
+  <li>The <code class="highlighter-rouge">describe</code> block is used to group similar tests.</li>
+  <li>The module, <code class="highlighter-rouge">myApp</code>, is loaded, into each test, in the first <code class="highlighter-rouge">beforeEach</code> block, which instantiates a clean testing environment.</li>
+  <li>The dependencies are injected, a new scope is created, and the controller is instantiated in the second <code class="highlighter-rouge">beforeEach</code>.</li>
+  <li>Each <code class="highlighter-rouge">it</code> function is a separate test, which includes a title, in human readable form, and a function with the actual test code.</li>
+  <li>The first test asserts that the initial state of <code class="highlighter-rouge">greeting</code> is <code class="highlighter-rouge">"Hello, World!"</code>.</li>
+  <li>Meanwhile, the second test assets that the <code class="highlighter-rouge">changeGreeting()</code> function actually changes the value of <code class="highlighter-rouge">greeting</code>.</li>
+</ol>
+
+<p>Make sense?</p>
+
+<p><em>In most cases, unit tests simply change the scope and assert that the results are what we expected.</em></p>
+
+<blockquote>
+  <p>In general, when testing controllers, you inject then register the controller with a <code class="highlighter-rouge">beforeEach</code> block, along with the <code class="highlighter-rouge">$rootScope</code> and then test that the functions within the controller act as expected.</p>
+</blockquote>
+
+<p>Run the tests again to ensure they still pass - <code class="highlighter-rouge">gulp unit</code>.</p>
+
+<p>What else could we test? How about if <code class="highlighter-rouge">newText</code> doesn’t change - e.g., if the user submits the button without entering any text in the input box - then the value of <code class="highlighter-rouge">greeting</code> should stay the same. Try writing this on your own, before you look at my answer:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'clicking the button does not change the greeting if text is not inputed'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">changeGreeting</span><span class="p">();</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span><span class="p">,</span> <span class="s2">"Hello, World!"</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Try running this. It should fail.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)</span> TestOneController clicking the button does not change the greeting FAILED
+  AssertionError: expected undefined to equal <span class="s1">'Hello, World!'</span>
+</code></pre></div></div>
+
+<p>So, we’ve revealed a bug. We could fix this by adding validation to the input box to ensure the end user enters a value or we could update <code class="highlighter-rouge">changeGreeting</code> to only update <code class="highlighter-rouge">greeting</code> if <code class="highlighter-rouge">newText</code> is not <code class="highlighter-rouge">undefined</code>. Let’s go with the latter.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">$scope</span><span class="p">.</span><span class="nx">changeGreeting</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">newText</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">newText</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Save the code, and then run the tests again:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp unit
+<span class="o">[</span>08:28:18] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+<span class="o">[</span>08:28:18] Starting <span class="s1">'unit'</span>...
+INFO <span class="o">[</span>karma]: Karma v0.12.31 server started at http://localhost:9876/
+INFO <span class="o">[</span>launcher]: Starting browser Chrome
+INFO <span class="o">[</span>Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)]</span>: Connected on socket HGnVC5-cAXOZjAsrSCWj with id 83240025
+Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)</span>: Executed 3 of 3 SUCCESS <span class="o">(</span>0.065 secs / 0.001 secs<span class="o">)</span>
+<span class="o">[</span>08:28:21] Finished <span class="s1">'unit'</span> after 3.13 s
+</code></pre></div></div>
+
+<p>Nice!</p>
+
+<blockquote>
+  <p>Since controllers are used to bind data to the template (via scope), unit tests are perfect for testing the controller logic - e.g., what happens to the scope as the controller runs - while E2E tests ensure that the template is updated accordingly.</p>
+</blockquote>
+
+<h3 id="testtwocontroller">TestTwoController</h3>
+
+<p>Start by analyzing the code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">myApp</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'TestTwoController'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">newItem</span> <span class="o">=</span> <span class="kc">undefined</span><span class="p">;</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">];</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">add</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">newItem</span><span class="p">);</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+      <span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span> <span class="o">+=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>What should we test? Take out a pen and paper and write down everything that should be tested. Once done, write the code. Check your code against mine.</p>
+
+<p>Be sure to start with the following boilerplate:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'TestTwoController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+  <span class="kd">var</span> <span class="nx">controller</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="nx">$scope</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">module</span><span class="p">(</span><span class="s1">'myApp'</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="nx">inject</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$controller</span><span class="p">,</span> <span class="nx">$rootScope</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span> <span class="o">=</span> <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span>
+    <span class="nx">controller</span> <span class="o">=</span> <span class="nx">$controller</span><span class="p">(</span><span class="s1">'TestTwoController'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">$scope</span><span class="p">:</span> <span class="nx">$scope</span>
+    <span class="p">});</span>
+  <span class="p">}));</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="test-1-the-initial-value-of-total">Test 1: The initial value of <code class="highlighter-rouge">total</code></h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'initially has a total'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span><span class="p">,</span> <span class="mi">6</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="test-2-the-initial-value-of-items">Test 2: The initial value of <code class="highlighter-rouge">items</code></h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'initially has items'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">deepEqual</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="test-3-the-add-function-updates-the-total-and-items-array-when-a-value-is-added">Test 3: The <code class="highlighter-rouge">add</code> function updates the <code class="highlighter-rouge">total</code> and <code class="highlighter-rouge">items</code> array when a value is added</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'the `add` function updates the `total` and `items` array when a value is added'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">newItem</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">add</span><span class="p">();</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span><span class="p">,</span> <span class="mi">13</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">deepEqual</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">]);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="test-4-the-add-function-does-not-update-the-total-and-items-array-when-an-empty-value-is-added">Test 4: The <code class="highlighter-rouge">add</code> function does not update the <code class="highlighter-rouge">total</code> and <code class="highlighter-rouge">items</code> array when an empty value is added</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'does not update the `total` and `items` array when an empty value is added'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">newItem</span> <span class="o">=</span> <span class="kc">undefined</span><span class="p">;</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">add</span><span class="p">();</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span><span class="p">,</span> <span class="mi">6</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">deepEqual</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]);</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">newItem</span> <span class="o">=</span> <span class="mi">22</span><span class="p">;</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">add</span><span class="p">();</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span><span class="p">,</span> <span class="mi">28</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">deepEqual</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">22</span><span class="p">]);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="run">Run</h4>
+
+<p>Each test should be straightforward. Run the tests. There should be one failure:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">Chrome</span> <span class="mf">41.0</span><span class="p">.</span><span class="mi">2272</span> <span class="p">(</span><span class="nx">Mac</span> <span class="nx">OS</span> <span class="nx">X</span> <span class="mf">10.10</span><span class="p">.</span><span class="mi">2</span><span class="p">)</span> <span class="nx">TestTwoController</span> <span class="nx">does</span> <span class="nx">not</span> <span class="nx">update</span> <span class="nx">the</span> <span class="s2">`total`</span> <span class="nx">and</span> <span class="s2">`items`</span> <span class="nx">array</span> <span class="nx">when</span> <span class="nx">an</span> <span class="nx">empty</span> <span class="nx">value</span> <span class="nx">is</span> <span class="nx">added</span> <span class="nx">FAILED</span>
+  <span class="nx">AssertionError</span><span class="p">:</span> <span class="nx">expected</span> <span class="kc">NaN</span> <span class="nx">to</span> <span class="nx">equal</span> <span class="mi">6</span>
+</code></pre></div></div>
+
+<p>Update the code, adding a conditional again:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">$scope</span><span class="p">.</span><span class="nx">add</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">newItem</span> <span class="o">==</span> <span class="s1">'number'</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">newItem</span><span class="p">);</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+      <span class="nx">$scope</span><span class="p">.</span><span class="nx">total</span> <span class="o">+=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Also update the partial, <em>/app/partials/two.html</em>:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"number"</span> <span class="na">ng-model=</span><span class="s">"newItem"</span><span class="nt">&gt;</span>
+</code></pre></div></div>
+
+<p>Run it again:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp unit
+<span class="o">[</span>09:56:10] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+<span class="o">[</span>09:56:10] Starting <span class="s1">'unit'</span>...
+INFO <span class="o">[</span>karma]: Karma v0.12.31 server started at http://localhost:9876/
+INFO <span class="o">[</span>launcher]: Starting browser Chrome
+INFO <span class="o">[</span>Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)]</span>: Connected on socket Lbv1sROpYrEHgotlmJZf with id 91008249
+Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)</span>: Executed 7 of 7 SUCCESS <span class="o">(</span>0.082 secs / 0.003 secs<span class="o">)</span>
+<span class="o">[</span>09:56:13] Finished <span class="s1">'unit'</span> after 3.05 s
+</code></pre></div></div>
+
+<p>Success!</p>
+
+<p>Did I miss anything? Comment below.</p>
+
+<h3 id="testthreecontroller">TestThreeController</h3>
+
+<p>Again, check out the code in <em>app.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">myApp</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'TestThreeController'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">modal</span> <span class="o">=</span> <span class="p">{</span><span class="na">title</span><span class="p">:</span> <span class="s1">'Hi!'</span><span class="p">,</span> <span class="na">content</span><span class="p">:</span> <span class="s1">'This is a message!'</span><span class="p">};</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>What can we test here?</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'initially has a modal'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">modal</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">deepEqual</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">modal</span><span class="p">,</span> <span class="p">{</span><span class="na">title</span><span class="p">:</span> <span class="s1">'Hi!'</span><span class="p">,</span> <span class="na">content</span><span class="p">:</span> <span class="s1">'This is a message!'</span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Perhaps a better question is: What <em>should</em> we test here? Is the above test really necessary? Probably not. But we may need to test it out more in the future if we build out the functionality. Let’s go for it!</p>
+
+<h4 id="update-appjs">Update <em>app.js</em>:</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">myApp</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'TestThreeController'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$modal</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">modalNumber</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">myModal</span> <span class="o">=</span> <span class="nx">$modal</span><span class="p">({</span><span class="na">scope</span><span class="p">:</span> <span class="nx">$scope</span><span class="p">,</span> <span class="na">template</span><span class="p">:</span> <span class="s1">'modal.tpl.html'</span><span class="p">,</span> <span class="na">show</span><span class="p">:</span> <span class="kc">false</span><span class="p">});</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">showModal</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">myModal</span><span class="p">.</span><span class="nx">$promise</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">myModal</span><span class="p">.</span><span class="nx">show</span><span class="p">);</span>
+  <span class="p">};</span>
+  <span class="nx">$scope</span><span class="p">.</span><span class="nx">changeModalText</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">modalNumber</span><span class="o">++</span><span class="p">;</span>
+    <span class="p">};</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here we are defined a custom template, <code class="highlighter-rouge">modal.tpl.html</code>, to be used for the modal text and then we assigned <code class="highlighter-rouge">$scope.modalNumber</code> to <code class="highlighter-rouge">1</code> as well as function to iterate the number.</p>
+
+<h4 id="add-modaltplhtml">Add <em>modal.tpl.html</em>:</h4>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"modal"</span> <span class="na">tabindex=</span><span class="s">"-1"</span> <span class="na">role=</span><span class="s">"dialog"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"modal-dialog"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"modal-content"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"modal-body"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;span&gt;</span>
+          <span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">"btn btn-default"</span> <span class="na">ng-click=</span><span class="s">"changeModalText()"</span><span class="nt">&gt;</span>Iterate<span class="nt">&lt;/button&gt;</span>
+          <span class="ni">&amp;nbsp;&amp;#8594;&amp;nbsp;</span>
+          <span class="nt">&lt;span&gt;</span>{{ modalNumber }}<span class="nt">&lt;/span&gt;</span>
+        <span class="nt">&lt;/span&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"modal-footer"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"btn btn-default"</span> <span class="na">ng-click=</span><span class="s">"$hide()"</span><span class="nt">&gt;</span>Close<span class="nt">&lt;/button&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div></div>
+
+<p>Add this template to the “app” folder.</p>
+
+<h4 id="update-threehtml">Update <em>three.html</em>:</h4>
+
+<p>Finally, update the partial:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;h2&gt;</span>Just a modal<span class="nt">&lt;/h2&gt;</span>
+<span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"btn btn-lg btn-default"</span> <span class="na">data-template=</span><span class="s">"modal.tpl.html"</span> <span class="na">bs-modal=</span><span class="s">"modal"</span><span class="nt">&gt;</span>
+  Launch modal!
+<span class="nt">&lt;/button&gt;</span>
+</code></pre></div></div>
+
+<p>Run the app to make sure everything works, and then update the test…</p>
+
+<h4 id="test-redux">Test redux</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'TestThreeController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+  <span class="kd">var</span> <span class="nx">controller</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="nx">$scope</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">module</span><span class="p">(</span><span class="s1">'myApp'</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="nx">inject</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$controller</span><span class="p">,</span> <span class="nx">$rootScope</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span> <span class="o">=</span> <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span>
+    <span class="nx">controller</span> <span class="o">=</span> <span class="nx">$controller</span><span class="p">(</span><span class="s1">'TestThreeController'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">$scope</span><span class="p">:</span> <span class="nx">$scope</span>
+    <span class="p">});</span>
+  <span class="p">}));</span>
+
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'initially has a modalNumber'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">modalNumber</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'updates the `modalNumber` when a value is added'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">changeModalText</span><span class="p">();</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">modalNumber</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">changeModalText</span><span class="p">();</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">modalNumber</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Notice how we’re no longer testing that a modal is present. We’ll test that via the E2E tests.</p>
+
+<h3 id="testfourcontroller">TestFourController</h3>
+
+<p>Finally, let’s test the AJAX request:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>myApp.controller<span class="o">(</span><span class="s1">'TestFourController'</span>, <span class="k">function</span><span class="o">(</span><span class="nv">$scope</span>, <span class="nv">$http</span><span class="o">)</span> <span class="o">{</span>
+  <span class="nv">$scope</span>.repos <span class="o">=</span> <span class="o">[]</span><span class="p">;</span>
+  <span class="nv">$scope</span>.loadRepos <span class="o">=</span> <span class="k">function</span> <span class="o">()</span> <span class="o">{</span>
+    <span class="nv">$http</span>.get<span class="o">(</span><span class="s1">'https://api.github.com/repositories'</span><span class="o">)</span>.then<span class="o">(</span><span class="k">function</span> <span class="o">(</span>repos<span class="o">)</span> <span class="o">{</span>
+      <span class="nv">$scope</span>.repos <span class="o">=</span> repos.data<span class="p">;</span>
+    <span class="o">})</span><span class="p">;</span>
+  <span class="o">}</span><span class="p">;</span>
+<span class="o">})</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Remember the discussion earlier on mocking HTTP requests? Well, here’s probably a good place to actually use a mocking library since this request hits an external API. To do this, we can use the <code class="highlighter-rouge">$httpBackend</code> directive from the <a href="https://docs.angularjs.org/api/ngMock">angular-mocks</a> library.</p>
+
+<p>First, let’s first add the <em>mock.js</em> file found in the <a href="https://github.com/mjhea0/angular-testing-tutorial/tree/master/tests/mock">repo</a> into a new folder called “mock” within the “tests” folder. This module uses <code class="highlighter-rouge">angular.module().value</code> to set a JSON value to use as the fake data.</p>
+
+<p>Update the list of files in <em>karma.conf.js</em> so that the the mock file is loaded and served by Karma:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">files</span><span class="p">:</span> <span class="p">[</span>
+  <span class="s1">'../app/bower_components/angular/angular.js'</span><span class="p">,</span>
+  <span class="s1">'../app/bower_components/jquery/dist/jquery.js'</span><span class="p">,</span>
+  <span class="s1">'../app/bower_components/angular-strap/dist/angular-strap.js'</span><span class="p">,</span>
+  <span class="s1">'../app/bower_components/angular-strap/dist/angular-strap.tpl.js'</span><span class="p">,</span>
+  <span class="s1">'../app/bower_components/angular-mocks/angular-mocks.js'</span><span class="p">,</span>
+  <span class="s1">'../app/bower_components/angular-route/angular-route.js'</span><span class="p">,</span>
+  <span class="s1">'./unit/*.js'</span><span class="p">,</span>
+  <span class="s1">'./mock/*.js'</span><span class="p">,</span>
+  <span class="s1">'../app/app.js'</span>
+<span class="p">],</span>
+</code></pre></div></div>
+
+<p>Next, add the test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'TestFourController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+  <span class="kd">var</span> <span class="nx">controller</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">$scope</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">$httpBackend</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">mockedDashboardJSON</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">module</span><span class="p">(</span><span class="s1">'myApp'</span><span class="p">,</span> <span class="s1">'mockedDashboardJSON'</span><span class="p">);</span>
+  <span class="p">});</span>
+
+    <span class="nx">beforeEach</span><span class="p">(</span><span class="nx">inject</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$controller</span><span class="p">,</span> <span class="nx">$rootScope</span><span class="p">,</span> <span class="nx">_$httpBackend_</span><span class="p">,</span> <span class="nx">defaultJSON</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">$httpBackend</span> <span class="o">=</span> <span class="nx">_$httpBackend_</span><span class="p">;</span>
+      <span class="nx">$scope</span> <span class="o">=</span> <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span>
+      <span class="nx">$httpBackend</span><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">'GET'</span><span class="p">,</span><span class="s1">'https://api.github.com/repositories'</span><span class="p">).</span><span class="nx">respond</span><span class="p">(</span><span class="nx">defaultJSON</span><span class="p">.</span><span class="nx">fakeData</span><span class="p">);</span>
+      <span class="nx">controller</span> <span class="o">=</span> <span class="nx">$controller</span><span class="p">(</span><span class="s1">'TestFourController'</span><span class="p">,</span> <span class="p">{</span>
+          <span class="na">$scope</span><span class="p">:</span> <span class="nx">$scope</span>
+      <span class="p">});</span>
+    <span class="p">}));</span>
+
+    <span class="nx">afterEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="nx">$httpBackend</span><span class="p">.</span><span class="nx">verifyNoOutstandingExpectation</span><span class="p">();</span>
+      <span class="nx">$httpBackend</span><span class="p">.</span><span class="nx">verifyNoOutstandingRequest</span><span class="p">();</span>
+    <span class="p">});</span>
+
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'initially has repos'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">repos</span><span class="p">);</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">deepEqual</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">repos</span><span class="p">,</span> <span class="p">[]);</span>
+  <span class="p">});</span>
+
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'clicking the button updates the repos'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="nx">$scope</span><span class="p">.</span><span class="nx">loadRepos</span><span class="p">();</span>
+      <span class="nx">$httpBackend</span><span class="p">.</span><span class="nx">flush</span><span class="p">();</span>
+      <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$scope</span><span class="p">.</span><span class="nx">repos</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>What’s happening?</p>
+
+<ol>
+  <li>Essentially, here we’re injecting <code class="highlighter-rouge">defaultJSON</code> so that when the app tries to make the HTTP request, it triggers <code class="highlighter-rouge">$httpBackend</code>, which, in turn, uses the <code class="highlighter-rouge">defaultJSON</code> value.</li>
+  <li>Did you notice the underscores surrounding the <code class="highlighter-rouge">$httpBackend</code> directive? This is a hack that allows us to use the dependency in multiple tests. You can find more information on this from the <a href="https://docs.angularjs.org/api/ngMock/function/angular.mock.inject">official documentation</a>.</li>
+  <li>Finally, we’re using an <code class="highlighter-rouge">afterEach</code> block to check that we’re not missing any HTTP requests in our tests via the <code class="highlighter-rouge">verifyNoOutstandingExpectation()</code> and <code class="highlighter-rouge">verifyNoOutstandingRequest()</code> methods. Again, you can read more about these methods from the <a href="https://docs.angularjs.org/api/ngMock/service/$httpBackend">Angular docs</a>.</li>
+</ol>
+
+<p>Test it out!</p>
+
+<h3 id="routes">Routes</h3>
+
+<p>How about the routes, templates, and partials?</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'routes'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">module</span><span class="p">(</span><span class="s1">'myApp'</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="nx">inject</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">_$httpBackend_</span><span class="p">,</span> <span class="nx">_$route_</span><span class="p">,</span> <span class="nx">_$location_</span><span class="p">,</span> <span class="nx">$rootScope</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$httpBackend</span> <span class="o">=</span> <span class="nx">_$httpBackend_</span><span class="p">;</span>
+    <span class="nx">$route</span> <span class="o">=</span> <span class="nx">_$route_</span><span class="p">;</span>
+    <span class="nx">$location</span> <span class="o">=</span> <span class="nx">_$location_</span><span class="p">;</span>
+    <span class="nx">$scope</span> <span class="o">=</span> <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span>
+  <span class="p">}));</span>
+
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should load the one.html template'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">$httpBackend</span><span class="p">.</span><span class="nx">whenGET</span><span class="p">(</span><span class="s1">'partials/one.html'</span><span class="p">).</span><span class="nx">respond</span><span class="p">(</span><span class="s1">'...'</span><span class="p">);</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">$apply</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(</span><span class="s1">'/one'</span><span class="p">);</span>
+    <span class="p">});</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$route</span><span class="p">.</span><span class="nx">current</span><span class="p">.</span><span class="nx">templateUrl</span><span class="p">,</span> <span class="s1">'partials/one.html'</span><span class="p">);</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">$route</span><span class="p">.</span><span class="nx">current</span><span class="p">.</span><span class="nx">controller</span><span class="p">,</span> <span class="s1">'TestOneController'</span><span class="p">);</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<ol>
+  <li>When the route is loaded, the <code class="highlighter-rouge">current</code> property is updated. We then test to ensure that the current controller and template are <code class="highlighter-rouge">TestOneController</code> and <code class="highlighter-rouge">partials/one.html</code>, respectively.</li>
+  <li>Did you notice that we wrapped the route change inside the <code class="highlighter-rouge">$apply</code> callback? Since unit tests don’t run the full Angular app, we had to simulate it by triggering the <a href="https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$digest">digest cycle</a>.</li>
+  <li>Curious about <code class="highlighter-rouge">WhenGET</code>? Check out the <a href="https://docs.angularjs.org/api/ngMock/service/$httpBackend">Angular documentation</a>. Take note of <code class="highlighter-rouge">ExpectGET</code> as well. Can you re-write the above test to use <code class="highlighter-rouge">ExpectGET</code>?</li>
+</ol>
+
+<p>Make sure to run the tests one last time:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp unit
+<span class="o">[</span>05:20:07] Using gulpfile ~/angular-testing-tutorial/Gulpfile.js
+<span class="o">[</span>05:20:07] Starting <span class="s1">'unit'</span>...
+INFO <span class="o">[</span>karma]: Karma v0.12.31 server started at http://localhost:9876/
+INFO <span class="o">[</span>launcher]: Starting browser Chrome
+INFO <span class="o">[</span>Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)]</span>: Connected on socket R5qQUcjswAbpcvMK6JKu with id 67365006
+Chrome 41.0.2272 <span class="o">(</span>Mac OS X 10.10.2<span class="o">)</span>: Executed 12 of 12 SUCCESS <span class="o">(</span>0.16 secs / 0.027 secs<span class="o">)</span>
+<span class="o">[</span>05:20:10] Finished <span class="s1">'unit'</span> after 3.44 s
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>That’s it for unit tests. In the next <a href="http://mherman.org/blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2">part</a>, we’ll test the entire application, front to back, using end-to-end (E2E) tests via Protractor.</p>
+
+<p>Checkout the third tag, <code class="highlighter-rouge">v3</code>, to view all the completed unit tests:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git checkout tags/v3
+</code></pre></div></div>
+
+<p>Ready for more?</p>
+
+<p>Try adding some <a href="http://mherman.org/blog/2014/06/12/primer-on-angularjs-service-types/">Factories/Services</a> and Filters to your app to continue practicing. Since the syntax is relatively the same for testing all parts of an Angular app, you should be able to extend your testing knowledge to both factories and filters. Take a look at this <a href="https://github.com/mjhea0/thinkful-mentor/tree/master/angular/projects/angular-unit-test-demo/app/components">example</a> for help getting started. Once you feel comfortable with factories, controllers, and filters, move on to testing more difficult components, like directives, resources, and animations. Good luck!</p>
+
+<p>Comment below with questions.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+
+
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2017 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+    
+      <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', UA-37074204-1, 'auto');
+  ga('send', 'pageview');
+</script>
+
+    
+
+  </body>
+
+</html>

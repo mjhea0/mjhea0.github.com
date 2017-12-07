@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Kickstarting Angular with Gulp and Browserify, Part 1 - Gulp and Bower</title>
+  <meta name="description" content="This article details how to seed an Angular project using Gulp and Browserify.">
+  
+    
+    <meta name="keywords" content="angular, boilerplate, gulp, template, browserify">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2014/08/14/kickstarting-angular-with-gulp/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Kickstarting Angular with Gulp and Browserify, Part 1 - Gulp and Bower">
+  <meta name="twitter:description" content="This article details how to seed an Angular project using Gulp and Browserify.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Kickstarting Angular with Gulp and Browserify, Part 1 - Gulp and Bower</h1>
+    
+    <p class="post-meta"><time datetime="2014-08-14T08:17:00-06:00" itemprop="datePublished">Aug 14, 2014</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/angular/">angular</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Let’s develop an Angular boilerplate. Why? Despite the plethora of Angular seeds/generators/templates/boilerplates/starters/etc. on Github, none of them will ever do <em>exactly</em> what you want unless you build your own, piece by piece. By designing your own, you will better understand each component as well as how each fits into the greater project. Stop fighting against a boilerplate that just doesn’t fit your needs and start from scratch. Keep it simple, as you learn the process.</p>
+
+<p><strong>In this first part, we’ll start with Angular and Gulp, getting a working project setup. Next <a href="http://mherman.org/blog/2014/08/15/kickstarting-angular-with-gulp-and-browserify-part-2/#.U-4co4BdUZ0">time</a> we’ll add Browserify into the mix.</strong></p>
+
+<blockquote>
+  <p>This tutorial assumes you have Node.js installed and have working knowledge of NPM and Angular. Just want the code? Get it <a href="https://github.com/mjhea0/angular-gulp-browserify-seed">here</a>.</p>
+</blockquote>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#develop-a-sample-app" id="markdown-toc-develop-a-sample-app">Develop a Sample App</a></li>
+  <li><a href="#create-the-build" id="markdown-toc-create-the-build">Create the Build</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<h3 id="install-dependencies">Install Dependencies</h3>
+
+<h4 id="setup-a-project-folder-and-create-a-packagejson-file">Setup a project folder and create a <em>package.json</em> file:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mkdir project_name <span class="o">&amp;&amp;</span> <span class="nb">cd </span>project_name
+<span class="nv">$ </span>npm init
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">npm init</code> command helps you create your project’s base configuration through an interactive prompt. Be sure to update the ‘entry point’ to ‘gulpfile.js’. You can just accept the defaults on the remaining prompts.</p>
+
+<p>Do the same for Bower:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>bower init
+</code></pre></div></div>
+
+<p>Accept all the defaults. After the file is created update the <code class="highlighter-rouge">ignore</code> list:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"ignore"</span><span class="p">:</span> <span class="p">[</span>
+  <span class="s2">"**/.*"</span><span class="p">,</span>
+  <span class="s2">"node_modules"</span><span class="p">,</span>
+  <span class="s2">"app/bower_components"</span><span class="p">,</span>
+  <span class="s2">"test"</span><span class="p">,</span>
+  <span class="s2">"tests"</span>
+<span class="p">],</span>
+</code></pre></div></div>
+
+<h4 id="install-global-dependencies">Install global dependencies:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> gulp bower
+</code></pre></div></div>
+
+<h4 id="bower-install-directory">Bower install directory</h4>
+
+<p>You can specify where you want the dependencies (commonly known as bower components) installed to by adding a <em>.bowerrc</em> file and adding the following code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>
+  <span class="s2">"directory"</span><span class="p">:</span> <span class="s2">"/app/bower_components"</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="install-local-dependencies">Install local dependencies:</h4>
+
+<p><em>NPM</em></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install gulp bower gulp-clean gulp-jshint gulp-uglify gulp-minify-css gulp-connect <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p><em>Bower</em></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$bower</span> install angular angular-animate angular-route jquery animate.css bootstrap fontawesome <span class="nt">--save</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>The <code class="highlighter-rouge">--save</code> flag adds the dependencies to the <em>package.json</em> and <em>bower.json</em> files, respectively.</p>
+</blockquote>
+
+<p>We’ll address each of these dependencies shortly. For now, be sure you understand the project’s core dependencies:</p>
+
+<ul>
+  <li><strong><a href="http://gulpjs.com/">Gulp</a></strong> is a Javascript task runner, used to automate repetitive tasks (i.e., minifying, linting, testing, building, compiling) to simplify the build process.</li>
+  <li><strong><a href="http://bower.io/">Bower</a></strong> manages front-end dependencies.</li>
+</ul>
+
+<h3 id="folder-structure">Folder Structure</h3>
+
+<p>Let’s setup a base folder structure:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">.</span>
+├── app
+│   ├── bower_components
+│   ├── css
+│   │    └── main.css
+│   ├── img
+│   ├── index.html
+│   ├── partials
+│   │    ├── partial1.html
+│   │    └── partial2.html
+│   └── js
+│   │    └── main.js
+├── .bowerrc
+├── .gitignore
+├── bower.json
+├── gulpfile.js
+├── node_modules
+└── package.json
+</code></pre></div></div>
+
+<p>Add the files and folders not already included. This structure is based on the popular <a href="https://github.com/angular/angular-seed">Angular Seed</a> boilerplate, developed by the Angular team.</p>
+
+<h3 id="gulp">Gulp</h3>
+
+<p>To start, we just need the following code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// gulp</span>
+<span class="kd">var</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp'</span><span class="p">);</span>
+
+<span class="c1">// plugins</span>
+<span class="kd">var</span> <span class="nx">connect</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-connect'</span><span class="p">);</span>
+
+
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'connect'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">connect</span><span class="p">.</span><span class="nx">server</span><span class="p">({</span>
+    <span class="na">root</span><span class="p">:</span> <span class="s1">'app/'</span><span class="p">,</span>
+    <span class="na">port</span><span class="p">:</span> <span class="mi">8888</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>This allows us to serve our future Angular app on a development server running on port 8888.</p>
+
+<h3 id="test">Test</h3>
+
+<p>Let’s test it out. Add the word ‘hi’ to the <em>index.html</em> file, then run the following command:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp connect
+</code></pre></div></div>
+
+<p>Navigate to <a href="http://localhost:8888/">http://localhost:8888/</a> and you should see ‘hi’ staring back at you. Let’s build a quick sample app. Keep the server running…</p>
+
+<h2 id="develop-a-sample-app">Develop a Sample App</h2>
+
+<h3 id="indexhtml"><em>index.html</em></h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html</span> <span class="na">ng-app=</span><span class="s">"SampleApp"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;head</span> <span class="na">lang=</span><span class="s">"en"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"viewport"</span> <span class="na">content=</span><span class="s">"width=device-width, initial-scale=1.0"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"description"</span> <span class="na">content=</span><span class="s">""</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"author"</span> <span class="na">content=</span><span class="s">""</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;title&gt;</span>Angular-Gulp-Browserify-Starter<span class="nt">&lt;/title&gt;</span>
+    <span class="c">&lt;!-- styles --&gt;</span>
+    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">href=</span><span class="s">"bower_components/bootstrap/dist/css/bootstrap.css"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">href=</span><span class="s">"bower_components/fontawesome/css/font-awesome.css"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">href=</span><span class="s">"bower_components/animate.css/animate.css"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">href=</span><span class="s">"css/main.css"</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;h1&gt;</span>Angular-Gulp-Browserify-Starter<span class="nt">&lt;/h1&gt;</span>
+      <span class="c">&lt;!-- views --&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">ng-view</span><span class="nt">&gt;&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="c">&lt;!-- scripts --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"bower_components/jquery/dist/jquery.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"bower_components/angular/angular.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"bower_components/angular-route/angular-route.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"bower_components/angular-animate/angular-animate.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"bower_components/bootstrap/dist/js/bootstrap.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"js/main.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>This should look familiar. The <code class="highlighter-rouge">ng-app</code> directive initiates an Angular app while <code class="highlighter-rouge">ng-view</code> sets the stage for routing.</p>
+
+<h3 id="mainjs"><em>main.js</em></h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+<span class="s1">'use strict'</span><span class="p">;</span>
+
+
+  <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'SampleApp'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngRoute'</span><span class="p">,</span> <span class="s1">'ngAnimate'</span><span class="p">])</span>
+
+  <span class="p">.</span><span class="nx">config</span><span class="p">([</span>
+    <span class="s1">'$locationProvider'</span><span class="p">,</span>
+    <span class="s1">'$routeProvider'</span><span class="p">,</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">$locationProvider</span><span class="p">,</span> <span class="nx">$routeProvider</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">$locationProvider</span><span class="p">.</span><span class="nx">hashPrefix</span><span class="p">(</span><span class="s1">'!'</span><span class="p">);</span>
+      <span class="c1">// routes</span>
+      <span class="nx">$routeProvider</span>
+        <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="p">{</span>
+          <span class="na">templateUrl</span><span class="p">:</span> <span class="s2">"./partials/partial1.html"</span><span class="p">,</span>
+          <span class="na">controller</span><span class="p">:</span> <span class="s2">"MainController"</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">otherwise</span><span class="p">({</span>
+           <span class="na">redirectTo</span><span class="p">:</span> <span class="s1">'/'</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+  <span class="p">]);</span>
+
+  <span class="c1">//Load controller</span>
+  <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'SampleApp'</span><span class="p">)</span>
+
+  <span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="p">[</span>
+    <span class="s1">'$scope'</span><span class="p">,</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">$scope</span><span class="p">.</span><span class="nx">test</span> <span class="o">=</span> <span class="s2">"Testing..."</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">]);</span>
+
+<span class="p">}());</span>
+</code></pre></div></div>
+
+<p>Again, this should be relatively straightforward. We setup the basic Angular code to establish a route handler along with a controller that passes the variable <code class="highlighter-rouge">test</code> to the template.</p>
+
+<h3 id="partial1html"><em>partial1.html</em></h3>
+
+<p>Now let’s add the partial template:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;p&gt;</span>{{ test }}<span class="nt">&lt;/p&gt;</span>
+</code></pre></div></div>
+
+<h3 id="test-1">Test</h3>
+
+<p>Back in your browser, refresh the page. You should see the text:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Angular-Gulp-Browserify-Starter
+
+Testing...
+</code></pre></div></div>
+
+<h2 id="create-the-build">Create the Build</h2>
+
+<p>Now that our app is working locally, let’s modify our <em>gulpfile.js</em> to generate a deployable build. Kill the server.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// gulp</span>
+<span class="kd">var</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp'</span><span class="p">);</span>
+
+<span class="c1">// plugins</span>
+<span class="kd">var</span> <span class="nx">connect</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-connect'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">jshint</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-jshint'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">uglify</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-uglify'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">minifyCSS</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-minify-css'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">clean</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-clean'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">runSequence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'run-sequence'</span><span class="p">);</span>
+
+<span class="c1">// tasks</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'lint'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">([</span><span class="s1">'./app/**/*.js'</span><span class="p">,</span> <span class="s1">'!./app/bower_components/**'</span><span class="p">])</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">jshint</span><span class="p">())</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">jshint</span><span class="p">.</span><span class="nx">reporter</span><span class="p">(</span><span class="s1">'default'</span><span class="p">))</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">jshint</span><span class="p">.</span><span class="nx">reporter</span><span class="p">(</span><span class="s1">'fail'</span><span class="p">));</span>
+<span class="p">});</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'clean'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">'./dist/*'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">clean</span><span class="p">({</span><span class="na">force</span><span class="p">:</span> <span class="kc">true</span><span class="p">}));</span>
+<span class="p">});</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'minify-css'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">opts</span> <span class="o">=</span> <span class="p">{</span><span class="na">comments</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="na">spare</span><span class="p">:</span><span class="kc">true</span><span class="p">};</span>
+  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">([</span><span class="s1">'./app/**/*.css'</span><span class="p">,</span> <span class="s1">'!./app/bower_components/**'</span><span class="p">])</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">minifyCSS</span><span class="p">(</span><span class="nx">opts</span><span class="p">))</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">'./dist/'</span><span class="p">))</span>
+<span class="p">});</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'minify-js'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">([</span><span class="s1">'./app/**/*.js'</span><span class="p">,</span> <span class="s1">'!./app/bower_components/**'</span><span class="p">])</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">uglify</span><span class="p">({</span>
+      <span class="c1">// inSourceMap:</span>
+      <span class="c1">// outSourceMap: "app.js.map"</span>
+    <span class="p">}))</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">'./dist/'</span><span class="p">))</span>
+<span class="p">});</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'copy-bower-components'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">'./app/bower_components/**'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">'dist/bower_components'</span><span class="p">));</span>
+<span class="p">});</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'copy-html-files'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">'./app/**/*.html'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">'dist/'</span><span class="p">));</span>
+<span class="p">});</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'connect'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">connect</span><span class="p">.</span><span class="nx">server</span><span class="p">({</span>
+    <span class="na">root</span><span class="p">:</span> <span class="s1">'app/'</span><span class="p">,</span>
+    <span class="na">port</span><span class="p">:</span> <span class="mi">8888</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'connectDist'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">connect</span><span class="p">.</span><span class="nx">server</span><span class="p">({</span>
+    <span class="na">root</span><span class="p">:</span> <span class="s1">'dist/'</span><span class="p">,</span>
+    <span class="na">port</span><span class="p">:</span> <span class="mi">9999</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+
+
+<span class="c1">// default task</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'default'</span><span class="p">,</span>
+  <span class="p">[</span><span class="s1">'lint'</span><span class="p">,</span> <span class="s1">'connect'</span><span class="p">]</span>
+<span class="p">);</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'build'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">runSequence</span><span class="p">(</span>
+    <span class="p">[</span><span class="s1">'clean'</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">'lint'</span><span class="p">,</span> <span class="s1">'minify-css'</span><span class="p">,</span> <span class="s1">'minify-js'</span><span class="p">,</span> <span class="s1">'copy-html-files'</span><span class="p">,</span> <span class="s1">'copy-bower-components'</span><span class="p">,</span> <span class="s1">'connectDist'</span><span class="p">]</span>
+  <span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p><strong>What’s happening here?</strong></p>
+
+<ol>
+  <li><a href="https://github.com/spenceralger/gulp-jshint">gulp-jshint</a> checks for code quality in the JS files. If there are any issues the build fails and all errors output to the console.</li>
+  <li><a href="https://github.com/peter-vilja/gulp-clean">gulp-clean</a> removes the entire build folder so that we start fresh every time we generate a new build.</li>
+  <li><a href="https://github.com/terinjokes/gulp-uglify">gulp-uglify</a> and <a href="https://github.com/jonathanepollack/gulp-minify-css">gulp-minify-css</a> minify JS and CSS, respectively.</li>
+</ol>
+
+<h3 id="build-commands">Build commands</h3>
+
+<p><strong>Default</strong></p>
+
+<p>The default task, <code class="highlighter-rouge">gulp</code>, is a compound task that runs both the <code class="highlighter-rouge">lint</code> and <code class="highlighter-rouge">connect</code> tasks. Again, this just serves the files in the “app” folder on <a href="http://localhost:8888/">http://localhost:8888/</a>.</p>
+
+<p><strong>Build</strong></p>
+
+<p>The build task creates a new directory called “dist”, runs the linter, minifies the CSS and JS files, and copies all the HTML files and Bower Components. You can then see what the final build looks like on <a href="http://localhost:9999/">http://localhost:9999/</a> before deployment. You should also run the <code class="highlighter-rouge">clean</code> task before you generate a build.</p>
+
+<p>Test this out:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp build
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Well, hopefully you now have a better understanding of how Gulp can greatly simply the build process, handling a number of repetitive tasks. Next time we’ll clean up some of the mess that the Bower components leave behind by adding Browserify into the mix and detail a nice workflow that you can use for all your Angular projects.</p>
+
+<p>Leave questions and comments below. Cheers!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+
+
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2017 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+    
+      <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', UA-37074204-1, 'auto');
+  ga('send', 'pageview');
+</script>
+
+    
+
+  </body>
+
+</html>

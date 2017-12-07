@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Handling AJAX calls with Node.js and Express (scraping Craigslist)</title>
+  <meta name="description" content="This tutorial is meant for someone who’s finished a basic Hello World project with Node and Express and ready to take another step. In short, I’ll show you how to search/scrape/crawl Craigslist using AJAX along with Node and Express. I assume you’re working from a Unix-based environment, already have Node and Express installed, and understand how to navigate the terminal.">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Handling AJAX calls with Node.js and Express (scraping Craigslist)">
+  <meta name="twitter:description" content="This tutorial is meant for someone who’s finished a basic Hello World project with Node and Express and ready to take another step. In short, I’ll show you how to search/scrape/crawl Craigslist usi...">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Handling AJAX calls with Node.js and Express (scraping Craigslist)</h1>
+    
+    <p class="post-meta"><time datetime="2013-10-20T01:12:00-06:00" itemprop="datePublished">Oct 20, 2013</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This tutorial is meant for someone who’s finished a basic Hello World project with Node and Express and ready to take another step. In short, I’ll show you how to <strong>search/scrape/crawl Craigslist using AJAX along with Node and Express.</strong> I assume you’re working from a Unix-based environment, already have Node and Express installed, and understand how to navigate the terminal.</p>
+
+<p>You can find the finished code on this <a href="https://github.com/mjhea0/node-express-ajax-craigslist">repo</a> if wish to bypass the tutorial altogether.</p>
+
+<p>Let’s get right to it.</p>
+
+<p>Here is an index of all the articles in the series that have been published to date:</p>
+
+<ul>
+  <li>Part 1: <a href="http://mherman.org/blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/">Scraping Craigslist</a> <strong>« CURRENT</strong></li>
+  <li>Part 2: <a href="http://mherman.org/blog/2013/11/01/handling-ajax-calls-with-node-dot-js-and-express-part-2/">Adding Handlebars</a></li>
+  <li>Part 3: <a href="http://mherman.org/blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/">User Authentication with Passport and MongoDB</a></li>
+  <li>Part 4: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-4/">Refactoring, Adding styles</a></li>
+  <li>Part 5: <a href="http://mherman.org/blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5">Saving Jobs</a></li>
+</ul>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#appjs-server-side" id="markdown-toc-appjs-server-side">app.js (server-side)</a></li>
+  <li><a href="#index-route-client-side" id="markdown-toc-index-route-client-side">Index Route (client-side)</a></li>
+  <li><a href="#index-view-client-side" id="markdown-toc-index-view-client-side">Index View (client-side)</a></li>
+  <li><a href="#mainjs-client-side" id="markdown-toc-mainjs-client-side">Main.js (client-side)</a></li>
+  <li><a href="#workflow" id="markdown-toc-workflow">Workflow</a></li>
+  <li><a href="#appjs-server-side-redux" id="markdown-toc-appjs-server-side-redux">app.js (server-side) redux</a></li>
+  <li><a href="#mainjs-client-side-redux" id="markdown-toc-mainjs-client-side-redux">Main.js (client-side) redux</a></li>
+  <li><a href="#testing" id="markdown-toc-testing">Testing</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<h4 id="navigate-to-where-youd-like-your-project-to-reside-then-run-the-following-command">Navigate to where you’d like your project to reside, then run the following command:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>express node-express-ajax-craigslist
+</code></pre></div></div>
+
+<h4 id="cd-into-the-newly-created-directory-and-install-the-node-modules">CD into the newly created directory and install the node modules:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd </span>node-express-ajax-craigslist
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Aside for the installed node modules/dependencies, your project structure should look like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── app.js
+├── package.json
+├── public
+│   ├── images
+│   ├── javascripts
+│   └── stylesheets
+│       └── style.css
+├── routes
+│   ├── index.js
+│   └── user.js
+└── views
+	├── index.jade
+	└── layout.jade
+</code></pre></div></div>
+
+<blockquote>
+  <p>In short, your server-side Javascript is held in the <code class="highlighter-rouge">app.js</code> file, while the client-side file(s) will be placed in the “javascripts” directory. Keep this in mind as we go through the remainder of the tutorial as it’s important to understand both the relationship between client and server-side Javascript as well as the ability to distinguish between the two.</p>
+</blockquote>
+
+<h4 id="next-install-supervisor-if-you-dont-already-have-it">Next, install <a href="https://github.com/isaacs/node-supervisor">Supervisor</a> if you don’t already have it:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install supervisor <span class="nt">-g</span>
+</code></pre></div></div>
+
+<h4 id="finally-run-a-sanity-check-by-testing-out-your-app">Finally, run a sanity check by testing out your app:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>supervisor app
+</code></pre></div></div>
+
+<p>Point your browser to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see the simple “Welcome to Express” message:</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/welcome.png" alt="image" /></p>
+
+<p>Still with me? Good. Let’s set up our first route.</p>
+
+<h2 id="appjs-server-side">app.js (server-side)</h2>
+
+<h4 id="within-appjs-comment-out-the-following-two-dependencies-since-well-be-defining-all-our-views-directly-in-appjs">Within <code class="highlighter-rouge">app.js</code>, comment out the following two dependencies since we’ll be defining <em>all</em> our views directly in <code class="highlighter-rouge">app.js</code>:</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">routes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/user'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Comment out the following routes as well:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="nx">routes</span><span class="p">.</span><span class="nx">index</span><span class="p">);</span>
+<span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/users'</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">list</span><span class="p">);</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>You probably noticed the <code class="highlighter-rouge">'express'</code> dependency. Remember that we also used Express to generate our project structure. To clarify, Express is <em>both</em> a framework and a command line tool. Just be aware that you can use the Express framework without generating the project structure, although you would probably want to follow another boilerplate structure to speed up the development process.</p>
+</blockquote>
+
+<h4 id="lets-set-up-our-routes-routes-bind-a-url-to-a-specific-function-in-other-words-when-a-request-is-sent-by-the-end-user-its-handled-by-a-specific-url-different-requests-are-handled-by-different-urls-within-our-application-hence-the-need-for-different-routes"><strong>Let’s set up our routes.</strong> Routes bind a URL to a specific function. In other words, when a request is sent by the end user, it’s handled by a specific URL. Different requests are handled by different URLs within our application. Hence the need for different routes.</h4>
+
+<p>Our app we’ll have two routes. (1) The first renders the search page where the end user directly searches Craigslist. (2) The result of the search is then passed to another route via AJAX, which processes the request on the server side.</p>
+
+<p>Let’s look at the former.</p>
+
+<h2 id="index-route-client-side">Index Route (client-side)</h2>
+
+<h4 id="add-the-following-code-to-appjs">Add the following code to ‘app.js’:</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span><span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">'index'</span><span class="p">)});</span>
+</code></pre></div></div>
+
+<p>Essentially, when a user sends an HTTP GET request to <code class="highlighter-rouge">/</code>, the <code class="highlighter-rouge">index.jade</code> view is rendered. Let’s test this out. Update the code in the <code class="highlighter-rouge">index.jade</code> view:</p>
+
+<pre><code class="language-jade">extends layout
+
+block content
+ h1 goodbye, cruel world
+</code></pre>
+
+<p>Double check in the terminal that your server is still running (and that there are no errors), and then return to your browser and refresh the page. You should see the updated H1 tag:</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/goodbye.png" alt="image" /></p>
+
+<p>Next, we’ll update the view.</p>
+
+<h2 id="index-view-client-side">Index View (client-side)</h2>
+
+<h4 id="first-update-indexjade">First, update <code class="highlighter-rouge">index.jade</code>:</h4>
+
+<pre><code class="language-jade">extends layout
+
+   block content
+   input#search(type="search", placeholder="Search Craig's Jobs")
+   h2#results
+
+   script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")
+   script(src="/javascripts/main.js")
+</code></pre>
+
+<p>Then add the following styles to “style.css”:</p>
+
+<div class="language-css highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">#search</span> <span class="p">{</span>
+  <span class="nl">text-align</span><span class="p">:</span> <span class="nb">center</span><span class="p">;</span>
+  <span class="nl">width</span><span class="p">:</span><span class="m">500px</span><span class="p">;</span>
+  <span class="nl">height</span><span class="p">:</span> <span class="m">70px</span><span class="p">;</span>
+  <span class="nl">font-size</span><span class="p">:</span><span class="m">3.5em</span><span class="p">;</span>
+  <span class="nl">border-radius</span><span class="p">:</span><span class="m">8px</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Refresh your browser. See the updates?</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/craigs.png" alt="image" /></p>
+
+<p>This should be straightforward.</p>
+
+<h2 id="mainjs-client-side">Main.js (client-side)</h2>
+
+<h4 id="while-were-still-on-the-client-side-lets-go-ahead-and-add-the-event-handler-within-the-mainjs-file">While we’re still on the client side, let’s go ahead and add the event handler within the <code class="highlighter-rouge">main.js</code> file:</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+ <span class="nx">$</span><span class="p">(</span><span class="s1">'#search'</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">'keyup'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+   <span class="k">if</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span> <span class="o">===</span> <span class="mi">13</span><span class="p">)</span> <span class="p">{</span>
+     <span class="kd">var</span> <span class="nx">parameters</span> <span class="o">=</span> <span class="p">{</span> <span class="na">search</span><span class="p">:</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="p">};</span>
+       <span class="nx">$</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span> <span class="s1">'/searching'</span><span class="p">,</span><span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+       <span class="nx">$</span><span class="p">(</span><span class="s1">'#results'</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+     <span class="p">});</span>
+    <span class="p">};</span>
+ <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here we’re capturing the search results after the end user presses (and releases) the ENTER button (keycode <code class="highlighter-rouge">13</code>), and then storing them in the variable <code class="highlighter-rouge">val</code>. This data is then sent to the server where the response <em>will</em> then be handled, passed back to the client, and finally added to the document via another event handler: <code class="highlighter-rouge">$('#results').html(data)</code>.</p>
+
+<p>That’s a lot to take in. Let’s stop for a minute and look at the workflow from the user perspective.</p>
+
+<h2 id="workflow">Workflow</h2>
+
+<ol>
+  <li>User navigates to main page. The page loads.</li>
+  <li>On the page load, the user sees the search box.</li>
+  <li>User can then enter some text to search for.</li>
+  <li>After the user presses ENTER results are displayed.</li>
+</ol>
+
+<p>Thus far, we’ve finished numbers 1, 2, and 3. Most of the action is handled in step 4, though. We already passed the results back to the server to the <code class="highlighter-rouge">/searching/</code> route. We need to then scrape Craigslist, send the results back, and then display them, of course.</p>
+
+<p>Now might be a good time to take out a piece of paper and a pen and write a diagram of what has happened thus far.</p>
+
+<p>Ready? Let’s move back to the server-side.</p>
+
+<h2 id="appjs-server-side-redux">app.js (server-side) redux</h2>
+
+<h4 id="back-on-the-sever-side-we-need-a-route-to-handle-searching">Back on the sever side, we need a route to handle <code class="highlighter-rouge">/searching/</code>:</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/searching'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+ <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">"WHEEE"</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="notice-the-ressend-i-just-want-to-test-that-the-route-works-point-your-browser-to-httplocalhost3000searching-if-all-is-well-you-should-see-wheee-in-the-top-left-of-the-screen-we-now-know-the-route-is-working">Notice the <code class="highlighter-rouge">res.send()</code>. I just want to test that the route works. Point your browser to <a href="http://localhost:3000/searching">http://localhost:3000/searching</a>. If all is well, you should see “WHEEE” in the top-left of the screen. We now know the route is working.</h4>
+
+<p>####With the route working, we need to accomplish a number of things -</p>
+<ul>
+  <li>Set the returned value from the search box to a variable;</li>
+  <li>Pass the variable into the YQL search URL (YQL handles the actual scraping);</li>
+  <li>Use the <em>request</em> module to process the YQL URL and return the results; and,</li>
+  <li>Pass the results back to the client side.</li>
+</ul>
+
+<p><strong>We’ll handle all this in increments, testing as we go.</strong></p>
+
+<h4 id="set-the-returned-value-from-the-search-box-to-a-variable">Set the returned value from the search box to a variable:</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/searching'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+
+ <span class="c1">// input value from search</span>
+ <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+ <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">val</span><span class="p">);</span>
+
+<span class="c1">// testing the route</span>
+<span class="c1">// res.send("WHEEE");</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>So after you add this code, return to your main route in the browser - <a href="http://localhost:3000/">http://localhost:3000/</a> - and place your terminal next to the browser. Now enter a search term and press ENTER. You should see the <code class="highlighter-rouge">console.log()</code> in the terminal:</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/value.png" alt="image" /></p>
+
+<p>In the above example, I first searched for “Ruby” and then “hello, wonderful”.</p>
+
+<p>Moving on, let’s add another step.</p>
+
+<h4 id="pass-the-variable-into-the-yql-search-url">Pass the variable into the YQL search URL.</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/searching'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+
+ <span class="c1">// input value from search</span>
+ <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+<span class="c1">//console.log(val);</span>
+
+<span class="c1">// url used to search yql</span>
+<span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">"http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search"</span> <span class="o">+</span>
+<span class="s2">"%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22"</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">"%22&amp;format="</span> <span class="o">+</span>
+<span class="s2">"json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"</span><span class="p">;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">url</span><span class="p">);</span>
+
+<span class="c1">// testing the route</span>
+<span class="c1">// res.send("WHEEE");</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Again, open your browser along with your terminal and search for something relevant. (This specific YQL URL searches for all jobs in the San Francisco Bay Area.)</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/yql.png" alt="image" /></p>
+
+<p>I searched for Ruby then Python in the example above. If you want to see the actual JSON results, grab the URL from the terminal and paste it into your browser’s address bar.</p>
+
+<h4 id="use-the-request-module-to-process-the-yql-url-and-return-the-results-to-do-this-we-need-to-first-install-this-module-by-running-this-command-from-your-terminal">Use the <a href="https://github.com/mikeal/request"><em>request</em></a> module to process the YQL URL and return the results. To do this we need to first install this module by running this command from your terminal:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install request
+</code></pre></div></div>
+
+<p>Now add the following code to the route function:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
+<span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+ <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+ <span class="c1">// logic used to compare search results with the input from user</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+   <span class="nx">craig</span> <span class="o">=</span> <span class="s2">"No results found. Try again."</span><span class="p">;</span>
+ <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="nx">craig</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'about'</span><span class="p">];</span>
+ <span class="p">}</span>
+ <span class="c1">// pass back the results to client side</span>
+ <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">craig</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+<p>So that <code class="highlighter-rouge">app.js</code> looks like this:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/searching'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+
+ <span class="c1">// input value from search</span>
+ <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+<span class="c1">//console.log(val);</span>
+
+<span class="c1">// url used to search yql</span>
+<span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">"http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search"</span> <span class="o">+</span>
+<span class="s2">"%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22"</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">"%22&amp;format="</span> <span class="o">+</span>
+<span class="s2">"json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"</span><span class="p">;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">url</span><span class="p">);</span>
+
+ <span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
+ <span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+   <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+   <span class="c1">// logic used to compare search results with the input from user</span>
+   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+     <span class="nx">craig</span> <span class="o">=</span> <span class="s2">"No results found. Try again."</span><span class="p">;</span>
+   <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">craig</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'about'</span><span class="p">];</span>
+   <span class="p">}</span>
+ <span class="p">});</span>
+
+  <span class="c1">// testing the route</span>
+  <span class="c1">// res.send("WHEEE");</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>In this code, we pass the YQL URL to the <em>request</em> module (<code class="highlighter-rouge">request(url</code>. . .), then we grab the callback (<code class="highlighter-rouge">body</code>), which is a string, and then parse it as JSON (<code class="highlighter-rouge">body = JSON.parse(body);</code>). Next, we test to see if any results are returned. If so, we assign the value <code class="highlighter-rouge">body.query.results.RDF.item[0]['about']</code> to <code class="highlighter-rouge">craig</code>, and if not, we assign the value <code class="highlighter-rouge">"No results found. Try again."</code> to <code class="highlighter-rouge">craig</code>.</p>
+
+<blockquote>
+  <p>If you run into problems here, stop and test. <code class="highlighter-rouge">console.log()</code> the <code class="highlighter-rouge">body</code>. You can also add a <code class="highlighter-rouge">console.log</code> inside the conditional statement to see if the logic is even working. For example, if you know that no results are being returned, yet when you add <code class="highlighter-rouge">console.log(testing)</code> inside the first conditional and don’t see it in your console when you run the app, you know that your logic is incorrect.</p>
+</blockquote>
+
+<blockquote>
+  <p><strong>When in doubt always, always, ALWAYS test with <code class="highlighter-rouge">console.log()</code>.</strong></p>
+</blockquote>
+
+<h4 id="finally-lets-pass-the-results-back-to-the-client-side">Finally, let’s pass the results back to the client side:</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/searching'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+
+ <span class="c1">// input value from search</span>
+ <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+<span class="c1">//console.log(val);</span>
+
+<span class="c1">// url used to search yql</span>
+<span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">"http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search"</span> <span class="o">+</span>
+<span class="s2">"%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22"</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">"%22&amp;format="</span> <span class="o">+</span>
+<span class="s2">"json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"</span><span class="p">;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">url</span><span class="p">);</span>
+
+ <span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
+ <span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+   <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+   <span class="c1">// logic used to compare search results with the input from user</span>
+   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+     <span class="nx">craig</span> <span class="o">=</span> <span class="s2">"No results found. Try again."</span><span class="p">;</span>
+   <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">craig</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'about'</span><span class="p">];</span>
+   <span class="p">}</span>
+ <span class="p">});</span>
+
+  <span class="c1">// pass back the results to client side</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">craig</span><span class="p">);</span>
+
+  <span class="c1">// testing the route</span>
+  <span class="c1">// res.send("WHEEE");</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>So, we’re simply taking <code class="highlighter-rouge">craig</code>, which could contain results or a string stating that no results could be found and sending it back to the client using     <code class="highlighter-rouge">res.send(craig)</code>.</p>
+
+<p>And with that, we’re finished with the server side.</p>
+
+<h2 id="mainjs-client-side-redux">Main.js (client-side) redux</h2>
+
+<h4 id="open-mainjs-and-look-at-the-following-code">Open <code class="highlighter-rouge">main.js</code> and look at the following code:</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">$</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span> <span class="s1">'/searching'</span><span class="p">,</span><span class="nx">parameters</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+ <span class="nx">$</span><span class="p">(</span><span class="s1">'#results'</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>This is the <em>actual</em> AJAX request. As I stated before, we pass the <code class="highlighter-rouge">parameters</code> (which is an object) to the server side. We also have a handler setup to process the response from the server, which then takes the returned results and adds the data to the <code class="highlighter-rouge">&lt;h2&gt;</code> tag with the <code class="highlighter-rouge">id</code> of <code class="highlighter-rouge">results</code> in the JADE template.</p>
+
+<p>Now the end user should see the results.</p>
+
+<h2 id="testing">Testing</h2>
+
+<p>Test it out using a number of inputs. <em>Remember: this searches jobs in the SF Bay Area, so use appropriate keywords.</em></p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/ruby.png" alt="image" /></p>
+
+<p>Wait. Why did this return just the URL? Well, go back to <code class="highlighter-rouge">app.js</code> and check the conditional logic:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">craig</span> <span class="o">=</span> <span class="s2">"No results found. Try again."</span><span class="p">;</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="nx">craig</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'about'</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>If the query returns results, then we pass <code class="highlighter-rouge">body.query.results.RDF.item[0]['about']</code> to <code class="highlighter-rouge">craig</code>. What is that value? Well, we take the JSON file, <code class="highlighter-rouge">body</code>, and traverse through it. Let’s look at the JSON file real quick. You can grab this from the <a href="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/yql.json">repo</a>.</p>
+
+<p>Now just look at the value, <code class="highlighter-rouge">body.query.results.RDF.item[0]['about']</code>, and compare it to the JSON file. We move from <code class="highlighter-rouge">query</code> to <code class="highlighter-rouge">RDF</code> to the first item, <code class="highlighter-rouge">item[0]</code>. Finally, when we call the <code class="highlighter-rouge">about</code> key, the URL (the value) is returned. Make sense? See if you can return the <code class="highlighter-rouge">description</code> from the second <code class="highlighter-rouge">item</code>.</p>
+
+<p>Now let’s turn that text URL into an actual clickable URL. See if you can do it yourself before you look at my <a href="https://gist.github.com/mjhea0/05da6ead756bd6af7d3b">answer</a>.</p>
+
+<p><img src="https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/img/final.png" alt="image" /></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>That’s all for now. Next time we’ll look at how to return multiple results and loop through them with <a href="http://handlebarsjs.com/">Handlebars</a> and the separation of concerns. Comment if you have questions. Check out the <a href="https://github.com/mjhea0/node-express-ajax-craigslist">repo</a>. Cheers!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+
+
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2017 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+    
+      <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', UA-37074204-1, 'auto');
+  ga('send', 'pageview');
+</script>
+
+    
+
+  </body>
+
+</html>

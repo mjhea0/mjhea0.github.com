@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Designing a RESTful API with Node and Postgres</title>
+  <meta name="description" content="This article details how to build a RESTful API with Node, Express, and Postgres.">
+  
+    
+    <meta name="keywords" content="node, express, postgres, api, restful api, crud">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2016/03/13/designing-a-restful-api-with-node-and-postgres/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Designing a RESTful API with Node and Postgres">
+  <meta name="twitter:description" content="This article details how to build a RESTful API with Node, Express, and Postgres.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Designing a RESTful API with Node and Postgres</h1>
+    
+    <p class="post-meta"><time datetime="2016-03-13T07:56:00-06:00" itemprop="datePublished">Mar 13, 2016</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>In this tutorial we’ll create a RESTful web service with JavaScript, Node, Express, Postgres, and pg-promise.</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/node-restful-api.png" style="max-width: 100%; border:0; box-shadow: none;" alt="node restful api" />
+</div>
+
+<p><br /></p>
+
+<p>Our app will include the following endpoints:</p>
+
+<table style="font-size:18px;border-spacing:12px 0px;border-collapse:separate;border:1px solid black;">
+<thead>
+<tr>
+<th style="text-align:center"><strong>URL</strong></th>
+<th style="text-align:center"><strong>HTTP Verb</strong></th>
+<th style="text-align:center"><strong>Action</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/puppies</td>
+<td>GET</td>
+<td>Return ALL puppies</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>GET</td>
+<td>Return a SINGLE puppy</td>
+</tr>
+<tr>
+<td>/api/puppies</td>
+<td>POST</td>
+<td>Add a puppy</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>PUT</td>
+<td>Update a puppy</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>DELETE</td>
+<td>Delete a puppy</td>
+</tr>
+</tbody>
+</table>
+
+<p><br /></p>
+
+<blockquote>
+  <p>This tutorial uses the following tools and technologies - Node.js v<a href="https://nodejs.org/dist/v4.7.2/">4.x</a>, <a href="https://github.com/expressjs/generator">express-generator v4.x</a>, <a href="https://github.com/vitaly-t/pg-promise">pg-promise v5.x</a>, PostgreSQL v<a href="http://www.postgresql.org/docs/9.4/static/release.html">9.4</a>, and <a href="http://bluebirdjs.com">Bluebird v3.x</a></p>
+</blockquote>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project setup</a></li>
+  <li><a href="#postgres-setup" id="markdown-toc-postgres-setup">Postgres setup</a></li>
+  <li><a href="#routes" id="markdown-toc-routes">Routes</a></li>
+  <li><a href="#queries" id="markdown-toc-queries">Queries</a></li>
+  <li><a href="#error-handling" id="markdown-toc-error-handling">Error Handling</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="project-setup">Project setup</h2>
+
+<p>Install the Express Generator (if necessary):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install express-generator@4 <span class="nt">-g</span>
+</code></pre></div></div>
+
+<p>Create a new project and install the required dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>express node-postgres-promises
+<span class="nv">$ </span><span class="nb">cd </span>node-postgres-promises
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Test!</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm start
+</code></pre></div></div>
+
+<p>Navigate to <a href="http://localhost:3000">http://localhost:3000</a> in your browser, and you should see the familiar “Welcome to Express” text. Kill the server when done. Now let’s set up the Postgres bindings via <a href="https://www.npmjs.com/package/pg-promise">pg-promise</a>…</p>
+
+<p>Install <code class="highlighter-rouge">pg-promise</code></p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install pg-promise@5 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Why <code class="highlighter-rouge">pg-promise</code> instead of <code class="highlighter-rouge">pg</code>? Put simply, pg-promise abstracts away much of the difficult, low-level connection management, allowing you to focus on the business logic. Further, the library includes a powerful <a href="https://www.npmjs.com/package/pg-promise#queries-and-parameters">query formatting engine</a> and support for <a href="https://www.npmjs.com/package/pg-promise#transactions">automated transactions</a>.</p>
+
+<p>Finally, create a new file in the project root called <em>queries.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'bluebird'</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="c1">// Initialization Options</span>
+  <span class="na">promiseLib</span><span class="p">:</span> <span class="nx">promise</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">pgp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'pg-promise'</span><span class="p">)(</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">connectionString</span> <span class="o">=</span> <span class="s1">'postgres://localhost:5432/puppies'</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">pgp</span><span class="p">(</span><span class="nx">connectionString</span><span class="p">);</span>
+
+<span class="c1">// add query functions</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">getAllPuppies</span><span class="p">:</span> <span class="nx">getAllPuppies</span><span class="p">,</span>
+  <span class="na">getSinglePuppy</span><span class="p">:</span> <span class="nx">getSinglePuppy</span><span class="p">,</span>
+  <span class="na">createPuppy</span><span class="p">:</span> <span class="nx">createPuppy</span><span class="p">,</span>
+  <span class="na">updatePuppy</span><span class="p">:</span> <span class="nx">updatePuppy</span><span class="p">,</span>
+  <span class="na">removePuppy</span><span class="p">:</span> <span class="nx">removePuppy</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Here, we created an instance of <code class="highlighter-rouge">pg-promise</code> and assigned it to a variable, <code class="highlighter-rouge">pgp</code>.</p>
+
+<p>Did you notice that we passed an object, <code class="highlighter-rouge">options</code>, during the initialization process? This is required, even if you do not pass any properties/<a href="https://www.npmjs.com/package/pg-promise#initialization-options">initialization options</a> to the object. In this case, we <a href="https://www.npmjs.com/package/pg-promise#promiselib">overrode</a> pg-promise’s default promise library - ES6 Promises - with <a href="http://bluebirdjs.com">Bluebird</a> by setting the <code class="highlighter-rouge">promiseLib</code> property in the <code class="highlighter-rouge">options</code> object.</p>
+
+<blockquote>
+  <p>Why Bluebird? It’s loaded with features and reputed to be <a href="http://programmers.stackexchange.com/questions/278778/why-are-native-es6-promises-slower-and-more-memory-intensive-than-bluebird">faster</a> than ES6 Promises.</p>
+</blockquote>
+
+<p>Don’t forget to install Bluebird:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install bluebird@3 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Next, we defined a connection string, and then passed it to the pg-promise instance to create a global connection instance.</p>
+
+<p>Done!</p>
+
+<h2 id="postgres-setup">Postgres setup</h2>
+
+<p>Create a new file also in the root called <em>puppies.sql</em> and then add the following code:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">DROP</span> <span class="k">DATABASE</span> <span class="n">IF</span> <span class="k">EXISTS</span> <span class="n">puppies</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">puppies</span><span class="p">;</span>
+
+<span class="err">\</span><span class="k">c</span> <span class="n">puppies</span><span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">pups</span> <span class="p">(</span>
+  <span class="n">ID</span> <span class="n">SERIAL</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+  <span class="n">name</span> <span class="n">VARCHAR</span><span class="p">,</span>
+  <span class="n">breed</span> <span class="n">VARCHAR</span><span class="p">,</span>
+  <span class="n">age</span> <span class="n">INTEGER</span><span class="p">,</span>
+  <span class="n">sex</span> <span class="n">VARCHAR</span>
+<span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">pups</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">breed</span><span class="p">,</span> <span class="n">age</span><span class="p">,</span> <span class="n">sex</span><span class="p">)</span>
+  <span class="k">VALUES</span> <span class="p">(</span><span class="s1">'Tyler'</span><span class="p">,</span> <span class="s1">'Retrieved'</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">'M'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Run the file to create the database, apply the schema, and add one row to the newly created database:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql <span class="nt">-f</span> puppies.sql
+
+DROP DATABASE
+CREATE DATABASE
+CREATE TABLE
+INSERT 0 1
+</code></pre></div></div>
+
+<h2 id="routes">Routes</h2>
+
+<p>Now we can set up the route handlers in <em>index.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+<span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../queries'</span><span class="p">);</span>
+
+
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/puppies'</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">getAllPuppies</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/puppies/:id'</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">getSinglePuppy</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/api/puppies'</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">createPuppy</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/api/puppies/:id'</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">updatePuppy</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/api/puppies/:id'</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">removePuppy</span><span class="p">);</span>
+
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="queries">Queries</h2>
+
+<p>Next, let’s add the SQL queries to the <em>queries.js</em> file…</p>
+
+<h3 id="get-all-puppies">GET All Puppies</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getAllPuppies</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">db</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="s1">'select * from pups'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+          <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+          <span class="na">data</span><span class="p">:</span> <span class="nx">data</span><span class="p">,</span>
+          <span class="na">message</span><span class="p">:</span> <span class="s1">'Retrieved ALL puppies'</span>
+        <span class="p">});</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>In the above code, we utilized the <code class="highlighter-rouge">any</code> <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Mask</a> to query the database, which returns a promise object. This method is used to indicate that we are expecting any number of results back. Success and failures are then handled by <code class="highlighter-rouge">.then()</code> and <code class="highlighter-rouge">.catch()</code>.</p>
+
+<p>Besides, <code class="highlighter-rouge">any</code>, you can use the following <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Masks</a> (just to name a few):</p>
+
+<ul>
+  <li><code class="highlighter-rouge">one</code> - a single row is expected</li>
+  <li><code class="highlighter-rouge">many</code> - one or more rows are expected</li>
+  <li><code class="highlighter-rouge">none</code> - no rows are expected</li>
+  <li><code class="highlighter-rouge">result</code> - passes the original object when resolved (we’ll look at an example of this shortly)</li>
+</ul>
+
+<p>Test the request out in the browser - <a href="http://localhost:3000/api/puppies">http://localhost:3000/api/puppies</a>:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tyler"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"breed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Shih-tzu"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"age"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"sex"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Retrieved ALL puppies"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="get-single-puppy">GET Single Puppy</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getSinglePuppy</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">pupID</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+  <span class="nx">db</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="s1">'select * from pups where id = $1'</span><span class="p">,</span> <span class="nx">pupID</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+          <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+          <span class="na">data</span><span class="p">:</span> <span class="nx">data</span><span class="p">,</span>
+          <span class="na">message</span><span class="p">:</span> <span class="s1">'Retrieved ONE puppy'</span>
+        <span class="p">});</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Again, test in the browser: <a href="http://localhost:3000/api/puppies/1">http://localhost:3000/api/puppies/1</a></p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tyler"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"breed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Shih-tzu"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"age"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"sex"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Retrieved ONE puppy"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="post">POST</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">createPuppy</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">age</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">age</span><span class="p">);</span>
+  <span class="nx">db</span><span class="p">.</span><span class="nx">none</span><span class="p">(</span><span class="s1">'insert into pups(name, breed, age, sex)'</span> <span class="o">+</span>
+      <span class="s1">'values(${name}, ${breed}, ${age}, ${sex})'</span><span class="p">,</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+          <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+          <span class="na">message</span><span class="p">:</span> <span class="s1">'Inserted one puppy'</span>
+        <span class="p">});</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Test with curl in a new terminal window:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">--data</span> <span class="s2">"name=Whisky&amp;breed=annoying&amp;age=3&amp;sex=f"</span> <span class="se">\</span>
+http://127.0.0.1:3000/api/puppies
+</code></pre></div></div>
+
+<p>You should see:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">{</span>
+  <span class="s2">"status"</span>: <span class="s2">"success"</span>,
+  <span class="s2">"message"</span>: <span class="s2">"Inserted one puppy"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Double check the GET ALL route in your browser to ensure that the new puppy is now part of the collection.</p>
+
+<h3 id="put">PUT</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">updatePuppy</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">db</span><span class="p">.</span><span class="nx">none</span><span class="p">(</span><span class="s1">'update pups set name=$1, breed=$2, age=$3, sex=$4 where id=$5'</span><span class="p">,</span>
+    <span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">breed</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">age</span><span class="p">),</span>
+      <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">sex</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)])</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+          <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+          <span class="na">message</span><span class="p">:</span> <span class="s1">'Updated puppy'</span>
+        <span class="p">});</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Test!</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-X</span> PUT <span class="nt">--data</span> <span class="s2">"name=Hunter&amp;breed=annoying&amp;age=33&amp;sex=m"</span> <span class="se">\</span>
+http://127.0.0.1:3000/api/puppies/1
+</code></pre></div></div>
+
+<h3 id="delete">Delete</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">removePuppy</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">pupID</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+  <span class="nx">db</span><span class="p">.</span><span class="nx">result</span><span class="p">(</span><span class="s1">'delete from pups where id = $1'</span><span class="p">,</span> <span class="nx">pupID</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+      <span class="cm">/* jshint ignore:start */</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+          <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+          <span class="na">message</span><span class="p">:</span> <span class="s2">`Removed </span><span class="p">${</span><span class="nx">result</span><span class="p">.</span><span class="nx">rowCount</span><span class="p">}</span><span class="s2"> puppy`</span>
+        <span class="p">});</span>
+      <span class="cm">/* jshint ignore:end */</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>So, we used the <code class="highlighter-rouge">result</code> <a href="https://www.npmjs.com/package/pg-promise#query-result-mask">Query Result Mask</a>, in order to get the number of records affected by the query.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-X</span> DELETE http://127.0.0.1:3000/api/puppies/1
+</code></pre></div></div>
+
+<p>Result:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">{</span>
+  <span class="s2">"status"</span>: <span class="s2">"success"</span>,
+  <span class="s2">"message"</span>: <span class="s2">"Removed 1 puppy"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="error-handling">Error Handling</h2>
+
+<p>Update the error handlers in <em>app.js</em> to serve up JSON:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// development error handler</span>
+<span class="c1">// will print stacktrace</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'env'</span><span class="p">)</span> <span class="o">===</span> <span class="s1">'development'</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span> <span class="nx">err</span><span class="p">.</span><span class="nx">code</span> <span class="o">||</span> <span class="mi">500</span> <span class="p">)</span>
+    <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="nx">err</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="c1">// production error handler</span>
+<span class="c1">// no stacktraces leaked to user</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">status</span> <span class="o">||</span> <span class="mi">500</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+    <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+    <span class="na">message</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We now have a basic RESTful API built with Node, Express, and pg-promise. Be sure to comment below if you have any questions.</p>
+
+<p>Grab the code from the <a href="https://github.com/mjhea0/node-postgres-promises">repo</a>.</p>
+
+<blockquote>
+  <p><strong>NOTE</strong>: Check out <a href="https://github.com/vitaly-t/pg-promise-demo">pg-promise-demo</a> for a more comprehensive example of setting up your database layer.</p>
+</blockquote>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+
+
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2017 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+    
+      <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', UA-37074204-1, 'auto');
+  ga('send', 'pageview');
+</script>
+
+    
+
+  </body>
+
+</html>

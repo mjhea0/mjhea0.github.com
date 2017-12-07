@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Removing a Django App</title>
+  <meta name="description" content="In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related contenttypes.">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2013/07/04/removing-a-django-app/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Removing a Django App">
+  <meta name="twitter:description" content="In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related contenttypes.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Removing a Django App</h1>
+    
+    <p class="post-meta"><time datetime="2013-07-04T09:43:00-06:00" itemprop="datePublished">Jul 4, 2013</time> • 
+  
+  
+    
+  
+    
+  
+    
+      <a href="/categories/python/">python</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/django/">django</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related <a href="https://docs.djangoproject.com/en/1.5/ref/contrib/contenttypes/">contenttypes</a>.</p>
+
+<p>Let’s look at two ways to handle this: Manually and with <a href="http://south.aeracode.org/">South</a>.</p>
+
+<p>In this case, the application name is called <code class="highlighter-rouge">customers</code>, and it contains the following tables within <em>models.py</em>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Student</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">courses</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="s">'Course'</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<span class="k">class</span> <span class="nc">Course</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</code></pre></div></div>
+
+<p>Also, I am using a sqlite3 database called <em>test.db</em>, which contains <a href="https://gist.github.com/mjhea0/5959729">this</a> data.</p>
+
+<p>Let’s say we want to drop the Course table (for reasons unknown).</p>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#manually" id="markdown-toc-manually">Manually</a></li>
+  <li><a href="#south" id="markdown-toc-south">South</a></li>
+</ul>
+
+<h2 id="manually">Manually</h2>
+
+<ol>
+  <li>Navigate to your project working directory and drop the table:</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">sqlclear</span> <span class="n">customers</span> <span class="o">&gt;</span> <span class="n">drop_customers_customerprofile</span>
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>Remove the app from the INSTALLED_APPS section in <em>settings.py</em> and delete any associated URL patterns from <em>urls.py</em>.</p>
+  </li>
+  <li>
+    <p>Drop the database tables:</p>
+  </li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="n">sqlite3</span> <span class="n">test</span><span class="o">.</span><span class="n">db</span>
+<span class="n">sqlite</span><span class="o">&gt;</span> <span class="n">DROP</span> <span class="n">TABLE</span> <span class="n">customers_customerprofile</span><span class="p">;</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>equivalent MySQL command - <code class="highlighter-rouge">$ mysql -u root -p &lt;database_name&gt; &lt; drop_&lt;app_name&gt;_&lt;table_name&gt;.sql</code></p>
+</blockquote>
+
+<ol>
+  <li>Clean up the related contenttypes from the Shell:</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">shell</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">app_label</span><span class="o">=</span><span class="s">'customers'</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</code></pre></div></div>
+
+<ol>
+  <li>You can now delete the app folder as well as any associated media files and/or templates. Finally, make sure to uninstall any associated packages or dependencies using <code class="highlighter-rouge">pip uninstall &lt;package_name&gt;</code>. <em>Make sure to use virtualenv</em>.</li>
+</ol>
+
+<h2 id="south">South</h2>
+
+<p>I use South with all my Django projects, so I tend to prefer this method. Let’s take a look.</p>
+
+<ol>
+  <li>Setup the initial migration and push it through:</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">schemamigration</span> <span class="n">customers</span> <span class="o">--</span><span class="n">initial</span>
+<span class="err">$</span> <span class="n">python</span> <span class="n">manage</span><span class="o">.</span><span class="n">py</span> <span class="n">migrate</span> <span class="n">customers</span>
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>Remove the <code class="highlighter-rouge">CustomerProfile</code> class from <em>models.py</em>.</p>
+  </li>
+  <li>
+    <p>Setup the migration to delete the table:</p>
+  </li>
+</ol>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>python manage.py schemamigration customers <span class="nt">--auto</span>
+</code></pre></div></div>
+
+<ol>
+  <li>Update the migration file <em>0002_auto__del_customerprofile.py</em>, to clean up the related contenttypes as well as delete the table from the database, by updating the <code class="highlighter-rouge">forwards</code> function:</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">forwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orm</span><span class="p">):</span>
+   <span class="c"># Deleting model 'CustomerProfile'</span>
+   <span class="n">db</span><span class="o">.</span><span class="n">delete_table</span><span class="p">(</span><span class="s">u'customers_customerprofile'</span><span class="p">)</span>
+   <span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
+   <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="n">app_label</span><span class="o">=</span><span class="s">'customers'</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</code></pre></div></div>
+
+<ol>
+  <li>Push the migration through:</li>
+</ol>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>python manage.py migrate customers
+</code></pre></div></div>
+
+<ol>
+  <li>Fake a zero migration to remove the migration history and clear up the South tables:</li>
+</ol>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>python manage.py migrate customers zero <span class="nt">--fake</span>
+</code></pre></div></div>
+
+<ol>
+  <li>Remove the app from the INSTALLED_APPS section in <em>settings.py</em> and delete any associated URL patterns from <em>urls.py</em>. Then delete the app folder and any related media files and/or templates. Finally, make sure to uninstall any packages or dependencies using <code class="highlighter-rouge">pip unistall &lt;package_name&gt;</code>. <em>Make sure to use virtualenv</em>.</li>
+</ol>
+
+<p><strong>Comment if you have questions. Cheers!</strong></p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+
+
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2017 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+    
+      <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', UA-37074204-1, 'auto');
+  ga('send', 'pageview');
+</script>
+
+    
+
+  </body>
+
+</html>

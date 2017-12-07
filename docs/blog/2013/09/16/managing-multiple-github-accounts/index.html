@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Managing Multiple Github Accounts</title>
+  <meta name="description" content="Let’s look at how to manage multiple Github accounts from one computer. In essence, it’s simply a matter of balancing both your git and ssh configurations - which actually is not as bad as it might seem.">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2013/09/16/managing-multiple-github-accounts/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Managing Multiple Github Accounts">
+  <meta name="twitter:description" content="Let’s look at how to manage multiple Github accounts from one computer. In essence, it’s simply a matter of balancing both your git and ssh configurations - which actually is not as bad as it might...">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Managing Multiple Github Accounts</h1>
+    
+    <p class="post-meta"><time datetime="2013-09-16T07:43:00-06:00" itemprop="datePublished">Sep 16, 2013</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/github/">github</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Let’s look at how to manage multiple Github accounts from one computer. In essence, it’s simply a matter of balancing both your git and ssh configurations - which actually is not as bad as it might seem.</p>
+
+<blockquote>
+  <p>Note: This tutorial is meant for Unix users.</p>
+</blockquote>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#set-up-ssh-keys" id="markdown-toc-set-up-ssh-keys">Set up SSH Keys</a></li>
+  <li><a href="#add-the-keys-to-your-github-accounts" id="markdown-toc-add-the-keys-to-your-github-accounts">Add the keys to your Github accounts:</a></li>
+  <li><a href="#create-a-configuration-file-to-manage-the-separate-keys" id="markdown-toc-create-a-configuration-file-to-manage-the-separate-keys">Create a configuration file to manage the separate keys</a></li>
+  <li><a href="#update-stored-identities" id="markdown-toc-update-stored-identities">Update stored identities</a></li>
+  <li><a href="#test-push" id="markdown-toc-test-push">Test PUSH</a></li>
+  <li><a href="#test-pull" id="markdown-toc-test-pull">Test PULL</a></li>
+</ul>
+
+<h2 id="set-up-ssh-keys">Set up SSH Keys</h2>
+
+<p>Let’s assume your two Github accounts are named <em>githubPersonal</em> and <em>githubWork</em>, respectively.</p>
+
+<p>Create two SSH keys, saving each to a separate file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd</span> ~/.ssh
+<span class="nv">$ </span>ssh-keygen <span class="nt">-t</span> rsa <span class="nt">-C</span> <span class="s2">"your_email@associated_with_githubPersonal.com"</span>
+<span class="c"># save it as id_rsa_personal when prompted</span>
+<span class="nv">$ </span>ssh-keygen <span class="nt">-t</span> rsa <span class="nt">-C</span> <span class="s2">"your_email@associated_with_githubWork.com"</span>
+<span class="c"># save it as id_rsa_work when prompted</span>
+</code></pre></div></div>
+
+<p>The above commands setup the following files:</p>
+
+<ul>
+  <li><em>id_rsa_personal</em></li>
+  <li><em>id_rsa_personal.pub</em></li>
+  <li><em>id_rsa_work</em></li>
+  <li><em>id_rsa_work.pub</em></li>
+</ul>
+
+<h2 id="add-the-keys-to-your-github-accounts">Add the keys to your Github accounts:</h2>
+
+<h4 id="copy-the-key-to-your-clipboard">Copy the key to your clipboard:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>pbcopy &lt; ~/.ssh/id_rsa_personal.pub
+</code></pre></div></div>
+
+<h4 id="add-the-key-to-your-account">Add the key to your account:</h4>
+<ul>
+  <li>Go to your Account Settings</li>
+  <li>Click “SSH Keys” then “Add SSH key”</li>
+  <li>Paste your key into the “Key” field and add a relevant title</li>
+  <li>Click “Add key” then enter your Github password to confirm</li>
+</ul>
+
+<h4 id="repeat-the-process-for-your-githubwork-account">Repeat the process for your <em>githubWork</em> account.</h4>
+
+<h2 id="create-a-configuration-file-to-manage-the-separate-keys">Create a configuration file to manage the separate keys</h2>
+
+<h4 id="create-a-config-file-in-ssh">Create a config file in ~/.ssh/</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>touch config
+</code></pre></div></div>
+
+<h4 id="edit-the-file-using-the-text-editor-of-your-choice-i-used-vim----vim-config">Edit the file using the text editor of your choice. I used vim - <code class="highlighter-rouge">$ vim config</code>:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># githubPersonal</span>
+Host personal
+   HostName github.com
+   User git
+   IdentityFile ~/.ssh/id_rsa_personal
+
+<span class="c"># githubWork</span>
+Host work
+   HostName github.com
+   User git
+   IdentityFile ~/.ssh/id_rsa_work
+</code></pre></div></div>
+
+<h2 id="update-stored-identities">Update stored identities</h2>
+
+<h4 id="clear-currently-stored-identities">Clear currently stored identities:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh-add <span class="nt">-D</span>
+</code></pre></div></div>
+
+<h4 id="add-new-keys">Add new keys:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh-add id_rsa_personal
+<span class="nv">$ </span>ssh-add id_rsa_work
+</code></pre></div></div>
+
+<h4 id="test-to-make-sure-new-keys-are-stored">Test to make sure new keys are stored:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh-add <span class="nt">-l</span>
+</code></pre></div></div>
+
+<h4 id="test-to-make-sure-github-recognizes-the-keys">Test to make sure Github recognizes the keys:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh <span class="nt">-T</span> personal
+Hi githubPersonal! You<span class="s1">'ve successfully authenticated, but GitHub does not provide shell access.
+$ ssh -T work
+Hi githubWork! You'</span>ve successfully authenticated, but GitHub does not provide shell access.
+</code></pre></div></div>
+
+<h2 id="test-push">Test PUSH</h2>
+
+<h4 id="on-github-create-a-new-repo-in-your-personal-account-githubpersonal-called-test-personal">On Github, create a new repo in your personal account, <em>githubPersonal</em>, called <em>test-personal</em>.</h4>
+
+<h4 id="back-on-your-local-machine-create-a-test-directory">Back on your local machine, create a test directory:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd</span> ~/documents
+<span class="nv">$ </span>mkdir test-personal
+<span class="nv">$ </span><span class="nb">cd </span>test-personal
+</code></pre></div></div>
+
+<h4 id="add-a-blank-readmemd-file-and-push-to-github">Add a blank “readme.md” file and PUSH to Github:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>touch readme.md
+<span class="nv">$ </span>git init
+<span class="nv">$ </span>git add <span class="nb">.</span>
+<span class="nv">$ </span>git commit <span class="nt">-am</span> <span class="s2">"first commit"</span>
+<span class="nv">$ </span>git remote add origin git@personal:githubPersonal/test-personal.git
+<span class="nv">$ </span>git push origin master
+</code></pre></div></div>
+
+<blockquote>
+  <p>Notice how we’re using the custom account, <code class="highlighter-rouge">git@personal</code>, instead of <code class="highlighter-rouge">git@github.com</code>.</p>
+</blockquote>
+
+<h4 id="repeat-the-process-for-your-githubwork-account-1">Repeat the process for your <em>githubWork</em> account.</h4>
+
+<h2 id="test-pull">Test PULL</h2>
+
+<h4 id="add-some-text-to-the-readmemd-file-in-your-personal-account-on-github">Add some text to the <em>readme.md</em> file in your personal account on Github.</h4>
+
+<h4 id="now-pull-and-merge-the-changes-by-running-the-following-command-within-the-test-personal-directory">Now PULL and merge the changes by running the following command within the <em>test-personal</em> directory:</h4>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git pull origin master
+</code></pre></div></div>
+
+<h4 id="again-repeat-this-for-your-githubwork-account">Again, repeat this for your <em>githubWork</em> account.</h4>
+
+<p><br /></p>
+
+<p>Questions? Comments? Did I miss something? Comment below.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+
+
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2017 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+    
+      <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', UA-37074204-1, 'auto');
+  ga('send', 'pageview');
+</script>
+
+    
+
+  </body>
+
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Dockerizing a React App</title>
+  <meta name="description" content="Let&#39;s look at how to Dockerize a React app.">
+  
+    
+    <meta name="keywords" content="docker, react, reactjs, javascript, containerization, create-react-app, create react app">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2017/12/07/dockerizing-a-react-app/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Dockerizing a React App">
+  <meta name="twitter:description" content="Let&#39;s look at how to Dockerize a React app.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Dockerizing a React App</h1>
+    
+    <p class="post-meta"><time datetime="2017-12-07T01:23:24-07:00" itemprop="datePublished">Dec 7, 2017</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/docker/">docker</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/react/">react</a>
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This tutorial demonstrates how to Dockerize a React app using the <a href="https://github.com/facebookincubator/create-react-app">Create React App</a> generator. We’ll specifically focus on setting up a development environment with code hot-reloading.</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/docker-logo.png" style="max-width: 100%; border:0; box-shadow: none;" alt="docker" />
+</div>
+
+<p><br /></p>
+
+<p><em>We will be using:</em></p>
+
+<ul>
+  <li>Docker v17.09.0-ce</li>
+  <li>Create React App v1.4.3</li>
+  <li>Node v9.2</li>
+</ul>
+
+<h3 id="project-setup">Project Setup</h3>
+
+<p>Install <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> create-react-app@1.4.3
+</code></pre></div></div>
+
+<p>Generate a new app:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>create-react-app sample-app
+<span class="nv">$ </span><span class="nb">cd </span>sample-app
+</code></pre></div></div>
+
+<h3 id="docker">Docker</h3>
+
+<p>Add a Dockerfile to the project root:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># base image
+FROM node:9.2
+
+# set working directory
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+
+# add `/usr/src/app/node_modules/.bin` to $PATH
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+
+# install and cache app dependencies
+ADD package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.0.17 -g --silent
+
+# start app
+CMD ["npm", "start"]
+</code></pre></div></div>
+
+<p>Add a <em>.dockerignore</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node_modules
+</code></pre></div></div>
+
+<p>So, this will greatly speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.</p>
+
+<p>Build and tag the Docker image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> sample-app <span class="nb">.</span>
+</code></pre></div></div>
+
+<p>Then, spin up the container once the build is done:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="nt">-p</span> 3000:3000 <span class="nt">--rm</span> sample-app
+</code></pre></div></div>
+
+<p>Open your browser to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see the app. Try making a change to the <code class="highlighter-rouge">App</code> component within your code editor. You should see the app hot-reload.</p>
+
+<h3 id="docker-compose">Docker Compose</h3>
+
+<p>Want to use <a href="https://docs.docker.com/compose/">Docker Compose</a>? Add a <em>docker-compose.yml</em> file to the project root:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.3'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">sample-app</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">sample-app</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">3000:3000'</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">NODE_ENV=development</span>
+</code></pre></div></div>
+
+<p>Build the image and fire up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p>Ensure the app is running in the browser and test hot-reloading again. Bring down the containers before moving on:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose stop
+</code></pre></div></div>
+
+<h3 id="docker-machine">Docker Machine</h3>
+
+<p>To get hot-reloading to work with <a href="https://docs.docker.com/machine/">Docker Machine</a> and <a href="https://docs.docker.com/machine/get-started/">VirtualBox</a> you’ll need to <a href="https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#troubleshooting">enable</a> a polling mechanism via <a href="https://github.com/paulmillr/chokidar">chokidar</a>.</p>
+
+<p>Create a new Machine:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine create <span class="nt">-d</span> virtualbox sample
+<span class="nv">$ </span>docker-machine env sample
+<span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env sample<span class="k">)</span>
+</code></pre></div></div>
+
+<p>Grab the IP address:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine ip sample
+</code></pre></div></div>
+
+<p>Then, build the images and run the containers:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> sample-app <span class="nb">.</span>
+<span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="nt">-p</span> 3000:3000 <span class="nt">--rm</span> sample-app
+</code></pre></div></div>
+
+<p>Test the app again in the browser at <a href="http://DOCKER_MACHINE_IP:3000/">http://DOCKER_MACHINE_IP:3000/</a>. Also, confirm that auto reload is <em>not</em> working. You can try with Docker Compose as well, but the results will be the same.</p>
+
+<p>To get hot-reload working, we need to add an environment variable:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">CHOKIDAR_USEPOLLING</span><span class="o">=</span><span class="nb">true</span> <span class="nt">--rm</span> sample-app
+</code></pre></div></div>
+
+<p>Test it out again. You could add the variable to a <em>.env</em> file, however you  don’t need it for a production build.</p>
+
+<p>Updated <em>docker-compose.yml</em> file:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.3'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">sample-app</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">sample-app</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">3000:3000'</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">NODE_ENV=development</span>
+      <span class="pi">-</span> <span class="s">CHOKIDAR_USEPOLLING=true</span>
+</code></pre></div></div>
+
+<p>Want to destroy the Machine?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env <span class="nt">-u</span><span class="k">)</span>
+<span class="nv">$ </span>docker-machine rm sample
+</code></pre></div></div>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+
+
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2017 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+    
+      <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', UA-37074204-1, 'auto');
+  ga('send', 'pageview');
+</script>
+
+    
+
+  </body>
+
+</html>

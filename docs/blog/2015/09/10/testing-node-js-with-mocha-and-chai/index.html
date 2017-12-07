@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Testing Node.js with Mocha and Chai</title>
+  <meta name="description" content="Let&#39;s look at how to test a Node.JS application with Mocha and Chai.">
+  
+    
+    <meta name="keywords" content="mocha, chai, node, testing, node.js, integration tests, unit tests">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2015/09/10/testing-node-js-with-mocha-and-chai/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Testing Node.js with Mocha and Chai">
+  <meta name="twitter:description" content="Let&#39;s look at how to test a Node.JS application with Mocha and Chai.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Testing Node.js with Mocha and Chai</h1>
+    
+    <p class="post-meta"><time datetime="2015-09-10T10:52:00-06:00" itemprop="datePublished">Sep 10, 2015</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/mocha/">mocha</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/auth/">auth</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This post serves as an introduction to testing a Node.js RESTful API with <a href="http://mochajs.org/">Mocha</a> (v2.3.1), a JavaScript testing framework.</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/mocha-chaijs.png" style="max-width: 50%; border:0;" alt="mocha and chai.js" />
+</div>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#why-test" id="markdown-toc-why-test">Why Test?</a></li>
+  <li><a href="#structure" id="markdown-toc-structure">Structure</a></li>
+  <li><a href="#logic" id="markdown-toc-logic">Logic</a></li>
+  <li><a href="#test---get-all" id="markdown-toc-test---get-all">Test - GET (all)</a></li>
+  <li><a href="#test---post" id="markdown-toc-test---post">Test - POST</a></li>
+  <li><a href="#hooks" id="markdown-toc-hooks">Hooks</a></li>
+  <li><a href="#test---get-all-1" id="markdown-toc-test---get-all-1">Test - GET (all)</a></li>
+  <li><a href="#test---get-single" id="markdown-toc-test---get-single">Test - GET (single)</a></li>
+  <li><a href="#test---put" id="markdown-toc-test---put">Test - PUT</a></li>
+  <li><a href="#test---delete" id="markdown-toc-test---delete">Test - DELETE</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="why-test">Why Test?</h2>
+
+<p>Before diving in it’s important that you understand <em>why</em> tests are necessary.</p>
+
+<p>Grab the Node/Express sample CRUD application from the <a href="https://github.com/mjhea0/node-mocha-chai-tutorial">repository</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/mjhea0/node-mocha-chai-tutorial.git
+<span class="nv">$ </span>git checkout tags/v1
+</code></pre></div></div>
+
+<p>Once you have <em>v1</em> of the app, manually go through it and test each of the CRUD functions via cURL (or <a href="http://httpie.org/">HTTPie</a> or <a href="https://www.getpostman.com/">Postman</a>):</p>
+
+<ol>
+  <li>Add new blobs</li>
+  <li>View all blobs</li>
+  <li>View a single blob</li>
+  <li>Update a single blob</li>
+  <li>Delete a single blob</li>
+</ol>
+
+<p>This is a tedious process. What if you had to go through this same manual process <em>every</em> single time a new feature got added to the application? That would not only be a massive misuse of time - but unreliable as well. Hence the need for setting up a testing framework for automating the testing of the application, so you can run hundreds of tests in a matter of seconds.</p>
+
+<p>With that, install Mocha:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> mocha@2.3.1
+</code></pre></div></div>
+
+<blockquote>
+  <p>We installed this globally so we’ll be able to run <code class="highlighter-rouge">mocha</code> from the terminal.</p>
+</blockquote>
+
+<h2 id="structure">Structure</h2>
+
+<p>To set up the basic tests, create a new folder called “test” in the project root, then within that folder add a file called <em>test-server.js</em>. Your file/folder structure should now look like:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── package.json
+├── server
+│   ├── app.js
+│   ├── models
+│   │   └── blob.js
+│   └── routes
+│       └── index.js
+└── <span class="nb">test</span>
+    └── test-server.js
+</code></pre></div></div>
+
+<p>Now add the following code to the new file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'Blobs'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should list ALL blobs on /blobs GET'</span><span class="p">);</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should list a SINGLE blob on /blob/&lt;id&gt; GET'</span><span class="p">);</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should add a SINGLE blob on /blobs POST'</span><span class="p">);</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should update a SINGLE blob on /blob/&lt;id&gt; PUT'</span><span class="p">);</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should delete a SINGLE blob on /blob/&lt;id&gt; DELETE'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Although this is just boilerplate, pay attention to the <code class="highlighter-rouge">describe()</code> block and <code class="highlighter-rouge">it()</code> statements. <code class="highlighter-rouge">describe()</code> is used for grouping tests in a logical manner. Meanwhile, the <code class="highlighter-rouge">it()</code> statements contain each individual test case, which generally (err, <em>should</em>) test a single feature or edge case.</p>
+
+<h2 id="logic">Logic</h2>
+
+<p>To add the necessary logic, we’ll utilize <a href="http://chaijs.com/">Chai</a> (v3.2.0), an assertion library, and <a href="http://chaijs.com/plugins/chai-http">chai-http</a> (v 1.0.0), for making the actual HTTP requests and then testing the responses.</p>
+
+<p>Install them both now:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install chai@3.2.0 chai-http@1.0.0 <span class="nt">--save-dev</span>
+</code></pre></div></div>
+
+<p>Then update <em>test-server.js</em>, like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../server/app'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'Blobs'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should list ALL blobs on /blobs GET'</span><span class="p">);</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should list a SINGLE blob on /blob/&lt;id&gt; GET'</span><span class="p">);</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should add a SINGLE blob on /blobs POST'</span><span class="p">);</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should update a SINGLE blob on /blob/&lt;id&gt; PUT'</span><span class="p">);</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should delete a SINGLE blob on /blob/&lt;id&gt; DELETE'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here, we required the new packages, <code class="highlighter-rouge">chai</code> and <code class="highlighter-rouge">chai-http</code>, and our <em>app.js</em> file in order to make requests to the app. We also used the <code class="highlighter-rouge">should</code> assertion library so we can utilize <a href="http://chaijs.com/api/bdd/">BDD-style assertions</a>.</p>
+
+<blockquote>
+  <p>One of the powerful aspects of Chai is that it allows you to choose the type of assertion style you’d like to use. Check out the <a href="http://chaijs.com/guide/styles/">Assertion Style Guide</a> for more info. Also, aside for the assertion libraries included with Chai, there are a number of other libraries available via <a href="https://github.com/mochajs/mocha/wiki#assertion-libraries">NPM</a> and <a href="https://github.com/search?utf8=%E2%9C%93&amp;q=chai+assertion&amp;type=Repositories&amp;ref=searchresults">Github</a>.</p>
+</blockquote>
+
+<p>Now we can write our tests…</p>
+
+<h2 id="test---get-all">Test - GET (all)</h2>
+
+<p>Update the first <code class="highlighter-rouge">it()</code> statement:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should list ALL blobs on /blobs GET'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/blobs'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>So, we passed an anonymous function with a single argument of <code class="highlighter-rouge">done</code> (a function) to the <code class="highlighter-rouge">it()</code> statement. This argument ends the test case when called - e.g., <code class="highlighter-rouge">done()</code>. The test itself is simple: We made a GET request to the <code class="highlighter-rouge">/blobs</code> endpoint and then asserted that the response contained a 200 HTTP status code.</p>
+
+<p>Simple, right?</p>
+
+<p>To test, simply run <code class="highlighter-rouge">mocha</code>; and if all went well, you should see:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mocha
+
+
+  Blobs
+Connected to Database!
+GET /blobs 200 19.621 ms - 2
+    ✓ should list ALL blobs on /blobs GET <span class="o">(</span>43ms<span class="o">)</span>
+    - should list a SINGLE blob on /blob/&lt;id&gt; GET
+    - should add a SINGLE blob on /blobs POST
+    - should update a SINGLE blob on /blob/&lt;id&gt; PUT
+    - should delete a SINGLE blob on /blob/&lt;id&gt; DELETE
+
+
+  1 passing <span class="o">(</span>72ms<span class="o">)</span>
+  4 pending
+</code></pre></div></div>
+
+<p>Since testing the status code alone isn’t very significant, let’s add some more assertions:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should list ALL blobs on /blobs GET'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/blobs'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'array'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>This should be straightforward, since these assertions read like plain English. Run the test suite again. It passes, right? This test still isn’t complete, since we’re not testing any of the <em>actual</em> data being returned. We’ll get to that shortly.</p>
+
+<p>How about testing a POST request…</p>
+
+<h2 id="test---post">Test - POST</h2>
+
+<p>Based on the code within <em>index.js</em>, when a new “blob” is successfully added, we should see the following response:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">{</span>
+  <span class="s2">"SUCCESS"</span>: <span class="o">{</span>
+    <span class="s2">"__v"</span>: 0,
+    <span class="s2">"name"</span>: <span class="s2">"name"</span>,
+    <span class="s2">"lastName"</span>: <span class="s2">"lastname"</span>,
+    <span class="s2">"_id"</span>: <span class="s2">"some-unique-id"</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>Need proof? Test this out by logging <code class="highlighter-rouge">{'SUCCESS': newBlob}</code> to the console, and then run a manual test to see what gets logged.</p>
+</blockquote>
+
+<p>With that, think about how you would write/structure your assertions to test this…</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should add a SINGLE blob on /blobs POST'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/blobs'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Java'</span><span class="p">,</span> <span class="s1">'lastName'</span><span class="p">:</span> <span class="s1">'Script'</span><span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'SUCCESS'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">SUCCESS</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">SUCCESS</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">SUCCESS</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'lastName'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">SUCCESS</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'_id'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">SUCCESS</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Java'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">SUCCESS</span><span class="p">.</span><span class="nx">lastName</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Script'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Need help understanding what’s happening here? Add <code class="highlighter-rouge">console.log(res.body)</code> just before the first assert. Run the test to see the data contained within the response body. The test we wrote tests the actual structure and data from the response body, broken down by each individual key/value pair.</p>
+
+<h2 id="hooks">Hooks</h2>
+
+<p>Up to this point we have been using the main database for testing purposes, which is not ideal since we’re polluting the database with test data. Instead, let’s utilize a test database and add a dummy blob to it to assert against. To do this, we can use the <code class="highlighter-rouge">beforeEach()</code> and <code class="highlighter-rouge">afterEach()</code> <a href="http://mochajs.org/#hooks">hooks</a> - which, as the names suggest, add and remove a dummy document to the database before and after each test case is ran.</p>
+
+<p>This sounds a bit difficult, but with Mocha it’s super easy!</p>
+
+<p>Start by adding a configuration file called <em>_config.js</em> to the “server” folder in order to specify a different database URI for testing purposes:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{};</span>
+
+<span class="nx">config</span><span class="p">.</span><span class="nx">mongoURI</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">development</span><span class="p">:</span> <span class="s1">'mongodb://localhost/node-testing'</span><span class="p">,</span>
+  <span class="na">test</span><span class="p">:</span> <span class="s1">'mongodb://localhost/node-test'</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Next, update <em>app.js</em> to utilize the test database when the environment variable <code class="highlighter-rouge">app.settings.env</code> evaluates to <code class="highlighter-rouge">test</code>. (The default is <code class="highlighter-rouge">development</code>.)</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// *** config file *** //</span>
+<span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./_config'</span><span class="p">);</span>
+
+<span class="c1">// *** mongoose *** ///</span>
+<span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">mongoURI</span><span class="p">[</span><span class="nx">app</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">env</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Error connecting to the database. '</span> <span class="o">+</span> <span class="nx">err</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Connected to Database: '</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">mongoURI</span><span class="p">[</span><span class="nx">app</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">env</span><span class="p">]);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Finally, update the requirements and add the hooks to the testing script:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"mongoose"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../server/app'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Blob</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"../server/models/blob"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'Blobs'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="nx">Blob</span><span class="p">.</span><span class="nx">collection</span><span class="p">.</span><span class="nx">drop</span><span class="p">();</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">newBlob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Blob</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="s1">'Bat'</span><span class="p">,</span>
+      <span class="na">lastName</span><span class="p">:</span> <span class="s1">'man'</span>
+    <span class="p">});</span>
+    <span class="nx">newBlob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">afterEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">){</span>
+    <span class="nx">Blob</span><span class="p">.</span><span class="nx">collection</span><span class="p">.</span><span class="nx">drop</span><span class="p">();</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+
+<span class="p">...</span><span class="nx">snip</span><span class="p">...</span>
+</code></pre></div></div>
+
+<p>Now, before each test case, the database is cleared and a new blob is added; then, after each test, the database is cleared before the next test case is ran.</p>
+
+<p>Run the tests again to ensure they still pass.</p>
+
+<h2 id="test---get-all-1">Test - GET (all)</h2>
+
+<p>With the hooks set up, let’s refactor the first test to assert that the blob from the <code class="highlighter-rouge">beforeEach()</code> is part of the collection:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should list ALL blobs on /blobs GET'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/blobs'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'array'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'_id'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'lastName'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Bat'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">lastName</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'man'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Let’s look at the final three tests…</p>
+
+<h2 id="test---get-single">Test - GET (single)</h2>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should list a SINGLE blob on /blob/&lt;id&gt; GET'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">newBlob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Blob</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="s1">'Super'</span><span class="p">,</span>
+      <span class="na">lastName</span><span class="p">:</span> <span class="s1">'man'</span>
+    <span class="p">});</span>
+    <span class="nx">newBlob</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+        <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/blob/'</span><span class="o">+</span><span class="nx">data</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'_id'</span><span class="p">);</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'lastName'</span><span class="p">);</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Super'</span><span class="p">);</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">lastName</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'man'</span><span class="p">);</span>
+          <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">_id</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+          <span class="nx">done</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>In this test case, we first added a new blob, and then used the newly created <code class="highlighter-rouge">_id</code> to make the request and then test the subsequent response.</p>
+
+<h2 id="test---put">Test - PUT</h2>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should update a SINGLE blob on /blob/&lt;id&gt; PUT'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/blobs'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/blob/'</span><span class="o">+</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">_id</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">send</span><span class="p">({</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Spider'</span><span class="p">})</span>
+        <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">response</span><span class="p">){</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'UPDATED'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">UPDATED</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">UPDATED</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">UPDATED</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'_id'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">UPDATED</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Spider'</span><span class="p">);</span>
+          <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here, we hit the <code class="highlighter-rouge">/blobs</code> endpoint with a GET request to grab the blob added from the <code class="highlighter-rouge">beforeEach()</code> hook, then we simply added the <code class="highlighter-rouge">_id</code> to the URL for the PUT request and updated the name to <code class="highlighter-rouge">Spider</code>.</p>
+
+<h2 id="test---delete">Test - DELETE</h2>
+
+<p>Finally…</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should delete a SINGLE blob on /blob/&lt;id&gt; DELETE'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/blobs'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+        <span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/blob/'</span><span class="o">+</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">_id</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">response</span><span class="p">){</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'REMOVED'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">REMOVED</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">REMOVED</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">REMOVED</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'_id'</span><span class="p">);</span>
+          <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">REMOVED</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Bat'</span><span class="p">);</span>
+          <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Hopefully you can now see just how easy it is to test your code with Mocha and Chai. Keep practicing on your own, incorporating a true <a href="https://mochajs.org/#bdd">BDD</a> approach into your workflow. Grab the final code for this tutorial from the <a href="https://github.com/mjhea0/node-mocha-chai-tutorial">repository</a>.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+
+
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2017 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+    
+      <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', UA-37074204-1, 'auto');
+  ga('send', 'pageview');
+</script>
+
+    
+
+  </body>
+
+</html>
