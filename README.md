@@ -1,4 +1,18 @@
 # mherman.org
 
-1. Run locally - `bundle exec jekyll serve`
-1. Create build - `JEKYLL_ENV=production bundle exec jekyll build`
+### Run locally
+
+```sh
+$ bundle exec jekyll serve
+```
+
+### Deploy
+
+```sh
+# generate build
+$ JEKYLL_ENV=production bundle exec jekyll build
+# deploy
+$ git subtree push --prefix _site origin master
+# backup
+$ git push origin master:backup
+```
