@@ -1,0 +1,40 @@
+<div class="highlight"><pre>SELECT results.months,
+       results.cohort,
+       results.actives AS active_users,
+       user_totals.total AS total_users,
+       results.actives/user_totals.total*100 AS percent_active
+FROM
+  <span class="o">(</span> SELECT ROUND<span class="o">(</span>DATEDIFF<span class="o">(</span>events.date, users.date<span class="o">)</span>/30.4<span class="o">)</span> AS months,
+           DATE_FORMAT<span class="o">(</span>events.date, <span class="s1">&#39;%Y/%m&#39;</span><span class="o">)</span> AS MONTH,
+           DATE_FORMAT<span class="o">(</span>users.date, <span class="s1">&#39;%Y/%m&#39;</span><span class="o">)</span> AS cohort,
+           COUNT<span class="o">(</span>DISTINCT users.id<span class="o">)</span> AS actives
+   FROM users
+   JOIN events ON events.user_id <span class="o">=</span> users.id
+   GROUP BY cohort,
+            months <span class="o">)</span> AS results
+JOIN
+  <span class="o">(</span> SELECT DATE_FORMAT<span class="o">(</span>date, <span class="s2">&quot;%Y/%m&quot;</span><span class="o">)</span> AS cohort,
+           count<span class="o">(</span>id<span class="o">)</span> AS total
+   FROM users
+   GROUP BY cohort <span class="o">)</span> AS user_totals ON user_totals.cohort <span class="o">=</span> results.cohort
+WHERE results.MONTH &lt; DATE_FORMAT<span class="o">(</span>NOW<span class="o">()</span>, <span class="s1">&#39;%Y/%m&#39;</span><span class="o">)</span><span class="p">;</span>
+
++--------+---------+--------------+-------------+----------------+
+<span class="p">|</span> months <span class="p">|</span> cohort  <span class="p">|</span> active_users <span class="p">|</span> total_users <span class="p">|</span> percent_active <span class="p">|</span>
++--------+---------+--------------+-------------+----------------+
+<span class="p">|</span>      <span class="m">0</span> <span class="p">|</span> 2013/02 <span class="p">|</span>           <span class="m">29</span> <span class="p">|</span>          <span class="m">48</span> <span class="p">|</span>        60.4167 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">1</span> <span class="p">|</span> 2013/02 <span class="p">|</span>           <span class="m">35</span> <span class="p">|</span>          <span class="m">48</span> <span class="p">|</span>        72.9167 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">2</span> <span class="p">|</span> 2013/02 <span class="p">|</span>           <span class="m">38</span> <span class="p">|</span>          <span class="m">48</span> <span class="p">|</span>        79.1667 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">3</span> <span class="p">|</span> 2013/02 <span class="p">|</span>           <span class="m">40</span> <span class="p">|</span>          <span class="m">48</span> <span class="p">|</span>        83.3333 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">0</span> <span class="p">|</span> 2013/03 <span class="p">|</span>          <span class="m">156</span> <span class="p">|</span>         <span class="m">338</span> <span class="p">|</span>        46.1538 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">1</span> <span class="p">|</span> 2013/03 <span class="p">|</span>          <span class="m">251</span> <span class="p">|</span>         <span class="m">338</span> <span class="p">|</span>        74.2604 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">2</span> <span class="p">|</span> 2013/03 <span class="p">|</span>          <span class="m">258</span> <span class="p">|</span>         <span class="m">338</span> <span class="p">|</span>        76.3314 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">3</span> <span class="p">|</span> 2013/03 <span class="p">|</span>          <span class="m">305</span> <span class="p">|</span>         <span class="m">338</span> <span class="p">|</span>        90.2367 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">0</span> <span class="p">|</span> 2013/04 <span class="p">|</span>          <span class="m">888</span> <span class="p">|</span>        <span class="m">1699</span> <span class="p">|</span>        52.2660 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">1</span> <span class="p">|</span> 2013/04 <span class="p">|</span>         <span class="m">1290</span> <span class="p">|</span>        <span class="m">1699</span> <span class="p">|</span>        75.9270 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">0</span> <span class="p">|</span> 2013/05 <span class="p">|</span>         <span class="m">4454</span> <span class="p">|</span>        <span class="m">7658</span> <span class="p">|</span>        58.1614 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">1</span> <span class="p">|</span> 2013/05 <span class="p">|</span>         <span class="m">7004</span> <span class="p">|</span>        <span class="m">7658</span> <span class="p">|</span>        91.4599 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">2</span> <span class="p">|</span> 2013/05 <span class="p">|</span>         <span class="m">2157</span> <span class="p">|</span>        <span class="m">7658</span> <span class="p">|</span>        28.1666 <span class="p">|</span>
+<span class="p">|</span>      <span class="m">0</span> <span class="p">|</span> 2013/06 <span class="p">|</span>        <span class="m">18612</span> <span class="p">|</span>       <span class="m">24716</span> <span class="p">|</span>        75.3034 <span class="p">|</span>
++--------+---------+--------------+-------------+----------------+
+</pre></div>

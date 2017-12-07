@@ -1,0 +1,2162 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>
+    
+      Building a RESTful API with Node, Flow, and Jest
+     
+   </title>
+  <meta name="author" content="Michael Herman">
+
+  
+  <meta name="description" content="This tutorial takes a test-first approach to developing a RESTful API with NodeJS, ExpressJS, and Flow, and Jest.">
+  <meta name="keywords" content="node, express, flow, flowtype, RESTful API, tdd, jest, yarn, test-driven development">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://mherman.org/blog/2016/12/23/building-a-restful-api-with-node-and-flow">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Michael Herman" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+
+
+  <!-- hello bar -->
+  <link rel="stylesheet" href="/stylesheets/hellobar.css">
+  <!-- hello bar -->
+  <script type="text/javascript" src="/javascripts/hellobar.js"></script>
+
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Michael Herman</a></h1>
+  
+    <h2>Software Developer</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="mherman.org" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about">About</a></li>
+  <li><a href="/talks">Talks</a></li>
+</ul>
+
+</nav>
+      <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=mhermanorg" id="_carbonads_js" media="(min-width: 768px)"></script>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Building a RESTful API With Node, Flow, and Jest</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-12-23T07:59:54-07:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2016</span></span> <span class='time'>7:59 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>This tutorial details how to develop a RESTful API with <a href="https://nodejs.org/en/">NodeJS</a>, <a href="http://expressjs.com/">ExpressJS</a>, and <a href="https://flowtype.org/">Flow</a> using test-driven development (TDD).</p>
+
+<p>We&rsquo;ll be going full-Facebook with this application (FaceStack), utilizing:</p>
+
+<ul>
+<li><a href="https://flowtype.org/">Flow</a> for type checking</li>
+<li><a href="http://babeljs.io/">Babel</a> for transpilation</li>
+<li><a href="https://facebook.github.io/jest/">Jest</a> for our testing framework</li>
+<li>(Optionally) <a href="https://yarnpkg.com/">Yarn</a> to replace <a href="https://www.npmjs.com/">NPM</a></li>
+</ul>
+
+
+<h2>Contents</h2>
+
+<ol>
+<li>Project Setup</li>
+<li>Server Setup</li>
+<li>Test Setup</li>
+<li>First Endpoint</li>
+<li>Rounding out CRUD</li>
+<li>Conclusion</li>
+</ol>
+
+
+<h2>Project Setup</h2>
+
+<p>Create a new directory to hold the project:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mkdir flow-node-api
+</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>flow-node-api
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Transpilation</h3>
+
+<p>To start, let&rsquo;s get Babel transpilation up and running. We&rsquo;ll use <a href="http://gulpjs.com/">Gulp</a> to automate the build process.</p>
+
+<blockquote><p><strong>NOTE:</strong> W&rsquo;ll use <a href="https://yarnpkg.com/">yarn</a> here to download and manage dependencies, but you can use <code>npm</code> just as easily if you wish. Anytime you see a <code>yarn add</code> or <code>yarn remove</code> just substitute in a <code>npm install</code> or <code>npm rm</code>. The only difference is that yarn does the <code>--save</code> part for you and with <code>npm</code> you must be explicit.</p></blockquote>
+
+<p>Go ahead and add <code>gulp</code>, <code>gulp-babel</code>, and <code>gulp-sourcemaps</code> to your project, and create a <em>gulpfile.js</em> to start writing our Gulp tasks in:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>yarn init -y
+</span><span class='line'><span class="nv">$ </span>yarn add gulp@3.9.1 gulp-babel@6.1.2 gulp-sourcemaps@1.9.1
+</span><span class='line'><span class="nv">$ </span>touch gulpfile.js
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Also, install Gulp globally (if necessary), so you can run Gulp tasks from the command line:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>yarn global add gulp-cli@1.2.2
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We&rsquo;re going to write all of our source code in the &ldquo;src&rdquo; directory, so the first  Gulp task will need to:</p>
+
+<ol>
+<li>Grab all of the JavaScript files inside of &ldquo;src&rdquo;</li>
+<li>Pipe the files through Babel</li>
+<li>Deliver them to the &ldquo;build&rdquo; directory</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">const</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">babel</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-babel&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">sourcemaps</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-sourcemaps&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;scripts&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">&#39;src/**/*.js&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">sourcemaps</span><span class="p">.</span><span class="nx">init</span><span class="p">())</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">babel</span><span class="p">())</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">sourcemaps</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">&#39;build&#39;</span><span class="p">));</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Pretty straightforward. Time to test!</p>
+
+<p>Add a &ldquo;src&rdquo; directory, and then create a file inside of it called <em>index.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mkdir src <span class="o">&amp;&amp;</span> touch src/index.js
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Put some kind of JavaScript statement inside of your newly created file, like:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// src/index.js</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Hello World!&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run the Gulp task, and then run the transpiled version of <em>index.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>gulp scripts
+</span><span class='line'><span class="nv">$ </span>node build/index.js
+</span><span class='line'>Hello World!
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Nice! However, do you really want to manually type <code>gulp scripts</code> in to build the project <em>every</em> time changes are made? Of course not. So, let&rsquo;s set up a <code>watch</code> and a <code>default</code> task with Gulp to make this easier.</p>
+
+<p>Add the following to <code>gulpfile.js</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;watch&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;scripts&#39;</span><span class="p">],</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">gulp</span><span class="p">.</span><span class="nx">watch</span><span class="p">(</span><span class="s1">&#39;src/**/*.js&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;scripts&#39;</span><span class="p">]);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;watch&#39;</span><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you can just run <code>gulp</code> from the command line, and it will listen for changes to our JavaScript files inside of &ldquo;src&rdquo; and re-run the <code>scripts</code> task whenever it detects changes.</p>
+
+<h3>Flow</h3>
+
+<p>Moving on, to use <a href="https://flowtype.org/">Flow</a>, we&rsquo;ll use the <code>gulp-flowtype</code> plugin to interface with Flow. Download the dependency and head back over to <code>gulpfile.js</code>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>yarn add --dev gulp-flowtype@1.0.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// ...</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">flow</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gulp-flowtype&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// ...</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;flow&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">&#39;src/**/*.js&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">flow</span><span class="p">({</span> <span class="nx">killFlow</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}));</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="c1">// ...</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// update the watch task as well</span>
+</span><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;watch&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">,</span> <span class="s1">&#39;scripts&#39;</span><span class="p">],</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">gulp</span><span class="p">.</span><span class="nx">watch</span><span class="p">(</span><span class="s1">&#39;src/**/*.js&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">,</span> <span class="s1">&#39;scripts&#39;</span><span class="p">]);</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is all well and good, but we&rsquo;re going to configure a few more parts before we move forward. We need to tell Babel to strip out all of our Flow <a href="https://flowtype.org/docs/type-annotations.html">type annotations</a>. While we&rsquo;re doing that, we might as well install the other Babel dependencies:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>yarn add babel-plugin-transform-flow-strip-types@6.21.0
+</span><span class='line'><span class="nv">$ </span>yarn add babel-polyfill@6.20.0 babel-preset-latest@6.16.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With those installed create a <em>.babelrc</em> file in the root of the project, and add these settings:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;presets&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;latest&quot;</span><span class="p">],</span>
+</span><span class='line'>  <span class="nt">&quot;plugins&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;transform-flow-strip-types&quot;</span><span class="p">]</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Finally, we need a <em>.flowconfig</em> to tell Flow that this is a project with Flow annotated code. If you have the Flow CLI installed, you can do this with <code>flow init</code>. If you don&rsquo;t, just create a file called <em>.flowconfig</em>  file and paste this in:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">[</span><span class="err">ignore</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">[</span><span class="err">include</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">[</span><span class="err">libs</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">[</span><span class="err">options</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Whew. Now that we&rsquo;ve done all that configuring, let&rsquo;s make sure it&rsquo;s all working by testing out some Flow type annotations. If you&rsquo;re familiar with <a href="http://mherman.org/blog/2016/11/05/developing-a-restful-api-with-node-and-typescript/">TypeScript</a>, this syntax will look very familiar. There are some notable differences, but in general TypeScript and Flow look pretty similar. Let&rsquo;s start with a simple function that adds two numbers together.</p>
+
+<p>Run the default gulp task:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>gulp
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Replace the contents of <em>src/index.js</em> with the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// @flow</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">testFunc</span><span class="p">(</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="mi">10</span> <span class="o">*</span> <span class="nx">item</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">testFunc</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">testFunc</span><span class="p">(</span><span class="s1">&#39;banana&#39;</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Since Gulp is watching for changes, you should automatically see the output from Flow as soon as you save the file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>src/index.js:4
+</span><span class='line'>  4:   <span class="k">return</span> <span class="m">10</span> * item<span class="p">;</span>
+</span><span class='line'>                   ^^^^ string. This <span class="nb">type </span>is incompatible with
+</span><span class='line'>  4:   <span class="k">return</span> <span class="m">10</span> * item<span class="p">;</span>
+</span><span class='line'>              ^^^^^^^^^ number
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Excellent! Flow is doing its job. Here, it&rsquo;s telling us that when we try to call <code>testFunc('banana')</code> we&rsquo;re going to run into issues because <code>testFunc</code> is clearly expecting its argument to be a number, not a string. Notice the <code>// @flow</code> comment that&rsquo;s now at the top of the file. This tells Flow that this file should be <a href="https://en.wikipedia.org/wiki/Type_system#Type_checking">typechecked</a>. If you don&rsquo;t put this comment at the top of the file you&rsquo;re working on, Flow will ignore it. Keep this in mind as you develop your application.</p>
+
+<p>If you read the post on TypeScript (<a href="http://mherman.org/blog/2016/11/05/developing-a-restful-api-with-node-and-typescript">Developing a RESTful API With Node and TypeScript</a>), you may already be wondering how we can use types with third-party libraries. Well, with Flow there&rsquo;s a command line tool called <a href="https://github.com/flowtype/flow-typed">flow-typed</a> that is used to manage libdefs (library definitions) for Flow.</p>
+
+<p>First, install <code>flow-typed</code> globally:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>yarn global add flow-typed@2.0.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The nice thing about <code>flow-typed</code> is that we don&rsquo;t really have to manage it too much. It reads <code>package.json</code> and automatically downloads the libdefs for our dependencies and stores them in &ldquo;flow-typed&rdquo;.</p>
+
+<p>To install the libdefs for the packages we&rsquo;re using so far just run:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>flow-typed install --flowVersion<span class="o">=</span>0.36.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For packages that have no official libdef in the flow-typed repository, a stub is generated. Unfortunately, if you want to omit the <code>--flowVersion=0.36.0</code> flag, you&rsquo;ll need to install <code>flow-bin</code> and have it listed as a dependency in <em>package.json</em>.</p>
+
+<p>Before moving forward, we need to make one more change to our Gulp task for Flow. Now that we&rsquo;ve got <code>flow-typed</code>, tell Flow where we&rsquo;re keeping these definitions:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">&#39;flow&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">&#39;src/**/*.js&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">flow</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">killFlow</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">declarations</span><span class="o">:</span> <span class="s1">&#39;./flow-typed&#39;</span>
+</span><span class='line'>  <span class="p">}));</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Great! We&rsquo;ve got Flow type checking our code, and Babel is stripping out our type annotations and transpiling.</p>
+
+<p>Let&rsquo;s construct the basics of the server.</p>
+
+<h2>Server Setup</h2>
+
+<p>We&rsquo;re going to use <em>src/index.js</em> as the entry point for our Express API along with the <a href="https://github.com/visionmedia/debug">debug</a> module to set up simple logging. Install it with <code>yarn</code> (<code>yarn add debug@2.4.5</code>) or <code>npm</code> (<code>npm install debug@2.4.5 --save</code>), and then wipe everything out of <em>index.js</em> and replace it with the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// @flow</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">&#39;use strict&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="o">*</span> <span class="nx">as</span> <span class="nx">http</span> <span class="nx">from</span> <span class="s1">&#39;http&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kr">import</span> <span class="nx">debug</span> <span class="nx">from</span> <span class="s1">&#39;debug&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kr">import</span> <span class="nx">Api</span> <span class="nx">from</span> <span class="s1">&#39;./Api&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// ErrnoError interface for use in onError</span>
+</span><span class='line'><span class="nx">declare</span> <span class="kr">interface</span> <span class="nx">ErrnoError</span> <span class="kr">extends</span> <span class="nb">Error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">errno</span><span class="o">?:</span> <span class="nx">number</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">code</span><span class="o">?:</span> <span class="nx">string</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">path</span><span class="o">?:</span> <span class="nx">string</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">syscall</span><span class="o">?:</span> <span class="nx">string</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">logger</span> <span class="o">=</span> <span class="nx">debug</span><span class="p">(</span><span class="s1">&#39;flow-api:startup&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">app</span><span class="o">:</span> <span class="nx">Api</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Api</span><span class="p">();</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">DEFAULT_PORT</span><span class="o">:</span> <span class="nx">number</span> <span class="o">=</span> <span class="mi">3000</span><span class="p">;</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">port</span><span class="o">:</span> <span class="nx">string</span> <span class="o">|</span> <span class="nx">number</span> <span class="o">=</span> <span class="nx">normalizePort</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span><span class="p">);</span>
+</span><span class='line'><span class="kr">const</span> <span class="nx">server</span><span class="o">:</span> <span class="nx">http</span><span class="p">.</span><span class="nx">Server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">express</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">port</span><span class="p">);</span>
+</span><span class='line'><span class="nx">server</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">onError</span><span class="p">);</span>
+</span><span class='line'><span class="nx">server</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;listening&#39;</span><span class="p">,</span> <span class="nx">onListening</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">normalizePort</span><span class="p">(</span><span class="nx">val</span><span class="o">:</span> <span class="nx">any</span><span class="p">)</span><span class="o">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="nx">string</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">port</span><span class="o">:</span> <span class="nx">number</span> <span class="o">=</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">val</span> <span class="o">===</span> <span class="s1">&#39;string&#39;</span><span class="p">)</span> <span class="o">?</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">:</span> <span class="nx">val</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">port</span> <span class="o">&amp;&amp;</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">port</span><span class="p">))</span> <span class="k">return</span> <span class="nx">port</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">port</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="nx">port</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">else</span> <span class="k">return</span> <span class="nx">DEFAULT_PORT</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">onError</span><span class="p">(</span><span class="nx">error</span><span class="o">:</span> <span class="nx">ErrnoError</span><span class="p">)</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">syscall</span> <span class="o">!==</span> <span class="s1">&#39;listen&#39;</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span><span class="p">;</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">bind</span><span class="o">:</span> <span class="nx">string</span> <span class="o">=</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">port</span> <span class="o">===</span> <span class="s1">&#39;string&#39;</span><span class="p">)</span> <span class="o">?</span> <span class="err">`</span><span class="nx">Pipe</span> <span class="nx">$</span><span class="p">{</span><span class="nx">port</span><span class="p">}</span><span class="err">`</span> <span class="o">:</span> <span class="err">`</span><span class="nx">Port</span> <span class="nx">$</span><span class="p">{</span><span class="nx">port</span><span class="p">.</span><span class="nx">toString</span><span class="p">()}</span><span class="err">`</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">switch</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">code</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="s1">&#39;EACCES&#39;</span><span class="o">:</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="err">`</span><span class="nx">$</span><span class="p">{</span><span class="nx">bind</span><span class="p">}</span> <span class="nx">requires</span> <span class="nx">elevated</span> <span class="nx">privileges</span><span class="err">`</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">case</span> <span class="s1">&#39;EADDRINUSE&#39;</span><span class="o">:</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="err">`</span><span class="nx">$</span><span class="p">{</span><span class="nx">bind</span><span class="p">}</span> <span class="nx">is</span> <span class="nx">already</span> <span class="k">in</span> <span class="nx">use</span><span class="err">`</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">default</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">throw</span> <span class="nx">error</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">onListening</span><span class="p">()</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">addr</span><span class="o">:</span> <span class="nx">string</span> <span class="o">=</span> <span class="nx">server</span><span class="p">.</span><span class="nx">address</span><span class="p">();</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">bind</span><span class="o">:</span> <span class="nx">string</span> <span class="o">=</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">addr</span> <span class="o">===</span> <span class="s1">&#39;string&#39;</span><span class="p">)</span> <span class="o">?</span> <span class="err">`</span><span class="nx">pipe</span> <span class="nx">$</span><span class="p">{</span><span class="nx">addr</span><span class="p">}</span><span class="err">`</span> <span class="o">:</span> <span class="err">`</span><span class="nx">port</span> <span class="nx">$</span><span class="p">{</span><span class="nx">addr</span><span class="p">.</span><span class="nx">port</span><span class="p">}</span><span class="err">`</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">logger</span><span class="p">(</span><span class="err">`</span><span class="nx">Listening</span> <span class="nx">on</span> <span class="nx">$</span><span class="p">{</span><span class="nx">bind</span><span class="p">}</span><span class="err">`</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Alright. This looks like a lot of code, but it&rsquo;s mostly boilerplate with some fancy type annotations added. Let&rsquo;s break it down real quick though anyways:</p>
+
+<ul>
+<li>At the top we&rsquo;ve got our Flow comment, imports, and our first bit of strictly Flow-enabled code - the <code>ErrnoError</code> interface declaration. This error type is used by Express. When using the <code>flow check</code> command from the official command line tool, Flow will not flag this as an error. For whatever reason, <code>gulp-flowtype</code> does. If you get a strange type check error, it may be worth it to install the Flow CLI and double check using <code>flow check</code>.</li>
+<li>After the <code>ErrnoError</code> definition, we set up some data and instantiate the server by attaching our future Express app with <code>http.createServer</code>.</li>
+<li><code>normalizePort</code> looks for the <code>$PORT</code> environment variable and sets the app&rsquo;s port to its value. If it doesn&rsquo;t exist, it sets the port to the default value - <code>3000</code>.</li>
+<li><code>onError</code> is just our basic error handler for the HTTP server.</li>
+<li><code>onListening</code> simply lets us know that our application has actually started and is listening for requests.</li>
+</ul>
+
+
+<p>Run <code>gulp</code>. Right now, you should see Flow complaining about trying to import the API:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>src/index.js:7
+</span><span class='line'>  7: import Api from <span class="s1">&#39;./Api&#39;</span><span class="p">;</span>
+</span><span class='line'>                     ^^^^^^^ ./Api. Required module not found
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This makes sense because we don&rsquo;t even have a file called <em>Api.js</em>, so let&rsquo;s create it and set up the basic structure for the API. In this file, the third-party libraries we&rsquo;ll be using are:</p>
+
+<ul>
+<li><a href="http://expressjs.com/">Express</a> - web framework</li>
+<li><a href="https://github.com/expressjs/body-parser">body-parser</a> - JSON body parser for HTTP requests</li>
+<li><a href="https://github.com/expressjs/morgan">morgan</a> - request logging</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>yarn add express@4.14.0 body-parser@1.15.2 morgan@1.7.0
+</span><span class='line'><span class="nv">$ </span>flow-typed install --flowVersion<span class="o">=</span>0.36.0
+</span><span class='line'><span class="nv">$ </span>touch src/Api.js
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With the dependencies and libdefs acquired, we&rsquo;re ready to build out the <code>Api.js</code> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// @flow</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="nx">express</span> <span class="nx">from</span> <span class="s1">&#39;express&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kr">import</span> <span class="nx">morgan</span> <span class="nx">from</span> <span class="s1">&#39;morgan&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kr">import</span> <span class="nx">bodyParser</span> <span class="nx">from</span> <span class="s1">&#39;body-parser&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">Api</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// annotate with the express $Application type</span>
+</span><span class='line'>  <span class="nx">express</span><span class="o">:</span> <span class="nx">express$Application</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// create the express instance, attach app-level middleware, attach routers</span>
+</span><span class='line'>  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">express</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">middleware</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">routes</span><span class="p">();</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// register middlewares</span>
+</span><span class='line'>  <span class="nx">middleware</span><span class="p">()</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">morgan</span><span class="p">(</span><span class="s1">&#39;dev&#39;</span><span class="p">));</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">({</span><span class="nx">extended</span><span class="o">:</span> <span class="kc">false</span><span class="p">}));</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// connect resource routers</span>
+</span><span class='line'>  <span class="nx">routes</span><span class="p">()</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">((</span><span class="nx">req</span><span class="o">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="o">:</span> <span class="nx">$Response</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span> <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello Flow!&#39;</span> <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Most of this file ends up just loading and initializing the libraries that we&rsquo;re using. There are a few things to note though:</p>
+
+<ul>
+<li>First, we create a field reference for the <code>Api.express</code> property, and tell Flow that it will be an object of type <code>express$Application</code> from Express.</li>
+<li>The constructor initializes an instance of Express, and attaches it to the instance of <code>Api</code>. Then it calls the other two methods, <code>Api.middleware</code> and <code>Api.routes</code>.</li>
+<li><code>Api.middleware</code> - Initializes and attaches our middleware modules to the app.</li>
+<li><code>Api.routes</code> - Right now, it attaches a single route handler that returns some JSON. However, notice the Flow annotations on the parameters of the anonymous function. These correspond to the base arguments for an Express route handler: <code>$Request</code> and <code>$Response</code>. These refer to Express' extended versions of Node&rsquo;s <code>IncomingMessage</code> and <code>ServerResponse</code> objects, respectively.</li>
+</ul>
+
+
+<p>At this point, you may start to see a Flow error in your terminal that looks something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>src/index.js:12
+</span><span class='line'> 12: const server: <span class="nv">Server</span> <span class="o">=</span> http.createServer<span class="o">(</span>app.express<span class="o">)</span><span class="p">;</span>
+</span><span class='line'>                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method <span class="sb">`</span>createServer<span class="sb">`</span>
+</span><span class='line'>835:     requestListener?: <span class="o">(</span>request: IncomingMessage, response: ServerResponse<span class="o">)</span> <span class="o">=</span>&gt; void
+</span><span class='line'>                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ <span class="k">function</span> type. Callable signature not found in. See lib: /private/tmp/flow/flowlib_120ceaae/node.js:835
+</span><span class='line'> 12: const server: <span class="nv">Server</span> <span class="o">=</span> http.createServer<span class="o">(</span>app.express<span class="o">)</span><span class="p">;</span>
+</span><span class='line'>                                              ^^^^^^^^^^^ express<span class="nv">$Application</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It would appear that Flow doesn&rsquo;t get the memo that when <code>app.express</code> is called, it does return a request handler. This seems to be an issue with the libdef for Express, because it declares that the <code>express$Application</code> constructor has a return type of <code>void</code>.</p>
+
+<blockquote><p><strong>NOTE:</strong> After unsuccessfully messing with the libdef for a while, I decided I knew that it worked better than Flow, and moved on. If the terminal output bugs you, go ahead and add this comment to the line above where <code>http.createServer</code> is called:</p>
+
+<pre><code class="javascript">// $FlowFixMe: express libdef issue
+</code></pre></blockquote>
+
+<p>Let&rsquo;s go ahead and fire up the app and make sure everything is working as intended thus far. To run the app from the command line, you can run <code>node build/index.js</code>. However, we really should have a start script so we can just type <code>npm start</code> to run the server. Open up <code>package.json</code> and add the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="s2">&quot;scripts&quot;</span><span class="err">:</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG=\&quot;flow-api:*\&quot; node build/index.js&quot;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The first part of the command just sets the <code>DEBUG</code> environment variable to <code>flow-api:*</code>, so that the <code>debug</code> module writes our logs to stdout. Now you can run <code>npm start</code>, and you should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>&gt; <span class="nv">DEBUG</span><span class="o">=</span><span class="s2">&quot;flow-api:*&quot;</span> node build/index.js
+</span><span class='line'>
+</span><span class='line'>  flow-api:startup Listening on port <span class="m">3000</span> +0ms
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Awesome! The server is listening. Now, if we hit any endpoint, it should send back our <code>{ message: "Hello Flow!" }</code> payload. You can use <a href="https://httpie.org/">httpi</a> for this kind of thing. If you&rsquo;re on a Mac you can install it with Homebrew: <code>brew install httpie</code>. Then within a new terminal window run:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>http localhost:3000/
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And you should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>→ HTTP/1.1 <span class="m">200</span> OK
+</span><span class='line'>Connection: keep-alive
+</span><span class='line'>Content-Length: 25
+</span><span class='line'>Content-Type: application/json<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>utf-8
+</span><span class='line'>
+</span><span class='line'><span class="o">{</span>
+</span><span class='line'>    <span class="s2">&quot;message&quot;</span>: <span class="s2">&quot;Hello Flow!&quot;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And we&rsquo;re up and running! At this point, we&rsquo;ve got the base Express application up and running. Now we just need to build out a router that does something useful!</p>
+
+<h2>Test Setup</h2>
+
+<p>Not so fast! Rather than jumping straight into the RESTful router, we&rsquo;re going to set up our testing environment so that as we create endpoints and handlers we can test that they work as we expect. Since we&rsquo;re using the FaceStack, we&rsquo;ll use <a href="https://facebook.github.io/jest/">Jest</a> as well as <a href="https://github.com/WhoopInc/supertest-as-promised">supertest-as-promised</a> to interface with our Express API.</p>
+
+<p>Install the packages:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>yarn add --dev jest@18.0.0 supertest@2.0.1 supertest-as-promised@4.0.2
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Open up <em>package.json</em> again and add a few lines to configure Jest:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="s2">&quot;jest&quot;</span><span class="err">:</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;transform&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;.*&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;rootDir&gt;/node_modules/babel-jest&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This just tells Jest to use Babel and our Babel configuration to interpret our test files and the files they test. To run our tests from the command line, we just need to add a test script to <code>package.json</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="s2">&quot;scripts&quot;</span><span class="err">:</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG=\&quot;flow-api:*\&quot; node build/index.js&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;jest&quot;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Right now, if you run it, Jest is just going to tell you it couldn&rsquo;t find any tests So, let&rsquo;s fix that. Create a directory called <em>__tests__</em> in the project root, and inside of it add a file to hold our first test:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>mkdir __tests__ <span class="o">&amp;&amp;</span> touch __tests__/first.test.js
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">request</span> <span class="nx">from</span> <span class="s1">&#39;supertest-as-promised&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kr">import</span> <span class="nx">Api</span> <span class="nx">from</span> <span class="s1">&#39;../src/Api&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Api</span><span class="p">().</span><span class="nx">express</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;Flow API&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;hello test&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;Hello Flow!&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is a pretty simple test, but it should at least demonstrate the basic structure of what we&rsquo;re doing here. If you&rsquo;re saying to yourself, &ldquo;Hey, this looks a lot like Jasmine!&rdquo;,  you&rsquo;re right it does, because Jest is built on top of Jasmine. Here&rsquo;s a quick breakdown of this first test file:</p>
+
+<ul>
+<li>We import the <code>Api</code> class and <code>supertest-as-promised</code> to create the interface to the API. This way we don&rsquo;t have to manage starting and stopping the server or actually sending requests over a network connection.</li>
+<li>We assert that we&rsquo;re expecting a 200 status code.</li>
+<li>When the response comes back, we assert that the payload should have a property called <code>message</code>, who&rsquo;s value is a string, and that string should equal: &ldquo;Hello Flow!&rdquo;</li>
+</ul>
+
+
+<p>Go ahead and run the tests, <code>npm test</code>, and you should see this output:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>&gt; jest
+</span><span class='line'>
+</span><span class='line'> PASS  __tests__/first.test.js
+</span><span class='line'>  Flow API
+</span><span class='line'>    ✓ hello <span class="nb">test</span> <span class="o">(</span>42ms<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>Test Suites: <span class="m">1</span> passed, <span class="m">1</span> total
+</span><span class='line'>Tests:       <span class="m">1</span> passed, <span class="m">1</span> total
+</span><span class='line'>Snapshots:   <span class="m">0</span> total
+</span><span class='line'>Time:        2.03s
+</span><span class='line'>Ran all <span class="nb">test </span>suites.
+</span><span class='line'>GET / <span class="m">200</span> 4.059 ms - 25
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With the test environment set up, let&rsquo;s build out our first endpoint!</p>
+
+<h2>First Endpoint</h2>
+
+<p>Now, we&rsquo;re going to implement CRUD with a single resource - produce. You can use any resource you want or grab the fake data we used <a href="https://raw.githubusercontent.com/mjhea0/flow-node-api/master/data/produce.json">here</a>. In case you&rsquo;re blanking on what CRUD means, we&rsquo;re going to implement 4 actions that the API will support for the produce resource:</p>
+
+<ol>
+<li>Create a produce item.</li>
+<li>Read produce item(s).</li>
+<li>Update a produce item.</li>
+<li>Delete a produce item.</li>
+</ol>
+
+
+<p>We&rsquo;ll start by implementing the <code>GET</code> handler that returns all the produce in our inventory, with the following shape:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nx">id</span><span class="o">:</span> <span class="nx">integer</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">name</span><span class="o">:</span> <span class="nx">string</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">quantity</span><span class="o">:</span> <span class="nx">integer</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">price</span><span class="o">:</span> <span class="nx">integer</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p><strong>NOTE:</strong> The <code>id</code> property will not be supplied by the user, but assigned when an item is created by the API.</p></blockquote>
+
+<p>Let&rsquo;s start by first writing some tests that we can test our implementation against as we write it. Rename <em>first.test.js</em> to <em>ProduceRouter.test.js</em>, and replace the current <code>describe</code> block with these tests for the <code>GET</code> all endpoint:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;Flow API&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;GET /api/v1/produce - get all produce&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// properties expected on an obj in the response</span>
+</span><span class='line'>    <span class="kd">let</span> <span class="nx">expectedProps</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;quantity&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">];</span>
+</span><span class='line'>    <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should return JSON array&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// check that it sends back an array</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">).</span><span class="nx">toBeInstanceOf</span><span class="p">(</span><span class="nb">Array</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>    <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should return objs w/ correct props&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// check for the expected properties</span>
+</span><span class='line'>        <span class="kd">let</span> <span class="nx">sampleKeys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span><span class='line'>        <span class="nx">expectedProps</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">expect</span><span class="p">(</span><span class="nx">sampleKeys</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">key</span><span class="p">)).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>    <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;shouldn\&#39;t return objs w/ extra props&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// check for only expected properties</span>
+</span><span class='line'>        <span class="kd">let</span> <span class="nx">extraProps</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]).</span><span class="nx">filter</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="o">!</span><span class="nx">expectedProps</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nx">extraProps</span><span class="p">.</span><span class="nx">length</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Inside of the outer <code>describe</code>, we&rsquo;ve added a nested block to indicate that all of the tests inside of it are related and, thus, testing the same feature. These three tests are pretty basic and check that:</p>
+
+<ul>
+<li>We get an array back.</li>
+<li>The objects in the array have the required properties.</li>
+<li>The objects in the array do not have extra properties.</li>
+</ul>
+
+
+<p>Run the tests from the terminal with <code>npm test</code> and you should see them all fail:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>Flow API
+</span><span class='line'>  GET /api/v1/produce - get all produce
+</span><span class='line'>    ✕ should <span class="k">return</span> JSON array <span class="o">(</span>42ms<span class="o">)</span>
+</span><span class='line'>    ✕ should <span class="k">return</span> objs w/ correct props <span class="o">(</span>9ms<span class="o">)</span>
+</span><span class='line'>    ✕ shouldn<span class="err">&#39;</span>t <span class="k">return</span> objs w/ extra props <span class="o">(</span>4ms<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>Test Suites: <span class="m">1</span> failed, <span class="m">1</span> total
+</span><span class='line'>Tests:       <span class="m">3</span> failed, <span class="m">3</span> total
+</span><span class='line'>Snapshots:   <span class="m">0</span> total
+</span><span class='line'>Time:        1.835s, estimated 2s
+</span><span class='line'>Ran all <span class="nb">test </span>suites.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, let&rsquo;s get rid of all those errors and failed tests, and implement the endpoint.</p>
+
+<p>Create a new directory inside of &ldquo;src&rdquo; called &ldquo;routers&rdquo; and add a file called <em>ProduceRouter.js</em>. This is where we&rsquo;ll implement the handler functions for all of the endpoints designated for the produce resource.</p>
+
+<blockquote><p><strong>NOTE:</strong> Remember - For Flow to type check the file, you have to add the <code>@flow</code> comment at the very top of the file!</p></blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// @ flow</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="nx">inventory</span> <span class="nx">from</span> <span class="s1">&#39;../../data/produce&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span> <span class="p">}</span>  <span class="nx">from</span> <span class="s1">&#39;express&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">ProduceRouter</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// these fields must be type annotated, or Flow will complain!</span>
+</span><span class='line'>  <span class="nx">router</span><span class="o">:</span> <span class="nx">Router</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">path</span><span class="o">:</span> <span class="nx">string</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// take the mount path as the constructor argument</span>
+</span><span class='line'>  <span class="nx">constructor</span><span class="p">(</span><span class="nx">path</span> <span class="o">=</span> <span class="s1">&#39;/api/v1/produce&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// instantiate the express.Router</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">router</span> <span class="o">=</span> <span class="nx">Router</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">=</span> <span class="nx">path</span><span class="p">;</span>
+</span><span class='line'>    <span class="c1">// glue it all together</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="cm">/**</span>
+</span><span class='line'><span class="cm">   * Return all items in the inventory</span>
+</span><span class='line'><span class="cm">   */</span>
+</span><span class='line'>  <span class="nx">getAll</span><span class="p">(</span><span class="nx">req</span><span class="o">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="o">:</span> <span class="nx">$Response</span><span class="p">)</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">(</span><span class="nx">inventory</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="cm">/**</span>
+</span><span class='line'><span class="cm">   * Attach route handlers to their endpoints.</span>
+</span><span class='line'><span class="cm">   */</span>
+</span><span class='line'>  <span class="nx">init</span><span class="p">()</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getAll</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>ProduceRouter</code> holds fields for an Express <code>Router</code> instance, and a <code>path</code> property that holds its mount point to the application. The constructor takes this mount point as its only argument and then attaches the endpoint handlers to their endpoints.</p>
+
+<blockquote><p><strong>NOTE:</strong>  The field type annotations for <code>router</code> and <code>path</code> are not strictly required (as far as I can tell). You can get rid of them, and Flow will not complain. But you can&rsquo;t have field declarations without types. It doesn&rsquo;t like that at all. I tend to use them because they&rsquo;re a useful quick reference to the properties on an object.</p></blockquote>
+
+<p>The <code>getAll</code> function has the basic function signature of an Express route handler, and it simply responds to requests with the full inventory list. Notice that the return type is <code>void</code>. This is because of the middleware architecture that Express is built on. Each middleware function is run in sequence, rather than returning a value from the handler.</p>
+
+<p>Finally, in <code>init</code> we will take each of our route handlers, and attach it to a mount path on the router. Each endpoint will be prefixed with the overall <code>Router</code> mount path that is passed to the <code>ProduceRouter</code> constructor. Right now, our <code>ProduceRouter</code> is responding to <code>GET</code> requests at the <code>/api/v1/produce</code> endpoint.</p>
+
+<p>We&rsquo;re done in this file for now, but we&rsquo;ll have to hop back over to <code>Api.js</code> in order to finish linking these things up.</p>
+
+<p>Add an import statement for <code>ProduceRouter</code> at the top:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">ProduceRouter</span> <span class="nx">from</span> <span class="s1">&#39;./routers/ProduceRouter&#39;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And then replace the <code>routes</code> function with:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// connect resource routers</span>
+</span><span class='line'><span class="nx">routes</span><span class="p">()</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// create an instance of ProduceRouter</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">produceRouter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ProduceRouter</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// attach it to our express app</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">produceRouter</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span> <span class="nx">produceRouter</span><span class="p">.</span><span class="nx">router</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, we simply create an instance of the <code>ProduceRouter</code> class, and attach it to the Express application path specified by its <code>path</code> property. Now cross your fingers and run <code>npm test</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>PASS  __tests__/ProduceRouter.test.js
+</span><span class='line'> Flow API
+</span><span class='line'>   GET /api/v1/produce - get all produce
+</span><span class='line'>     ✓ should <span class="k">return</span> JSON array <span class="o">(</span>43ms<span class="o">)</span>
+</span><span class='line'>     ✓ should <span class="k">return</span> objs w/ correct props <span class="o">(</span>10ms<span class="o">)</span>
+</span><span class='line'>     ✓ shouldn<span class="err">&#39;</span>t <span class="k">return</span> objs w/ extra props <span class="o">(</span>4ms<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>Test Suites: <span class="m">1</span> passed, <span class="m">1</span> total
+</span><span class='line'>Tests:       <span class="m">3</span> passed, <span class="m">3</span> total
+</span><span class='line'>Snapshots:   <span class="m">0</span> total
+</span><span class='line'>Time:        2.052s
+</span><span class='line'>Ran all <span class="nb">test </span>suites.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Victory! Go ahead and pat yourself on the back, maybe stretch the legs or get a snack. We&rsquo;ll work out the rest of the endpoints in the next section.</p>
+
+<h2>Rounding out CRUD</h2>
+
+<p>We&rsquo;ve already got one aspect of the &ldquo;Read&rdquo; part of CRUD complete. Let&rsquo;s knock the other one out now. Rather than only being able to get the full list of items, we need to enable requesting items by their <code>id</code>s. First, we need some tests. Start by making sure that this <code>getById</code> handler will:</p>
+
+<ul>
+<li>Return an object of the correct type.</li>
+<li>Return the record that lines up with the <code>id</code> sent with the request.</li>
+<li>Reject out-of-bounds <code>id</code>s.</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;GET /api/v1/produce/:id - get produce item by id&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should return an obj of type Produce&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce/1&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="kr">const</span> <span class="nx">reqKeys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="s1">&#39;quantity&#39;</span><span class="p">];</span>
+</span><span class='line'>      <span class="kr">const</span> <span class="p">{</span><span class="nx">item</span><span class="p">}</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">;</span>
+</span><span class='line'>      <span class="c1">// check it has correct keys</span>
+</span><span class='line'>      <span class="nx">reqKeys</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">item</span><span class="p">)).</span><span class="nx">toContain</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>      <span class="c1">// check type of each field</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">item</span><span class="p">.</span><span class="nx">name</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">item</span><span class="p">.</span><span class="nx">quantity</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">item</span><span class="p">.</span><span class="nx">price</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;number&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should return a Produce w/ requested id&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce/1&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">item</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">({</span>
+</span><span class='line'>        <span class="nx">id</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;banana&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">quantity</span><span class="o">:</span> <span class="mi">15</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">price</span><span class="o">:</span> <span class="mi">1</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should 400 on a request for a nonexistant id&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">([</span>
+</span><span class='line'>      <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce/-32&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;No item found with id: -32&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}),</span>
+</span><span class='line'>      <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce/99999&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;No item found with id: 99999&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">})</span>
+</span><span class='line'>    <span class="p">]);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run those new tests and make sure they fail like they should:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>Flow API
+</span><span class='line'>  GET /api/v1/produce - get all produce
+</span><span class='line'>    ✓ should <span class="k">return</span> JSON array <span class="o">(</span>38ms<span class="o">)</span>
+</span><span class='line'>    ✓ should <span class="k">return</span> objs w/ correct props <span class="o">(</span>8ms<span class="o">)</span>
+</span><span class='line'>    ✓ shouldn<span class="err">&#39;</span>t <span class="k">return</span> objs w/ extra props <span class="o">(</span>5ms<span class="o">)</span>
+</span><span class='line'>  GET /api/v1/produce/:id - get produce item by id
+</span><span class='line'>    ✕ should <span class="k">return</span> an obj of <span class="nb">type </span>Produce <span class="o">(</span>6ms<span class="o">)</span>
+</span><span class='line'>    ✕ should <span class="k">return</span> a Produce w/ requested id <span class="o">(</span>2ms<span class="o">)</span>
+</span><span class='line'>    ✕ should <span class="m">400</span> on a request <span class="k">for</span> a nonexistant id <span class="o">(</span>9ms<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>Test Suites: <span class="m">1</span> failed, <span class="m">1</span> total
+</span><span class='line'>Tests:       <span class="m">3</span> failed, <span class="m">3</span> passed, <span class="m">6</span> total
+</span><span class='line'>Snapshots:   <span class="m">0</span> total
+</span><span class='line'>Time:        1.857s, estimated 2s
+</span><span class='line'>Ran all <span class="nb">test </span>suites.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Good. Now we can work on making them pass. This one isn&rsquo;t so bad. We just need to parse the ID number from the request params, and find an item in the <code>inventory</code> array with the same ID.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Return an item from the inventory by ID.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="nx">getById</span><span class="p">(</span><span class="nx">req</span><span class="o">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="o">:</span> <span class="nx">$Response</span><span class="p">)</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">id</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">record</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">id</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">record</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Success!&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">item</span><span class="o">:</span> <span class="nx">record</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">status</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">message</span><span class="o">:</span> <span class="err">`</span><span class="nx">No</span> <span class="nx">item</span> <span class="nx">found</span> <span class="kd">with</span> <span class="nx">id</span><span class="o">:</span> <span class="nx">$</span><span class="p">{</span><span class="nx">id</span><span class="p">}</span><span class="err">`</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Not particularly exciting, but it works for now! Just make sure to add the handler as well:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/:id&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getById</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That does it for the &ldquo;R&rdquo; in CRUD.</p>
+
+<h3>POST - Create a New Item</h3>
+
+<p>Let&rsquo;s knock out the &ldquo;C&rdquo; now. We&rsquo;re going to allow <code>POST</code>s to the endpoint <code>/api/v1/produce</code> to be used for creating new items for the inventory. In addition, we&rsquo;ll require that the <code>quantity</code>, <code>price</code>, and <code>name</code> properties are passed.</p>
+
+<p>Tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;POST /api/v1/produce - create new item&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">peach</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;peach&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">quantity</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">price</span><span class="o">:</span> <span class="mi">6</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should accept and add a valid new item&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">peach</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;Success!&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="kd">let</span> <span class="nx">returnedPeach</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">name</span> <span class="o">===</span> <span class="s1">&#39;peach&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">returnedPeach</span><span class="p">.</span><span class="nx">quantity</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">returnedPeach</span><span class="p">.</span><span class="nx">price</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">6</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should reject post w/o name, price, or quantity&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">let</span> <span class="nx">badItems</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>        <span class="nx">name</span><span class="o">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">quantity</span><span class="o">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">quantity</span>
+</span><span class='line'>      <span class="p">},</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>        <span class="nx">quantity</span><span class="o">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">quantity</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">price</span><span class="o">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">price</span>
+</span><span class='line'>      <span class="p">},</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>        <span class="nx">name</span><span class="o">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+</span><span class='line'>        <span class="nx">price</span><span class="o">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">price</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">];</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">badItems</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">badItem</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">badItem</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;Bad Request&#39;</span><span class="p">)).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">}));</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Verify that the tests fail with <code>npm test</code>, then add another method to <code>ProduceRouter</code> called <code>postOne</code>.</p>
+
+<blockquote><p><strong>NOTE:</strong> I ended up also writing functions to parse the payload from the request, as well as one to re-write our JSON &ldquo;database&rdquo; file. You can either include those as helper methods somewhere in the same file as <code>ProduceRouter</code>, or define them in a different file and import it. If you decide to import it, make sure that you type annotate the function so that Flow can work with its types. I chose to define them in different files and export them from there.</p></blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Add a new item to the inventory.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="nx">postOne</span><span class="p">(</span><span class="nx">req</span><span class="o">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="o">:</span> <span class="nx">$Response</span><span class="p">)</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">received</span><span class="o">:</span> <span class="nx">Produce</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="o">=</span> <span class="nx">parseProduce</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">newProduce</span> <span class="o">=</span> <span class="p">(</span><span class="nx">received</span><span class="p">)</span> <span class="o">?</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">received</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">newProduce</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nx">genId</span><span class="p">(</span><span class="nx">received</span><span class="p">,</span> <span class="nx">inventory</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">inventory</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">newProduce</span><span class="p">);</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">status</span><span class="o">:</span> <span class="mi">200</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Success!&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">item</span><span class="o">:</span> <span class="nx">newProduce</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>    <span class="c1">// write updated inventory to the file</span>
+</span><span class='line'>    <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">writePath</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="err">`</span><span class="nx">Inventory</span> <span class="nx">updated</span><span class="p">.</span> <span class="nx">Written</span> <span class="nx">to</span><span class="o">:</span><span class="err">\</span><span class="nx">n</span><span class="err">\</span><span class="nx">t$</span><span class="p">{</span><span class="nx">path</span><span class="p">.</span><span class="nx">relative</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">),</span> <span class="nx">writePath</span><span class="p">)}</span><span class="err">`</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;Error writing to inventory file.&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">status</span><span class="o">:</span> <span class="mi">400</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Bad Request. Make sure that you submit an item with a name, quantity, and price.&#39;</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>    <span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;Malformed POST to /produce.&#39;</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Create a new folder within &ldquo;src&rdquo; called &ldquo;util&rdquo;. Then add a <em>parsers.js</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">export</span> <span class="kd">function</span> <span class="nx">parseProduce</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span> <span class="nx">any</span><span class="p">)</span><span class="o">:</span> <span class="kr">boolean</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">requirements</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>    <span class="p">{</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;string&#39;</span> <span class="p">},</span>
+</span><span class='line'>    <span class="p">{</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;quantity&#39;</span><span class="p">,</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;number&#39;</span> <span class="p">},</span>
+</span><span class='line'>    <span class="p">{</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;number&#39;</span> <span class="p">}</span>
+</span><span class='line'>  <span class="p">];</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">requirements</span><span class="p">.</span><span class="nx">every</span><span class="p">((</span><span class="nx">req</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">input</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">key</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">typeof</span> <span class="nx">input</span><span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">===</span> <span class="nx">req</span><span class="p">.</span><span class="nx">type</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>&hellip;and <em>save.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// @flow</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">import</span> <span class="nx">path</span> <span class="nx">from</span> <span class="s1">&#39;path&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kr">import</span> <span class="nx">fs</span> <span class="nx">from</span> <span class="s1">&#39;fs&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// use a Flow type import to get our Produce type</span>
+</span><span class='line'><span class="kr">import</span> <span class="nx">type</span> <span class="p">{</span><span class="nx">Produce</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;./types&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="k">default</span> <span class="kd">function</span> <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="o">:</span> <span class="nb">Array</span><span class="o">&lt;</span><span class="nx">Produce</span><span class="o">&gt;</span><span class="p">)</span><span class="o">:</span> <span class="nx">Promise</span><span class="o">&lt;</span><span class="nx">string</span><span class="o">&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">outpath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;produce.json&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// lets not write to the file if we&#39;re running tests</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">!==</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">outpath</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">inventory</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;\t&#39;</span><span class="p">),</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">?</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">:</span> <span class="nx">resolve</span><span class="p">(</span><span class="nx">outpath</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="kd">function</span> <span class="nx">genId</span><span class="p">(</span><span class="nx">prod</span><span class="o">:</span> <span class="nx">Produce</span><span class="p">,</span> <span class="nx">inv</span><span class="o">:</span> <span class="nb">Array</span><span class="o">&lt;</span><span class="nx">Produce</span><span class="o">&gt;</span><span class="p">)</span><span class="o">:</span> <span class="nx">number</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">maxId</span><span class="o">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="k">typeof</span> <span class="kc">undefined</span> <span class="o">=</span> <span class="nx">inv</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">inv</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">item</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">&amp;&amp;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">&gt;</span> <span class="nx">maxId</span><span class="p">)</span> <span class="nx">maxId</span> <span class="o">=</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">maxId</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We don&rsquo;t have tests written currently for these, but they&rsquo;re pretty simple functions. Most importantly, now we have a couple utility functions that we can reuse. We&rsquo;ll definitely need to reuse <code>saveInventory</code> whenever we need to persist changes to the JSON file holding the inventory.</p>
+
+<p>Add the imports to <em>ProduceRouter.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="nx">saveInventory</span><span class="p">,</span> <span class="p">{</span><span class="nx">genId</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;../util/save&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">parseProduce</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;../util/parsers&#39;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then update the <code>init()</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Attach route handlers to their endpoints.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="nx">init</span><span class="p">()</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getAll</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/:id&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getById</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">postOne</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With this code filled in, run <code>npm test</code> again and when you&rsquo;ve got all green check marks, head on to the next section.</p>
+
+<h3>PUT - Update an Item</h3>
+
+<p>This route will allow requests to update the properties of a single item. We need to make sure that a user is unable to change the <code>id</code> property of the item so that they can&rsquo;t create collisions. To solve this issue, we need to strip out all invalid keys from the submitted payload. But first, a few tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;PUT /api/v1/produce/:id - update an item&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;allows updates to props other than id&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce/1&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">send</span><span class="p">({</span> <span class="nx">quantity</span><span class="o">:</span> <span class="mi">20</span> <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;Success!&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">item</span><span class="p">.</span><span class="nx">quantity</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;rejects updates to id prop&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce/1&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">send</span><span class="p">({</span> <span class="nx">id</span><span class="o">:</span> <span class="mi">10</span> <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;Update failed&#39;</span><span class="p">)).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Add the new handler to <code>ProduceRouter</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Update a Produce item by id.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="nx">updateOneById</span><span class="p">(</span><span class="nx">req</span><span class="o">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="o">:</span> <span class="nx">$Response</span><span class="p">)</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">searchId</span><span class="o">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="o">=</span> <span class="nx">parseId</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">);</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">payload</span><span class="o">:</span> <span class="nx">any</span> <span class="o">=</span> <span class="nx">parseUpdate</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">toUpdate</span><span class="o">:</span> <span class="nx">Produce</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">searchId</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">toUpdate</span> <span class="o">&amp;&amp;</span> <span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">payload</span><span class="p">).</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;quantity&#39;</span> <span class="o">||</span> <span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;price&#39;</span><span class="p">)</span> <span class="nx">toUpdate</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">payload</span><span class="p">[</span><span class="nx">key</span><span class="p">]);</span>
+</span><span class='line'>      <span class="k">else</span> <span class="nx">toUpdate</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">payload</span><span class="p">[</span><span class="nx">key</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">status</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Success!&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">item</span><span class="o">:</span> <span class="nx">toUpdate</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>    <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">writePath</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="err">`</span><span class="nx">Item</span> <span class="nx">updated</span><span class="p">.</span> <span class="nx">Inventory</span> <span class="nx">written</span> <span class="nx">to</span><span class="o">:</span><span class="err">\</span><span class="nx">n</span><span class="err">\</span><span class="nx">t$</span><span class="p">{</span><span class="nx">path</span><span class="p">.</span><span class="nx">relative</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">),</span> <span class="nx">writePath</span><span class="p">)}</span><span class="err">`</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;Error writing to inventory file.&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">status</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Update failed. Make sure the item ID and submitted fields are correct.&#39;</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then, within <em>parsers.js</em>, add the <code>parseId()</code> and <code>parseUpdate()</code> helpers, which are used to clean the payload and requested item ID:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">export</span> <span class="kd">function</span> <span class="nx">parseUpdate</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span> <span class="nx">any</span><span class="p">)</span><span class="o">:</span> <span class="nx">any</span> <span class="o">|</span> <span class="kc">null</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">validKeys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;quantity&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">];</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">trimmed</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">input</span><span class="p">).</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">obj</span><span class="p">,</span> <span class="nx">curr</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span> <span class="o">&amp;&amp;</span> <span class="nx">validKeys</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">curr</span><span class="p">)</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">obj</span><span class="p">[</span><span class="nx">curr</span><span class="p">]</span> <span class="o">=</span> <span class="nx">input</span><span class="p">[</span><span class="nx">curr</span><span class="p">];</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">},</span> <span class="p">{});</span>
+</span><span class='line'>  <span class="k">return</span> <span class="p">(</span><span class="nx">trimmed</span> <span class="o">&amp;&amp;</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">trimmed</span><span class="p">).</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="nx">trimmed</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">export</span> <span class="kd">function</span> <span class="nx">parseId</span><span class="p">(</span><span class="nx">input</span><span class="o">:</span> <span class="nx">any</span><span class="p">)</span><span class="o">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">input</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="s1">&#39;string&#39;</span><span class="p">)</span> <span class="o">?</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">:</span> <span class="nx">input</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>These are fairly straightforward. <code>parseUpdate</code> takes in the payload from the request, and strips out any keys that are not <code>name</code>, <code>quantity</code>, or <code>price</code>. Then it just simply returns the trimmed object if there&rsquo;s still keys left, and <code>null</code> if not. <code>parseId</code> is even simpler: It looks for an <code>id</code> property on the payload, converts it to a number (if necessary), and returns.</p>
+
+<p>Update the import in <em>ProduceRouter.js</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">parseProduce</span><span class="p">,</span> <span class="nx">parseUpdate</span><span class="p">,</span> <span class="nx">parseId</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;../util/parsers&#39;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then update the <code>init()</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Attach route handlers to their endpoints.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="nx">init</span><span class="p">()</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getAll</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/:id&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getById</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">postOne</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/:id&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">updateOneById</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run the tests again and ensure they pass. One more route to go!</p>
+
+<h3>DELETE - Remove an Item</h3>
+
+<p>This route will allow for deleting an item from the inventory by passing a valid <code>id</code> as a URL parameter. This is the same string route that the <code>getById</code> and <code>updateOneById</code> functions handle, but will use the <code>DELETE</code> HTTP method. Here&rsquo;s a few basic tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;DELETE /api/v1/produce/:id - delete an item&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;deletes when given a valid ID&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/api/v1/produce/4&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;Success!&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">deleted</span><span class="p">.</span><span class="nx">id</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;responds w/ error if given invalid ID&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100</span><span class="p">].</span><span class="nx">map</span><span class="p">((</span><span class="nx">id</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="k">delete</span><span class="p">(</span><span class="err">`</span><span class="o">/</span><span class="nx">api</span><span class="o">/</span><span class="nx">v1</span><span class="o">/</span><span class="nx">produce</span><span class="o">/</span><span class="nx">$</span><span class="p">{</span><span class="nx">id</span><span class="p">}</span><span class="err">`</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+</span><span class='line'>        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;No item found with given ID.&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">}));</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Ensure those fail, and then add the implementation for the handler to <code>ProduceRouter</code> as <code>removeById</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Remove an item from the inventory by ID.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="nx">removeById</span><span class="p">(</span><span class="nx">req</span><span class="o">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="o">:</span> <span class="nx">$Response</span><span class="p">)</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">searchId</span><span class="o">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="o">=</span> <span class="nx">parseId</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">);</span>
+</span><span class='line'>  <span class="kd">let</span> <span class="nx">toDel</span><span class="o">:</span> <span class="nx">number</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">findIndex</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">searchId</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="nx">toDel</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">let</span> <span class="nx">deleted</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="nx">toDel</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">status</span><span class="o">:</span> <span class="mi">200</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Success!&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">deleted</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>    <span class="c1">// update json file</span>
+</span><span class='line'>    <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">writePath</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="err">`</span><span class="nx">Item</span> <span class="nx">deleted</span><span class="p">.</span> <span class="nx">Inventory</span> <span class="nx">written</span> <span class="nx">to</span><span class="o">:</span><span class="err">\</span><span class="nx">n</span><span class="err">\</span><span class="nx">t$</span><span class="p">{</span><span class="nx">writePath</span><span class="p">}</span><span class="err">`</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">})</span>
+</span><span class='line'>    <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;Error writing to inventory file.&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">status</span><span class="o">:</span> <span class="mi">400</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;No item found with given ID.&#39;</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This obviously looks pretty similar to most of the other handlers. The only difference being that once we get a valid <code>id</code>, we search for the object it matches in the inventory, get its index, and then splice it out of the inventory array.</p>
+
+<p>Don&rsquo;t forget the handler:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">&#39;/:id&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">removeById</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run the tests one last time:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>PASS  __tests__/ProduceRouter.test.js
+</span><span class='line'> Flow API
+</span><span class='line'>   ✓ allows updates to props other than id <span class="o">(</span>4ms<span class="o">)</span>
+</span><span class='line'>   GET /api/v1/produce - get all produce
+</span><span class='line'>     ✓ should <span class="k">return</span> JSON array <span class="o">(</span>50ms<span class="o">)</span>
+</span><span class='line'>     ✓ should <span class="k">return</span> objs w/ correct props <span class="o">(</span>11ms<span class="o">)</span>
+</span><span class='line'>     ✓ shouldn<span class="err">&#39;</span>t <span class="k">return</span> objs w/ extra props <span class="o">(</span>18ms<span class="o">)</span>
+</span><span class='line'>   GET /api/v1/produce/:id - get produce item by id
+</span><span class='line'>     ✓ should <span class="k">return</span> an obj of <span class="nb">type </span>Produce <span class="o">(</span>8ms<span class="o">)</span>
+</span><span class='line'>     ✓ should <span class="k">return</span> a Produce w/ requested id <span class="o">(</span>6ms<span class="o">)</span>
+</span><span class='line'>     ✓ should <span class="m">400</span> on a request <span class="k">for</span> a nonexistant id <span class="o">(</span>9ms<span class="o">)</span>
+</span><span class='line'>   POST /api/v1/produce - create new item
+</span><span class='line'>     ✓ should accept and add a valid new item <span class="o">(</span>27ms<span class="o">)</span>
+</span><span class='line'>     ✓ should reject post w/o name, price, or quantity <span class="o">(</span>9ms<span class="o">)</span>
+</span><span class='line'>   PUT /api/v1/produce/:id - update an item
+</span><span class='line'>     ✓ allows updates to props other than id <span class="o">(</span>6ms<span class="o">)</span>
+</span><span class='line'>     ✓ rejects updates to id prop <span class="o">(</span>7ms<span class="o">)</span>
+</span><span class='line'>   DELETE /api/v1/produce/:id - delete an item
+</span><span class='line'>     ✓ deletes when given a valid ID <span class="o">(</span>4ms<span class="o">)</span>
+</span><span class='line'>     ✓ responds w/ error <span class="k">if</span> given invalid ID <span class="o">(</span>11ms<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>Test Suites: <span class="m">1</span> passed, <span class="m">1</span> total
+</span><span class='line'>Tests:       <span class="m">13</span> passed, <span class="m">13</span> total
+</span><span class='line'>Snapshots:   <span class="m">0</span> total
+</span><span class='line'>Time:        2.322s
+</span><span class='line'>Ran all <span class="nb">test </span>suites.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Congratulations! You just built an Express API type checked with Flow!</p>
+
+<h2>Conclusion</h2>
+
+<p>All in all, working with Flow is interesting, at the very least.</p>
+
+<p>After using both it and TypeScript, Flow&rsquo;s type checking tends to be more strict, but you also spend more time trying to figure out what Flow is getting at and how to fix errors. Part of this is probably that the tooling support for TypeScript is vastly superior. Flow offers a lot of the same functionality that TypeScript does, but there&rsquo;s a TypeScript tool for every single thing you could ever want. It simply isn&rsquo;t the same for Flow. The community doesn&rsquo;t seem to have embraced it with as much enthusiasm. The number of libdefs in the <code>flow-typed</code> repository versus <code>DefinitelyTyped</code> for TypeScript is tiny. This is probably the biggest problem you&rsquo;d have to face in choosing to use Flow for static type analysis over TypeScript.</p>
+
+<p>That being said, Flow also offers some distinct advantages.</p>
+
+<p>It&rsquo;s plug-n-play with Babel, so adding Flow to a project using Babel would probably be much less painful than converting it to use TypeScript. Both allow you to do so bit by bit, but Flow handles this more gracefully. TypeScript would usually like to just have you pass everything through the compiler and deal with the type errors as you can. Flow allows you to annotate <em>only</em> the files you want to type check, so adding it to an existing project is much easier. Actually, this is probably the best use case for Flow. It would be cumbersome to start a brand new project with such strict type checking. It definitely slows down the rapid iteration needed at the beginning of a project&rsquo;s life. However, once the project gets to a certain size it&rsquo;s easy to drop in Flow and clean up the errors file by file as you move forward.</p>
+
+<p>You can grab the code from the <a href="https://github.com/mjhea0/flow-node-api">flow-node-api</a> repo. Best!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    Michael Herman
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-12-23T07:59:54-07:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2016</span></span> <span class='time'>7:59 am</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/node/'>node</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+<!--   
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mherman.org/blog/2016/12/23/building-a-restful-api-with-node-and-flow/" data-via="" data-counturl="http://mherman.org/blog/2016/12/23/building-a-restful-api-with-node-and-flow/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+   -->
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+  <a class="addthis_button_preferred_1"></a>
+  <a class="addthis_button_preferred_2"></a>
+  <a class="addthis_button_preferred_3"></a>
+  <a class="addthis_button_preferred_4"></a>
+  <a class="addthis_button_compact"></a>
+  <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/11/05/developing-a-restful-api-with-node-and-typescript/" title="Previous Post: Developing a RESTful API with Node and TypeScript">&laquo; Developing a RESTful API with Node and TypeScript</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2017/01/05/token-based-authentication-with-angular/" title="Next Post: Token-Based Authentication with Angular">Token-Based Authentication with Angular &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><div>
+  <span>Copyright &copy; 2017 - Michael Herman</span><br>
+  <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+  <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+  <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+  <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+</div>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'michaelherman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://mherman.org/blog/2016/12/23/building-a-restful-api-with-node-and-flow/';
+        var disqus_url = 'http://mherman.org/blog/2016/12/23/building-a-restful-api-with-node-and-flow/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<div class="highlight"><pre><span class="nx">exports</span><span class="p">.</span><span class="nx">search</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// grab the request from the client</span>
+  <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">choices</span><span class="p">);</span>
+  <span class="c1">// grab the current date</span>
+  <span class="kd">var</span> <span class="nx">today</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
+  <span class="c1">// establish the twitter config (grab your keys at dev.twitter.com)</span>
+  <span class="kd">var</span> <span class="nx">twitter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">twit</span><span class="p">({</span>
+    <span class="nx">consumer_key</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_key</span><span class="p">,</span>
+    <span class="nx">consumer_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">consumer_secret</span><span class="p">,</span>
+    <span class="nx">access_token</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token</span><span class="p">,</span>
+    <span class="nx">access_token_secret</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">access_token_secret</span>
+  <span class="p">});</span>
+  <span class="c1">// set highest score</span>
+  <span class="kd">var</span> <span class="nx">highestScore</span> <span class="o">=</span> <span class="o">-</span><span class="kc">Infinity</span><span class="p">;</span>
+  <span class="c1">// set highest choice</span>
+  <span class="kd">var</span> <span class="nx">highestChoice</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="c1">// create new array</span>
+  <span class="kd">var</span> <span class="nx">array</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="c1">// set score</span>
+  <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;----------&quot;</span><span class="p">)</span>
+
+  <span class="c1">// iterate through the choices array from the request</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// add choice to new array</span>
+    <span class="nx">array</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
+    <span class="c1">// grad 20 tweets from today</span>
+    <span class="nx">twitter</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;search/tweets&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">q</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="o">+</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; since:&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getFullYear</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span>
+      <span class="p">(</span><span class="nx">today</span><span class="p">.</span><span class="nx">getMonth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">today</span><span class="p">.</span><span class="nx">getDate</span><span class="p">(),</span> <span class="nx">count</span><span class="o">:</span><span class="mi">20</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// perform sentiment analysis</span>
+        <span class="nx">score</span> <span class="o">=</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;statuses&#39;</span><span class="p">]);</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;score:&quot;</span><span class="p">,</span> <span class="nx">score</span><span class="p">)</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;choice:&quot;</span><span class="p">,</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
+        <span class="c1">//  determine winner</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="nx">highestScore</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">highestScore</span> <span class="o">=</span> <span class="nx">score</span><span class="p">;</span>
+          <span class="nx">highestChoice</span> <span class="o">=</span> <span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;winner:&quot;</span><span class="p">,</span><span class="nx">choices</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
+        <span class="p">}</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+      <span class="p">});</span>
+    <span class="p">})(</span><span class="nx">i</span><span class="p">)</span>
+  <span class="p">}</span>
+  <span class="c1">// send response back to the server side; why the need for the timeout?</span>
+  <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="o">:</span> <span class="nx">highestScore</span><span class="p">,</span> <span class="s1">&#39;choice&#39;</span><span class="o">:</span> <span class="nx">highestChoice</span><span class="p">}))</span> <span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">};</span>
+</pre></div>

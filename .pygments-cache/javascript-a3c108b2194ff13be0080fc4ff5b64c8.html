@@ -1,0 +1,33 @@
+<div class="highlight"><pre><span class="c1">// second route</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/searching&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+
+	<span class="c1">// input value from search</span>
+	<span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">search</span><span class="p">;</span>
+	<span class="c1">//console.log(val);</span>
+
+	<span class="c1">// url used to search yql</span>
+	<span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s2">&quot;http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20craigslist.search&quot;</span> <span class="o">+</span>
+	<span class="s2">&quot;%20where%20location%3D%22sfbay%22%20and%20type%3D%22jjj%22%20and%20query%3D%22&quot;</span> <span class="o">+</span> <span class="nx">val</span> <span class="o">+</span> <span class="s2">&quot;%22&amp;format=&quot;</span> <span class="o">+</span>
+	<span class="s2">&quot;json&amp;diagnostics=true&amp;env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&quot;</span><span class="p">;</span>
+	<span class="c1">// console.log(url);</span>
+
+	<span class="c1">// request module is used to process the yql url and return the results in JSON format</span>
+	<span class="nx">request</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">resp</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+		<span class="c1">// logic used to compare search results with the input from user</span>
+		<span class="c1">// console.log(!body.query.results.RDF.item[&#39;about&#39;])</span>
+		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="s1">&#39;about&#39;</span><span class="p">]</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
+		  <span class="nx">craig</span> <span class="o">=</span> <span class="s2">&quot;No results found. Try again.&quot;</span><span class="p">;</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+		  <span class="nx">results</span> <span class="o">=</span> <span class="nx">body</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">RDF</span><span class="p">.</span><span class="nx">item</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;about&#39;</span><span class="p">]</span>
+	      <span class="nx">craig</span> <span class="o">=</span> <span class="s1">&#39;&lt;a href =&quot;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&quot;&gt;&#39;</span><span class="o">+</span><span class="nx">results</span><span class="o">+</span><span class="s1">&#39;&lt;/a&gt;&#39;</span>
+	  <span class="p">}</span>
+	  <span class="c1">// pass back the results to client side</span>
+		<span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">craig</span><span class="p">);</span>
+	<span class="p">});</span>
+
+	<span class="c1">// testing the route</span>
+	<span class="c1">// res.send(&quot;WHEEE&quot;);</span>
+
+<span class="p">});</span>
+</pre></div>

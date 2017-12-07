@@ -1,0 +1,39 @@
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">performAnalysis</span><span class="p">(</span><span class="nx">tweetSet</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">//set a results variable</span>
+  <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="c1">// iterate through the tweets, pulling the text, retweet count, and favorite count</span>
+  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">tweetSet</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">tweet</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">];</span>
+    <span class="nx">retweets</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;retweet_count&#39;</span><span class="p">];</span>
+    <span class="nx">favorites</span> <span class="o">=</span> <span class="nx">tweetSet</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;favorite_count&#39;</span><span class="p">];</span>
+    <span class="c1">// remove the hastag from the tweet text</span>
+    <span class="nx">tweet</span> <span class="o">=</span> <span class="nx">tweet</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="c1">// perform sentiment on the text</span>
+    <span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">sentimental</span><span class="p">.</span><span class="nx">analyze</span><span class="p">(</span><span class="nx">tweet</span><span class="p">)[</span><span class="s1">&#39;score&#39;</span><span class="p">];</span>
+    <span class="c1">// calculate score</span>
+    <span class="nx">results</span> <span class="o">+=</span> <span class="nx">score</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">retweets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">results</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">retweets</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+      <span class="p">}</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">favorites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">results</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">favorites</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">score</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">retweets</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">results</span> <span class="o">-=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">retweets</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+      <span class="p">}</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">favorites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">results</span> <span class="o">-=</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">favorites</span><span class="p">)</span><span class="o">/</span><span class="nb">Math</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">results</span> <span class="o">+=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="c1">// return score</span>
+  <span class="nx">results</span> <span class="o">=</span> <span class="nx">results</span> <span class="o">/</span> <span class="nx">tweetSet</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+  <span class="k">return</span> <span class="nx">results</span>
+<span class="p">}</span>
+</pre></div>

@@ -1,0 +1,35 @@
+<div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm"> * Update a Produce item by id.</span>
+<span class="cm"> */</span>
+<span class="nx">updateOneById</span><span class="p">(</span><span class="nx">req</span><span class="o">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="o">:</span> <span class="nx">$Response</span><span class="p">)</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">searchId</span><span class="o">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="o">=</span> <span class="nx">parseId</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">);</span>
+  <span class="kr">const</span> <span class="nx">payload</span><span class="o">:</span> <span class="nx">any</span> <span class="o">=</span> <span class="nx">parseUpdate</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+  <span class="kd">let</span> <span class="nx">toUpdate</span><span class="o">:</span> <span class="nx">Produce</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">searchId</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">toUpdate</span> <span class="o">&amp;&amp;</span> <span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">payload</span><span class="p">).</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;quantity&#39;</span> <span class="o">||</span> <span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;price&#39;</span><span class="p">)</span> <span class="nx">toUpdate</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">payload</span><span class="p">[</span><span class="nx">key</span><span class="p">]);</span>
+      <span class="k">else</span> <span class="nx">toUpdate</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">payload</span><span class="p">[</span><span class="nx">key</span><span class="p">];</span>
+    <span class="p">});</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+      <span class="nx">status</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span>
+      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Success!&#39;</span><span class="p">,</span>
+      <span class="nx">item</span><span class="o">:</span> <span class="nx">toUpdate</span>
+    <span class="p">});</span>
+
+    <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">writePath</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">logger</span><span class="p">(</span><span class="err">`</span><span class="nx">Item</span> <span class="nx">updated</span><span class="p">.</span> <span class="nx">Inventory</span> <span class="nx">written</span> <span class="nx">to</span><span class="o">:</span><span class="err">\</span><span class="nx">n</span><span class="err">\</span><span class="nx">t$</span><span class="p">{</span><span class="nx">path</span><span class="p">.</span><span class="nx">relative</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">),</span> <span class="nx">writePath</span><span class="p">)}</span><span class="err">`</span><span class="p">);</span>
+      <span class="p">})</span>
+      <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">logger</span><span class="p">(</span><span class="s1">&#39;Error writing to inventory file.&#39;</span><span class="p">);</span>
+        <span class="nx">logger</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">);</span>
+      <span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="nx">status</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span>
+      <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Update failed. Make sure the item ID and submitted fields are correct.&#39;</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>

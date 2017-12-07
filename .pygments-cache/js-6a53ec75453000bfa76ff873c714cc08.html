@@ -1,0 +1,77 @@
+<div class="highlight"><pre><span class="kr">const</span> <span class="nx">AWS</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;aws-sdk&#39;</span><span class="p">);</span>
+
+
+<span class="c1">// globals</span>
+
+<span class="kr">const</span> <span class="nx">AWS_ACCOUNT_ID</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">AWS_ACCOUNT_ID</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">AWS_ACCESS_KEY_ID</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">AWS_ACCESS_KEY_ID</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">AWS_SECRET_ACCESS_KEY</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">AWS_SECRET_ACCESS_KEY</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">AWS_USERNAME</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">AWS_USERNAME</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">AWS_CONFIG_REGION</span> <span class="o">=</span> <span class="s1">&#39;us-west-2&#39;</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">SHORT_GIT_HASH</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">CIRCLE_SHA1</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">);</span>
+<span class="kr">const</span> <span class="nx">VPC_ID</span><span class="o">=</span><span class="s1">&#39;UPDATE_ME&#39;</span><span class="p">;</span>
+
+
+<span class="c1">// config</span>
+
+<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AWS</span><span class="p">.</span><span class="nx">Config</span><span class="p">();</span>
+<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">accessKeyId</span> <span class="o">=</span> <span class="nx">AWS_ACCESS_KEY_ID</span><span class="p">;</span>
+<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">secretAccessKey</span> <span class="o">=</span> <span class="nx">AWS_SECRET_ACCESS_KEY</span><span class="p">;</span>
+<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">region</span> <span class="o">=</span> <span class="nx">AWS_CONFIG_REGION</span><span class="p">;</span>
+
+
+<span class="c1">// init aws services</span>
+
+<span class="kr">const</span> <span class="nx">elbv2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AWS</span><span class="p">.</span><span class="nx">ELBv2</span><span class="p">();</span>
+
+
+<span class="c1">// methods</span>
+
+<span class="kd">function</span> <span class="nx">ensureAuthenticated</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">iam</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AWS</span><span class="p">.</span><span class="nx">IAM</span><span class="p">();</span>
+    <span class="kr">const</span> <span class="nx">params</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">UserName</span><span class="o">:</span> <span class="nx">AWS_USERNAME</span> <span class="p">};</span>
+    <span class="nx">iam</span><span class="p">.</span><span class="nx">getUser</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+      <span class="nx">resolve</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">addTargetGroup</span><span class="p">(</span><span class="nx">service</span><span class="p">,</span> <span class="nx">port</span><span class="p">,</span> <span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">params</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">Name</span><span class="o">:</span> <span class="err">`</span><span class="nx">$</span><span class="p">{</span><span class="nx">SHORT_GIT_HASH</span><span class="p">}</span><span class="o">-</span><span class="nx">$</span><span class="p">{</span><span class="nx">service</span><span class="p">}</span><span class="err">`</span><span class="p">,</span>
+      <span class="nx">Port</span><span class="o">:</span> <span class="nx">port</span><span class="p">,</span>
+      <span class="nx">Protocol</span><span class="o">:</span> <span class="s2">&quot;HTTP&quot;</span><span class="p">,</span>
+      <span class="nx">VpcId</span><span class="o">:</span> <span class="nx">VPC</span><span class="p">,</span>
+      <span class="nx">HealthCheckPath</span><span class="o">:</span> <span class="nx">path</span>
+    <span class="p">};</span>
+    <span class="nx">elbv2</span><span class="p">.</span><span class="nx">createTargetGroup</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+      <span class="nx">resolve</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+
+<span class="c1">// main</span>
+
+<span class="k">return</span> <span class="nx">ensureAuthenticated</span><span class="p">()</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="err">`</span><span class="nx">Welcome</span> <span class="nx">$</span><span class="p">{</span><span class="nx">data</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">UserName</span><span class="p">}</span><span class="o">!</span><span class="err">`</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">addTargetGroup</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span> <span class="s1">&#39;3000&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/ping&#39;</span><span class="p">);</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">addTargetGroup</span><span class="p">(</span><span class="s1">&#39;movies&#39;</span><span class="p">,</span> <span class="s1">&#39;3000&#39;</span><span class="p">,</span> <span class="s1">&#39;/movies/ping&#39;</span><span class="p">);</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">addTargetGroup</span><span class="p">(</span><span class="s1">&#39;web&#39;</span><span class="p">,</span> <span class="s1">&#39;9000&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">);</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">);</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">});</span>
+</pre></div>

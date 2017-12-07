@@ -1,0 +1,82 @@
+<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+  <span class="c1">// highest # of choices (inputs) allowed</span>
+  <span class="nb">window</span><span class="p">.</span><span class="nx">highestChoice</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="c1">// hide again button on page load</span>
+  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+
+  <span class="kd">var</span> <span class="nx">goDecide</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// prevent default browser behavior upon submit</span>
+    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
+    <span class="c1">// erase old values</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="c1">// hide decision text</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+    <span class="c1">// display processing text, update color to black in case of an error</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;black&quot;</span><span class="p">);</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;Processing ...&quot;</span><span class="p">);</span>
+    <span class="c1">// create variable to see if any of the inputs are input</span>
+    <span class="kd">var</span> <span class="nx">anyEmpty</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="c1">// array to hold inputs</span>
+    <span class="kd">var</span> <span class="nx">choices</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="c1">// grab values, add to choices array</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">highestChoice</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">choiceValue</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice&quot;</span><span class="o">+</span><span class="nx">i</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">choiceValue</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">anyEmpty</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">choices</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">choiceValue</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">choiceValue</span><span class="p">);</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">// Handling *some* errors</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">anyEmpty</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice1&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="o">!=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice2&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">())</span> <span class="p">{</span>
+        <span class="c1">// send values to server side for processing, wait for callback, getting AJAXy</span>
+        <span class="nx">$</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/search&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">choices</span><span class="p">)},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">data</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+          <span class="c1">// append data to the DOM</span>
+          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.form-container&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
+          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;and the winner is ...&quot;</span><span class="p">);</span>
+          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;choice&#39;</span><span class="p">]);</span>
+          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;... with a score of &#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">fadeIn</span><span class="p">();</span>
+          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">fadeIn</span><span class="p">();</span>
+          <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
+        <span class="p">});</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="c1">// error code</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">);</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;Both choices are the same. Try again.&quot;</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="c1">// error code</span>
+      <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">);</span>
+      <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s2">&quot;You must enter a value for both choices.&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+
+
+  <span class="c1">// ----- MAIN ----- //</span>
+
+  <span class="c1">// on click, run the goDecide function</span>
+  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="nx">goDecide</span><span class="p">);</span>
+  <span class="c1">// on click new form is shown</span>
+  <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.form-container&quot;</span><span class="p">).</span><span class="nx">show</span><span class="p">()</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#again&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">()</span>
+    <span class="c1">// erase old values</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#score&quot;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice1&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#choice2&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="c1">// hide decision text</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#decision-text&quot;</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</pre></div>

@@ -1,0 +1,101 @@
+<div class="highlight"><pre><span class="kr">const</span> <span class="nx">AWS</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;aws-sdk&#39;</span><span class="p">);</span>
+
+<span class="kr">const</span> <span class="nx">createUsersTaskDefinition</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../tasks/users-review_task&#39;</span><span class="p">).</span><span class="nx">createUsersTaskDefinition</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">createMoviesTaskDefinition</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../tasks/movies-review_task&#39;</span><span class="p">).</span><span class="nx">createMoviesTaskDefinition</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">createWebTaskDefinition</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../tasks/web-review_task&#39;</span><span class="p">).</span><span class="nx">createWebTaskDefinition</span><span class="p">;</span>
+
+
+<span class="c1">// globals</span>
+
+<span class="kr">const</span> <span class="nx">AWS_ACCOUNT_ID</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">AWS_ACCOUNT_ID</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">AWS_ACCESS_KEY_ID</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">AWS_ACCESS_KEY_ID</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">AWS_SECRET_ACCESS_KEY</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">AWS_SECRET_ACCESS_KEY</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">AWS_USERNAME</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">AWS_USERNAME</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">AWS_CONFIG_REGION</span> <span class="o">=</span> <span class="s1">&#39;us-west-2&#39;</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">SHORT_GIT_HASH</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">CIRCLE_SHA1</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">);</span>
+
+
+<span class="c1">// config</span>
+
+<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AWS</span><span class="p">.</span><span class="nx">Config</span><span class="p">();</span>
+<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">accessKeyId</span> <span class="o">=</span> <span class="nx">AWS_ACCESS_KEY_ID</span><span class="p">;</span>
+<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">secretAccessKey</span> <span class="o">=</span> <span class="nx">AWS_SECRET_ACCESS_KEY</span><span class="p">;</span>
+<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">region</span> <span class="o">=</span> <span class="nx">AWS_CONFIG_REGION</span><span class="p">;</span>
+
+
+<span class="c1">// init aws services</span>
+
+<span class="kr">const</span> <span class="nx">ecs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AWS</span><span class="p">.</span><span class="nx">ECS</span><span class="p">();</span>
+
+
+<span class="c1">// methods</span>
+
+<span class="kd">function</span> <span class="nx">ensureAuthenticated</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">iam</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AWS</span><span class="p">.</span><span class="nx">IAM</span><span class="p">();</span>
+    <span class="kr">const</span> <span class="nx">params</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">UserName</span><span class="o">:</span> <span class="nx">AWS_USERNAME</span> <span class="p">};</span>
+    <span class="nx">iam</span><span class="p">.</span><span class="nx">getUser</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+      <span class="nx">resolve</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">registerTaskDef</span><span class="p">(</span><span class="nx">task</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">params</span> <span class="o">=</span> <span class="nx">task</span><span class="p">;</span>
+    <span class="nx">ecs</span><span class="p">.</span><span class="nx">registerTaskDefinition</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+      <span class="nx">resolve</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">registerUsersTD</span><span class="p">(</span><span class="nx">taskDefinitionName</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">task</span> <span class="o">=</span> <span class="nx">createUsersTaskDefinition</span><span class="p">(</span><span class="nx">AWS_ACCOUNT_ID</span><span class="p">,</span> <span class="nx">AWS_CONFIG_REGION</span><span class="p">,</span> <span class="nx">SHORT_GIT_HASH</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">registerTaskDef</span><span class="p">(</span><span class="nx">task</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Task Registered!&#39;</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">taskDefinition</span><span class="p">.</span><span class="nx">taskDefinitionArn</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">registerMoviesTD</span><span class="p">(</span><span class="nx">taskDefinitionName</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">task</span> <span class="o">=</span> <span class="nx">createMoviesTaskDefinition</span><span class="p">(</span><span class="nx">AWS_ACCOUNT_ID</span><span class="p">,</span> <span class="nx">AWS_CONFIG_REGION</span><span class="p">,</span> <span class="nx">SHORT_GIT_HASH</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">registerTaskDef</span><span class="p">(</span><span class="nx">task</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Task Registered!&#39;</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">taskDefinition</span><span class="p">.</span><span class="nx">taskDefinitionArn</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">registerWebTD</span><span class="p">(</span><span class="nx">taskDefinitionName</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">task</span> <span class="o">=</span> <span class="nx">createWebTaskDefinition</span><span class="p">(</span><span class="nx">AWS_ACCOUNT_ID</span><span class="p">,</span> <span class="nx">AWS_CONFIG_REGION</span><span class="p">,</span> <span class="nx">SHORT_GIT_HASH</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">registerTaskDef</span><span class="p">(</span><span class="nx">task</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Task Registered!&#39;</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">taskDefinition</span><span class="p">.</span><span class="nx">taskDefinitionArn</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+
+<span class="c1">// main</span>
+
+<span class="k">return</span> <span class="nx">ensureAuthenticated</span><span class="p">()</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="err">`</span><span class="nx">Welcome</span> <span class="nx">$</span><span class="p">{</span><span class="nx">data</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">UserName</span><span class="p">}</span><span class="o">!</span><span class="err">`</span><span class="p">);</span>
+  <span class="nx">registerUsersTD</span><span class="p">();</span>
+  <span class="nx">registerMoviesTD</span><span class="p">();</span>
+  <span class="nx">registerWebTD</span><span class="p">();</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">});</span>
+</pre></div>

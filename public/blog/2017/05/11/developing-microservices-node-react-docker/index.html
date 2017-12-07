@@ -1,0 +1,1501 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>
+    
+      Developing Microservices - Node, React, and Docker
+     
+   </title>
+  <meta name="author" content="Michael Herman">
+
+  
+  <meta name="description" content="This tutorial details how to quickly spin up a reproducible development environment with Docker to manage a number of Node.js microservices.">
+  <meta name="keywords" content="docker, microservice, microservices, node, react, reactjs, javascript">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://mherman.org/blog/2017/05/11/developing-microservices-node-react-docker">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Michael Herman" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+
+
+  <!-- hello bar -->
+  <link rel="stylesheet" href="/stylesheets/hellobar.css">
+  <!-- hello bar -->
+  <script type="text/javascript" src="/javascripts/hellobar.js"></script>
+
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Michael Herman</a></h1>
+  
+    <h2>Software Developer</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="mherman.org" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about">About</a></li>
+  <li><a href="/talks">Talks</a></li>
+</ul>
+
+</nav>
+      <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=mhermanorg" id="_carbonads_js" media="(min-width: 768px)"></script>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Developing Microservices - Node, React, and Docker</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-05-11T08:16:46-06:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>8:16 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>In this post you will learn how to quickly spin up a reproducible development environment with Docker to manage a number of Node.js microservices.</p>
+
+<div style="text-align:center;">
+  <img src="/images/blog/docker-microservices.png" style="max-width: 100%; border:0; box-shadow: none;" alt="microservice architecture">
+</div>
+
+
+<p><br></p>
+
+<p>This post assumes prior knowledge of the following topics. Refer to the resources for more info:</p>
+
+<table>
+<thead>
+<tr>
+<th> Topic            </th>
+<th> Resource </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> Docker           </td>
+<td> <a href="https://docs.docker.com/engine/getstarted/">Get started with Docker</a> </td>
+</tr>
+<tr>
+<td> Docker Compose   </td>
+<td> <a href="https://docs.docker.com/compose/gettingstarted/">Get started with Docker Compose</a> </td>
+</tr>
+<tr>
+<td> Node/Express API </td>
+<td> <a href="http://mherman.org/blog/2016/09/12/testing-node-and-express">Testing Node and Express</a> </td>
+</tr>
+<tr>
+<td> React </td>
+<td> <a href="https://github.com/mjhea0/node-workshop/blob/master/w2/lessons/03-react.md">React Intro</a></td>
+</tr>
+<tr>
+<td> TestCafe </td>
+<td> <a href="http://mherman.org/blog/2017/03/19/functional-testing-with-testcafe">Functional Testing With TestCafe</a></td>
+</tr>
+<tr>
+<td> Swagger </td>
+<td> <a href="http://mherman.org/blog/2016/05/26/swagger-and-nodejs/">Swagger and NodeJS</a></td>
+</tr>
+</tbody>
+</table>
+
+
+<blockquote><p><strong>NOTE</strong>: Looking for a slightly easier implementation? Check out my previous post - <a href="http://mherman.org/blog/2017/04/18/developing-and-testing-microservices-with-docker">Developing and Testing Microservices With Docker</a>.</p></blockquote>
+
+<h2>Contents</h2>
+
+<ol>
+<li>Objectives</li>
+<li>Architecture</li>
+<li>Project Setup</li>
+<li>Users Service</li>
+<li>Web Service - part 1</li>
+<li>Movies Service</li>
+<li>Web Service - part 2</li>
+<li>Workflow</li>
+<li>Test Setup</li>
+<li>Swagger Setup</li>
+<li>Next Steps</li>
+</ol>
+
+
+<h2>Objectives</h2>
+
+<p>By the end of this tutorial, you should be able to&hellip;</p>
+
+<ol>
+<li>Configure and run microservices locally with Docker and Docker Compose</li>
+<li>Utilize <a href="https://docs.docker.com/engine/tutorials/dockervolumes/">volumes</a> to mount your code into a container</li>
+<li>Run unit and integration tests inside a Docker container</li>
+<li>Test the entire set of services with functional, end-to-end tests</li>
+<li>Debug a running Docker container</li>
+<li>Enable services running in different containers to talk to one other</li>
+<li>Secure your services via JWT-based authentication</li>
+<li>Work with React running inside a Docker Container</li>
+<li>Configure Swagger to interact with a service</li>
+</ol>
+
+
+<h2>Architecture</h2>
+
+<p>The end goal of this post is to organize the technologies from the above image into the following containers and services:</p>
+
+<table>
+<thead>
+<tr>
+<th> Name             </th>
+<th> Service </th>
+<th> Container </th>
+<th> Tech                 </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> Web              </td>
+<td> Web     </td>
+<td> web       </td>
+<td> React, React-Router  </td>
+</tr>
+<tr>
+<td> Movies API       </td>
+<td> Movies  </td>
+<td> movies    </td>
+<td> Node, Express        </td>
+</tr>
+<tr>
+<td> Movies DB        </td>
+<td> Movies  </td>
+<td> movies-db </td>
+<td> Postgres             </td>
+</tr>
+<tr>
+<td> Swagger          </td>
+<td> Movies  </td>
+<td> swagger   </td>
+<td> Swagger UI           </td>
+</tr>
+<tr>
+<td> Users API        </td>
+<td> Users   </td>
+<td> users     </td>
+<td> Node, Express        </td>
+</tr>
+<tr>
+<td> Users DB         </td>
+<td> Users   </td>
+<td> users-db  </td>
+<td> Postgres             </td>
+</tr>
+<tr>
+<td> Functional Tests </td>
+<td> Test    </td>
+<td> n/a       </td>
+<td> TestCafe             </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Let&rsquo;s get started!</p>
+
+<h2>Project Setup</h2>
+
+<p>Start by cloning the base project and then checking out the first tag:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>git clone https://github.com/mjhea0/microservice-movies
+</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>microservice-movies
+</span><span class='line'><span class="nv">$ </span>git checkout tags/v1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Overall project structure:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>.
+</span><span class='line'>├── services
+</span><span class='line'>│   ├── movies
+</span><span class='line'>│   │   ├── src
+</span><span class='line'>│   │   │   └── db
+</span><span class='line'>│   │   └── swagger
+</span><span class='line'>│   ├── users
+</span><span class='line'>│   │   └── src
+</span><span class='line'>│   │       └── db
+</span><span class='line'>│   └── web
+</span><span class='line'>└── tests
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Before we add Docker, be sure to review the code so that you have a basic understanding of how everything works. Feel free to test these services as well&hellip;</p>
+
+<p><em>Users:</em></p>
+
+<ul>
+<li>Navigate to &ldquo;services/users&rdquo;</li>
+<li><code>npm install</code></li>
+<li>update the <code>start</code> script within <em>package.json</em> to <code>"gulp --gulpfile gulpfile.js"</code></li>
+<li><code>npm start</code></li>
+<li>Open <a href="http://localhost:3000/users/ping">http://localhost:3000/users/ping</a> in your browser</li>
+</ul>
+
+
+<p><em>Movies:</em></p>
+
+<ul>
+<li>Navigate to &ldquo;services/movies&rdquo;</li>
+<li><code>npm install</code></li>
+<li>update the <code>start</code> script within <em>package.json</em> to <code>"gulp --gulpfile gulpfile.js"</code></li>
+<li><code>npm start</code></li>
+<li>Open <a href="http://localhost:3000/movies/ping">http://localhost:3000/movies/ping</a> in your browser</li>
+</ul>
+
+
+<p><em>Web:</em></p>
+
+<ul>
+<li>Navigate to &ldquo;services/web&rdquo;</li>
+<li><code>npm install</code></li>
+<li><code>npm start</code></li>
+<li>Open <a href="http://localhost:3006">http://localhost:3006</a> in your browser. You should see the log in page.</li>
+</ul>
+
+
+<p>Next, add a <em>docker-compose.yml</em> file to the project root. This file is used by Docker Compose to link multiple services together. With one command it will spin up all the containers we need and enable them to communicate with one another (as needed).</p>
+
+<p>With that, let&rsquo;s get each service going, making sure to test as we go&hellip;</p>
+
+<h2>Users Service</h2>
+
+<p>We&rsquo;ll start with the database since the API is dependent on it being up&hellip;</p>
+
+<h3>Database</h3>
+
+<p>First, add a <em>Dockerfile</em> to &ldquo;services/users/src/db&rdquo;:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>FROM postgres
+</span><span class='line'>
+</span><span class='line'><span class="c"># run create.sql on init</span>
+</span><span class='line'>ADD create.sql /docker-entrypoint-initdb.d
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, we extend the official Postgres image by adding a SQL file to the &ldquo;docker-entrypoint-initdb.d&rdquo; directory in the container, which will execute on init.</p>
+
+<p>Then update the <em>docker-compose.yml</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>version: <span class="s1">&#39;2.1&#39;</span>
+</span><span class='line'>
+</span><span class='line'>services:
+</span><span class='line'>
+</span><span class='line'>  users-db:
+</span><span class='line'>    container_name: users-db
+</span><span class='line'>    build: ./services/users/src/db
+</span><span class='line'>    ports:
+</span><span class='line'>      - <span class="s1">&#39;5433:5432&#39;</span> <span class="c"># expose ports - HOST:CONTAINER</span>
+</span><span class='line'>    environment:
+</span><span class='line'>      - <span class="nv">POSTGRES_USER</span><span class="o">=</span>postgres
+</span><span class='line'>      - <span class="nv">POSTGRES_PASSWORD</span><span class="o">=</span>postgres
+</span><span class='line'>    healthcheck:
+</span><span class='line'>      <span class="nb">test</span>: <span class="nb">exit </span>0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This config will create a container called <code>users-db</code>, from the <em>Dockerfile</em> found in &ldquo;services/users/src/db&rdquo;. (Directories are relative to the <em>docker-compose.yml</em> file.)</p>
+
+<p>Once spun up, environment variables will be added and an exit code of <code>0</code> will be sent after it&rsquo;s successfully up and running. Postgres will be available on port <code>5433</code> on the host machine and on port <code>5432</code> for other services.</p>
+
+<blockquote><p><strong>NOTE:</strong> Use <code>expose</code>, rather than <code>ports</code>, if you just want Postgres available to other services but not the host machine:</p>
+
+<pre><code>expose:
+  - "5432"
+</code></pre></blockquote>
+
+<p>Take note of the version used - <code>2.1</code>. This does not relate directly to the version of Docker Compose installed; instead, it specifies the file format that you want to use.</p>
+
+<p>Fire up the container:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose up --build -d users-db
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Once up, let&rsquo;s run a quick sanity check. Enter the shell:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose run users-db bash
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then run <code>env</code> to ensure that the proper environment variables are set. You can also check out the &ldquo;docker-entrypoint-initdb.d&rdquo; directory:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c"># cd docker-entrypoint-initdb.d/</span>
+</span><span class='line'><span class="c"># ls</span>
+</span><span class='line'>create.sql
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>exit</code> when done.</p>
+
+<h3>API</h3>
+
+<p>Turning to the API, add a <em>Dockerfile</em> to &ldquo;services/users&rdquo;, making sure to review the comments:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>FROM node:latest
+</span><span class='line'>
+</span><span class='line'><span class="c"># set working directory</span>
+</span><span class='line'>RUN mkdir /usr/src/app
+</span><span class='line'>WORKDIR /usr/src
+</span><span class='line'>
+</span><span class='line'><span class="c"># add `/usr/src/node_modules/.bin` to $PATH</span>
+</span><span class='line'>ENV PATH /usr/src/node_modules/.bin:<span class="nv">$PATH</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># install and cache app dependencies</span>
+</span><span class='line'>ADD package.json /usr/src/package.json
+</span><span class='line'>RUN npm install
+</span><span class='line'>
+</span><span class='line'><span class="c"># start app</span>
+</span><span class='line'>CMD <span class="o">[</span><span class="s2">&quot;npm&quot;</span>, <span class="s2">&quot;start&quot;</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p><strong>NOTE</strong>: Be sure to take advantage of Docker&rsquo;s layered <a href="https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#build-cache">cache</a> system, to speed up build times, by adding the <em>package.json</em> and installing the dependencies <strong>before</strong> adding the app&rsquo;s source files. For more on this, check out <a href="http://bitjudo.com/blog/2014/03/13/building-efficient-dockerfiles-node-dot-js/">Building Efficient Dockerfiles - Node.js</a>.</p></blockquote>
+
+<p>Then add the <code>users-service</code> to the <em>docker-compose.yml</em> file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>users-service:
+</span><span class='line'>  container_name: users-service
+</span><span class='line'>  build: ./services/users/
+</span><span class='line'>  volumes:
+</span><span class='line'>    - <span class="s1">&#39;./services/users:/usr/src/app&#39;</span>
+</span><span class='line'>    - <span class="s1">&#39;./services/users/package.json:/usr/src/package.json&#39;</span>
+</span><span class='line'>  ports:
+</span><span class='line'>    - <span class="s1">&#39;3000:3000&#39;</span> <span class="c"># expose ports - HOST:CONTAINER</span>
+</span><span class='line'>  environment:
+</span><span class='line'>    - <span class="nv">DATABASE_URL</span><span class="o">=</span>postgres://postgres:postgres@users-db:5432/users_dev
+</span><span class='line'>    - <span class="nv">DATABASE_TEST_URL</span><span class="o">=</span>postgres://postgres:postgres@users-db:5432/users_test
+</span><span class='line'>    - <span class="nv">NODE_ENV</span><span class="o">=</span><span class="k">${</span><span class="nv">NODE_ENV</span><span class="k">}</span>
+</span><span class='line'>    - <span class="nv">TOKEN_SECRET</span><span class="o">=</span>changeme
+</span><span class='line'>  depends_on:
+</span><span class='line'>    users-db:
+</span><span class='line'>      condition: service_healthy
+</span><span class='line'>  links:
+</span><span class='line'>    - users-db
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>What&rsquo;s happening here?</p>
+
+<ul>
+<li><code>volumes</code>: <a href="https://docs.docker.com/engine/tutorials/dockervolumes/">volumes</a> are used to mount a directory inside a container so that you can make modifications to the code without having to rebuild the image. This should be a default in your local development environment so you quickly get feedback on code changes.</li>
+<li><code>depends_on</code>: <a href="https://docs.docker.com/compose/compose-file/#dependson">depends_on</a> specifies the order in which to start services. In this case, the <code>users-service</code> will wait for the <code>users-db</code> to fire up successfully (with an exit code of <code>0</code>) before it starts.</li>
+<li><code>links</code>: With <a href="https://docs.docker.com/compose/compose-file/#links">links</a> you can link to services running in other containers. So, with this config, code inside the <code>users-service</code> will be able to access the database via <code>users-db:5432</code>.</li>
+</ul>
+
+
+<blockquote><p><strong>NOTE:</strong> Curious about the difference between <code>depends_on</code> and <code>links</code>? Check out the following <a href="http://stackoverflow.com/a/39658359/1799408">Stack Overflow discussion</a> for more info.</p></blockquote>
+
+<p>Set the <code>NODE_ENV</code> environment variable:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">export </span><span class="nv">NODE_ENV</span><span class="o">=</span>development
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Build the image and spin up the container:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose up --build -d users-service
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p><strong>NOTE:</strong> Keep in mind that Docker Compose handles both the build and run times. This can be confusing. For example, take a look at the current docker-compose.yml file - What is happening at the build time? How about the run time? How do you know?</p></blockquote>
+
+<p>Once up, create a new file in the project root called <em>init_db.sh</em> and add the Knex migrate and seed commands:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/sh</span>
+</span><span class='line'>
+</span><span class='line'>docker-compose run users-service knex migrate:latest --env development --knexfile app/knexfile.js
+</span><span class='line'>docker-compose run users-service knex seed:run --env development --knexfile app/knexfile.js
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then apply the migrations and add the seed:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>sh init_db.sh
+</span><span class='line'>Using environment: development
+</span><span class='line'>Batch <span class="m">1</span> run: <span class="m">1</span> migrations
+</span><span class='line'>/src/src/db/migrations/20170504191016_users.js
+</span><span class='line'>Using environment: development
+</span><span class='line'>Ran <span class="m">1</span> seed files
+</span><span class='line'>/src/src/db/seeds/users.js
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Test:</p>
+
+<table>
+<thead>
+<tr>
+<th> Endpoint        </th>
+<th> HTTP Method </th>
+<th> CRUD Method </th>
+<th> Result        </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> /users/ping     </td>
+<td> GET         </td>
+<td> READ        </td>
+<td> <code>pong</code>        </td>
+</tr>
+<tr>
+<td> /users/register </td>
+<td> POST        </td>
+<td> CREATE      </td>
+<td> add a user    </td>
+</tr>
+<tr>
+<td> /users/login    </td>
+<td> POST        </td>
+<td> CREATE      </td>
+<td> log in a user </td>
+</tr>
+<tr>
+<td> /users/user     </td>
+<td> GET         </td>
+<td> READ        </td>
+<td> get user info </td>
+</tr>
+</tbody>
+</table>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>http POST http://localhost:3000/users/register <span class="nv">username</span><span class="o">=</span>foo <span class="nv">password</span><span class="o">=</span>bar
+</span><span class='line'><span class="nv">$ </span>http POST http://localhost:3000/users/login <span class="nv">username</span><span class="o">=</span>foo <span class="nv">password</span><span class="o">=</span>bar
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p><strong>NOTE:</strong> <code>http</code> in the above commands is part of the <a href="https://httpie.org/">HTTPie</a> library, which is a wrapper on top of cURL.</p></blockquote>
+
+<p>In both cases you should see a <code>status</code> of <code>success</code> along with a <code>token</code>, i.e. -</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">{</span>
+</span><span class='line'>    <span class="s2">&quot;status&quot;</span>: <span class="s2">&quot;success&quot;</span>,
+</span><span class='line'>    <span class="s2">&quot;token&quot;</span>: <span class="s2">&quot;eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9&quot;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Finally, run the unit and integration tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose run users-service npm <span class="nb">test</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>routes : index
+</span><span class='line'>  GET /does/not/exist
+</span><span class='line'>    ✓ should throw an error
+</span><span class='line'>
+</span><span class='line'>routes : users
+</span><span class='line'>  POST /users/register
+</span><span class='line'>    ✓ should register a new user <span class="o">(</span>178ms<span class="o">)</span>
+</span><span class='line'>  POST /users/login
+</span><span class='line'>    ✓ should login a user <span class="o">(</span>116ms<span class="o">)</span>
+</span><span class='line'>    ✓ should not login an unregistered user
+</span><span class='line'>    ✓ should not login a valid user with incorrect password <span class="o">(</span>125ms<span class="o">)</span>
+</span><span class='line'>  GET /users/user
+</span><span class='line'>    ✓ should <span class="k">return</span> a success <span class="o">(</span>114ms<span class="o">)</span>
+</span><span class='line'>    ✓ should throw an error <span class="k">if</span> a user is not logged in
+</span><span class='line'>
+</span><span class='line'>auth : helpers
+</span><span class='line'>  comparePass<span class="o">()</span>
+</span><span class='line'>    ✓ should <span class="k">return</span> <span class="nb">true </span><span class="k">if</span> the password is correct <span class="o">(</span>354ms<span class="o">)</span>
+</span><span class='line'>    ✓ should <span class="k">return</span> <span class="nb">false </span><span class="k">if</span> the password is correct <span class="o">(</span>315ms<span class="o">)</span>
+</span><span class='line'>    ✓ should <span class="k">return</span> <span class="nb">false </span><span class="k">if</span> the password empty <span class="o">(</span>305ms<span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>auth : <span class="nb">local</span>
+</span><span class='line'><span class="nb">  </span>encodeToken<span class="o">()</span>
+</span><span class='line'>    ✓ should <span class="k">return</span> a token
+</span><span class='line'>  decodeToken<span class="o">()</span>
+</span><span class='line'>    ✓ should <span class="k">return</span> a payload
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="m">12</span> passing <span class="o">(</span>4s<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Check the test specs for more info. That&rsquo;s it! Let&rsquo;s move on to the web service&hellip;</p>
+
+<h2>Web Service - part 1</h2>
+
+<p>With our users service up and running, we can turn our attention to the client-side and spin up the React app inside a container to test authentication.</p>
+
+<blockquote><p><strong>NOTE:</strong> The React code is ported from <a href="https://github.com/blackstc/intro-react-redux-omdb">intro-react-redux-omdb</a> and <a href="https://github.com/etmoore/communikey">communikey</a> written by <a href="https://www.linkedin.com/in/charlieblackstock/">Charlie Blackstock</a> and <a href="https://www.linkedin.com/in/etmoore1/">Evan Moore</a>, respectively - two of my former students.</p></blockquote>
+
+<p>Add a <em>Dockerfile</em> to &ldquo;services/web&rdquo;:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>FROM node:latest
+</span><span class='line'>
+</span><span class='line'><span class="c"># set working directory</span>
+</span><span class='line'>RUN mkdir /usr/src/app
+</span><span class='line'>WORKDIR /usr/src/app
+</span><span class='line'>
+</span><span class='line'><span class="c"># add `/usr/src/app/node_modules/.bin` to $PATH</span>
+</span><span class='line'>ENV PATH /usr/src/app/node_modules/.bin:<span class="nv">$PATH</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># install and cache app dependencies</span>
+</span><span class='line'>ADD package.json /usr/src/app/package.json
+</span><span class='line'>RUN npm install
+</span><span class='line'>RUN npm install react-scripts@0.9.5 -g
+</span><span class='line'>
+</span><span class='line'><span class="c"># start app</span>
+</span><span class='line'>CMD <span class="o">[</span><span class="s2">&quot;npm&quot;</span>, <span class="s2">&quot;start&quot;</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As of 05/10/2017 the <a href="http://www.omdbapi.com/">OMDb API</a> is private, so you have to donate at least $1 to gain access. Once you have an API Key, update the <code>API_URL</code> in <em>services/web/src/App.jsx</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kr">const</span> <span class="nx">API_URL</span> <span class="o">=</span> <span class="s1">&#39;http://www.omdbapi.com/?apikey=addyourkey&amp;s=&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then update the <em>docker-compose.yml</em> file like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">web</span><span class="o">-</span><span class="nx">service</span><span class="o">:</span>
+</span><span class='line'>  <span class="nx">container_name</span><span class="o">:</span> <span class="nx">web</span><span class="o">-</span><span class="nx">service</span>
+</span><span class='line'>  <span class="nx">build</span><span class="o">:</span> <span class="p">.</span><span class="o">/</span><span class="nx">services</span><span class="o">/</span><span class="nx">web</span><span class="o">/</span>
+</span><span class='line'>  <span class="nx">volumes</span><span class="o">:</span>
+</span><span class='line'>    <span class="o">-</span> <span class="s1">&#39;./services/web:/usr/src/app&#39;</span>
+</span><span class='line'>    <span class="o">-</span> <span class="s1">&#39;/usr/src/app/node_modules&#39;</span>
+</span><span class='line'>  <span class="nx">ports</span><span class="o">:</span>
+</span><span class='line'>    <span class="o">-</span> <span class="s1">&#39;3007:3006&#39;</span> <span class="err">#</span> <span class="nx">expose</span> <span class="nx">ports</span> <span class="o">-</span> <span class="nx">HOST</span><span class="o">:</span><span class="nx">CONTAINER</span>
+</span><span class='line'>  <span class="nx">environment</span><span class="o">:</span>
+</span><span class='line'>    <span class="o">-</span> <span class="nx">NODE_ENV</span><span class="o">=</span><span class="nx">$</span><span class="p">{</span><span class="nx">NODE_ENV</span><span class="p">}</span>
+</span><span class='line'>  <span class="nx">depends_on</span><span class="o">:</span>
+</span><span class='line'>    <span class="nx">users</span><span class="o">-</span><span class="nx">service</span><span class="o">:</span>
+</span><span class='line'>      <span class="nx">condition</span><span class="o">:</span> <span class="nx">service_started</span>
+</span><span class='line'>  <span class="nx">links</span><span class="o">:</span>
+</span><span class='line'>    <span class="o">-</span> <span class="nx">users</span><span class="o">-</span><span class="nx">service</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p><strong>NOTE:</strong> To prevent the volume - <code>/usr/src/app</code> - from overriding the <em>package.json</em>, we used a data volume - <code>/usr/src/app/node_modules</code>. This may or may not be necessary, depending on the order in which you set up your image and containers. Check out <a href="http://dchua.com/2016/02/07/getting-npm-packages-to-be-installed-with-docker-compose/">Getting npm packages to be installed with docker-compose</a> for more.</p></blockquote>
+
+<p>Build the image and fire up the container:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose up --build -d web-service
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p><strong>NOTE:</strong> To avoid dealing with too much configuration (babel and webpack), the React app uses <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>.</p></blockquote>
+
+<p>Open your browser and navigate to <a href="http://localhost:3007">http://localhost:3007</a>. You should see the login page:</p>
+
+<div style="text-align:center;">
+  <img src="/images/blog/microservice-movies-login.png" style="max-width: 100%; border:0; box-shadow: none;" alt="login page">
+</div>
+
+
+<p>Log in with -</p>
+
+<ul>
+<li>username: <code>foo</code></li>
+<li>password: <code>bar</code></li>
+</ul>
+
+
+<p>Once logged in you should see:</p>
+
+<div style="text-align:center;">
+  <img src="/images/blog/microservice-movies-search.png" style="max-width: 100%; border:0; box-shadow: none;" alt="search page">
+</div>
+
+
+<p>Within <em>services/web/src/App.jsx</em>, let&rsquo;s take a quick look at the AJAX request in the <code>loginUser()</code> method:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">loginUser</span> <span class="p">(</span><span class="nx">userData</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="cm">/*</span>
+</span><span class='line'><span class="cm">    why? http://localhost:3000/users/login</span>
+</span><span class='line'><span class="cm">    why not? http://users-service:3000/users/login</span>
+</span><span class='line'><span class="cm">   */</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">axios</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;http://localhost:3000/users/login&#39;</span><span class="p">,</span> <span class="nx">userData</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nb">window</span><span class="p">.</span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">setItem</span><span class="p">(</span><span class="s1">&#39;authToken&#39;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">token</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">window</span><span class="p">.</span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">setItem</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span> <span class="nx">isAuthenticated</span><span class="o">:</span> <span class="kc">true</span> <span class="p">})</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">createFlashMessage</span><span class="p">(</span><span class="s1">&#39;You successfully logged in! Welcome!&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">history</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">getMovies</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">error</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;Something went wrong&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Why do we use <code>localhost</code> rather than the name of the container, <code>users-service</code>? This request is originating outside the container, on the host. Keep in mind, that if, this request was originating inside the container, we would need to use the container name rather than <code>localhost</code>, since <code>localhost</code> would refer back to the container itself in that situation.</p>
+
+<p>Make sure you can log out and register as well.</p>
+
+<p>Next, let&rsquo;s spin up the movies service so that end users can save movies to a collection&hellip;</p>
+
+<h2>Movies Service</h2>
+
+<p>Set up for the movies service is nearly the same as the users service. Try this on your own to check your understanding:</p>
+
+<ol>
+<li>Database
+
+<ul>
+<li>add a <em>Dockerfile</em></li>
+<li>update the <em>docker-compose.yml</em></li>
+<li>spin up the container</li>
+<li>test</li>
+</ul>
+</li>
+<li>API
+
+<ul>
+<li>add a <em>Dockerfile</em></li>
+<li>update the <em>docker-compose.yml</em> (make sure to link the service with the database and the users service and update the exposed ports - <code>3001</code> for the api, <code>5434</code> for the db)</li>
+<li>spin up the container</li>
+<li>apply migrations and seeds</li>
+<li>test</li>
+</ul>
+</li>
+</ol>
+
+
+<blockquote><p><strong>NOTE:</strong> Need help? Grab the code from the <a href="https://github.com/mjhea0/microservice-movies/releases/tag/v2">v2</a> tag of the <a href="https://github.com/mjhea0/microservice-movies">microservice-movies</a> repo.</p></blockquote>
+
+<p>The movies database image should take much less time to build than the users database. Why?</p>
+
+<p>With the containers up, let&rsquo;s test out the endpoints&hellip;</p>
+
+<table>
+<thead>
+<tr>
+<th> Endpoint      </th>
+<th> HTTP Method </th>
+<th> CRUD Method </th>
+<th> Result                    </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> /movies/ping  </td>
+<td> GET         </td>
+<td> READ        </td>
+<td> <code>pong</code>                    </td>
+</tr>
+<tr>
+<td> /movies/user  </td>
+<td> GET         </td>
+<td> READ        </td>
+<td> get all movies by user    </td>
+</tr>
+<tr>
+<td> /movies       </td>
+<td> POST        </td>
+<td> CREATE      </td>
+<td> add a single movie        </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Start with opening the browser to <a href="http://localhost:3001/movies/ping">http://localhost:3001/movies/ping</a>. You should see <code>pong</code>! Try <a href="http://localhost:3001/movies/user">http://localhost:3001/movies/user</a>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;Please log in&quot;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Since you need to be authenticated to access the other routes, let&rsquo;s test them out by running the integration tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose run movies-service npm <span class="nb">test</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>routes : index
+</span><span class='line'>  GET /does/not/exist
+</span><span class='line'>    ✓ should throw an error
+</span><span class='line'>
+</span><span class='line'>Movies API Routes
+</span><span class='line'>  GET /movies/ping
+</span><span class='line'>    ✓ should <span class="k">return</span> <span class="s2">&quot;pong&quot;</span>
+</span><span class='line'>  GET /movies/user
+</span><span class='line'>    ✓ should <span class="k">return</span> saved movies
+</span><span class='line'>  POST /movies
+</span><span class='line'>    ✓ should create a new movie
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="m">4</span> passing <span class="o">(</span>818ms<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Check the test specs for more info.</p>
+
+<h2>Web Service - part 2</h2>
+
+<p>Turn to the <em>docker-compose.yml</em> file. Update the <code>links</code> and <code>depends_on</code> keys for the <code>web-service</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>depends_on:
+</span><span class='line'>  users-service:
+</span><span class='line'>    condition: service_started
+</span><span class='line'>  movies-service:
+</span><span class='line'>    condition: service_started
+</span><span class='line'>links:
+</span><span class='line'>  - users-service
+</span><span class='line'>  - movies-service
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Why?</p>
+
+<p>Next, update the container:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose up -d web-service
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&rsquo;s test this out in the browser! Open <a href="http://localhost:3007/">http://localhost:3007/</a>. Register a new user and then add some movies to the collection.</p>
+
+<p>Be sure to view the collection as well:</p>
+
+<div style="text-align:center;">
+  <img src="/images/blog/microservice-movies-collection.png" style="max-width: 100%; border:0; box-shadow: none;" alt="collection page">
+</div>
+
+
+<p>Open <em>services/movies/src/routes/_helpers.js</em> and take note of the <code>ensureAuthenticated()</code> method:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">let</span> <span class="nx">ensureAuthenticated</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">headers</span> <span class="o">&amp;&amp;</span> <span class="nx">req</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">authorization</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;Please log in&#39;</span> <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="kr">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;GET&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">uri</span><span class="o">:</span> <span class="s1">&#39;http://users-service:3000/users/user&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">json</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">headers</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">Authorization</span><span class="o">:</span> <span class="err">`</span><span class="nx">Bearer</span> <span class="nx">$</span><span class="p">{</span><span class="nx">req</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">authorization</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]}</span><span class="err">`</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">response</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">req</span><span class="p">.</span><span class="nx">user</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">});</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Why does the uri point to <code>users-service</code> and not <code>localhost</code>?</p>
+
+<h2>Workflow</h2>
+
+<p>Start by checking out the <em>Workflow</em> section from <a href="http://mherman.org/blog/2017/04/18/developing-and-testing-microservices-with-docker/">Developing and Testing Microservices With Docker</a>. Experiment with live reloading on a code change and debugging a running container with <code>console.log</code>.</p>
+
+<p>Add a header to the collection page:</p>
+
+<div style="text-align:center;">
+  <img src="/images/blog/microservice-movies-collection-updated.png" style="max-width: 100%; border:0; box-shadow: none;" alt="collection page with header">
+</div>
+
+
+<p>Run the logs - <code>docker-compose logs -f web-service</code> - and then make a change to one of the components that breaks compilation:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>web-service       <span class="p">|</span> Compiling...
+</span><span class='line'>web-service       <span class="p">|</span> Failed to compile.
+</span><span class='line'>web-service       <span class="p">|</span>
+</span><span class='line'>web-service       <span class="p">|</span> Error in ./src/components/SavedMovies.jsx
+</span><span class='line'>web-service       <span class="p">|</span>
+</span><span class='line'>web-service       <span class="p">|</span> /usr/src/app/src/components/SavedMovies.jsx
+</span><span class='line'>web-service       <span class="p">|</span>   10:13  error  <span class="s1">&#39;Link&#39;</span> is not defined  react/jsx-no-undef
+</span><span class='line'>web-service       <span class="p">|</span>
+</span><span class='line'>web-service       <span class="p">|</span> ✖ <span class="m">1</span> problem <span class="o">(</span><span class="m">1</span> error, <span class="m">0</span> warnings<span class="o">)</span>
+</span><span class='line'>web-service       <span class="p">|</span>
+</span><span class='line'>web-service       <span class="p">|</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Correct the error:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>web-service       <span class="p">|</span>
+</span><span class='line'>web-service       <span class="p">|</span> Compiling...
+</span><span class='line'>web-service       <span class="p">|</span> Compiled successfully!
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Continue to experiment with adding and updating the React app until you feel comfortable working with it inside the container.</p>
+
+<h2>Test Setup</h2>
+
+<p>Thus far we&rsquo;ve only tested each individual microservice with unit and integration tests. Let&rsquo;s turn our attention to functional, end-to-end tests to test the entire system. For this, we&rsquo;ll use <a href="https://devexpress.github.io/testcafe/">TestCafe</a>.</p>
+
+<blockquote><p><strong>NOTE:</strong> Don&rsquo;t want to use TestCafe? Check out the <a href="https://github.com/mjhea0/node-docker-api/tree/master/tests">code</a> for using Mocha, Chai, Request, and Cheerio (all within a container) for testing.</p></blockquote>
+
+<p>Let&rsquo;s be lazy and install TestCafe globally:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>npm install testcafe@0.15.0 -g
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then run the tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>testcafe firefox tests/**/*.js
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You should see:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>testcafe firefox tests/**/*.js
+</span><span class='line'> Running tests in:
+</span><span class='line'> - Firefox 53.0.0 / Mac OS X 10.11.0
+</span><span class='line'>
+</span><span class='line'> /login
+</span><span class='line'> ✓ users should be able to log in and out
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'> <span class="m">1</span> passed <span class="o">(</span>3s<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p><strong>NOTE:</strong> Interested in running the tests from within a container? Check out the <a href="https://devexpress.github.io/testcafe/documentation/using-testcafe/installing-testcafe.html#using-testcafe-docker-image">official TestCafe docs</a> for more info on using TestCafe with Docker.</p></blockquote>
+
+<p>To simplify the test workflow, add a <em>test.sh</em> file to the project root:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">fails</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+</span><span class='line'>
+</span><span class='line'>inspect<span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">[</span> <span class="nv">$1</span> -ne <span class="m">0</span> <span class="o">]</span> <span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>    <span class="nv">fails</span><span class="o">=</span><span class="s2">&quot;${fails} $2&quot;</span>
+</span><span class='line'>  <span class="k">fi</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>docker-compose run users-service npm <span class="nb">test</span>
+</span><span class='line'>inspect <span class="nv">$?</span> users-service
+</span><span class='line'>
+</span><span class='line'>docker-compose run movies-service npm <span class="nb">test</span>
+</span><span class='line'>inspect <span class="nv">$?</span> movies-service
+</span><span class='line'>
+</span><span class='line'>testcafe firefox tests/**/*.js
+</span><span class='line'>inspect <span class="nv">$?</span> e2e
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> -n <span class="s2">&quot;${fails}&quot;</span> <span class="o">]</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">then</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="s2">&quot;Tests failed: ${fails}&quot;</span>
+</span><span class='line'>    <span class="nb">exit </span>1
+</span><span class='line'>  <span class="k">else</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="s2">&quot;Tests passed!&quot;</span>
+</span><span class='line'>    <span class="nb">exit </span>0
+</span><span class='line'><span class="k">fi</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Run the tests:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>sh test.sh
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Swagger Setup</h2>
+
+<p>Add a <em>Dockerfile</em> to &ldquo;services/movies/swagger&rdquo;:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>FROM node:latest
+</span><span class='line'>
+</span><span class='line'><span class="c"># set working directory</span>
+</span><span class='line'>RUN mkdir /usr/src/app
+</span><span class='line'>WORKDIR /usr/src/app
+</span><span class='line'>
+</span><span class='line'><span class="c"># add `/usr/src/node_modules/.bin` to $PATH</span>
+</span><span class='line'>ENV PATH /usr/src/app/node_modules/.bin:<span class="nv">$PATH</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># install and cache app dependencies</span>
+</span><span class='line'>ADD package.json /usr/src/app/package.json
+</span><span class='line'>RUN npm install
+</span><span class='line'>
+</span><span class='line'><span class="c"># start app</span>
+</span><span class='line'>CMD <span class="o">[</span><span class="s2">&quot;npm&quot;</span>, <span class="s2">&quot;start&quot;</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Update <em>docker-compose.yml</em>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>swagger:
+</span><span class='line'>  container_name: swagger
+</span><span class='line'>  build: ./services/movies/swagger/
+</span><span class='line'>  volumes:
+</span><span class='line'>    - <span class="s1">&#39;./services/movies/swagger:/usr/src/app&#39;</span>
+</span><span class='line'>    - <span class="s1">&#39;/usr/src/app/node_modules&#39;</span>
+</span><span class='line'>  ports:
+</span><span class='line'>    - <span class="s1">&#39;3003:3001&#39;</span> <span class="c"># expose ports - HOST:CONTAINER</span>
+</span><span class='line'>  environment:
+</span><span class='line'>    - <span class="nv">NODE_ENV</span><span class="o">=</span><span class="k">${</span><span class="nv">NODE_ENV</span><span class="k">}</span>
+</span><span class='line'>  depends_on:
+</span><span class='line'>    users-service:
+</span><span class='line'>      condition: service_started
+</span><span class='line'>    movies-service:
+</span><span class='line'>      condition: service_started
+</span><span class='line'>  links:
+</span><span class='line'>    - users-service
+</span><span class='line'>    - movies-service
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Fire it up:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>docker-compose up -d --build swagger
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Navigate to <a href="http://localhost:3003/docs">http://localhost:3003/docs</a> and test it out:</p>
+
+<div style="text-align:center;">
+  <img src="/images/blog/microservice-movies-swagger.png" style="max-width: 100%; border:0; box-shadow: none;" alt="swagger docs">
+</div>
+
+
+<p>Now you just need to incorporate support for JWT-based auth and add the remaining endpoints!</p>
+
+<h2>Next Steps</h2>
+
+<p>What&rsquo;s next?</p>
+
+<ol>
+<li><em>React App</em> - The React app could use some love. Add styles. Fix bugs. Update the flash messages so that only one is displayed at a time. Write tests. Build new features. Add Redux. The sky&rsquo;s the limit. Contact me if you&rsquo;d like to pair!</li>
+<li><em>Swagger</em> - Add JWT-based auth and add additional endpoints from the movies service.</li>
+<li><em>Dockerfiles</em> - Read <a href="https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/">Best practices for writing Dockerfiles</a>, by the Docker team, and refactor as necessary.</li>
+<li><em>Production</em> - Want to deploy on AWS? Check out the <a href="http://mherman.org/blog/2017/09/18/on-demand-test-environments-with-docker-and-aws-ecs">On-Demand Environments With Docker and AWS ECS</a> blog post.</li>
+</ol>
+
+
+<p>Grab the final code from the <a href="https://github.com/mjhea0/microservice-movies/releases/tag/v2">v2</a> tag of the <a href="https://github.com/mjhea0/microservice-movies">microservice-movies</a> repo. Please add questions and/or comments below. There’s slides too! Check them out <a href="http://mherman.org/microservice-movies">here</a>, if interested.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    Michael Herman
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2017-05-11T08:16:46-06:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>8:16 am</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/node/'>node</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+<!--   
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://mherman.org/blog/2017/05/11/developing-microservices-node-react-docker/" data-via="" data-counturl="http://mherman.org/blog/2017/05/11/developing-microservices-node-react-docker/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+   -->
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+  <a class="addthis_button_preferred_1"></a>
+  <a class="addthis_button_preferred_2"></a>
+  <a class="addthis_button_preferred_3"></a>
+  <a class="addthis_button_preferred_4"></a>
+  <a class="addthis_button_compact"></a>
+  <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2017/04/26/flask-for-node-developers/" title="Previous Post: Flask for Node Developers">&laquo; Flask for Node Developers</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres/" title="Next Post: Building a RESTful API with Koa and Postgres">Building a RESTful API with Koa and Postgres &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><div>
+  <span>Copyright &copy; 2017 - Michael Herman</span><br>
+  <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+  <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+  <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+  <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+</div>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'michaelherman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://mherman.org/blog/2017/05/11/developing-microservices-node-react-docker/';
+        var disqus_url = 'http://mherman.org/blog/2017/05/11/developing-microservices-node-react-docker/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
