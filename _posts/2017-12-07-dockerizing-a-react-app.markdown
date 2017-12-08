@@ -62,6 +62,8 @@ RUN npm install react-scripts@1.0.17 -g --silent
 CMD ["npm", "start"]
 ```
 
+> Silencing the NPM output via `--silent` is a personal choice. It's often frowned upon, though, since it can swallow errors. Keep this in mind so you don't waste time debugging.
+
 Add a *.dockerignore*:
 
 ```
