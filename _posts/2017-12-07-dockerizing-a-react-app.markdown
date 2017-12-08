@@ -9,7 +9,7 @@ keywords: "docker, react, reactjs, javascript, containerization, create-react-ap
 description: "Let's look at how to Dockerize a React app."
 ---
 
-[Docker](https://www.docker.com/) is a technology that helps to speed up the development and deployment processes. If you're working with microsevices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.
+[Docker](https://www.docker.com/) is a technology that helps to speed up the development and deployment processes. If you're working with microservices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.
 
 This tutorial demonstrates how to Dockerize a React app using the [Create React App](https://github.com/facebookincubator/create-react-app) generator. We'll specifically focus on setting up a development environment with code hot-reloading.
 
@@ -190,4 +190,4 @@ $ docker-machine rm sample
 
 ## Next Steps
 
-With that, you should now be able to add React to a larger Docker-powered project. If you'd like to learn more about working with React and Docker along with building and testing microsevices, check out [Microservices with Docker, Flask, and React](https://testdriven.io/).
+With that, you should now be able to add React to a larger Docker-powered project. If you'd like to learn more about working with React and Docker along with building and testing microservices, check out [Microservices with Docker, Flask, and React](https://testdriven.io/).
