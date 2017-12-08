@@ -15,7 +15,7 @@ This tutorial details how to develop a RESTful API with [NodeJS](https://nodejs.
   <img src="/assets/img/blog/typescript-logo.png" style="max-width: 80%; border:0; box-shadow: none;" alt="typescript logo">
 </div>
 
-We will be using:
+*We will be using:*
 
   - NodeJS v[7.0.0](https://nodejs.org/docs/v7.0.0/api/all.html)
   - ExpressJS v[4.14.0](http://expressjs.com/4x/api.html)
@@ -23,8 +23,9 @@ We will be using:
 
 Additionally, we will use *[tsconfig.json](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html)* to configure the project, [Gulp](http://gulpjs.com/) to automate [transpilation](https://en.wikipedia.org/wiki/Source-to-source_compiler), and [d.ts](https://github.com/typings/typings) for managing typings with `npm`.
 
-Updates:
+*Updates:*
 
+  - 12/08/2017: Added Windows 10 equivalent commands
   - 11/18/2017: Updated *ts-node* to the latest version
   - 03/12/2017: Updated the *gulpfile.js* and *package.json*
 
@@ -666,3 +667,28 @@ Once the hero resource is implemented, we could add more resources to the API ea
 1. Attach the resource router to the Express app inside of the `routes` method of `App`.
 
 Now you're up and running with Express and TypeScript 2.0. Go build something! You can grab the code from the [typescript-node-api](https://github.com/mjhea0/typescript-node-api) repo. Cheers!
+
+## Windows 10
+
+On Windows 10? Here are some edits and command line equivalents:
+
+| Unix                                                                       | Windows                                                                                          |
+|----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `touch tsconfig.json`                                                        | `copy /b tsconfig.json +,,` |
+| `node_modules/.bin/tsc` | `.\node_modules\\.bin\\tsc` |
+| `mocha --reporter spec --compilers ts:ts-node/register 'test/**/*.test.ts'` | `mocha --reporter spec --compilers ts:ts-node/register \test/**/*.test.ts*\""` |
+
+You also may need to install:
+
+```sh
+$ npm install @types/express-serve-static-core@4.0.49
+```
+
+And:
+
+```sh
+$ npm install -g chai@3.0.0 \
+              chai-webdriver@1.2.0 \
+              webdriver-sizzle@0.2.2 \
+              selenium-webdriver@3.6.0
+```
