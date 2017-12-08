@@ -3,11 +3,13 @@ layout: post
 title: "Dockerizing a React App"
 date: 2017-12-07 08:23:24
 comments: true
-toc: false
+toc: true
 categories: [docker, react]
 keywords: "docker, react, reactjs, javascript, containerization, create-react-app, create react app"
 description: "Let's look at how to Dockerize a React app."
 ---
+
+[Docker](https://www.docker.com/) is a technology that helps to speed up the development and deployment processes. If you're working with microsevices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.
 
 This tutorial demonstrates how to Dockerize a React app using the [Create React App](https://github.com/facebookincubator/create-react-app) generator. We'll specifically focus on setting up a development environment with code hot-reloading.
 
@@ -23,7 +25,11 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 - Create React App v1.4.3
 - Node v9.2
 
-### Project Setup
+{% if page.toc %}
+{% include contents.html %}
+{% endif %}
+
+## Project Setup
 
 Install [Create React App](https://github.com/facebookincubator/create-react-app):
 
@@ -38,7 +44,7 @@ $ create-react-app sample-app
 $ cd sample-app
 ```
 
-### Docker
+## Docker
 
 Add a Dockerfile to the project root:
 
@@ -86,8 +92,6 @@ $ docker run -it -v ${PWD}:/usr/src/app -p 3000:3000 --rm sample-app
 
 Open your browser to [http://localhost:3000/](http://localhost:3000/) and you should see the app. Try making a change to the `App` component within your code editor. You should see the app hot-reload.
 
-### Docker Compose
-
 Want to use [Docker Compose](https://docs.docker.com/compose/)? Add a *docker-compose.yml* file to the project root:
 
 ```yaml
@@ -120,7 +124,7 @@ Ensure the app is running in the browser and test hot-reloading again. Bring dow
 $ docker-compose stop
 ```
 
-### Docker Machine
+## Docker Machine
 
 To get hot-reloading to work with [Docker Machine](https://docs.docker.com/machine/) and [VirtualBox](https://docs.docker.com/machine/get-started/) you'll need to [enable](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#troubleshooting) a polling mechanism via [chokidar](https://github.com/paulmillr/chokidar).
 
@@ -183,3 +187,7 @@ Want to destroy the Machine?
 $ eval $(docker-machine env -u)
 $ docker-machine rm sample
 ```
+
+## Next Steps
+
+With that, you should now be able to add React to a larger Docker-powered project. If you'd like to learn more about working with React and Docker along with building and testing microsevices, check out [Microservices with Docker, Flask, and React](https://testdriven.io/).
