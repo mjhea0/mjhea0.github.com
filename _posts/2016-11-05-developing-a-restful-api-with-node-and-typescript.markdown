@@ -676,7 +676,7 @@ On Windows 10? Here are some edits and command line equivalents:
 |----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | `touch tsconfig.json`                                                        | `copy /b tsconfig.json +,,` |
 | `node_modules/.bin/tsc` | `.\node_modules\\.bin\\tsc` |
-| `mocha --reporter spec --compilers ts:ts-node/register 'test/**/*.test.ts'` | `mocha --reporter spec --compilers ts:ts-node/register \test/**/*.test.ts*\""` |
+| `mocha --reporter spec --compilers ts:ts-node/register 'test/**/*.test.ts'` | `mocha --reporter spec --compilers ts:ts-node/register \"test/**/*.test.ts*\""` |
 
 You also may need to install:
 
