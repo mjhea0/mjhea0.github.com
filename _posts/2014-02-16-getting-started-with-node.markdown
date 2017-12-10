@@ -113,7 +113,7 @@ $ express <new_folder>
 $ npm install
 ```
 
-  > Please note: The dependencies within *package.json* are generally listed by name and version. In some cases, instead of a version, you'll see an `*`, which means that npm will retrieve the latest version of the dependency. For more information on NPM, please check out this [link](https://www.npmjs.org/doc/json.html).
+  > Please note: The dependencies within *package.json* are generally listed by name and version. In some cases, instead of a version, you'll see an `*`, which means that npm will retrieve the latest version of the dependency. For more information on NPM, please check out this [link](https://docs.npmjs.com/getting-started/using-a-package.json).
 
   Your project structure should now look like this:
 

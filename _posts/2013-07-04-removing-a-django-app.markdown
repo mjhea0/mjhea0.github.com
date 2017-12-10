@@ -8,7 +8,7 @@ toc: true
 categories: [python, django]
 ---
 
-In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related [contenttypes](https://docs.djangoproject.com/en/1.5/ref/contrib/contenttypes/).
+In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related [contenttypes](https://docs.djangoproject.com/en/1.7/ref/contrib/contenttypes/).
 
 Let's look at two ways to handle this: Manually and with [South](http://south.aeracode.org/).
 

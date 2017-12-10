@@ -61,7 +61,7 @@ In short, with Docker, you can truly mimic your production environment on your l
 - An *image* is used to build and save snapshots (the state) of an environment.
 - A *container* is an instantiated, live *image* that runs a collection of processes.
 
-> Be sure to check out the Docker [documentation](https://docs.docker.com/) for more info on [Dockerfiles](https://docs.docker.com/reference/builder/), [images](https://docs.docker.com/terms/image/), and [containers](https://docs.docker.com/terms/container/).
+> Be sure to check out the Docker [documentation](https://docs.docker.com/) for more info on [Dockerfiles](https://docs.docker.com/reference/builder/), [images](https://docs.docker.com/glossary/?term=image), and [containers](https://www.docker.com/what-container).
 
 ## Local Setup
 

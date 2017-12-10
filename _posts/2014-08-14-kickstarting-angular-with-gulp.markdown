@@ -324,7 +324,7 @@ gulp.task('build', function() {
 
 1. [gulp-jshint](https://github.com/spenceralger/gulp-jshint) checks for code quality in the JS files. If there are any issues the build fails and all errors output to the console.
 1. [gulp-clean](https://github.com/peter-vilja/gulp-clean) removes the entire build folder so that we start fresh every time we generate a new build.
-1. [gulp-uglify](https://github.com/terinjokes/gulp-uglify) and [gulp-minify-css](https://github.com/jonathanepollack/gulp-minify-css) minify JS and CSS, respectively.
+1. [gulp-uglify](https://github.com/terinjokes/gulp-uglify) and [gulp-minify-css](https://www.npmjs.com/package/gulp-minify-css) minify JS and CSS, respectively.
 
 ### Build commands
 

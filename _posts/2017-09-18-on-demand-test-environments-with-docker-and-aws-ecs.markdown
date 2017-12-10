@@ -286,7 +286,7 @@ jobs:
           command: docker-compose -f docker-compose-review.yml run movies-service-review npm test
 ```
 
-Review this file. Refer to the Circle [documentation](https://circleci.com/docs/2.0/) as needed. Commit and push your code to GitHub once done. On Circle, navigate to the [Add Projects](https://circleci.com/add-projects) page and click the "Build Project" button next to your project. This will trigger a new build, which should pass.
+Review this file. Refer to the Circle [documentation](https://circleci.com/docs/2.0/) as needed. Commit and push your code to GitHub once done. On Circle, navigate to the "Add Projects" page and click the "Build Project" button next to your project. This will trigger a new build, which should pass.
 
 ## AWS SDK Setup
 
@@ -1989,7 +1989,7 @@ Let's quickly review the development workflow...
 
 Did you test out the Swagger docs? They don't work. What's happening? Fix this on your own.
 
-Developers will inevitably forget to run the teardown script. Configure an [AWS Lambda](AWS Lambda) function to run nightly to tear down all AWS resources associated with the on-demand test environments.
+Developers will inevitably forget to run the teardown script. Configure an [AWS Lambda](https://aws.amazon.com/lambda/) function to run nightly to tear down all AWS resources associated with the on-demand test environments.
 
 Add [Vault](https://www.vaultproject.io/) and [Consul](https://www.consul.io/) into the mix to handle secrets and environment variables.
 

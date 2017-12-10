@@ -48,7 +48,7 @@ Besides my posts on [this site](/) and [Real Python](http://www.realpython.com/b
 - [Learn Indexing, dammit!](http://gun.io/blog/learn-indexing-dammit)
 - [Debugging SQL with the django-debug-toolbar](http://gun.io/blog/debugging-SQL)
 - [Deploying a Django App on Dokku](http://gun.io/blog/deploying-django-app-on-dokku)
-- [From MOOC (Massive Open Online Course) to Micro-Incubator](http://southernalpha.com/from-mooc-massive-open-online-course-to-micro-incubator-2/)
+- From MOOC (Massive Open Online Course) to Micro-Incubator
 - [How to take on a large Django project](http://gun.io/blog/how-to-take-on-a-large-Django-project/) (#6 on HackerNews)
 - [Simple Goods + Zapier & MySQL](https://www.simplegoods.co/blog/simple-goods-zapier-and-mysql/)
 - [Adding a web interface to our image search engine with Flask](http://www.pyimagesearch.com/2014/12/08/adding-web-interface-image-search-engine-flask/)

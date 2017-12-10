@@ -10,7 +10,7 @@ keywords: "swig, template engine web development, node, nodejs"
 description: "Here we look at the basics of using Swig, a template engine for Node."
 ---
 
-Let's look at the basics of [Swig](http://paularmstrong.github.io/swig/), "a simple, powerful, and extendable JavaScript Template Engine" for NodeJS.
+Let's look at the basics of [Swig](http://node-swig.github.io/swig-templates/), "a simple, powerful, and extendable JavaScript Template Engine" for NodeJS.
 
 <hr>
 
@@ -94,7 +94,7 @@ app.get('/', function(req, res) {
 });
 ```
 
-Keep in mind that all variable outputs are [automatically escaped](http://paularmstrong.github.io/swig/docs/api/#SwigOpts) except for function outputs:
+Keep in mind that all variable outputs are [automatically escaped](http://node-swig.github.io/swig-templates/docs/api/#SwigOpts) except for function outputs:
 
 ``` javascript
 // *** main routes *** //
@@ -116,7 +116,7 @@ app.get('/', function(req, res) {
 Don't forget to call the function in the template - `<p>{{allthethings()}}</p>`
 {% endraw %}
 
-> Please see the official [documentation](http://paularmstrong.github.io/swig/docs/#variables) for more info on output tags.
+> Please see the official [documentation](http://node-swig.github.io/swig-templates/docs/#variables) for more info on output tags.
 
 ### Filters
 
@@ -150,11 +150,11 @@ Now just add a new template, *filter.html*, adding in a number of filters:
 ```
 {% endraw %}
 
-> Check out all the available [filters](http://paularmstrong.github.io/swig/docs/filters/). You can also extend the functionality of Swig by adding your own [custom filters](http://paularmstrong.github.io/swig/docs/extending/)!
+> Check out all the available [filters](http://node-swig.github.io/swig-templates/docs/filters/). You can also extend the functionality of Swig by adding your own [custom filters](http://node-swig.github.io/swig-templates/docs/extending/)!
 
 ## Logic Tags
 
-As the name suggests, [logic tags](http://paularmstrong.github.io/swig/docs/tags/) let you use, well, logic in your templates.
+As the name suggests, [logic tags](http://node-swig.github.io/swig-templates/docs/tags/) let you use, well, logic in your templates.
 
 ### IF statements
 
@@ -187,7 +187,7 @@ app.get('/logic', function(req, res) {
 {% endraw %}
 ```
 
-**Test out some more examples of [if](http://paularmstrong.github.io/swig/docs/tags/#if), [elif](http://paularmstrong.github.io/swig/docs/tags/#elif), and [else](http://paularmstrong.github.io/swig/docs/tags/#else).**
+**Test out some more examples of [if](http://node-swig.github.io/swig-templates/docs/tags/#if), [elif](http://node-swig.github.io/swig-templates/docs/tags/#elif), and [else](http://node-swig.github.io/swig-templates/docs/tags/#else).**
 
 ### Loops
 
@@ -278,7 +278,7 @@ Simply add a filter:
 
 > You could also write a custom filter for this if you needed to do the *same* filtering logic a number of times throughout your application.
 
-There's also a number of [helper methods](http://paularmstrong.github.io/swig/docs/tags/#for) available with loops:
+There's also a number of [helper methods](http://node-swig.github.io/swig-templates/docs/tags/#for) available with loops:
 
   - `loop.index` returns the current iteration of the loop (1-indexed)
   - `loop.index0` returns the current iteration of the loop (0-indexed)
@@ -349,4 +349,4 @@ So, the blocks -  {% raw %}`{% block content %}{% endblock %}`{% endraw %} corre
 
 ## Conclusion
 
-Check the [documentation](http://paularmstrong.github.io/swig/) for more info. Add your questions below. Cheers!
+Check the [documentation](http://node-swig.github.io/swig-templates/) for more info. Add your questions below. Cheers!

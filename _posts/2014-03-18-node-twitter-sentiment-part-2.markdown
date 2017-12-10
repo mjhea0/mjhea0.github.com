@@ -488,7 +488,7 @@ So, how do we ad this to our Sentiment project? I'm not sure. :)
 
 > This isn't a method of handling the non-blocking function issue, but it instead shows how easily update the front end. We are using Async again to address the function issue. Check out the code [here](https://github.com/Nodejs-Colorado/node-twitter-sentiment-databinding).
 
-**Thanks to [Aaron Vandrey](http://www.meetup.com/Node-js-Denver-Boulder/members/103374712/) for developing the code and writing the following explanation.**
+**Thanks to [Aaron Vandrey](https://www.linkedin.com/in/aaron-vandrey-48358551/) for developing the code and writing the following explanation.**
 
 Although there are a number of front-end MV* frameworks that could be used, we chose the [KnockoutJS](https://github.com/knockout/knockout) data binding library for simplicity. KnockoutJS uses "observables" to enable two-way data binding from the View (HTML) back to the View-model (JavaScript).
 

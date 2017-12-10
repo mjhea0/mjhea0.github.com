@@ -10,7 +10,7 @@ categories: python
 
 This is a simple tutorial on how to write a crawler using [Scrapy](http://scrapy.org/) to scrape and parse Craigslist Nonprofit jobs in San Francisco and store the data to a CSV file.
 
-If you don't have any experience with Scrapy, start by reading this [tutorial](http://doc.scrapy.org/en/0.16/intro/tutorial.html). Also, I assume that you are familiar with Xpath; if not, please read the Xpath basic [tutorial](http://w3schools.com/xpath/) on w3schools. Enjoy!
+If you don't have any experience with Scrapy, start by reading this [tutorial](http://doc.scrapy.org/en/0.16/intro/tutorial.html). Also, I assume that you are familiar with Xpath; if not, please read the Xpath basic [tutorial](https://www.w3schools.com/xml/xpath_intro.asp) on w3schools. Enjoy!
 
 **Updates:**
 - 09/18/2015 – Updated the Scrapy scripts

@@ -399,7 +399,7 @@ Again, handle any edge cases on you own and clean up the code smell.
 
 ## Browser Support
 
-Aside for Chrome, TestCafe [supports](https://devexpress.github.io/testcafe/documentation/using-testcafe/common-concepts/browser-support.html#officially-supported-browsers) a number of browsers out-of-the-box. Further, if you don't need to test browser-dependent functionality, then you can use a headless browser.
+Aside for Chrome, TestCafe [supports](http://devexpress.github.io/testcafe/documentation/using-testcafe/common-concepts/browsers/browser-support.html#officially-supported-browsers) a number of browsers out-of-the-box. Further, if you don't need to test browser-dependent functionality, then you can use a headless browser.
 
 Start by installing the [plugin](https://github.com/ryx/testcafe-browser-provider-nightmare), which is powered by [Nightmare](https://github.com/segmentio/nightmare):
 

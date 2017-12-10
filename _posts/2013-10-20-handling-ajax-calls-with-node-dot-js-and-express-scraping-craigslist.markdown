@@ -391,7 +391,7 @@ if (!body.query.results.RDF.item) {
 }
 ```
 
-If the query returns results, then we pass `body.query.results.RDF.item[0]['about']` to `craig`. What is that value? Well, we take the JSON file, `body`, and traverse through it. Let's look at the JSON file real quick. You can grab this from the [repo](https://raw.github.com/mjhea0/node-express-ajax-craigslist/master/yql.json).
+If the query returns results, then we pass `body.query.results.RDF.item[0]['about']` to `craig`. What is that value? Well, we take the JSON file, `body`, and traverse through it. Let's look at the JSON file real quick. You can grab this from the [repo](https://raw.githubusercontent.com/mjhea0/node-express-ajax-craigslist/master/part1/yql.json).
 
 Now just look at the value, `body.query.results.RDF.item[0]['about']`, and compare it to the JSON file. We move from `query` to `RDF` to the first item, `item[0]`. Finally, when we call the `about` key, the URL (the value) is returned. Make sense? See if you can return the `description` from the second `item`.
 

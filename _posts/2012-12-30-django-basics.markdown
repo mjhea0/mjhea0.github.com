@@ -243,7 +243,7 @@ Again, in this final tutorial I'll go over how to create the public interface.
 url(r'^books/$', 'books.views.index'),
 ```
 
-   This is essentially a tuple that points a user to a Django page based on the URL that user visits. In this case the regular expression dictates that when the user visits any page with the ending /books they will be see the books.views.index page. This is a bit complicated, so be sure to visit the Django [tutorial](https://docs.djangoproject.com/en/1.4/intro/tutorial03/) for more into.
+   This is essentially a tuple that points a user to a Django page based on the URL that user visits. In this case the regular expression dictates that when the user visits any page with the ending /books they will be see the books.views.index page. This is a bit complicated, so be sure to visit the Django [tutorial](https://docs.djangoproject.com/en/1.7/intro/tutorial03/) for more into.
 ### Now to ensure that this is setup correctly run the server and then point your browser to http://localhost:8000/books.
 
    As long as you get the error, *ViewDoesNotExist at /books*, then the url is setup correctly.

@@ -27,7 +27,7 @@ Real quick, web2py utilizes the Model View Control (MVC) architecture:
 
 Wikipedia has a great diagram of how each part works together-
 
-![](http://upload.wikimedia.org/wikipedia/commons/f/fd/MVC-Process.png)
+![mvc](http://upload.wikimedia.org/wikipedia/commons/f/fd/MVC-Process.png)
 
 web2py essentially makes it easier for developers to design each part and create the overall workflow to ensure that each part works together. I hope that's clear. If not, please comment, and I'll go a little more in depth. It's important to understand this, as we will be utilizing this form of development from this point on.
 
@@ -49,7 +49,7 @@ db.define_table('register',
 
 Create a new HTML file named default/display\_your\_form.html
 
-![](http://www.backwardsteps.com/uploads/2012-11-30_2319.png)
+![web2py](http://www.backwardsteps.com/uploads/2012-11-30_2319.png)
 
 And then add the following code to call the form-
 
@@ -82,7 +82,7 @@ def display_your_form():
 
 Check out your amazing form at [http://127.0.0.1:8000/form/default/display\_your\_form.html](http://127.0.0.1:8000/form/default/display_your_form.html). Now, Go ahead and test the form to make sure it works. If done correctly, after you input the data and hit submit, the values are displayed.
 
-![](http://www.backwardsteps.com/uploads/2012-11-30_2330.png)
+![web2py](http://www.backwardsteps.com/uploads/2012-11-30_2330.png)
 
 ## Recap
 

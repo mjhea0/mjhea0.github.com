@@ -68,7 +68,7 @@ $ meteor
 We just initialized the Meteor server. Navigate to [http://localhost:3000/]
 (http://localhost:3000/), and you should see:
 
-![helloworld](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/helloworld.png)
+![helloworld](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/helloworld.png)
 
 If port 3000 is unavailable, you can use `–port` as an option:
 
@@ -232,7 +232,7 @@ Update "mymeteor.html":
 
 Your app should now look like this:
 
-![helloworld-redux](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/helloworld-redux.png)
+![helloworld-redux](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/helloworld-redux.png)
 
 <a id="test"></a>
 
@@ -338,11 +338,11 @@ Notice how we established the Mongo collection on both the client and server.
 
 First, your browser view should now look like this:
 
-![part1](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/part1.png)
+![part1](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/part1.png)
 
 Next, arrange your screen so that you can view both your terminal as well as your browser. Also, open up the JS debug console:
 
-![part1-2](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/part1-2.png)
+![part1-2](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/part1-2.png)
 
 Then, just like in the screenshot above, add an answer. On the client side, you should see the MongoDB ID - i.e., `Added answer with ID: ECrTqRQha7vpXu78q`, which should match the ID on the server side:
 
@@ -509,7 +509,7 @@ Add the templates to the HTML file:
 
 You should see all of the submitted answers:
 
-![part2](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/part2.png)
+![part2](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/part2.png)
 
 Go ahead and add new answers. They should immediately appear.
 
@@ -597,11 +597,11 @@ Update the `answer` template:
 
 You should see Yes and No buttons below the answers:
 
-![part3](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/part3.png)
+![part3](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/part3.png)
 
 Test it out:
 
-![part3-2](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/part3-2.png)
+![part3-2](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/part3-2.png)
 
 #### 4. Automated Test
 
@@ -694,13 +694,13 @@ Remember when we added these two packages-
 
 Check your browser. You should see the "Configure Twitter Login" button. Go ahead and click it:
 
-![oauth](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/oauth.png)
+![oauth](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/oauth.png)
 
 Wow. This tells you *exactly* how to setup your app on Twitter for logging via Oauth. Follow the instructions to create the app, then copy and paste the consumer key and consumer secret into the window on the Meteor app.
 
 Next, test logging in. If all went well you should see:
 
-![oauth2](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/oauth2.png)
+![oauth2](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/oauth2.png)
 
 > If you need to add a different Twitter app to authenticate with you must drop the `meteor_accounts_loginServiceConfiguration` collection from MongoDB - `db.meteor_accounts_loginServiceConfiguration.drop()`
 
@@ -832,7 +832,7 @@ var answerId = Answers.insert({
 
 Open your browser. If you're logged in, go ahead and log out. You should see this:
 
-![loggedout](https://raw.github.com/mjhea0/meteor-in-action/master/assets/img/blog/loggedout.png)
+![loggedout](https://raw.githubusercontent.com/mjhea0/meteor-in-action/master/images/loggedout.png)
 
 Now, before logging in to test. Let's dump the answers collection so that each record in the collection has a user associated with it. To do this, make sure your meteor app is running, then open a new terminal window and navigate to your app's project root.
 

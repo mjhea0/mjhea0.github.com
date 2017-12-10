@@ -12,7 +12,7 @@ $ bundle exec jekyll serve
 
 ```sh
 # commit and push to 'backup' branch
-git push origin master:backup
+$ git push origin master:backup
 
 # if travis build passes, generate build locally
 $ JEKYLL_ENV=production bundle exec jekyll build

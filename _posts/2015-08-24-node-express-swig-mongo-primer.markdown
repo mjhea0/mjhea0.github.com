@@ -18,7 +18,7 @@ Let's create a basic CRUD app using Node, Express, Swig, and MongoDB.
 
 <br>
 
-> This tutorial utilizes [Node](http://nodejs.org/) v0.12.5, [Express](http://expressjs.com/) v4.13.1, [Swig](http://paularmstrong.github.io/swig/) and [Mongoose](http://mongoosejs.com/) v4.1.3.
+> This tutorial utilizes [Node](http://nodejs.org/) v0.12.5, [Express](http://expressjs.com/) v4.13.1, [Swig](http://node-swig.github.io/swig-templates/) and [Mongoose](http://mongoosejs.com/) v4.1.3.
 
 {% if page.toc %}
 {% include contents.html %}

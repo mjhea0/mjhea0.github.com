@@ -127,7 +127,7 @@ Notice the `this` keyword? It's extremely powerful yet it can be difficult to us
 
 Don't believe me? Test it out: update the `console.log()` to `console.log($(this))`. Test it out.
 
-To learn more about `this`, check out the jQuery [docs](https://learn.jquery.com/javascript-101/this-keyword/) and Javascript [docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this).
+To learn more about `this`, check out [What is this?](http://www.learningjquery.com/2007/08/what-is-this) and the Javascript [docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this).
 
 Now what happens when you click the save button?
 
