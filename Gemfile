@@ -27,5 +27,3 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 # https://github.com/yous/whiteglass theme
 gem "jekyll-whiteglass"
-
-gem "html-proofer"
