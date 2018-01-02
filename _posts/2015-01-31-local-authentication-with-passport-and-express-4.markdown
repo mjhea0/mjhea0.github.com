@@ -10,7 +10,7 @@ keywords: "node, express, passport, authentication"
 description: "This article details how to add user authentication to Node/Express 4 with Passport.js"
 ---
 
-This post demonstrate how to add user authentication to Node/Express with Passport.js.
+This post demonstrates how to add user authentication to Node/Express with Passport.js.
 
 > If you're interested in social authentication via Passport, please check out [this](http://mherman.org/blog/2015/09/26/social-authentication-in-node-dot-js-with-passport/) blog post. Looking for an Express 3 authentication tutorial? Check out this [post](http://mherman.org/blog/2013/11/11/user-authentication-with-passport-dot-js/).
 

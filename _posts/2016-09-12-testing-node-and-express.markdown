@@ -4,7 +4,7 @@ title: "Testing Node and Express"
 date: 2016-09-12 07:09:13
 comments: true
 toc: true
-categories: [node, mocha, testing, auth]
+categories: [node, mocha, testing]
 keywords: "node, express, postgres, knex, api, restful api, crud, mocha, chai, integration tests, integration, unit tests, unit, faker, fixtures, test fixtures, validator, validations, express validations, tdd"
 description: "This article takes a test-first approach to developing a RESTful API with Node, Express, Mocha, Chai, knex, Postgres, faker.js, and express-validator."
 ---

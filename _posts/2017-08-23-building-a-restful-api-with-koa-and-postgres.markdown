@@ -1110,8 +1110,13 @@ Test your knowledge by adding additional test cases and error handlers to cover 
 
 Add end-to-end tests with [TestCafe](http://mherman.org/blog/2017/03/19/functional-testing-with-testcafe/#.WZxCvnd95E4).
 
-Finally, this tutorial took advantage of async/await functions in Koa version 2. If you're interested in comparing this pattern to the generator pattern found in Koa 1, review the code in the [Koa API](https://github.com/mjhea0/koa-api) repo.
+This tutorial took advantage of async/await functions in Koa version 2. If you're interested in comparing this pattern to the generator pattern found in Koa 1, review the code in the [Koa API](https://github.com/mjhea0/koa-api) repo.
 
-Grab the final code from the [node-koa-api](https://github.com/mjhea0/node-koa-api) repo. There's [slides](http://mherman.org/presentations/node-koa-api) as well.
+Finally, check out the following two posts that build on the Koa app built in this post:
+
+1. [Stubbing HTTP Requests with Sinon](http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon)
+1. User Authentication with Passport and Koa
+
+Grab the final code from the [v2](https://github.com/mjhea0/node-koa-api/releases/tag/v2) tag of  [node-koa-api](https://github.com/mjhea0/node-koa-api) repo. There's [slides](http://mherman.org/presentations/node-koa-api) as well.
 
 Please add questions and/or comments below. Cheers!

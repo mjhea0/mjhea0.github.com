@@ -5,7 +5,7 @@ title: "Testing Node.js with Mocha and Chai"
 date: 2015-09-10 10:52
 comments: true
 toc: true
-categories: [node, mocha, testing, auth]
+categories: [node, mocha, testing]
 keywords: "mocha, chai, node, testing, node.js, integration tests, unit tests"
 description: "Let's look at how to test a Node.JS application with Mocha and Chai."
 ---

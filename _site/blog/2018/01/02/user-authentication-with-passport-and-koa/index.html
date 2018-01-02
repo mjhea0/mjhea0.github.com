@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>User Authentication with Passport and Koa</title>
+  <meta name="description" content="This post demonstrates how to add user authentication to a Koa app with Passport.js.">
+  
+    
+    <meta name="keywords" content="node, koa, passport, authentication, postgres, koa 2, postgres, redis">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="User Authentication with Passport and Koa">
+  <meta name="twitter:description" content="This post demonstrates how to add user authentication to a Koa app with Passport.js.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">User Authentication with Passport and Koa</h1>
+    
+    <p class="post-meta"><time datetime="2018-01-02T01:17:05-07:00" itemprop="datePublished">Jan 2, 2018</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/koa/">koa</a>,
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/auth/">auth</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/mocha/">mocha</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p><a href="(http://www.passportjs.org/)">Passport</a> is a library that provides a simple authentication middleware for Node.js.</p>
+
+<p>This tutorial looks at how to set up a local authentication strategy with Node, Koa, and <a href="https://github.com/rkusa/koa-passport">koa-passport</a>, where users can sign up and log in using a username and password. We’ll also use Postgres for storing user information and Redis for session management.</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/koa/node-koa-passport.png" style="max-width: 90%; border:0; box-shadow: none;" alt="node koa passport" />
+</div>
+
+<p><br /></p>
+
+<h4 id="main-npm-dependencies">Main NPM Dependencies</h4>
+
+<ol>
+  <li>Koa v<a href="https://github.com/koajs/koa/releases/tag/2.3.0">2.3.0</a></li>
+  <li>Mocha v<a href="https://github.com/mochajs/mocha/releases/tag/v3.5.0">3.5.0</a></li>
+  <li>Chai v<a href="https://github.com/chaijs/chai/releases/tag/4.1.1">4.1.1</a></li>
+  <li>Chai HTTP v<a href="https://github.com/chaijs/chai-http/releases/tag/3.0.0">3.0.0</a></li>
+  <li>Knex v<a href="https://github.com/tgriesser/knex/releases/tag/0.13.0">0.13.0</a></li>
+  <li>pg v<a href="https://github.com/brianc/node-postgres/releases/tag/v7.1.2">7.1.2</a></li>
+  <li>koa-router v<a href="https://github.com/alexmingoia/koa-router/releases/tag/v7.2.1">7.2.1</a></li>
+  <li>koa-bodyparser v<a href="https://github.com/koajs/bodyparser/releases/tag/4.2.0">4.2.0</a></li>
+  <li>koa-passport v<a href="https://github.com/rkusa/koa-passport/releases/tag/4.0.1">4.0.1</a></li>
+  <li>koa-session v<a href="https://github.com/koajs/session/releases/tag/5.5.1">5.5.1</a></li>
+  <li>passport-local v<a href="https://github.com/jaredhanson/passport-local/releases/tag/v1.0.0">1.0.0</a></li>
+  <li>bcrypt.js v<a href="https://github.com/dcodeIO/bcrypt.js/releases/tag/2.4.3">2.4.3</a></li>
+  <li>koa-redis v<a href="https://github.com/koajs/koa-redis/releases/tag/v3.1.1">3.1.1</a></li>
+</ol>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#objectives" id="markdown-toc-objectives">Objectives</a></li>
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#user-model" id="markdown-toc-user-model">User Model</a></li>
+  <li><a href="#passport-setup" id="markdown-toc-passport-setup">Passport Setup</a></li>
+  <li><a href="#passport-local-strategy" id="markdown-toc-passport-local-strategy">Passport Local Strategy</a></li>
+  <li><a href="#routes-and-tests" id="markdown-toc-routes-and-tests">Routes and Tests</a></li>
+  <li><a href="#password-hashing" id="markdown-toc-password-hashing">Password Hashing</a></li>
+  <li><a href="#redis-session-store" id="markdown-toc-redis-session-store">Redis Session Store</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="objectives">Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to…</p>
+
+<ol>
+  <li>Discuss the overall client/server authentication workflow</li>
+  <li>Add Passport and passport-local to a Koa app</li>
+  <li>Configure bcrypt.js for salting and hashing passwords</li>
+  <li>Practice test driven development</li>
+  <li>Register and authenticate a user</li>
+  <li>Utilize sessions to store user information via koa-session</li>
+  <li>Set up an external session store with Redis</li>
+  <li>Render HTML pages via server-side templating</li>
+</ol>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Start by cloning down the base Koa project:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/mjhea0/node-koa-api <span class="se">\</span>
+  <span class="nt">--branch</span> v2 <span class="nt">--single-branch</span>
+<span class="nv">$ </span><span class="nb">cd </span>node-koa-api
+</code></pre></div></div>
+
+<p>Then, check out the <a href="https://github.com/mjhea0/node-koa-api/releases/tag/v2">v2</a> tag to the master branch and install the dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git checkout tags/v2 <span class="nt">-b</span> master
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Take a quick look at the code along with the project structure:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── knexfile.js
+├── package.json
+├── src
+│   └── server
+│       ├── db
+│       │   ├── connection.js
+│       │   ├── migrations
+│       │   │   └── 20170817152841_movies.js
+│       │   ├── queries
+│       │   │   └── movies.js
+│       │   └── seeds
+│       │       └── movies_seed.js
+│       ├── index.js
+│       └── routes
+│           ├── index.js
+│           └── movies.js
+└── <span class="nb">test</span>
+    ├── routes.index.test.js
+    ├── routes.movies.test.js
+    └── sample.test.js
+</code></pre></div></div>
+
+<p>This is just a basic RESTful API, with the following routes:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>URL</th>
+      <th>HTTP Verb</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>/api/v1/movies</td>
+      <td>GET</td>
+      <td>Return ALL movies</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>GET</td>
+      <td>Return a SINGLE movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies</td>
+      <td>POST</td>
+      <td>Add a movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>PUT</td>
+      <td>Update a movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>DELETE</td>
+      <td>Delete a movie</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>Want to learn how to build this project? Review the <a href="http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres">Building a RESTful API With Koa and Postgres</a> blog post.</p>
+</blockquote>
+
+<p><a href="https://www.postgresql.org/download/">Download</a> and install Postgres (if necessary), and then fire up the server on port 5432. Open psql, in the terminal, and create two new databases, one for development and the other for testing:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql
+
+<span class="c"># CREATE DATABASE koa_api;</span>
+CREATE DATABASE
+<span class="c"># CREATE DATABASE koa_api_test;</span>
+CREATE DATABASE
+<span class="c"># \q</span>
+</code></pre></div></div>
+
+<p>Ensure the tests pass:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ npm test
+
+Server listening on port: 1337
+  routes : index
+    GET /
+      ✓ should return json
+
+  routes : movies
+    GET /api/v1/movies
+      ✓ should return all movies
+    GET /api/v1/movies/:id
+      ✓ should respond with a single movie
+      ✓ should throw an error if the movie does not exist
+    POST /api/v1/movies
+      ✓ should return the movie that was added
+      ✓ should throw an error if the payload is malformed
+    PUT /api/v1/movies
+      ✓ should return the movie that was updated
+      ✓ should throw an error if the movie does not exist
+    DELETE /api/v1/movies/:id
+      ✓ should return the movie that was deleted
+      ✓ should throw an error if the movie does not exist
+
+  Sample Test
+    ✓ should pass
+
+
+  11 passing (624ms)
+</code></pre></div></div>
+
+<p>Apply the migrations, and seed the database:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:latest <span class="nt">--env</span> development
+<span class="nv">$ </span>knex seed:run <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<p>Run the Koa server, via <code class="highlighter-rouge">npm start</code>, and navigate to <a href="http://localhost:1337/">http://localhost:1337/</a>. You should see something similar to:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The Land Before Time"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Fantasy"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Jurassic Park"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Science Fiction"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Ice Age: Dawn of the Dinosaurs"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Action/Romance"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="user-model">User Model</h2>
+
+<p>Generate a new migration template for the user model:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:make users
+</code></pre></div></div>
+
+<p>Then update the newly created file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">up</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">createTable</span><span class="p">(</span><span class="s1">'users'</span><span class="p">,</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">increments</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'username'</span><span class="p">).</span><span class="nx">unique</span><span class="p">().</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'password'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">down</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">dropTable</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Apply the migration against the development database:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:latest <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<h2 id="passport-setup">Passport Setup</h2>
+
+<p>Install the <a href="https://github.com/jaredhanson/passport">koa-passport</a> wrapper module:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install koa-passport@4.0.1 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Then, update <em>src/server/index.js</em> to add Passport to the app middleware along with <a href="https://github.com/koajs/session">koa-session</a>, which is used for managing sessions:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Koa</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">bodyParser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-bodyparser'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">session</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-session'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-passport'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">indexRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/index'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">movieRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/movies'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Koa</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">PORT</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">1337</span><span class="p">;</span>
+
+<span class="c1">// sessions</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'super-secret-key'</span><span class="p">];</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">session</span><span class="p">(</span><span class="nx">app</span><span class="p">));</span>
+
+<span class="c1">// body parser</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">());</span>
+
+<span class="c1">// authentication</span>
+<span class="nx">require</span><span class="p">(</span><span class="s1">'./auth'</span><span class="p">);</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">passport</span><span class="p">.</span><span class="nx">initialize</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">passport</span><span class="p">.</span><span class="nx">session</span><span class="p">());</span>
+
+<span class="c1">// routes</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">indexRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">movieRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+
+<span class="c1">// server</span>
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">PORT</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Server listening on port: </span><span class="p">${</span><span class="nx">PORT</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">server</span><span class="p">;</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>In production, make sure to update the secret key, <code class="highlighter-rouge">app.keys</code>. For example, you can use Python to generate a secure key:</p>
+
+  <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>python3
+<span class="o">&gt;&gt;</span> import os
+<span class="o">&gt;&gt;</span> os.urandom<span class="o">(</span>24<span class="o">)</span>
+b<span class="s1">'3\xa5\xfa\xc6\xfb\x0e\x1dA\x19-U\x15Y\x9e2]\x92/\x97\x8d\xecsJ\xb7'</span>
+</code></pre></div>  </div>
+
+</blockquote>
+
+<p>Install koa-session:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install koa-session@5.5.1 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Sessions are stored in a cookie by default on the client-side, unencrypted. We’ll stick with this for now, just to get things up and running, but we’ll refactor and add Redis before all is said and done.</p>
+
+<p>Before moving on, let’s handle <a href="https://github.com/jaredhanson/passport#sessions">serializing and de-serializing the user information to the session</a>. Create a new file called <em>auth.js</em> in “src/server”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-passport'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./db/connection'</span><span class="p">);</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">serializeUser</span><span class="p">((</span><span class="nx">user</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span> <span class="p">});</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">deserializeUser</span><span class="p">((</span><span class="nx">id</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">where</span><span class="p">({</span><span class="nx">id</span><span class="p">}).</span><span class="nx">first</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span> <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="kc">null</span><span class="p">);</span> <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h2 id="passport-local-strategy">Passport Local Strategy</h2>
+
+<p>Next, install the <a href="https://github.com/jaredhanson/passport-local">passport-local</a> strategy, which is used for authenticating with a username and password:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install passport-local@1.0.0 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Update <em>auth.js</em> like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-passport'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">LocalStrategy</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'passport-local'</span><span class="p">).</span><span class="nx">Strategy</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./db/connection'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{};</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">serializeUser</span><span class="p">((</span><span class="nx">user</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span> <span class="p">});</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">deserializeUser</span><span class="p">((</span><span class="nx">id</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">where</span><span class="p">({</span><span class="nx">id</span><span class="p">}).</span><span class="nx">first</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span> <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="kc">null</span><span class="p">);</span> <span class="p">});</span>
+<span class="p">});</span>
+
+<span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">LocalStrategy</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">(</span><span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">where</span><span class="p">({</span> <span class="nx">username</span> <span class="p">}).</span><span class="nx">first</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">user</span><span class="p">)</span> <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">password</span> <span class="o">===</span> <span class="nx">user</span><span class="p">.</span><span class="nx">password</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">});</span>
+<span class="p">}));</span>
+</code></pre></div></div>
+
+<p>Here, we check if the user exists and the password matches what’s in the database and then pass the results back to Passport via the callback:</p>
+
+<ul>
+  <li><em>Does the username exist?</em>
+    <ul>
+      <li>No? then <code class="highlighter-rouge">false</code> is returned</li>
+      <li>Yes? <em>Does the password match?</em>
+        <ul>
+          <li>No? <code class="highlighter-rouge">false</code> is returned</li>
+          <li>Yes? The user object is returned and then the <code class="highlighter-rouge">id</code> is serialized to the session</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<blockquote>
+  <p>You probably noticed that we are checking that the provided password is literally the same as the password pulled from the database, so we are storing the password in plain text. We’ll update this after we add the main routes.</p>
+</blockquote>
+
+<h2 id="routes-and-tests">Routes and Tests</h2>
+
+<p>Like the majority of my tutorials, we’ll write tests first. That said, we will <em>only</em> be testing the happy paths. It’s up to you to add tests for handling errors.</p>
+
+<p>Routes:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>URL</th>
+      <th>HTTP Verb</th>
+      <th>Authenticated?</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>/auth/register</td>
+      <td>GET</td>
+      <td>No</td>
+      <td>Render the register view</td>
+    </tr>
+    <tr>
+      <td>/auth/register</td>
+      <td>POST</td>
+      <td>No</td>
+      <td>Register a new user</td>
+    </tr>
+    <tr>
+      <td>/auth/login</td>
+      <td>GET</td>
+      <td>No</td>
+      <td>Render the login view</td>
+    </tr>
+    <tr>
+      <td>/auth/login</td>
+      <td>POST</td>
+      <td>No</td>
+      <td>Log a user in</td>
+    </tr>
+    <tr>
+      <td>/auth/status</td>
+      <td>GET</td>
+      <td>Yes</td>
+      <td>Render the status page</td>
+    </tr>
+    <tr>
+      <td>/auth/logout</td>
+      <td>GET</td>
+      <td>Yes</td>
+      <td>Log a user out</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Full Authentication flow:</p>
+
+<ol>
+  <li>The end user provides a username and a password and the credentials are sent to the server-side</li>
+  <li>The server-side Koa app then checks the credentials against the database
+    <ul>
+      <li>If they are correct, the end user is redirected to <code class="highlighter-rouge">/auth/status</code></li>
+      <li>If they are incorrect, the end user is redirected to <code class="highlighter-rouge">/auth/login</code></li>
+    </ul>
+  </li>
+</ol>
+
+<p>Create a new file called <em>routes.auth.test.js</em> in “test”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../src/server/index'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../src/server/db/connection'</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'routes : auth'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+  <span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">latest</span><span class="p">();</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">seed</span><span class="p">.</span><span class="nx">run</span><span class="p">();</span> <span class="p">});</span>
+  <span class="p">});</span>
+
+  <span class="nx">afterEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">();</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>This is just a boilerplate for the tests.</p>
+
+<h3 id="register---get">Register - GET</h3>
+
+<p>This route serves up a view with an HTML form for users to register with.</p>
+
+<h4 id="test">Test</h4>
+
+<p>Start with a test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /auth/register'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should render the register view'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/auth/register'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">redirects</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'text/html'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'&lt;h1&gt;Register&lt;/h1&gt;'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span>
+        <span class="s1">'&lt;p&gt;&lt;button type="submit"&gt;Register&lt;/button&gt;&lt;/p&gt;'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests. You should see the following error:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Uncaught AssertionError: expected <span class="o">[</span>Error: Not Found] to not exist
+</code></pre></div></div>
+
+<p>Now let’s write the code to get it to pass…</p>
+
+<h4 id="code">Code</h4>
+
+<p>First, add a new file to the “src/server/routes” folder called <em>auth.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Router</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-router'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-passport'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">queries</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../db/queries/users'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">router</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Router</span><span class="p">();</span>
+
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/auth/register'</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">ctx</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s1">'html'</span><span class="p">;</span>
+  <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">createReadStream</span><span class="p">(</span><span class="s1">'./src/server/views/register.html'</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Create the “views” folder, and then add the <em>register.html</em> template:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;title&gt;</span>Register<span class="nt">&lt;/title&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;h1&gt;</span>Register<span class="nt">&lt;/h1&gt;</span>
+  <span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/auth/register"</span> <span class="na">method=</span><span class="s">"post"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;p&gt;&lt;label&gt;</span>Username: <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"username"</span><span class="nt">/&gt;&lt;/label&gt;&lt;/p&gt;</span>
+    <span class="nt">&lt;p&gt;&lt;label&gt;</span>Password: <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"password"</span> <span class="na">name=</span><span class="s">"password"</span><span class="nt">/&gt;&lt;/label&gt;&lt;/p&gt;</span>
+    <span class="nt">&lt;p&gt;&lt;button</span> <span class="na">type=</span><span class="s">"submit"</span><span class="nt">&gt;</span>Register<span class="nt">&lt;/button&gt;&lt;/p&gt;</span>
+  <span class="nt">&lt;/form&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>Register the auth routes in <em>src/server/index.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Koa</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">bodyParser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-bodyparser'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">session</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-session'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">passport</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-passport'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">indexRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/index'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">movieRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/movies'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">authRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/auth'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Koa</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">PORT</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">1337</span><span class="p">;</span>
+
+<span class="c1">// sessions</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'super-secret-key'</span><span class="p">];</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">session</span><span class="p">(</span><span class="nx">app</span><span class="p">));</span>
+
+<span class="c1">// body parser</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">());</span>
+
+<span class="c1">// authentication</span>
+<span class="nx">require</span><span class="p">(</span><span class="s1">'./auth'</span><span class="p">);</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">passport</span><span class="p">.</span><span class="nx">initialize</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">passport</span><span class="p">.</span><span class="nx">session</span><span class="p">());</span>
+
+<span class="c1">// routes</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">indexRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">movieRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">authRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+
+<span class="c1">// server</span>
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">PORT</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Server listening on port: </span><span class="p">${</span><span class="nx">PORT</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">server</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Ensure the tests now pass:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ npm test
+
+Server listening on port: 1337
+  routes : auth
+    GET /auth/register
+      ✓ should render the register view
+
+  routes : index
+    GET /
+      ✓ should return json
+
+  routes : movies
+    GET /api/v1/movies
+      ✓ should return all movies
+    GET /api/v1/movies/:id
+      ✓ should respond with a single movie
+      ✓ should throw an error if the movie does not exist
+    POST /api/v1/movies
+      ✓ should return the movie that was added
+      ✓ should throw an error if the payload is malformed
+    PUT /api/v1/movies
+      ✓ should return the movie that was updated
+      ✓ should throw an error if the movie does not exist
+    DELETE /api/v1/movies/:id
+      ✓ should return the movie that was deleted
+      ✓ should throw an error if the movie does not exist
+
+  Sample Test
+    ✓ should pass
+
+
+  12 passing (868ms)
+</code></pre></div></div>
+
+<h3 id="register---post">Register - POST</h3>
+
+<h4 id="test-1">Test</h4>
+
+<p>Again, start with a test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /auth/register'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should register a new user'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/auth/register'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">username</span><span class="p">:</span> <span class="s1">'michael'</span><span class="p">,</span>
+      <span class="na">password</span><span class="p">:</span> <span class="s1">'herman'</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">redirects</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'/auth/status'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>The test should fail with the following error, since the route does not exist:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Uncaught AssertionError: expected <span class="o">[</span>Error: Not Found] to not exist
+</code></pre></div></div>
+
+<h4 id="code-1">Code</h4>
+
+<p>Add the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/auth/register'</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">user</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">addUser</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">'local'</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">,</span> <span class="nx">info</span><span class="p">,</span> <span class="nx">status</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">login</span><span class="p">(</span><span class="nx">user</span><span class="p">);</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">'/auth/status'</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span> <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span> <span class="p">};</span>
+    <span class="p">}</span>
+  <span class="p">})(</span><span class="nx">ctx</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here, if the user is successfully added to the database, we call the <code class="highlighter-rouge">login</code> method, <a href="https://github.com/rkusa/koa-passport/blob/master/lib/framework/koa.js#L44">from koa-passport</a>, to trigger the creation of the session and then redirect the user to <code class="highlighter-rouge">/auth/status</code></p>
+
+<p>For the <code class="highlighter-rouge">addUser()</code> helper, add another new file called <em>users.js</em> to “src/server/db/queries”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../connection'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">addUser</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">insert</span><span class="p">({</span>
+    <span class="na">username</span><span class="p">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span>
+    <span class="na">password</span><span class="p">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">password</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">addUser</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Ensure the tests pass.</p>
+
+<h3 id="status">Status</h3>
+
+<p>Add the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/auth/status'</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">())</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s1">'html'</span><span class="p">;</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">createReadStream</span><span class="p">(</span><span class="s1">'./src/server/views/status.html'</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>For this route, we’ll skip the tests since we’ll have to stub the <code class="highlighter-rouge">isAuthenticated()</code> method and manually set a cookie.</p>
+
+<p>Add the template:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;title&gt;</span>Status<span class="nt">&lt;/title&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;p&gt;</span>You are authenticated.<span class="nt">&lt;/p&gt;</span>
+  <span class="nt">&lt;p&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/auth/logout"</span><span class="nt">&gt;</span>Logout<span class="nt">&lt;/a&gt;</span>?<span class="nt">&lt;/p&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>To test, fire up the server via <code class="highlighter-rouge">npm start</code> and navigate to <a href="http://localhost:1337/auth/register">http://localhost:1337/auth/status</a>. Register a new user. You should be redirected to <code class="highlighter-rouge">auth/status</code> and a cookie should be set:</p>
+
+<p><img src="/assets/img/blog/koa/koa-passport-status.png" alt="koa passport status" /></p>
+
+<h3 id="login---get">Login - GET</h3>
+
+<p>For this route, we’ll serve up a view with an HTML form for users to log in with.</p>
+
+<h4 id="test-2">Test</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /auth/login'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should render the login view'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">redirects</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'text/html'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'&lt;h1&gt;Login&lt;/h1&gt;'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span>
+        <span class="s1">'&lt;p&gt;&lt;button type="submit"&gt;Log In&lt;/button&gt;&lt;/p&gt;'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="code-2">Code</h4>
+
+<p>Add the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">())</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s1">'html'</span><span class="p">;</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">createReadStream</span><span class="p">(</span><span class="s1">'./src/server/views/login.html'</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">'/auth/status'</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Then, add the <em>login.html</em> template:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;title&gt;</span>Login<span class="nt">&lt;/title&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;h1&gt;</span>Login<span class="nt">&lt;/h1&gt;</span>
+  <span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/auth/login"</span> <span class="na">method=</span><span class="s">"post"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;p&gt;&lt;label&gt;</span>Username: <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"username"</span><span class="nt">/&gt;&lt;/label&gt;&lt;/p&gt;</span>
+    <span class="nt">&lt;p&gt;&lt;label&gt;</span>Password: <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"password"</span> <span class="na">name=</span><span class="s">"password"</span><span class="nt">/&gt;&lt;/label&gt;&lt;/p&gt;</span>
+    <span class="nt">&lt;p&gt;&lt;button</span> <span class="na">type=</span><span class="s">"submit"</span><span class="nt">&gt;</span>Log In<span class="nt">&lt;/button&gt;&lt;/p&gt;</span>
+  <span class="nt">&lt;/form&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>The tests should now pass.</p>
+
+<h3 id="login---post">Login - POST</h3>
+
+<h4 id="test-3">Test</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /auth/login'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should login a user'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">username</span><span class="p">:</span> <span class="s1">'jeremy'</span><span class="p">,</span>
+      <span class="na">password</span><span class="p">:</span> <span class="s1">'johnson'</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">redirects</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'/auth/status'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="code-3">Code</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">passport</span><span class="p">.</span><span class="nx">authenticate</span><span class="p">(</span><span class="s1">'local'</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">user</span><span class="p">,</span> <span class="nx">info</span><span class="p">,</span> <span class="nx">status</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">login</span><span class="p">(</span><span class="nx">user</span><span class="p">);</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">'/auth/status'</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span> <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span> <span class="p">};</span>
+    <span class="p">}</span>
+  <span class="p">})(</span><span class="nx">ctx</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Let’s also create a new Knex seed file to add a test user to the database:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex seed:make users
+</code></pre></div></div>
+
+<p>Add the following code to the newly created seed in “src/server/db/seeds”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">seed</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">del</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span>
+      <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+        <span class="na">username</span><span class="p">:</span> <span class="s1">'jeremy'</span><span class="p">,</span>
+        <span class="na">password</span><span class="p">:</span> <span class="s1">'johnson'</span>
+      <span class="p">})</span>
+    <span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The tests should now pass. Before moving on, try adding a few more tests to handle errors as well.</p>
+
+<h3 id="logout">Logout</h3>
+
+<p>We won’t be writing any tests for this route either since we’ll have to stub portions of the auth workflow. So, just add the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/auth/logout'</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">())</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span> <span class="na">success</span><span class="p">:</span> <span class="kc">false</span> <span class="p">};</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="k">throw</span><span class="p">(</span><span class="mi">401</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Manually test by registering a new user. If all is well, you should be redirected to <code class="highlighter-rouge">auth/status</code> and a cookie should be set. Then ensure that the cookie is removed after you log out.</p>
+
+<p>Make sure all tests pass before moving on.</p>
+
+<h2 id="password-hashing">Password Hashing</h2>
+
+<p>Install <a href="https://github.com/dcodeIO/bcrypt.js">bcrypt.js</a> to handle the salting and hashing of passwords:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install bcryptjs@2.4.3 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Start by adding a helper method called <code class="highlighter-rouge">comparePassword</code> to <em>src/server/auth.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">comparePass</span><span class="p">(</span><span class="nx">userPassword</span><span class="p">,</span> <span class="nx">databasePassword</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">compareSync</span><span class="p">(</span><span class="nx">userPassword</span><span class="p">,</span> <span class="nx">databasePassword</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Add the import as well:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">bcrypt</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'bcryptjs'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>This helper can now be used when we pull a user from the database and check that the passwords are equal:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">passport</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">new</span> <span class="nx">LocalStrategy</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">(</span><span class="nx">username</span><span class="p">,</span> <span class="nx">password</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">where</span><span class="p">({</span> <span class="nx">username</span> <span class="p">}).</span><span class="nx">first</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">user</span><span class="p">)</span> <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">comparePass</span><span class="p">(</span><span class="nx">password</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">password</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">user</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">});</span>
+<span class="p">}));</span>
+</code></pre></div></div>
+
+<p>Next, update the <code class="highlighter-rouge">addUser</code> function in <em>src/server/db/queries/users.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">bcrypt</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'bcryptjs'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../connection'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">addUser</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">salt</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">genSaltSync</span><span class="p">();</span>
+  <span class="kd">const</span> <span class="nx">hash</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">hashSync</span><span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="nx">salt</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">insert</span><span class="p">({</span>
+    <span class="na">username</span><span class="p">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span>
+    <span class="na">password</span><span class="p">:</span> <span class="nx">hash</span><span class="p">,</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">addUser</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Do the same for the user seed in <em>src/server/db/seeds/users.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">bcrypt</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'bcryptjs'</span><span class="p">);</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">seed</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">salt</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">genSaltSync</span><span class="p">();</span>
+  <span class="kd">const</span> <span class="nx">hash</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">hashSync</span><span class="p">(</span><span class="s1">'johnson'</span><span class="p">,</span> <span class="nx">salt</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">del</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span>
+      <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+        <span class="na">username</span><span class="p">:</span> <span class="s1">'jeremy'</span><span class="p">,</span>
+        <span class="na">password</span><span class="p">:</span> <span class="nx">hash</span><span class="p">,</span>
+      <span class="p">})</span>
+    <span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Now, instead of adding a plain text password to the database, we salt and hash it first.</p>
+
+<p>Drop and recreate the <code class="highlighter-rouge">koa_api</code> database, apply the migrations, and then run the server and manually test everything out.</p>
+
+<p>Finally, make sure the tests still pass:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ npm test
+
+Server listening on port: 1337
+  routes : auth
+    GET /auth/register
+      ✓ should render the register view
+    POST /auth/register
+      ✓ should register a new user (211ms)
+    GET /auth/login
+      ✓ should render the login view
+    POST /auth/login
+      ✓ should login a user (99ms)
+
+  routes : index
+    GET /
+      ✓ should return json
+
+  routes : movies
+    GET /api/v1/movies
+      ✓ should return all movies
+    GET /api/v1/movies/:id
+      ✓ should respond with a single movie
+      ✓ should throw an error if the movie does not exist
+    POST /api/v1/movies
+      ✓ should return the movie that was added
+      ✓ should throw an error if the payload is malformed
+    PUT /api/v1/movies
+      ✓ should return the movie that was updated
+      ✓ should throw an error if the movie does not exist
+    DELETE /api/v1/movies/:id
+      ✓ should return the movie that was deleted
+      ✓ should throw an error if the movie does not exist
+
+  Sample Test
+    ✓ should pass
+
+
+  15 passing (3s)
+</code></pre></div></div>
+
+<h2 id="redis-session-store">Redis Session Store</h2>
+
+<p>To utilize Redis as the session store, first install <a href="https://github.com/koajs/koa-redis">koa-redis</a>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ npm install koa-redis@3.1.1 --save
+</code></pre></div></div>
+
+<p>Then, update the <code class="highlighter-rouge">koa-session</code> middleware config in <em>src/server/index.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">session</span><span class="p">({</span>
+  <span class="na">store</span><span class="p">:</span> <span class="k">new</span> <span class="nx">RedisStore</span><span class="p">()</span>
+<span class="p">},</span> <span class="nx">app</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>Add the dependency:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">RedisStore</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-redis'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Take note of the <a href="https://github.com/koajs/koa-redis#options">default options</a> for koa-redis, making any necessary changes. Then, <a href="https://redis.io/download">download and install Redis</a> (if necessary) and spin up the server in a new terminal tab:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>redis-server
+</code></pre></div></div>
+
+<p>Fire up the app and register a new user, taking note of the cookie:</p>
+
+<p><img src="/assets/img/blog/koa/koa-passport-cookie.png" alt="koa passport cookie" /></p>
+
+<p>Within another new terminal tab, open the Redis client and make sure that key can be found:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>redis-cli
+
+127.0.0.1:6379&gt; keys 1nmcdC3apKbGVOk-VfbKjMR1dcgDUH1S
+1<span class="o">)</span> <span class="s2">"1nmcdC3apKbGVOk-VfbKjMR1dcgDUH1S"</span>
+127.0.0.1:6379&gt; <span class="nb">exit</span>
+</code></pre></div></div>
+
+<p>Run the tests one final time.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In this tutorial, we went through the process of adding authentication to a Koa app with Passport. Turn back to the objectives. Review each one. What did you learn?</p>
+
+<p>The full code can be found in the <a href="https://github.com/mjhea0/node-koa-api/releases/tag/v3">v3</a> tag of the <a href="https://github.com/mjhea0/node-koa-api">node-koa-api</a> repository.</p>
+
+<p>Check your understanding by adding additional test cases and error handlers, if you have not already done so. Add the missing tests to the <code class="highlighter-rouge">/auth/status</code> and <code class="highlighter-rouge">/auth/logout</code> routes by stubbing out the authentication functionality. Refer to the <a href="http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon">Stubbing HTTP Requests with Sinon</a> blog post for help. Try adding social authentication too!</p>
+
+<p>Please share your comments, questions, and/or tips in the comments below.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa/';
+    this.page.identifier = 'http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

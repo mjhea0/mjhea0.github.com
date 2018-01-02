@@ -68,11 +68,14 @@ Let's start by spinning up the external service that we'll consume from for test
 
 ### Movie Service
 
-Clone down the [project](https://github.com/mjhea0/node-koa-api) and install the dependencies:
+Clone down the [project](https://github.com/mjhea0/node-koa-api), check out the [v2](https://github.com/mjhea0/node-koa-api/releases/tag/v2) tag to the master branch, and install the dependencies:
 
 ```sh
-$ git clone https://github.com/mjhea0/node-koa-api
-$ cd node-koa-api && npm install
+$ git clone https://github.com/mjhea0/node-koa-api \
+  --branch v2 --single-branch
+$ cd node-koa-api
+$ git checkout tags/v2 -b master
+$ npm install
 ```
 
 Take a quick look at the code. This is just a simple Node RESTful API, with the following routes:

@@ -5,7 +5,7 @@ title: "Test Driven Development with Node, Postgres, and Knex (Red/Green/Refacto
 date: 2016-04-28 08:07:39
 comments: true
 toc: true
-categories: [node, mocha, testing, auth]
+categories: [node, mocha, testing]
 keywords: "node, express, postgres, knex, api, restful api, crud, mocha, chai, integration tests"
 description: "This article takes a test-driven approach to developing a RESTful API with Node, Express, Knex, and Postgres."
 ---
