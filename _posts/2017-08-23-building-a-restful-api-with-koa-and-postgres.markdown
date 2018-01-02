@@ -1115,7 +1115,7 @@ This tutorial took advantage of async/await functions in Koa version 2. If you'r
 Finally, check out the following two posts that build on the Koa app built in this post:
 
 1. [Stubbing HTTP Requests with Sinon](http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon)
-1. User Authentication with Passport and Koa
+1. [User Authentication with Passport and Koa](http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa)
 
 Grab the final code from the [v2](https://github.com/mjhea0/node-koa-api/releases/tag/v2) tag of  [node-koa-api](https://github.com/mjhea0/node-koa-api) repo. There's [slides](http://mherman.org/presentations/node-koa-api) as well.
 
