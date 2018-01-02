@@ -19,7 +19,4 @@ $ git push origin master:backup
 
 # if travis build passes, deploy
 $ git subtree push --prefix _site origin master
-
-# backup
-$ git push origin master:backup
 ```
