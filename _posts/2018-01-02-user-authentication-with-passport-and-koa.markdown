@@ -49,6 +49,7 @@ By the end of this tutorial, you will be able to...
 1. Practice test driven development
 1. Register and authenticate a user
 1. Utilize sessions to store user information via koa-session
+1. Explain why you may want to use an external session store to store session data
 1. Set up an external session store with Redis
 1. Render HTML pages via server-side templating
 
@@ -931,6 +932,10 @@ Server listening on port: 1337
 ```
 
 ## Redis Session Store
+
+It's a good idea to move session data out of memory and into an external session store as you begin scaling your application.
+
+For example, if you scale horizontally and start spinning up new instances of the same Node application to share the load, then users would need to log in to each instance separately if sessions are stored in memory. On the other hand, if sessions are stored in an external session store (like Redis), session data can be shared across all instances of the app. In the latter case, users would need to log in just once.
 
 To utilize Redis as the session store, first install [koa-redis](https://github.com/koajs/koa-redis):
 
