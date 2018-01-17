@@ -60,7 +60,7 @@ Calling external services during test runs can cause a number of problems:
 1. The service itself may not have a staging or sandbox mode for testing. In this case, you would actually be testing a service in production, so extra care needs to be taken to prevent test data from polluting production data.
 1. Finally, the service itself may not be fully implemented or it may not even exist yet, which is common in a microservice stack.
 
-*Isolating tests by stubbing external service calls makes testing faster, simpler, and more predictable.*
+*Isolating tests by stubbing external service calls makes testing faster, simpler, and more predictable.* Then, once you have some data to play with, you can use it in other parts of your test suite - to test a front-end UI, for example.
 
 ## Project Setup
 

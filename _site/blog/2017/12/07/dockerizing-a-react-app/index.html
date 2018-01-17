@@ -13,16 +13,16 @@
   <meta name="description" content="Let&#39;s look at how to Dockerize a React app.">
   
     
-    <meta name="keywords" content="docker, react, reactjs, javascript, containerization, create-react-app, create react app">
+    <meta name="keywords" content="docker, react, reactjs, javascript, containerization, create-react-app, create react app, multistage builds">
   
 
   <link rel="stylesheet" href="/assets/main.css">
-  <link rel="canonical" href="http://mherman.org/blog/2017/12/07/dockerizing-a-react-app/">
+  <link rel="canonical" href="http://localhost:4000/blog/2017/12/07/dockerizing-a-react-app/">
   
   
-  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
 
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" href="/favicon.png">
 
 
   
@@ -47,19 +47,6 @@
     s.parentNode.insertBefore(wf, s);
   })();
 </script>
-
-  
-    
-  <!-- Google Analytics -->
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-    ga('create', 'UA-37074204-1', 'auto');
-    ga('send', 'pageview');
-  </script>
-
 
   
 </head>
@@ -249,7 +236,12 @@
   <div class="post-content" itemprop="articleBody">
     <p><a href="https://www.docker.com/">Docker</a> is a technology that helps to speed up the development and deployment processes. If you’re working with microservices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.</p>
 
-<p>This tutorial demonstrates how to Dockerize a React app using the <a href="https://github.com/facebookincubator/create-react-app">Create React App</a> generator. We’ll specifically focus on setting up a development environment with code hot-reloading.</p>
+<p>This tutorial demonstrates how to Dockerize a React app using the <a href="https://github.com/facebookincubator/create-react-app">Create React App</a> generator. We’ll specifically focus on-</p>
+
+<ol>
+  <li>setting up a development environment with code hot-reloading</li>
+  <li>Configuring a production-ready image using multistage builds</li>
+</ol>
 
 <div style="text-align:center;">
   <img src="/assets/img/blog/docker-logo.png" style="max-width: 100%; border:0; box-shadow: none;" alt="docker" />
@@ -257,12 +249,19 @@
 
 <p><br /></p>
 
+<p><em>Updates:</em></p>
+
+<ul>
+  <li>Jan 17, 2018: Added a production build section that uses multistage Docker builds.</li>
+  <li>Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.</li>
+</ul>
+
 <p><em>We will be using:</em></p>
 
 <ul>
-  <li>Docker v17.09.0-ce</li>
-  <li>Create React App v1.4.3</li>
-  <li>Node v9.2</li>
+  <li>Docker v17.12.0-ce</li>
+  <li>Create React App v1.5.0</li>
+  <li>Node v9.4.0</li>
 </ul>
 
 <h2 class="no_toc" id="contents">Contents</h2>
@@ -271,6 +270,7 @@
   <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
   <li><a href="#docker" id="markdown-toc-docker">Docker</a></li>
   <li><a href="#docker-machine" id="markdown-toc-docker-machine">Docker Machine</a></li>
+  <li><a href="#production" id="markdown-toc-production">Production</a></li>
   <li><a href="#next-steps" id="markdown-toc-next-steps">Next Steps</a></li>
 </ul>
 
@@ -278,7 +278,7 @@
 
 <p>Install <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> create-react-app@1.4.3
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> create-react-app@1.5.0
 </code></pre></div></div>
 
 <p>Generate a new app:</p>
@@ -292,7 +292,7 @@
 <p>Add a <em>Dockerfile</em> to the project root:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># base image
-FROM node:9.2
+FROM node:9.4
 
 # set working directory
 RUN mkdir /usr/src/app
@@ -304,7 +304,7 @@ ENV PATH /usr/src/app/node_modules/.bin:$PATH
 # install and cache app dependencies
 ADD package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.0.17 -g --silent
+RUN npm install react-scripts@1.1.0 -g --silent
 
 # start app
 CMD ["npm", "start"]
@@ -414,7 +414,67 @@ CMD ["npm", "start"]
       <span class="pi">-</span> <span class="s">CHOKIDAR_USEPOLLING=true</span>
 </code></pre></div></div>
 
-<p>Want to destroy the Machine?</p>
+<h2 id="production">Production</h2>
+
+<p>Let’s create a separate Dockerfile for use in production called <em>Dockerfile-prod</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># build environment
+FROM node:latest as builder
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+ADD package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.0 -g --silent
+ADD . /usr/src/app
+RUN npm run build
+
+# production environment
+FROM nginx:1.13.5-alpine
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+</code></pre></div></div>
+
+<p>Here, we take advantage of <a href="https://docs.docker.com/engine/userguide/eng-image/multistage-build/">multistage builds</a> to create a temporary image used for building the artifact that is then copied over to the production image. The temporary build image is discarded along with the original files and folders associated with the image. This produces a lean, production-ready image.</p>
+
+<blockquote>
+  <p>Check out the <a href="https://blog.alexellis.io/mutli-stage-docker-builds/">Builder pattern vs. Multi-stage builds in Docker</a> blog post for more info on multistage builds.</p>
+</blockquote>
+
+<p>Using the production Dockerfile, build and tag the Docker image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-f</span> Dockerfile-prod <span class="nt">-t</span> sample-app-prod <span class="nb">.</span>
+</code></pre></div></div>
+
+<p>Spin up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-p</span> 80:80 <span class="nt">--rm</span> sample-app-prod
+</code></pre></div></div>
+
+<p>Assuming you are still using the same Docker Machine, navigate to <a href="http://DOCKER_MACHINE_IP">http://DOCKER_MACHINE_IP</a> in your browser.</p>
+
+<p>Test with a new Docker Compose file as well called <em>docker-compose-prod.yml</em>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.3'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">sample-app-prod</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">sample-app-prod</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile-prod</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">80:80'</span>
+</code></pre></div></div>
+
+<p>Fire up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose <span class="nt">-f</span> docker-compose-prod.yml up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p>Test it out once more in your browser. Then, if you’re done, go ahead and destroy the Machine:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env <span class="nt">-u</span><span class="k">)</span>
 <span class="nv">$ </span>docker-machine rm sample
@@ -422,7 +482,7 @@ CMD ["npm", "start"]
 
 <h2 id="next-steps">Next Steps</h2>
 
-<p>With that, you should now be able to add React to a larger Docker-powered project. If you’d like to learn more about working with React and Docker along with building and testing microservices, check out <a href="https://testdriven.io/">Microservices with Docker, Flask, and React</a>.</p>
+<p>With that, you should now be able to add React to a larger Docker-powered project for both development and production environments. If you’d like to learn more about working with React and Docker along with building and testing microservices, check out <a href="https://testdriven.io/">Microservices with Docker, Flask, and React</a>.</p>
 
   </div>
 
@@ -453,8 +513,8 @@ CMD ["npm", "start"]
 
 <script>
   var disqus_config = function () {
-    this.page.url = 'http://mherman.org/blog/2017/12/07/dockerizing-a-react-app/';
-    this.page.identifier = 'http://mherman.org/blog/2017/12/07/dockerizing-a-react-app/';
+    this.page.url = 'http://localhost:4000/blog/2017/12/07/dockerizing-a-react-app/';
+    this.page.identifier = 'http://localhost:4000/blog/2017/12/07/dockerizing-a-react-app/';
   };
 
   (function() { // DON'T EDIT BELOW THIS LINE

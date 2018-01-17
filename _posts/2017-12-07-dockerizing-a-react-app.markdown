@@ -5,13 +5,16 @@ date: 2017-12-07 08:23:24
 comments: true
 toc: true
 categories: [docker, react]
-keywords: "docker, react, reactjs, javascript, containerization, create-react-app, create react app"
+keywords: "docker, react, reactjs, javascript, containerization, create-react-app, create react app, multistage builds"
 description: "Let's look at how to Dockerize a React app."
 ---
 
 [Docker](https://www.docker.com/) is a technology that helps to speed up the development and deployment processes. If you're working with microservices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.
 
-This tutorial demonstrates how to Dockerize a React app using the [Create React App](https://github.com/facebookincubator/create-react-app) generator. We'll specifically focus on setting up a development environment with code hot-reloading.
+This tutorial demonstrates how to Dockerize a React app using the [Create React App](https://github.com/facebookincubator/create-react-app) generator. We'll specifically focus on-
+
+1. setting up a development environment with code hot-reloading
+1. Configuring a production-ready image using multistage builds
 
 <div style="text-align:center;">
   <img src="/assets/img/blog/docker-logo.png" style="max-width: 100%; border:0; box-shadow: none;" alt="docker">
@@ -19,11 +22,16 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 
 <br>
 
+*Updates:*
+
+- Jan 17, 2018: Added a production build section that uses multistage Docker builds.
+- Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.
+
 *We will be using:*
 
-- Docker v17.09.0-ce
-- Create React App v1.4.3
-- Node v9.2
+- Docker v17.12.0-ce
+- Create React App v1.5.0
+- Node v9.4.0
 
 {% if page.toc %}
 {% include contents.html %}
@@ -34,7 +42,7 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 Install [Create React App](https://github.com/facebookincubator/create-react-app):
 
 ```sh
-$ npm install -g create-react-app@1.4.3
+$ npm install -g create-react-app@1.5.0
 ```
 
 Generate a new app:
@@ -50,7 +58,7 @@ Add a *Dockerfile* to the project root:
 
 ```
 # base image
-FROM node:9.2
+FROM node:9.4
 
 # set working directory
 RUN mkdir /usr/src/app
@@ -62,7 +70,7 @@ ENV PATH /usr/src/app/node_modules/.bin:$PATH
 # install and cache app dependencies
 ADD package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.0.17 -g --silent
+RUN npm install react-scripts@1.1.0 -g --silent
 
 # start app
 CMD ["npm", "start"]
@@ -181,7 +189,70 @@ services:
       - CHOKIDAR_USEPOLLING=true
 ```
 
-Want to destroy the Machine?
+## Production
+
+Let's create a separate Dockerfile for use in production called *Dockerfile-prod*:
+
+```
+# build environment
+FROM node:latest as builder
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+ADD package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.0 -g --silent
+ADD . /usr/src/app
+RUN npm run build
+
+# production environment
+FROM nginx:1.13.5-alpine
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+Here, we take advantage of [multistage builds](https://docs.docker.com/engine/userguide/eng-image/multistage-build/) to create a temporary image used for building the artifact that is then copied over to the production image. The temporary build image is discarded along with the original files and folders associated with the image. This produces a lean, production-ready image.
+
+> Check out the [Builder pattern vs. Multi-stage builds in Docker](https://blog.alexellis.io/mutli-stage-docker-builds/) blog post for more info on multistage builds.
+
+Using the production Dockerfile, build and tag the Docker image:
+
+```sh
+$ docker build -f Dockerfile-prod -t sample-app-prod .
+```
+
+Spin up the container:
+
+```sh
+$ docker run -it -p 80:80 --rm sample-app-prod
+```
+
+Assuming you are still using the same Docker Machine, navigate to [http://DOCKER_MACHINE_IP](http://DOCKER_MACHINE_IP) in your browser.
+
+Test with a new Docker Compose file as well called *docker-compose-prod.yml*:
+
+```yaml
+version: '3.3'
+
+services:
+
+  sample-app-prod:
+    container_name: sample-app-prod
+    build:
+      context: .
+      dockerfile: Dockerfile-prod
+    ports:
+      - '80:80'
+```
+
+Fire up the container:
+
+```sh
+$ docker-compose -f docker-compose-prod.yml up -d --build
+```
+
+Test it out once more in your browser. Then, if you're done, go ahead and destroy the Machine:
 
 ```sh
 $ eval $(docker-machine env -u)
@@ -190,4 +261,4 @@ $ docker-machine rm sample
 
 ## Next Steps
 
-With that, you should now be able to add React to a larger Docker-powered project. If you'd like to learn more about working with React and Docker along with building and testing microservices, check out [Microservices with Docker, Flask, and React](https://testdriven.io/).
+With that, you should now be able to add React to a larger Docker-powered project for both development and production environments. If you'd like to learn more about working with React and Docker along with building and testing microservices, check out [Microservices with Docker, Flask, and React](https://testdriven.io/).

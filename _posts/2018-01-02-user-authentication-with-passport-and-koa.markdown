@@ -159,7 +159,7 @@ $ knex migrate:latest --env development
 $ knex seed:run --env development
 ```
 
-Run the Koa server, via `npm start`, and navigate to [http://localhost:1337/](http://localhost:1337/). You should see something similar to:
+Run the Koa server, via `npm start`, and navigate to [http://localhost:1337/api/v1/movies](http://localhost:1337/api/v1/movies). You should see something similar to:
 
 ```json
 {
