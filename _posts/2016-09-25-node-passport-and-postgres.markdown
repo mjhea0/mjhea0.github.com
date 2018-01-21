@@ -11,13 +11,14 @@ description: "This tutorial takes a test-first approach to implementing authenti
 
 This tutorial takes a test-first approach to implementing authentication in a Node app using Passport and Postgres.
 
+*Updates:*
+
+- January 21st, 2018: Updated integration tests
+- January 20th, 2017: Refactored the `login()` route handler
+
 {% if page.toc %}
 {% include contents.html %}
 {% endif %}
-
-Updates:
-
-  - *January 20th, 2017* - Refactored the `login()` route handler
 
 ## Objectives
 
@@ -794,7 +795,7 @@ describe('GET /admin', () => {
   });
   it('should throw an error if a user is not logged in', (done) => {
     chai.request(server)
-    .get('/user')
+    .get('/admin')
     .end((err, res) => {
       should.exist(err);
       res.redirects.length.should.eql(0);
@@ -1064,7 +1065,7 @@ it('should throw an error if the password is < 6 characters', (done) => {
 
 Run the tests:
 
-```sh
+```
 $ npm test
 
   jscs
