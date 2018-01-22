@@ -17,6 +17,15 @@ In this tutorial, you'll learn how to develop a RESTful API with [Koa](http://ko
   <img src="/assets/img/blog/node-koa-api.png" style="max-width: 90%; border:0; box-shadow: none;" alt="node koa">
 </div><br>
 
+#### Parts
+
+This article is part of a 4-part Koa and Sinon series...
+
+1. [Building a RESTful API with Koa and Postgres](http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres) (this article)
+1. [Stubbing HTTP Requests with Sinon](http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon)
+1. [User Authentication with Passport and Koa](http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa)
+1. [Stubbing Node Authentication Middleware with Sinon](http://mherman.org/blog/2018/01/22/stubbing-node-authentication-middleware-with-sinon)
+
 #### NPM Dependencies
 
 1. Koa v[2.3.0](https://github.com/koajs/koa/releases/tag/2.3.0)
@@ -1112,10 +1121,11 @@ Add end-to-end tests with [TestCafe](http://mherman.org/blog/2017/03/19/function
 
 This tutorial took advantage of async/await functions in Koa version 2. If you're interested in comparing this pattern to the generator pattern found in Koa 1, review the code in the [Koa API](https://github.com/mjhea0/koa-api) repo.
 
-Finally, check out the following two posts that build on the Koa app built in this post:
+Finally, check out the following posts that build on the Koa app built in this post:
 
 1. [Stubbing HTTP Requests with Sinon](http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon)
 1. [User Authentication with Passport and Koa](http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa)
+1. [Stubbing Node Authentication Middleware with Sinon](http://mherman.org/blog/2018/01/22/stubbing-node-authentication-middleware-with-sinon)
 
 Grab the final code from the [v2](https://github.com/mjhea0/node-koa-api/releases/tag/v2) tag of  [node-koa-api](https://github.com/mjhea0/node-koa-api) repo. There's [slides](http://mherman.org/presentations/node-koa-api) as well.
 

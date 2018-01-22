@@ -15,9 +15,18 @@ This tutorial details how to stub HTTP requests with [Sinon.js](http://sinonjs.o
   <img src="/assets/img/blog/sinonjs.png" style="max-width: 90%; border:0; box-shadow: none;" alt="sinon.js">
 </div>
 
-If you're developing for the web, you are most likely connecting to some other external service to extend the functionality of your application. You could be connecting to a third-party API - like Twilio, GitHub, Twitter, or Mailgun, to name a few - or just communicating with another service in your microservice stack. Regardless, when unit testing, you do not want HTTP requests to go out to these services. Instead, you can "fake" the request and response with a stub, tricking the system into thinking the request was made.  
+If you're developing for the web, you are most likely connecting to some other external service to extend the functionality of your application. You could be connecting to a third-party API - like Twilio, GitHub, Twitter, or Mailgun, to name a few - or just communicating with another service in your microservice stack. Regardless, when unit testing, you do not want HTTP requests to go out to these services. Instead, you can "fake" the request and response with a stub, tricking the system into thinking the request was made.
 
-#### NPM Dependencies:
+#### Parts
+
+This article is part of a 4-part Koa and Sinon series...
+
+1. [Building a RESTful API with Koa and Postgres](http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres)
+1. [Stubbing HTTP Requests with Sinon](http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon) (this article)
+1. [User Authentication with Passport and Koa](http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa)
+1. [Stubbing Node Authentication Middleware with Sinon](http://mherman.org/blog/2018/01/22/stubbing-node-authentication-middleware-with-sinon)
+
+#### NPM Dependencies
 
 1. Node v[8.7.0](https://nodejs.org/en/blog/release/v8.7.0/)
 1. Mocha v[4.0.1](https://github.com/mochajs/mocha/releases/tag/v4.0.1)

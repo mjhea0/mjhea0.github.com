@@ -13,7 +13,7 @@ This tutorial takes a test-first approach to implementing authentication in a No
 
 *Updates:*
 
-- January 21st, 2018: Updated integration tests
+- January 20th, 2018: Updated integration tests
 - January 20th, 2017: Refactored the `login()` route handler
 
 {% if page.toc %}

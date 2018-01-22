@@ -19,6 +19,15 @@ This tutorial looks at how to set up a local authentication strategy with Node, 
 
 <br>
 
+#### Parts
+
+This article is part of a 4-part Koa and Sinon series...
+
+1. [Building a RESTful API with Koa and Postgres](http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres)
+1. [Stubbing HTTP Requests with Sinon](http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon)
+1. [User Authentication with Passport and Koa](http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa) (this article)
+1. [Stubbing Node Authentication Middleware with Sinon](http://mherman.org/blog/2018/01/22/stubbing-node-authentication-middleware-with-sinon)
+
 #### Main NPM Dependencies
 
 1. Koa v[2.3.0](https://github.com/koajs/koa/releases/tag/2.3.0)
