@@ -25,7 +25,7 @@ Here's a list of talks and trainings I've given over the years...
 | May 11, 2017    | [Developing and Testing Microservices with Node, React, and Docker][3] | [Denver JavaScript Meetup][4] |
 | April 26, 2017  | [Flask for Node Developers][9] | [Galvanize Guest Speaker][8] |
 | April 12, 2017  | [Developing and Testing Microservices With Docker][7] | [Galvanize Guest Speaker][8] |
-| March 20, 2017  | [End-to-End Testing with TestCafe][1]  | [HTML5 Denver Users Group][2] |
+| March 20, 2017  | [End-to-End Testing with TestCafe][1]  | HTML5 Denver Users Group |
 | March 11, 2017  | [Learning to Learn][20] | [Weekly Python Chat][21] |
 | March 10, 2015   | [Rapid Development with Flask and Docker][10] | [Boulder Python Meetup][11] |
 | March 5, 2015   | [Node on Docker - from development to delivery][5] | [NodeJS Denver/Boulder Meetup][6] |
@@ -40,7 +40,6 @@ Here's a list of talks and trainings I've given over the years...
 | January - February 2017  | [Node Workshop][17] (4 sessions) | Twitter Boulder |
 
 [1]: http://mherman.org/testcafe-example
-[2]: https://www.meetup.com/HTML5-Denver-Users-Group/
 [3]: http://mherman.org/microservice-movies
 [4]: https://www.meetup.com/meetup-group-KHpdnFBx/
 [5]: http://realpython.github.io/fitter-happier-docker/node.html
