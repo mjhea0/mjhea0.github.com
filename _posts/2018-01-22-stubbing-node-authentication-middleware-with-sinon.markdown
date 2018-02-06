@@ -47,7 +47,7 @@ Clone the [node-koa-api](https://github.com/mjhea0/node-koa-api) repo (if you ha
 $ git clone https://github.com/mjhea0/node-koa-api \
   --branch v3 --single-branch
 $ cd node-koa-api
-$ git checkout tags/v2 -b master
+$ git checkout tags/v3 -b master
 $ npm install
 ```
 
