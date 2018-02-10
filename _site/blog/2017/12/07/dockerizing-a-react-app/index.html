@@ -14,7 +14,7 @@
   <meta name="description" content="Let&#39;s look at how to Dockerize a React app.">
   
     
-    <meta name="keywords" content="docker, react, reactjs, javascript, containerization, create-react-app, create react app, multistage builds">
+    <meta name="keywords" content="docker, react, reactjs, javascript, containerization, create-react-app, create react app, multistage builds, nginx, react-router, react router">
   
 
   <link rel="stylesheet" href="/assets/main.css">
@@ -266,6 +266,7 @@
 <p><em>Updates:</em></p>
 
 <ul>
+  <li>Feb 10, 2018: Detailed how to configure Nginx to work properly with React Router.</li>
   <li>Jan 17, 2018: Added a production build section that uses multistage Docker builds.</li>
   <li>Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.</li>
 </ul>
@@ -285,6 +286,7 @@
   <li><a href="#docker" id="markdown-toc-docker">Docker</a></li>
   <li><a href="#docker-machine" id="markdown-toc-docker-machine">Docker Machine</a></li>
   <li><a href="#production" id="markdown-toc-production">Production</a></li>
+  <li><a href="#react-router-and-nginx" id="markdown-toc-react-router-and-nginx">React Router and Nginx</a></li>
   <li><a href="#next-steps" id="markdown-toc-next-steps">Next Steps</a></li>
 </ul>
 
@@ -492,6 +494,59 @@ CMD ["nginx", "-g", "daemon off;"]
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env <span class="nt">-u</span><span class="k">)</span>
 <span class="nv">$ </span>docker-machine rm sample
+</code></pre></div></div>
+
+<h2 id="react-router-and-nginx">React Router and Nginx</h2>
+
+<p>If you are using <a href="https://reacttraining.com/react-router/">React Router</a>, then you’ll need to change the default Nginx config at build time:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+</code></pre></div></div>
+
+<p>Add the changes to <em>Dockerfile-prod</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># build environment
+FROM node:latest as builder
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+ADD package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.0 -g --silent
+ADD . /usr/src/app
+RUN npm run build
+
+# production environment
+FROM nginx:1.13.5-alpine
+RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+</code></pre></div></div>
+
+<p>Create the following two folders along with a <em>default.conf</em> file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>└── conf
+    └── conf.d
+        └── default.conf
+</code></pre></div></div>
+
+<p><em>default.conf</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+  listen 80;
+  location / {
+    root   /usr/share/nginx/html;
+    index  index.html index.htm;
+    try_files $uri $uri/ /index.html;
+  }
+  error_page   500 502 503 504  /50x.html;
+  location = /50x.html {
+    root   /usr/share/nginx/html;
+  }
+}
 </code></pre></div></div>
 
 <h2 id="next-steps">Next Steps</h2>

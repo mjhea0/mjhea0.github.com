@@ -5,7 +5,7 @@ date: 2017-12-07 08:23:24
 comments: true
 toc: true
 categories: [docker, react]
-keywords: "docker, react, reactjs, javascript, containerization, create-react-app, create react app, multistage builds"
+keywords: "docker, react, reactjs, javascript, containerization, create-react-app, create react app, multistage builds, nginx, react-router, react router"
 description: "Let's look at how to Dockerize a React app."
 ---
 
@@ -24,6 +24,7 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 
 *Updates:*
 
+- Feb 10, 2018: Detailed how to configure Nginx to work properly with React Router.
 - Jan 17, 2018: Added a production build section that uses multistage Docker builds.
 - Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.
 
@@ -257,6 +258,63 @@ Test it out once more in your browser. Then, if you're done, go ahead and destro
 ```sh
 $ eval $(docker-machine env -u)
 $ docker-machine rm sample
+```
+
+## React Router and Nginx
+
+If you are using [React Router](https://reacttraining.com/react-router/), then you'll need to change the default Nginx config at build time:
+
+```
+RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+```
+
+Add the changes to *Dockerfile-prod*:
+
+```
+# build environment
+FROM node:latest as builder
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+ADD package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.0 -g --silent
+ADD . /usr/src/app
+RUN npm run build
+
+# production environment
+FROM nginx:1.13.5-alpine
+RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+Create the following two folders along with a *default.conf* file:
+
+```sh
+└── conf
+    └── conf.d
+        └── default.conf
+```
+
+*default.conf*:
+
+```
+server {
+  listen 80;
+  location / {
+    root   /usr/share/nginx/html;
+    index  index.html index.htm;
+    try_files $uri $uri/ /index.html;
+  }
+  error_page   500 502 503 504  /50x.html;
+  location = /50x.html {
+    root   /usr/share/nginx/html;
+  }
+}
 ```
 
 ## Next Steps

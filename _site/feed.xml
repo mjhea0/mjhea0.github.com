@@ -5,7 +5,7 @@
   
   <link href="http://mherman.org/feed.xml" rel="self" type="application/atom+xml" />
   <link href="http://mherman.org/" rel="alternate" type="text/html" />
-  <updated>2018-02-05T18:59:50-07:00</updated>
+  <updated>2018-02-09T22:10:47-07:00</updated>
   <id>http://mherman.org//</id>
 
   
@@ -2116,6 +2116,7 @@ Server listening on port: 1337
 &lt;p&gt;&lt;em&gt;Updates:&lt;/em&gt;&lt;/p&gt;
 
 &lt;ul&gt;
+  &lt;li&gt;Feb 10, 2018: Detailed how to configure Nginx to work properly with React Router.&lt;/li&gt;
   &lt;li&gt;Jan 17, 2018: Added a production build section that uses multistage Docker builds.&lt;/li&gt;
   &lt;li&gt;Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.&lt;/li&gt;
 &lt;/ul&gt;
@@ -2135,6 +2136,7 @@ Server listening on port: 1337
   &lt;li&gt;&lt;a href=&quot;#docker&quot; id=&quot;markdown-toc-docker&quot;&gt;Docker&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;#docker-machine&quot; id=&quot;markdown-toc-docker-machine&quot;&gt;Docker Machine&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;#production&quot; id=&quot;markdown-toc-production&quot;&gt;Production&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#react-router-and-nginx&quot; id=&quot;markdown-toc-react-router-and-nginx&quot;&gt;React Router and Nginx&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;#next-steps&quot; id=&quot;markdown-toc-next-steps&quot;&gt;Next Steps&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
@@ -2342,6 +2344,59 @@ CMD [&quot;nginx&quot;, &quot;-g&quot;, &quot;daemon off;&quot;]
 
 &lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;docker-machine env &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker-machine rm sample
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;react-router-and-nginx&quot;&gt;React Router and Nginx&lt;/h2&gt;
+
+&lt;p&gt;If you are using &lt;a href=&quot;https://reacttraining.com/react-router/&quot;&gt;React Router&lt;/a&gt;, then you’ll need to change the default Nginx config at build time:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Add the changes to &lt;em&gt;Dockerfile-prod&lt;/em&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# build environment
+FROM node:latest as builder
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+ADD package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.0 -g --silent
+ADD . /usr/src/app
+RUN npm run build
+
+# production environment
+FROM nginx:1.13.5-alpine
+RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
+EXPOSE 80
+CMD [&quot;nginx&quot;, &quot;-g&quot;, &quot;daemon off;&quot;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Create the following two folders along with a &lt;em&gt;default.conf&lt;/em&gt; file:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;└── conf
+    └── conf.d
+        └── default.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;em&gt;default.conf&lt;/em&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;server {
+  listen 80;
+  location / {
+    root   /usr/share/nginx/html;
+    index  index.html index.htm;
+    try_files $uri $uri/ /index.html;
+  }
+  error_page   500 502 503 504  /50x.html;
+  location = /50x.html {
+    root   /usr/share/nginx/html;
+  }
+}
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h2 id=&quot;next-steps&quot;&gt;Next Steps&lt;/h2&gt;
