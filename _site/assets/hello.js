@@ -3,10 +3,11 @@ config
  */
 
 let content = {
-  text: 'Want to learn Docker, Flask, and React?',
+  text: 'Learn how to develop microservices with Docker!',
   buttonText: 'Click Here',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
+  cookieKey: 'cookieNotificationFeb102018'
 };
 
 /*
@@ -37,24 +38,35 @@ let helloBar = `
 event handlers
  */
 
+// display the bar, if the cookie does not exist
 document.addEventListener('DOMContentLoaded', (event) => {
-  if (!getCookie('cookieNotification')) {
+  if (!getCookie(content.cookieKey)) {
     let element = document.createRange().createContextualFragment(helloBar);
     document.body.appendChild(element);
   }
 });
 
+// set cookie when user clicks the 'x' button
 window.addEventListener('click', (event) => {
   if(event.target && event.target.matches('a.icon-close')) {
     const helloBarElement = document.getElementById('hellobar-bar');
     fadeOutEffect(helloBarElement);
-    setCookie('cookieNotification', 'true', content.cookieExpiration);
+    setCookie(content.cookieKey, 'true', content.cookieExpiration);
+  }
+});
+
+// set cookie when user clicks the 'call to action' button
+window.addEventListener('click', (event) => {
+  if(event.target && event.target.innerText.trim() === content.buttonText) {
+    const helloBarElement = document.getElementById('hellobar-bar');
+    fadeOutEffect(helloBarElement);
+    setCookie(content.cookieKey, 'true', content.cookieExpiration);
   }
 });
 
 
 /*
-help functions
+helper functions
  */
 
 function fadeOutEffect(element) {
