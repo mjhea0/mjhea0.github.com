@@ -5,7 +5,7 @@
   
   <link href="http://mherman.org/feed.xml" rel="self" type="application/atom+xml" />
   <link href="http://mherman.org/" rel="alternate" type="text/html" />
-  <updated>2018-02-12T07:48:03-07:00</updated>
+  <updated>2018-02-14T19:18:31-07:00</updated>
   <id>http://mherman.org//</id>
 
   
@@ -2116,6 +2116,7 @@ Server listening on port: 1337
 &lt;p&gt;&lt;em&gt;Updates:&lt;/em&gt;&lt;/p&gt;
 
 &lt;ul&gt;
+  &lt;li&gt;Feb 14, 2018: Added a data volume; updated to the latest versions of React and Node.&lt;/li&gt;
   &lt;li&gt;Feb 10, 2018: Detailed how to configure Nginx to work properly with React Router.&lt;/li&gt;
   &lt;li&gt;Jan 17, 2018: Added a production build section that uses multistage Docker builds.&lt;/li&gt;
   &lt;li&gt;Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.&lt;/li&gt;
@@ -2125,8 +2126,8 @@ Server listening on port: 1337
 
 &lt;ul&gt;
   &lt;li&gt;Docker v17.12.0-ce&lt;/li&gt;
-  &lt;li&gt;Create React App v1.5.0&lt;/li&gt;
-  &lt;li&gt;Node v9.4.0&lt;/li&gt;
+  &lt;li&gt;Create React App v1.5.5&lt;/li&gt;
+  &lt;li&gt;Node v9.5.0&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;h2 class=&quot;no_toc&quot; id=&quot;contents&quot;&gt;Contents&lt;/h2&gt;
@@ -2144,7 +2145,7 @@ Server listening on port: 1337
 
 &lt;p&gt;Install &lt;a href=&quot;https://github.com/facebookincubator/create-react-app&quot;&gt;Create React App&lt;/a&gt;:&lt;/p&gt;
 
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;npm install &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt; create-react-app@1.5.0
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;npm install &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt; create-react-app@1.5.2
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Generate a new app:&lt;/p&gt;
@@ -2158,7 +2159,7 @@ Server listening on port: 1337
 &lt;p&gt;Add a &lt;em&gt;Dockerfile&lt;/em&gt; to the project root:&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# base image
-FROM node:9.4
+FROM node:9.5
 
 # set working directory
 RUN mkdir /usr/src/app
@@ -2170,14 +2171,14 @@ ENV PATH /usr/src/app/node_modules/.bin:$PATH
 # install and cache app dependencies
 ADD package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.1.0 -g --silent
+RUN npm install react-scripts@1.1.1 -g --silent
 
 # start app
 CMD [&quot;npm&quot;, &quot;start&quot;]
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;blockquote&gt;
-  &lt;p&gt;Silencing the NPM output via &lt;code class=&quot;highlighter-rouge&quot;&gt;--silent&lt;/code&gt; is a personal choice. It’s often frowned upon, though, since it can swallow errors. Keep this in mind so you don’t waste time debugging.&lt;/p&gt;
+  &lt;p&gt;Silencing the NPM output, via &lt;code class=&quot;highlighter-rouge&quot;&gt;--silent&lt;/code&gt;, is a personal choice. It’s often frowned upon, though, since it can swallow errors. Keep this in mind so you don’t waste time debugging.&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;p&gt;Add a &lt;em&gt;.dockerignore&lt;/em&gt;:&lt;/p&gt;
@@ -2185,7 +2186,7 @@ CMD [&quot;npm&quot;, &quot;start&quot;]
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;node_modules
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;So, this will greatly speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.&lt;/p&gt;
+&lt;p&gt;This will greatly speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.&lt;/p&gt;
 
 &lt;p&gt;Build and tag the Docker image:&lt;/p&gt;
 
@@ -2194,14 +2195,18 @@ CMD [&quot;npm&quot;, &quot;start&quot;]
 
 &lt;p&gt;Then, spin up the container once the build is done:&lt;/p&gt;
 
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PWD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;:/usr/src/app &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 3000:3000 &lt;span class=&quot;nt&quot;&gt;--rm&lt;/span&gt; sample-app
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PWD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;:/usr/src/app &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; /usr/src/app/node_modules &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 3000:3000 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;--rm&lt;/span&gt; sample-app
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Open your browser to &lt;a href=&quot;http://localhost:3000/&quot;&gt;http://localhost:3000/&lt;/a&gt; and you should see the app. Try making a change to the &lt;code class=&quot;highlighter-rouge&quot;&gt;App&lt;/code&gt; component within your code editor. You should see the app hot-reload.&lt;/p&gt;
+&lt;p&gt;Open your browser to &lt;a href=&quot;http://localhost:3000/&quot;&gt;http://localhost:3000/&lt;/a&gt; and you should see the app. Try making a change to the &lt;code class=&quot;highlighter-rouge&quot;&gt;App&lt;/code&gt; component within your code editor. You should see the app hot-reload. Kill the server once done.&lt;/p&gt;
 
 &lt;p&gt;Want to use &lt;a href=&quot;https://docs.docker.com/compose/&quot;&gt;Docker Compose&lt;/a&gt;? Add a &lt;em&gt;docker-compose.yml&lt;/em&gt; file to the project root:&lt;/p&gt;
 
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3.3'&lt;/span&gt;
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3.4'&lt;/span&gt;
 
 &lt;span class=&quot;na&quot;&gt;services&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
 
@@ -2212,11 +2217,19 @@ CMD [&quot;npm&quot;, &quot;start&quot;]
       &lt;span class=&quot;na&quot;&gt;dockerfile&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Dockerfile&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
       &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;.:/usr/src/app'&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/usr/src/app/node_modules'&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
       &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3000:3000'&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;environment&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
       &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;NODE_ENV=development&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Take note of the volumes. Without the data volume (&lt;code class=&quot;highlighter-rouge&quot;&gt;'/usr/src/app/node_modules'&lt;/code&gt;), the &lt;em&gt;node_modules&lt;/em&gt; directory would be overwritten by the mounting of the host directory at runtime:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;Build&lt;/em&gt; - The &lt;code class=&quot;highlighter-rouge&quot;&gt;node_modules&lt;/code&gt; directory is created.&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;Run&lt;/em&gt; - The current directory is mounted into the container, overwriting the &lt;code class=&quot;highlighter-rouge&quot;&gt;node_modules&lt;/code&gt; that were just installed when the container was built.&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;p&gt;Build the image and fire up the container:&lt;/p&gt;
 
@@ -2247,22 +2260,31 @@ CMD [&quot;npm&quot;, &quot;start&quot;]
 &lt;p&gt;Then, build the images and run the containers:&lt;/p&gt;
 
 &lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker build &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; sample-app &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
-&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PWD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;:/usr/src/app &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 3000:3000 &lt;span class=&quot;nt&quot;&gt;--rm&lt;/span&gt; sample-app
+
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PWD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;:/usr/src/app &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; /usr/src/app/node_modules &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 3000:3000 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;--rm&lt;/span&gt; sample-app
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Test the app again in the browser at &lt;a href=&quot;http://DOCKER_MACHINE_IP:3000/&quot;&gt;http://DOCKER_MACHINE_IP:3000/&lt;/a&gt;. Also, confirm that auto reload is &lt;em&gt;not&lt;/em&gt; working. You can try with Docker Compose as well, but the results will be the same.&lt;/p&gt;
+&lt;p&gt;Test the app again in the browser at &lt;a href=&quot;http://DOCKER_MACHINE_IP:3000/&quot;&gt;http://DOCKER_MACHINE_IP:3000/&lt;/a&gt;. Also, confirm that auto reload is &lt;em&gt;not&lt;/em&gt; working. You can try with Docker Compose as well, but the result will be the same.&lt;/p&gt;
 
 &lt;p&gt;To get hot-reload working, we need to add an environment variable:&lt;/p&gt;
 
-&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PWD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;:/usr/src/app &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 3000:3000 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;CHOKIDAR_USEPOLLING&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--rm&lt;/span&gt; sample-app
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;docker run &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PWD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;:/usr/src/app &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; /usr/src/app/node_modules &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 3000:3000 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;CHOKIDAR_USEPOLLING&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;--rm&lt;/span&gt; sample-app
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Test it out again. You could add the variable to a &lt;em&gt;.env&lt;/em&gt; file, however you  don’t need it for a production build.&lt;/p&gt;
+&lt;p&gt;Test it out again. You could add the variable to a &lt;em&gt;.env&lt;/em&gt; file, however you  won’t need it for a production build.&lt;/p&gt;
 
 &lt;p&gt;Updated &lt;em&gt;docker-compose.yml&lt;/em&gt; file:&lt;/p&gt;
 
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3.3'&lt;/span&gt;
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3.4'&lt;/span&gt;
 
 &lt;span class=&quot;na&quot;&gt;services&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
 
@@ -2273,6 +2295,7 @@ CMD [&quot;npm&quot;, &quot;start&quot;]
       &lt;span class=&quot;na&quot;&gt;dockerfile&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Dockerfile&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
       &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;.:/usr/src/app'&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/usr/src/app/node_modules'&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
       &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3000:3000'&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;environment&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
@@ -2285,7 +2308,7 @@ CMD [&quot;npm&quot;, &quot;start&quot;]
 &lt;p&gt;Let’s create a separate Dockerfile for use in production called &lt;em&gt;Dockerfile-prod&lt;/em&gt;:&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# build environment
-FROM node:latest as builder
+FROM node:9.5 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
@@ -2322,7 +2345,7 @@ CMD [&quot;nginx&quot;, &quot;-g&quot;, &quot;daemon off;&quot;]
 
 &lt;p&gt;Test with a new Docker Compose file as well called &lt;em&gt;docker-compose-prod.yml&lt;/em&gt;:&lt;/p&gt;
 
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3.3'&lt;/span&gt;
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3.4'&lt;/span&gt;
 
 &lt;span class=&quot;na&quot;&gt;services&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
 
@@ -2357,7 +2380,7 @@ COPY conf /etc/nginx
 &lt;p&gt;Add the changes to &lt;em&gt;Dockerfile-prod&lt;/em&gt;:&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# build environment
-FROM node:latest as builder
+FROM node:9.5 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH

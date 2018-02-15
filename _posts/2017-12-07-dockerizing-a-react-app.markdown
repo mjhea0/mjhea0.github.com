@@ -24,6 +24,7 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 
 *Updates:*
 
+- Feb 14, 2018: Added a data volume; updated to the latest versions of React and Node.
 - Feb 10, 2018: Detailed how to configure Nginx to work properly with React Router.
 - Jan 17, 2018: Added a production build section that uses multistage Docker builds.
 - Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.
@@ -31,8 +32,8 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 *We will be using:*
 
 - Docker v17.12.0-ce
-- Create React App v1.5.0
-- Node v9.4.0
+- Create React App v1.5.5
+- Node v9.5.0
 
 {% if page.toc %}
 {% include contents.html %}
@@ -43,7 +44,7 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 Install [Create React App](https://github.com/facebookincubator/create-react-app):
 
 ```sh
-$ npm install -g create-react-app@1.5.0
+$ npm install -g create-react-app@1.5.2
 ```
 
 Generate a new app:
@@ -59,7 +60,7 @@ Add a *Dockerfile* to the project root:
 
 ```
 # base image
-FROM node:9.4
+FROM node:9.5
 
 # set working directory
 RUN mkdir /usr/src/app
@@ -71,13 +72,13 @@ ENV PATH /usr/src/app/node_modules/.bin:$PATH
 # install and cache app dependencies
 ADD package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.1.0 -g --silent
+RUN npm install react-scripts@1.1.1 -g --silent
 
 # start app
 CMD ["npm", "start"]
 ```
 
-> Silencing the NPM output via `--silent` is a personal choice. It's often frowned upon, though, since it can swallow errors. Keep this in mind so you don't waste time debugging.
+> Silencing the NPM output, via `--silent`, is a personal choice. It's often frowned upon, though, since it can swallow errors. Keep this in mind so you don't waste time debugging.
 
 Add a *.dockerignore*:
 
@@ -85,7 +86,7 @@ Add a *.dockerignore*:
 node_modules
 ```
 
-So, this will greatly speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.
+This will greatly speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.
 
 Build and tag the Docker image:
 
@@ -96,15 +97,19 @@ $ docker build -t sample-app .
 Then, spin up the container once the build is done:
 
 ```sh
-$ docker run -it -v ${PWD}:/usr/src/app -p 3000:3000 --rm sample-app
+$ docker run -it \
+  -v ${PWD}:/usr/src/app \
+  -v /usr/src/app/node_modules \
+  -p 3000:3000 \
+  --rm sample-app
 ```
 
-Open your browser to [http://localhost:3000/](http://localhost:3000/) and you should see the app. Try making a change to the `App` component within your code editor. You should see the app hot-reload.
+Open your browser to [http://localhost:3000/](http://localhost:3000/) and you should see the app. Try making a change to the `App` component within your code editor. You should see the app hot-reload. Kill the server once done.
 
 Want to use [Docker Compose](https://docs.docker.com/compose/)? Add a *docker-compose.yml* file to the project root:
 
 ```yaml
-version: '3.3'
+version: '3.4'
 
 services:
 
@@ -115,11 +120,17 @@ services:
       dockerfile: Dockerfile
     volumes:
       - '.:/usr/src/app'
+      - '/usr/src/app/node_modules'
     ports:
       - '3000:3000'
     environment:
       - NODE_ENV=development
 ```
+
+Take note of the volumes. Without the data volume (`'/usr/src/app/node_modules'`), the *node_modules* directory would be overwritten by the mounting of the host directory at runtime:
+
+- *Build* - The `node_modules` directory is created.
+- *Run* - The current directory is mounted into the container, overwriting the `node_modules` that were just installed when the container was built.
 
 Build the image and fire up the container:
 
@@ -155,24 +166,33 @@ Then, build the images and run the containers:
 
 ```sh
 $ docker build -t sample-app .
-$ docker run -it -v ${PWD}:/usr/src/app -p 3000:3000 --rm sample-app
+
+$ docker run -it \
+  -v ${PWD}:/usr/src/app \
+  -v /usr/src/app/node_modules \
+  -p 3000:3000 \
+  --rm sample-app
 ```
 
-Test the app again in the browser at [http://DOCKER_MACHINE_IP:3000/](http://DOCKER_MACHINE_IP:3000/). Also, confirm that auto reload is *not* working. You can try with Docker Compose as well, but the results will be the same.
+Test the app again in the browser at [http://DOCKER_MACHINE_IP:3000/](http://DOCKER_MACHINE_IP:3000/). Also, confirm that auto reload is *not* working. You can try with Docker Compose as well, but the result will be the same.
 
 To get hot-reload working, we need to add an environment variable:
 
 ```sh
-$ docker run -it -v ${PWD}:/usr/src/app -p 3000:3000 \
-  -e CHOKIDAR_USEPOLLING=true --rm sample-app
+$ docker run -it \
+  -v ${PWD}:/usr/src/app \
+  -v /usr/src/app/node_modules \
+  -p 3000:3000 \
+  -e CHOKIDAR_USEPOLLING=true \
+  --rm sample-app
 ```
 
-Test it out again. You could add the variable to a *.env* file, however you  don't need it for a production build.
+Test it out again. You could add the variable to a *.env* file, however you  won't need it for a production build.
 
 Updated *docker-compose.yml* file:
 
 ```yaml
-version: '3.3'
+version: '3.4'
 
 services:
 
@@ -183,6 +203,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - '.:/usr/src/app'
+      - '/usr/src/app/node_modules'
     ports:
       - '3000:3000'
     environment:
@@ -196,7 +217,7 @@ Let's create a separate Dockerfile for use in production called *Dockerfile-prod
 
 ```
 # build environment
-FROM node:latest as builder
+FROM node:9.5 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
@@ -234,7 +255,7 @@ Assuming you are still using the same Docker Machine, navigate to [http://DOCKER
 Test with a new Docker Compose file as well called *docker-compose-prod.yml*:
 
 ```yaml
-version: '3.3'
+version: '3.4'
 
 services:
 
@@ -273,7 +294,7 @@ Add the changes to *Dockerfile-prod*:
 
 ```
 # build environment
-FROM node:latest as builder
+FROM node:9.5 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH

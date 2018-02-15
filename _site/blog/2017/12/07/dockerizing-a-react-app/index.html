@@ -266,6 +266,7 @@
 <p><em>Updates:</em></p>
 
 <ul>
+  <li>Feb 14, 2018: Added a data volume; updated to the latest versions of React and Node.</li>
   <li>Feb 10, 2018: Detailed how to configure Nginx to work properly with React Router.</li>
   <li>Jan 17, 2018: Added a production build section that uses multistage Docker builds.</li>
   <li>Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.</li>
@@ -275,8 +276,8 @@
 
 <ul>
   <li>Docker v17.12.0-ce</li>
-  <li>Create React App v1.5.0</li>
-  <li>Node v9.4.0</li>
+  <li>Create React App v1.5.5</li>
+  <li>Node v9.5.0</li>
 </ul>
 
 <h2 class="no_toc" id="contents">Contents</h2>
@@ -294,7 +295,7 @@
 
 <p>Install <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> create-react-app@1.5.0
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> create-react-app@1.5.2
 </code></pre></div></div>
 
 <p>Generate a new app:</p>
@@ -308,7 +309,7 @@
 <p>Add a <em>Dockerfile</em> to the project root:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># base image
-FROM node:9.4
+FROM node:9.5
 
 # set working directory
 RUN mkdir /usr/src/app
@@ -320,14 +321,14 @@ ENV PATH /usr/src/app/node_modules/.bin:$PATH
 # install and cache app dependencies
 ADD package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.1.0 -g --silent
+RUN npm install react-scripts@1.1.1 -g --silent
 
 # start app
 CMD ["npm", "start"]
 </code></pre></div></div>
 
 <blockquote>
-  <p>Silencing the NPM output via <code class="highlighter-rouge">--silent</code> is a personal choice. It’s often frowned upon, though, since it can swallow errors. Keep this in mind so you don’t waste time debugging.</p>
+  <p>Silencing the NPM output, via <code class="highlighter-rouge">--silent</code>, is a personal choice. It’s often frowned upon, though, since it can swallow errors. Keep this in mind so you don’t waste time debugging.</p>
 </blockquote>
 
 <p>Add a <em>.dockerignore</em>:</p>
@@ -335,7 +336,7 @@ CMD ["npm", "start"]
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node_modules
 </code></pre></div></div>
 
-<p>So, this will greatly speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.</p>
+<p>This will greatly speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.</p>
 
 <p>Build and tag the Docker image:</p>
 
@@ -344,14 +345,18 @@ CMD ["npm", "start"]
 
 <p>Then, spin up the container once the build is done:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="nt">-p</span> 3000:3000 <span class="nt">--rm</span> sample-app
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
+  <span class="nt">--rm</span> sample-app
 </code></pre></div></div>
 
-<p>Open your browser to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see the app. Try making a change to the <code class="highlighter-rouge">App</code> component within your code editor. You should see the app hot-reload.</p>
+<p>Open your browser to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see the app. Try making a change to the <code class="highlighter-rouge">App</code> component within your code editor. You should see the app hot-reload. Kill the server once done.</p>
 
 <p>Want to use <a href="https://docs.docker.com/compose/">Docker Compose</a>? Add a <em>docker-compose.yml</em> file to the project root:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.3'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.4'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
@@ -362,11 +367,19 @@ CMD ["npm", "start"]
       <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
     <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">/usr/src/app/node_modules'</span>
     <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s1">'</span><span class="s">3000:3000'</span>
     <span class="na">environment</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">NODE_ENV=development</span>
 </code></pre></div></div>
+
+<p>Take note of the volumes. Without the data volume (<code class="highlighter-rouge">'/usr/src/app/node_modules'</code>), the <em>node_modules</em> directory would be overwritten by the mounting of the host directory at runtime:</p>
+
+<ul>
+  <li><em>Build</em> - The <code class="highlighter-rouge">node_modules</code> directory is created.</li>
+  <li><em>Run</em> - The current directory is mounted into the container, overwriting the <code class="highlighter-rouge">node_modules</code> that were just installed when the container was built.</li>
+</ul>
 
 <p>Build the image and fire up the container:</p>
 
@@ -397,22 +410,31 @@ CMD ["npm", "start"]
 <p>Then, build the images and run the containers:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> sample-app <span class="nb">.</span>
-<span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="nt">-p</span> 3000:3000 <span class="nt">--rm</span> sample-app
+
+<span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
+  <span class="nt">--rm</span> sample-app
 </code></pre></div></div>
 
-<p>Test the app again in the browser at <a href="http://DOCKER_MACHINE_IP:3000/">http://DOCKER_MACHINE_IP:3000/</a>. Also, confirm that auto reload is <em>not</em> working. You can try with Docker Compose as well, but the results will be the same.</p>
+<p>Test the app again in the browser at <a href="http://DOCKER_MACHINE_IP:3000/">http://DOCKER_MACHINE_IP:3000/</a>. Also, confirm that auto reload is <em>not</em> working. You can try with Docker Compose as well, but the result will be the same.</p>
 
 <p>To get hot-reload working, we need to add an environment variable:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
-  <span class="nt">-e</span> <span class="nv">CHOKIDAR_USEPOLLING</span><span class="o">=</span><span class="nb">true</span> <span class="nt">--rm</span> sample-app
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">CHOKIDAR_USEPOLLING</span><span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
+  <span class="nt">--rm</span> sample-app
 </code></pre></div></div>
 
-<p>Test it out again. You could add the variable to a <em>.env</em> file, however you  don’t need it for a production build.</p>
+<p>Test it out again. You could add the variable to a <em>.env</em> file, however you  won’t need it for a production build.</p>
 
 <p>Updated <em>docker-compose.yml</em> file:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.3'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.4'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
@@ -423,6 +445,7 @@ CMD ["npm", "start"]
       <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
     <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">/usr/src/app/node_modules'</span>
     <span class="na">ports</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s1">'</span><span class="s">3000:3000'</span>
     <span class="na">environment</span><span class="pi">:</span>
@@ -435,7 +458,7 @@ CMD ["npm", "start"]
 <p>Let’s create a separate Dockerfile for use in production called <em>Dockerfile-prod</em>:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># build environment
-FROM node:latest as builder
+FROM node:9.5 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
@@ -472,7 +495,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 <p>Test with a new Docker Compose file as well called <em>docker-compose-prod.yml</em>:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.3'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.4'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
@@ -507,7 +530,7 @@ COPY conf /etc/nginx
 <p>Add the changes to <em>Dockerfile-prod</em>:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># build environment
-FROM node:latest as builder
+FROM node:9.5 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
