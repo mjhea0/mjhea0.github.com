@@ -13,7 +13,7 @@ description: "Let's look at how to Dockerize a React app."
 
 This tutorial demonstrates how to Dockerize a React app using the [Create React App](https://github.com/facebookincubator/create-react-app) generator. We'll specifically focus on-
 
-1. setting up a development environment with code hot-reloading
+1. Setting up a development environment with code hot-reloading
 1. Configuring a production-ready image using multistage builds
 
 <div style="text-align:center;">
@@ -24,16 +24,15 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 
 *Updates:*
 
-- Feb 14, 2018: Added a data volume; updated to the latest versions of React and Node.
-- Feb 10, 2018: Detailed how to configure Nginx to work properly with React Router.
+- Feb 26, 2018: Updated to the latest versions of Node, React, and Nginx.
+- Feb 14, 2018: Added an anonymous volume; detailed how to configure Nginx to work properly with React Router.
 - Jan 17, 2018: Added a production build section that uses multistage Docker builds.
-- Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.
 
 *We will be using:*
 
 - Docker v17.12.0-ce
-- Create React App v1.5.5
-- Node v9.5.0
+- Create React App v1.5.2
+- Node v9.6.1
 
 {% if page.toc %}
 {% include contents.html %}
@@ -60,7 +59,7 @@ Add a *Dockerfile* to the project root:
 
 ```
 # base image
-FROM node:9.5
+FROM node:9.6.1
 
 # set working directory
 RUN mkdir /usr/src/app
@@ -70,7 +69,7 @@ WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
 
 # install and cache app dependencies
-ADD package.json /usr/src/app/package.json
+COPY package.json /usr/src/app/package.json
 RUN npm install --silent
 RUN npm install react-scripts@1.1.1 -g --silent
 
@@ -101,7 +100,8 @@ $ docker run -it \
   -v ${PWD}:/usr/src/app \
   -v /usr/src/app/node_modules \
   -p 3000:3000 \
-  --rm sample-app
+  --rm \
+  sample-app
 ```
 
 Open your browser to [http://localhost:3000/](http://localhost:3000/) and you should see the app. Try making a change to the `App` component within your code editor. You should see the app hot-reload. Kill the server once done.
@@ -109,7 +109,7 @@ Open your browser to [http://localhost:3000/](http://localhost:3000/) and you sh
 Want to use [Docker Compose](https://docs.docker.com/compose/)? Add a *docker-compose.yml* file to the project root:
 
 ```yaml
-version: '3.4'
+version: '3.5'
 
 services:
 
@@ -138,7 +138,7 @@ Build the image and fire up the container:
 $ docker-compose up -d --build
 ```
 
-Ensure the app is running in the browser and test hot-reloading again. Bring down the containers before moving on:
+Ensure the app is running in the browser and test hot-reloading again. Bring down the container before moving on:
 
 ```sh
 $ docker-compose stop
@@ -162,7 +162,7 @@ Grab the IP address:
 $ docker-machine ip sample
 ```
 
-Then, build the images and run the containers:
+Then, build the images and run the container:
 
 ```sh
 $ docker build -t sample-app .
@@ -192,7 +192,7 @@ Test it out again. You could add the variable to a *.env* file, however you  won
 Updated *docker-compose.yml* file:
 
 ```yaml
-version: '3.4'
+version: '3.5'
 
 services:
 
@@ -217,18 +217,18 @@ Let's create a separate Dockerfile for use in production called *Dockerfile-prod
 
 ```
 # build environment
-FROM node:9.5 as builder
+FROM node:9.6.1 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
-ADD package.json /usr/src/app/package.json
+COPY package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.1.0 -g --silent
-ADD . /usr/src/app
+RUN npm install react-scripts@1.1.1 -g --silent
+COPY . /usr/src/app
 RUN npm run build
 
 # production environment
-FROM nginx:1.13.5-alpine
+FROM nginx:1.13.9-alpine
 COPY --from=builder /usr/src/app/build /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
@@ -255,7 +255,7 @@ Assuming you are still using the same Docker Machine, navigate to [http://DOCKER
 Test with a new Docker Compose file as well called *docker-compose-prod.yml*:
 
 ```yaml
-version: '3.4'
+version: '3.5'
 
 services:
 
@@ -294,18 +294,18 @@ Add the changes to *Dockerfile-prod*:
 
 ```
 # build environment
-FROM node:9.5 as builder
+FROM node:9.6.1 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
-ADD package.json /usr/src/app/package.json
+COPY package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.1.0 -g --silent
-ADD . /usr/src/app
+RUN npm install react-scripts@1.1.1 -g --silent
+COPY . /usr/src/app
 RUN npm run build
 
 # production environment
-FROM nginx:1.13.5-alpine
+FROM nginx:1.13.9-alpine
 RUN rm -rf /etc/nginx/conf.d
 COPY conf /etc/nginx
 COPY --from=builder /usr/src/app/build /usr/share/nginx/html

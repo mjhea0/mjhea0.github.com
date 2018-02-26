@@ -253,7 +253,7 @@
 <p>This tutorial demonstrates how to Dockerize a React app using the <a href="https://github.com/facebookincubator/create-react-app">Create React App</a> generator. We’ll specifically focus on-</p>
 
 <ol>
-  <li>setting up a development environment with code hot-reloading</li>
+  <li>Setting up a development environment with code hot-reloading</li>
   <li>Configuring a production-ready image using multistage builds</li>
 </ol>
 
@@ -266,18 +266,17 @@
 <p><em>Updates:</em></p>
 
 <ul>
-  <li>Feb 14, 2018: Added a data volume; updated to the latest versions of React and Node.</li>
-  <li>Feb 10, 2018: Detailed how to configure Nginx to work properly with React Router.</li>
+  <li>Feb 26, 2018: Updated to the latest versions of Node, React, and Nginx.</li>
+  <li>Feb 14, 2018: Added an anonymous volume; detailed how to configure Nginx to work properly with React Router.</li>
   <li>Jan 17, 2018: Added a production build section that uses multistage Docker builds.</li>
-  <li>Jan 16, 2018: Updated to the latest versions of Docker, React, and Node.</li>
 </ul>
 
 <p><em>We will be using:</em></p>
 
 <ul>
   <li>Docker v17.12.0-ce</li>
-  <li>Create React App v1.5.5</li>
-  <li>Node v9.5.0</li>
+  <li>Create React App v1.5.2</li>
+  <li>Node v9.6.1</li>
 </ul>
 
 <h2 class="no_toc" id="contents">Contents</h2>
@@ -309,7 +308,7 @@
 <p>Add a <em>Dockerfile</em> to the project root:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># base image
-FROM node:9.5
+FROM node:9.6.1
 
 # set working directory
 RUN mkdir /usr/src/app
@@ -319,7 +318,7 @@ WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
 
 # install and cache app dependencies
-ADD package.json /usr/src/app/package.json
+COPY package.json /usr/src/app/package.json
 RUN npm install --silent
 RUN npm install react-scripts@1.1.1 -g --silent
 
@@ -349,14 +348,15 @@ CMD ["npm", "start"]
   <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
   <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
   <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
-  <span class="nt">--rm</span> sample-app
+  <span class="nt">--rm</span> <span class="se">\</span>
+  sample-app
 </code></pre></div></div>
 
 <p>Open your browser to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see the app. Try making a change to the <code class="highlighter-rouge">App</code> component within your code editor. You should see the app hot-reload. Kill the server once done.</p>
 
 <p>Want to use <a href="https://docs.docker.com/compose/">Docker Compose</a>? Add a <em>docker-compose.yml</em> file to the project root:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.4'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
@@ -386,7 +386,7 @@ CMD ["npm", "start"]
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose up <span class="nt">-d</span> <span class="nt">--build</span>
 </code></pre></div></div>
 
-<p>Ensure the app is running in the browser and test hot-reloading again. Bring down the containers before moving on:</p>
+<p>Ensure the app is running in the browser and test hot-reloading again. Bring down the container before moving on:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose stop
 </code></pre></div></div>
@@ -407,7 +407,7 @@ CMD ["npm", "start"]
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine ip sample
 </code></pre></div></div>
 
-<p>Then, build the images and run the containers:</p>
+<p>Then, build the images and run the container:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> sample-app <span class="nb">.</span>
 
@@ -434,7 +434,7 @@ CMD ["npm", "start"]
 
 <p>Updated <em>docker-compose.yml</em> file:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.4'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
@@ -458,18 +458,18 @@ CMD ["npm", "start"]
 <p>Let’s create a separate Dockerfile for use in production called <em>Dockerfile-prod</em>:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># build environment
-FROM node:9.5 as builder
+FROM node:9.6.1 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
-ADD package.json /usr/src/app/package.json
+COPY package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.1.0 -g --silent
-ADD . /usr/src/app
+RUN npm install react-scripts@1.1.1 -g --silent
+COPY . /usr/src/app
 RUN npm run build
 
 # production environment
-FROM nginx:1.13.5-alpine
+FROM nginx:1.13.9-alpine
 COPY --from=builder /usr/src/app/build /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
@@ -495,7 +495,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 <p>Test with a new Docker Compose file as well called <em>docker-compose-prod.yml</em>:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.4'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
@@ -530,18 +530,18 @@ COPY conf /etc/nginx
 <p>Add the changes to <em>Dockerfile-prod</em>:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># build environment
-FROM node:9.5 as builder
+FROM node:9.6.1 as builder
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
-ADD package.json /usr/src/app/package.json
+COPY package.json /usr/src/app/package.json
 RUN npm install --silent
-RUN npm install react-scripts@1.1.0 -g --silent
-ADD . /usr/src/app
+RUN npm install react-scripts@1.1.1 -g --silent
+COPY . /usr/src/app
 RUN npm run build
 
 # production environment
-FROM nginx:1.13.5-alpine
+FROM nginx:1.13.9-alpine
 RUN rm -rf /etc/nginx/conf.d
 COPY conf /etc/nginx
 COPY --from=builder /usr/src/app/build /usr/share/nginx/html
