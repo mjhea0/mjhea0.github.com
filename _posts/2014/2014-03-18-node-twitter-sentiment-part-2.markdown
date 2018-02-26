@@ -142,27 +142,24 @@ Simple example:
 ``` javascript
 var async = require('async');
 
-var names = ["michael","richard","john","jennifer","ben","julie"];
+var names = ["michael", "richard", "john", "jennifer", "ben", "julie"];
 
 async.map(names, getInfo, function (err, result) {
-if(!err) {
-  console.log('Finished: ' + result);
-} else {
-  console.log('Error: ' + err);
-}
-
+  if(!err) {
+    console.log('Finished: ' + result);
+  } else {
+    console.log('Error: ' + err);
+  }
 });
 
 function getInfo(name, callback) {
-setTimeout(function() {
-  callback(null, name.toUpperCase());
-}, 1000);
+  setTimeout(function() {
+    callback(null, name.toUpperCase());
+  }, 1000);
 }
 ```
 
-Test it out [here](http://runnable.com/UyXKBzE8BKUZRnR5/node-async-map-example-for-node-js).
-
-Basically, we have an array of names, in lower case, which we are converting to uppercase, then outputting via a `console.log`. Let's say that another function depended on the results of `getInfo`, if `getInfo` was long-running, then the other function could fire before `getInfo` returned the results. Thus, the need to suspend the function until the results are returned.
+Basically, we have an array of names, in lower case, which we are converted to uppercase, then outputted via a `console.log`. Let's say that another function depended on the results of `getInfo`. Well, if `getInfo` was long-running, then the other function *could* fire before `getInfo` returned the results. Thus, the need to suspend the function until the results are returned.
 
 ### Update Node-Twitter-Sentiment
 
