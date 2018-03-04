@@ -3,11 +3,12 @@ config
  */
 
 let content = {
-  text: 'Learn how to develop microservices with Docker!',
+  text: 'Building Scalable Microservices with Docker!',
   buttonText: 'Click Here',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
-  cookieKey: 'cookieNotificationFeb102018'
+  cookieKey: 'cookieNotificationMar042018',
+  googleAnalytics: true
 };
 
 /*
@@ -61,6 +62,9 @@ window.addEventListener('click', (event) => {
     const helloBarElement = document.getElementById('hellobar-bar');
     fadeOutEffect(helloBarElement);
     setCookie(content.cookieKey, 'true', content.cookieExpiration);
+    if (content.googleAnalytics) {
+      ga('send', 'event', 'buttons', 'click', content.cookieKey);
+    }
   }
 });
 
