@@ -36,7 +36,7 @@ By the end of this tutorial, you should be able to...
 
 Before we start, ensure that you have [Python v3.6.1](https://www.python.org/downloads/release/python-361/) installed.
 
-Along with Python, we also need [pip](https://pypi.python.org/pypi/pip) to install third-party packages from the [Python Package Index](https://pypi.python.org/pypi) (aka PyPI), the Python equivalent of npm. Fortunately, this comes pre-installed with all Python versions >= 3.4.
+Along with Python, we also need [pip](https://pypi.python.org/pypi/pip) to install third-party packages from the [Python Package Index](https://pypi.org/) (aka PyPI), the Python equivalent of npm. Fortunately, this comes pre-installed with all Python versions >= 3.4.
 
 Let's start by creating a new project directory:
 
