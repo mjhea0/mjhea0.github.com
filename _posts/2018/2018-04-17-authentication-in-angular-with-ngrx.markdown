@@ -4,7 +4,7 @@ title: "Authentication in Angular with NGRX"
 date: 2018-04-17 08:00:00
 comments: true
 toc: true
-categories: [angular]
+categories: [angular, auth]
 keywords: "angular, javascript, authentication, auth, ngrx, ngrx store, ngrx effects"
 description: "This tutorial demonstrates how to add authentication to Angular using NGRX Store and Effects."
 ---
@@ -2442,7 +2442,7 @@ You should no longer see the template flicker before being redirected.
 
 ## Conclusion
 
-This article took a look at how to add authentication to an Angular app using NGRX Store (to manage state) and Effects (to manage side-effects). The full code can be found in the [angular-auth-ngrx]() repository.
+This article took a look at how to add authentication to an Angular app using NGRX Store (to manage state) and Effects (to manage side-effects). The full code can be found in the [angular-auth-ngrx](https://github.com/mjhea0/angular-auth-ngrx) repository.
 
 Looking for some challenges?
 
