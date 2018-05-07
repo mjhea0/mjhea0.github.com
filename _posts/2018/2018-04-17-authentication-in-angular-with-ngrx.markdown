@@ -2444,6 +2444,8 @@ You should no longer see the template flicker before being redirected.
 
 This article took a look at how to add authentication to an Angular app using NGRX Store (to manage state) and Effects (to manage side-effects). The full code can be found in the [angular-auth-ngrx](https://github.com/mjhea0/angular-auth-ngrx) repository.
 
+> Want to learn how to test this app? Check out the [Testing Angular with Cypress and Docker](https://testdriven.io/testing-angular-with-cypress-and-docker) blog post!
+
 Looking for some challenges?
 
 1. Add some additional actions and effects: `[Auth] Signup Redirect` and `[Auth] Login Redirect`
