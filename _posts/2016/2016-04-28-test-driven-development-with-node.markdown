@@ -251,7 +251,7 @@ Before moving on, follow the same process for the test seed. Just use the same d
 
 ### Mocha/Chai Setup
 
-With the database set up with data in it, we can start setting up our tests. Start by installing [Mocha](http://mochajs.org/) (test runner) and [Chai](http://chaijs.com/) ([assertion](https://en.wikipedia.org/wiki/Assertion_(software_development)) as well as [ChaiHTTP](https://github.com/chaijs/chai-http) (HTTP request module for integration testing). Make sure to also install mocha globally, so that we can run tests from the command line.
+With the database set up with data in it, we can start setting up our tests. Start by installing [Mocha](http://mochajs.org/) (test runner) and [Chai](http://chaijs.com/) (assertions) as well as [ChaiHTTP](https://github.com/chaijs/chai-http) (HTTP request module for integration testing). Make sure to also install mocha globally, so that we can run tests from the command line.
 
 ```sh
 $ npm install mocha@2.4.5 -g
