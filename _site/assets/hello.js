@@ -3,11 +3,11 @@ config
  */
 
 let content = {
-  text: 'Building Scalable Microservices with Docker!',
-  buttonText: 'Click Here',
+  text: 'Check out my course, <em>Microservices with Docker, Flask, and React</em>!',
+  buttonText: 'Available Now',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
-  cookieKey: 'cookieNotificationMar042018',
+  cookieKey: 'cookieNotificationJun102018',
   googleAnalytics: true
 };
 
@@ -63,7 +63,9 @@ window.addEventListener('click', (event) => {
     fadeOutEffect(helloBarElement);
     setCookie(content.cookieKey, 'true', content.cookieExpiration);
     if (content.googleAnalytics) {
+      /*jshint -W117 */
       ga('send', 'event', 'buttons', 'click', content.cookieKey);
+      /*jshint +W117 */
     }
   }
 });
