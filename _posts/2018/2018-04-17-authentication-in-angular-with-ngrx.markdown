@@ -66,7 +66,7 @@ With that, here’s the full user auth process:
 
 For more on token-based auth, along with the pros and cons of using it vs. session-based auth, please review the following articles:
 
-1. [Cookies vs Tokens: The Definitive Guide](https://auth0.com/blog/cookies-vs-tokens-definitive-guide/)
+1. [Cookies vs Tokens: The Definitive Guide](https://dzone.com/articles/cookies-vs-tokens-the-definitive-guide)
 1. [Token Authentication vs. Cookies](https://stackoverflow.com/questions/17000835/token-authentication-vs-cookies)
 
 ## Project Setup

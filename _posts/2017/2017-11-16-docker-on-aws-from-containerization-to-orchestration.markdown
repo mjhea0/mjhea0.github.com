@@ -629,7 +629,7 @@ That's it!
 
 ### Check your understanding
 
-1. Add CI/CD (via [Circle CI](http://mherman.org/blog/2017/09/18/on-demand-test-environments-with-docker-and-aws-ecs) or [AWS Lambda](https://medium.com/@YadavPrakshi/automate-zero-downtime-deployment-with-amazon-ecs-and-lambda-c4e49953273d)) and Postgres via RDS ([example](https://testdriven.io/part-five-ec2-relational-database-service/))
+1. Add CI/CD (via [Circle CI](http://mherman.org/blog/2017/09/18/on-demand-test-environments-with-docker-and-aws-ecs) or [AWS Lambda](https://medium.com/@YadavPrakshi/automate-zero-downtime-deployment-with-amazon-ecs-and-lambda-c4e49953273d)) and Postgres via RDS ([example](https://testdriven.io))
 1. Turn back to the feature wish-list. Implement anything not covered.
 1. Did you notice that we didn't add any of the environment variables from the Docker Compose file to the Task Definitions? Why does the app still work? Update the Task Definitions on your own.
 
