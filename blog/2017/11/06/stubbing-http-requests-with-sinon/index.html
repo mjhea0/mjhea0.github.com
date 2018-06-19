@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Stubbing HTTP Requests with Sinon</title>
+  <meta name="description" content="Let&#39;s look at how to stub HTTP requests with Sinon.js during test runs.">
+  
+    
+    <meta name="keywords" content="node, node.js, testing, sinon, sinon.js, stub, mock, javascript, unit tests, unit testing, mocha, chai, api, RESTful api">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Stubbing HTTP Requests with Sinon">
+  <meta name="twitter:description" content="Let&#39;s look at how to stub HTTP requests with Sinon.js during test runs.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Stubbing HTTP Requests with Sinon</h1>
+    
+    <p class="post-meta"><time datetime="2017-11-06T01:27:01-07:00" itemprop="datePublished">Nov 6, 2017</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/mocha/">mocha</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This tutorial details how to stub HTTP requests with <a href="http://sinonjs.org/">Sinon.js</a> during test runs.</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/sinonjs.png" style="max-width: 90%; border:0; box-shadow: none;" alt="sinon.js" />
+</div>
+
+<p>If you’re developing for the web, you are most likely connecting to some other external service to extend the functionality of your application. You could be connecting to a third-party API - like Twilio, GitHub, Twitter, or Mailgun, to name a few - or just communicating with another service in your microservice stack. Regardless, when unit testing, you do not want HTTP requests to go out to these services. Instead, you can “fake” the request and response with a stub, tricking the system into thinking the request was made.</p>
+
+<h4 id="parts">Parts</h4>
+
+<p>This article is part of a 4-part Koa and Sinon series…</p>
+
+<ol>
+  <li><a href="http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres">Building a RESTful API with Koa and Postgres</a></li>
+  <li><a href="http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon">Stubbing HTTP Requests with Sinon</a> (this article)</li>
+  <li><a href="http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa">User Authentication with Passport and Koa</a></li>
+  <li><a href="http://mherman.org/blog/2018/01/22/stubbing-node-authentication-middleware-with-sinon">Stubbing Node Authentication Middleware with Sinon</a></li>
+</ol>
+
+<h4 id="npm-dependencies">NPM Dependencies</h4>
+
+<ol>
+  <li>Node v<a href="https://nodejs.org/en/blog/release/v8.7.0/">8.7.0</a></li>
+  <li>Mocha v<a href="https://github.com/mochajs/mocha/releases/tag/v4.0.1">4.0.1</a></li>
+  <li>Chai v<a href="https://github.com/chaijs/chai/releases/tag/4.1.2">4.1.2</a></li>
+  <li>Sinon v<a href="http://sinonjs.org/releases/v4.1.1/">4.1.1</a></li>
+  <li>Request v<a href="https://github.com/request/request/releases/tag/v2.83.0">2.83.0</a></li>
+</ol>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#objectives" id="markdown-toc-objectives">Objectives</a></li>
+  <li><a href="#what-is-a-stub" id="markdown-toc-what-is-a-stub">What is a Stub?</a></li>
+  <li><a href="#why-stub" id="markdown-toc-why-stub">Why Stub?</a></li>
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#sinon-setup" id="markdown-toc-sinon-setup">Sinon Setup</a></li>
+  <li><a href="#testing-the-movie-service" id="markdown-toc-testing-the-movie-service">Testing the Movie Service</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="objectives">Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to…</p>
+
+<ol>
+  <li>Describe what a stub is and why you would want to use them in your test suites</li>
+  <li>Discuss the benefits of using Sinon to stub calls to external services</li>
+  <li>Set up a testing structure with Mocha, Chai, and Sinon</li>
+  <li>Write full integration tests to call an external service during the test run</li>
+  <li>Refactor integration tests to unit tests, stubbing out the external HTTP requests</li>
+  <li>Stub each of the CRUD functions from an external service</li>
+</ol>
+
+<h2 id="what-is-a-stub">What is a Stub?</h2>
+
+<p>In testing land, a stub replaces real behavior with a fixed version. In the case of HTTP requests, instead of making the actual call, a stub fakes the call and provides a canned response that can be used to test against.</p>
+
+<p>It’s important to note that you should not rely solely on fake data in place of real data when testing. At some point in the testing process, possibly in a staging/pre-prod environment, you should test out all external communication so that you can be confident that the system works as expected. This is often achieved with some form of end-to-end tests.</p>
+
+<p>Also, keep in mind, that it can be quite difficult to keep the testing behavior aligned with the actual behavior of the service. It’s common for this to happen when a service is updated and the stub stays the same. Because of this, you should limit your use of stubs to <a href="https://en.wikipedia.org/wiki/Input/output">I/O</a> operations and processes that are CPU intensive.</p>
+
+<blockquote>
+  <p>For more on stubs and fakes, check out the excellent <a href="https://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren’t Stubs</a> article.</p>
+</blockquote>
+
+<h2 id="why-stub">Why Stub?</h2>
+
+<p>Calling external services during test runs can cause a number of problems:</p>
+
+<ol>
+  <li>First off, this will slow down your test suite. Calling external services, especially in a microservice stack, can result in a ping-pong affect with HTTP requests and responses.</li>
+  <li>Tests will often fail due to network outages and other connectivity issues, like the service being down.</li>
+  <li>Often, third-party services have rate limits in place. Getting around this can be tricky (creating new test accounts on the fly) or costly (upgrading to the next service tier).</li>
+  <li>The service itself may not have a staging or sandbox mode for testing. In this case, you would actually be testing a service in production, so extra care needs to be taken to prevent test data from polluting production data.</li>
+  <li>Finally, the service itself may not be fully implemented or it may not even exist yet, which is common in a microservice stack.</li>
+</ol>
+
+<p><em>Isolating tests by stubbing external service calls makes testing faster, simpler, and more predictable.</em> Then, once you have some data to play with, you can use it in other parts of your test suite - to test a front-end UI, for example.</p>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Let’s start by spinning up the external service that we’ll consume from for testing purposes in the integration tests.</p>
+
+<h3 id="movie-service">Movie Service</h3>
+
+<p>Clone down the <a href="https://github.com/mjhea0/node-koa-api">project</a>, check out the <a href="https://github.com/mjhea0/node-koa-api/releases/tag/v2">v2</a> tag to the master branch, and install the dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/mjhea0/node-koa-api <span class="se">\</span>
+  <span class="nt">--branch</span> v2 <span class="nt">--single-branch</span>
+<span class="nv">$ </span><span class="nb">cd </span>node-koa-api
+<span class="nv">$ </span>git checkout tags/v2 <span class="nt">-b</span> master
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Take a quick look at the code. This is just a simple Node RESTful API, with the following routes:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>URL</th>
+      <th>HTTP Verb</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>/api/v1/movies</td>
+      <td>GET</td>
+      <td>Return ALL movies</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>GET</td>
+      <td>Return a SINGLE movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies</td>
+      <td>POST</td>
+      <td>Add a movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>PUT</td>
+      <td>Update a movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>DELETE</td>
+      <td>Delete a movie</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>Want to learn how to build this project? Check out the <a href="http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres">Building a RESTful API With Koa and Postgres</a> blog post.</p>
+</blockquote>
+
+<p>With Postgres up and running on port 5432, open psql in the terminal, and create the databases:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql
+psql <span class="o">(</span>9.6.1<span class="o">)</span>
+
+<span class="c"># CREATE DATABASE koa_api;</span>
+CREATE DATABASE
+<span class="c"># CREATE DATABASE koa_api_test;</span>
+CREATE DATABASE
+<span class="c"># \q</span>
+</code></pre></div></div>
+
+<p>Apply the migrations and seed the database:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:latest <span class="nt">--env</span> development
+<span class="nv">$ </span>knex seed:run <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<p>Fire up the service:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm start
+</code></pre></div></div>
+
+<p>Then, navigate to <a href="http://localhost:1337/api/v1/movies">http://localhost:1337/api/v1/movies</a> in your favorite browser, and you should see all the movies:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The Land Before Time"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Fantasy"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Jurassic Park"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Science Fiction"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Ice Age: Dawn of the Dinosaurs"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Action/Romance"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>With that, let’s set up the testing framework boilerplate.</p>
+
+<h3 id="mocha-and-chai">Mocha and Chai</h3>
+
+<p>Clone down the base project:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/mjhea0/mocha-chai-sinon <span class="se">\</span>
+  <span class="nt">--branch</span> v1 <span class="nt">--single-branch</span>
+<span class="nv">$ </span><span class="nb">cd </span>mocha-chai-sinon
+</code></pre></div></div>
+
+<p>Then, check out the v1 tag to the master branch and install the dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git checkout tags/v1 <span class="nt">-b</span> master
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Make sure the tests pass:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm <span class="nb">test
+
+</span>Sample Test
+  ✓ should pass
+
+1 passing <span class="o">(</span>8ms<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Take a quick look at the project structure before moving on.</p>
+
+<h2 id="sinon-setup">Sinon Setup</h2>
+
+<p>Install:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install sinon@4.1.1 <span class="nt">--save-dev</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>While that’s installing, do some basic research on the libraries available to stub (or mock) HTTP requests in Node. How does Sinon compare to these other libraries?</p>
+</blockquote>
+
+<p>Let’s start with a basic example. Add the following code to <em>test/sample.test.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">greaterThanTwenty</span><span class="p">(</span><span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">num</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">)</span> <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'Sample Sinon Stub'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should pass'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">greaterThanTwenty</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">().</span><span class="nx">returns</span><span class="p">(</span><span class="s1">'something'</span><span class="p">);</span>
+    <span class="nx">greaterThanTwenty</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'something'</span><span class="p">);</span>
+    <span class="nx">greaterThanTwenty</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here, we stubbed out the <code class="highlighter-rouge">greaterThanTwenty</code> function, overriding the function’s default behavior, so that it returns <code class="highlighter-rouge">'something'</code> instead of either <code class="highlighter-rouge">true</code> or <code class="highlighter-rouge">false</code>.</p>
+
+<p>Run the tests to ensure they pass:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Sample Test
+  ✓ should pass
+
+Sample Sinon Stub
+  ✓ should pass
+</code></pre></div></div>
+
+<p>You can also stub a prototype method:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">Person</span><span class="p">(</span><span class="nx">givenName</span><span class="p">,</span> <span class="nx">familyName</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">givenName</span> <span class="o">=</span> <span class="nx">givenName</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">familyName</span> <span class="o">=</span> <span class="nx">familyName</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nx">Person</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">getFullName</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="s2">`</span><span class="p">${</span><span class="k">this</span><span class="p">.</span><span class="nx">givenName</span><span class="p">}</span><span class="s2"> </span><span class="p">${</span><span class="k">this</span><span class="p">.</span><span class="nx">familyName</span><span class="p">}</span><span class="s2">`</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'Sample Sinon Stub Take 2'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should pass'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">name</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Person</span><span class="p">(</span><span class="s1">'Michael'</span><span class="p">,</span> <span class="s1">'Herman'</span><span class="p">);</span>
+    <span class="nx">name</span><span class="p">.</span><span class="nx">getFullName</span><span class="p">().</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'Michael Herman'</span><span class="p">);</span>
+    <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">Person</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="s1">'getFullName'</span><span class="p">).</span><span class="nx">returns</span><span class="p">(</span><span class="s1">'John Doe'</span><span class="p">);</span>
+    <span class="nx">name</span><span class="p">.</span><span class="nx">getFullName</span><span class="p">().</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'John Doe'</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Again, make sure the tests pass:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Sample Test
+  ✓ should pass
+
+Sample Sinon Stub
+  ✓ should pass
+
+Sample Sinon Stub Take 2
+  ✓ should pass
+</code></pre></div></div>
+
+<blockquote>
+  <p>For more examples, review the official <a href="http://sinonjs.org/releases/v4.0.1/stubs/">docs</a>.</p>
+</blockquote>
+
+<p>With that, let’s now look at stubbing HTTP requests.</p>
+
+<h2 id="testing-the-movie-service">Testing the Movie Service</h2>
+
+<p>Create a new file in “test” called <em>movie.service.test.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">sinon</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'sinon'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">request</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'request'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+
+<span class="kd">const</span> <span class="nx">base</span> <span class="o">=</span> <span class="s1">'http://localhost:1337'</span><span class="p">;</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'movie service'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+  <span class="nx">describe</span><span class="p">(</span><span class="s1">'when not stubbed'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// test cases</span>
+  <span class="p">});</span>
+
+  <span class="nx">describe</span><span class="p">(</span><span class="s1">'when stubbed'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="kd">get</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'get'</span><span class="p">);</span>
+    <span class="p">});</span>
+    <span class="nx">afterEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">request</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+    <span class="p">});</span>
+    <span class="c1">// test cases</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>So, we’ll test out the movie service using both unit and integrations tests so you can see the difference. Take note of the <code class="highlighter-rouge">beforeEach</code> and <code class="highlighter-rouge">afterEach</code> functions. Here, we stubbed the <code class="highlighter-rouge">get</code> method, from the <code class="highlighter-rouge">request</code> package (assigning it to <code class="highlighter-rouge">this.get</code> so we can reference it later in the test cases), in the <code class="highlighter-rouge">beforeEach()</code>, and then we restored the original behavior in the <code class="highlighter-rouge">afterEach()</code>.</p>
+
+<p>Install the <a href="https://github.com/request/request">Request</a> library:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install request@2.83.0 <span class="nt">--save-dev</span>
+</code></pre></div></div>
+
+<h3 id="get-all-movies">GET All Movies</h3>
+
+<p>Start with the integration test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return all movies'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies`</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="c1">// there should be a 200 status code</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="c1">// the response should be JSON</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="c1">// parse response body</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"status": "success"}</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"data": [3 movie objects]}</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+      <span class="c1">// the first object in the data array should</span>
+      <span class="c1">// have the right keys</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="c1">// the first object should have the right value for name</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'The Land Before Time'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Take note of the code comments. This should be fairly straightforward. With the movie service up and running, ensure the test passes:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>movie service
+  when not stubbed
+    GET /api/v1/movies
+      ✓ should <span class="k">return </span>all movies
+</code></pre></div></div>
+
+<p>Now, let’s look at how to stub the HTTP request call. Update the “when stubbed” <code class="highlighter-rouge">describe</code> block, like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'when stubbed'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">responseObject</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">statusCode</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+      <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'content-type'</span><span class="p">:</span> <span class="s1">'application/json'</span>
+      <span class="p">}</span>
+    <span class="p">};</span>
+    <span class="kd">const</span> <span class="nx">responseBody</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="na">id</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+          <span class="na">name</span><span class="p">:</span> <span class="s1">'The Land Before Time'</span><span class="p">,</span>
+          <span class="na">genre</span><span class="p">:</span> <span class="s1">'Fantasy'</span><span class="p">,</span>
+          <span class="na">rating</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+          <span class="na">explicit</span><span class="p">:</span> <span class="kc">false</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+          <span class="na">id</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+          <span class="na">name</span><span class="p">:</span> <span class="s1">'Jurassic Park'</span><span class="p">,</span>
+          <span class="na">genre</span><span class="p">:</span> <span class="s1">'Science Fiction'</span><span class="p">,</span>
+          <span class="na">rating</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+          <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+          <span class="na">id</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+          <span class="na">name</span><span class="p">:</span> <span class="s1">'Ice Age: Dawn of the Dinosaurs'</span><span class="p">,</span>
+          <span class="na">genre</span><span class="p">:</span> <span class="s1">'Action/Romance'</span><span class="p">,</span>
+          <span class="na">rating</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+          <span class="na">explicit</span><span class="p">:</span> <span class="kc">false</span>
+        <span class="p">}</span>
+      <span class="p">]</span>
+    <span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="kd">get</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'get'</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nx">afterEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+  <span class="p">});</span>
+  <span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">it</span><span class="p">(</span><span class="s1">'should return all movies'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="kd">get</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">responseObject</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">responseBody</span><span class="p">));</span>
+      <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies`</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="c1">// there should be a 200 status code</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="c1">// the response should be JSON</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+        <span class="c1">// parse response body</span>
+        <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"status": "success"}</span>
+        <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"data": [3 movie objects]}</span>
+        <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+        <span class="c1">// the first object in the data array should</span>
+        <span class="c1">// have the right keys</span>
+        <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+          <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+        <span class="p">);</span>
+        <span class="c1">// the first object should have the right value for name</span>
+        <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'The Land Before Time'</span><span class="p">);</span>
+        <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here, we use the <a href="http://sinonjs.org/releases/v1.17.7/stubs/">yields</a> method to automatically call the callback passed to <code class="highlighter-rouge">get()</code>. Remember how <code class="highlighter-rouge">request</code> works? After the request is sent, the function waits until the callback is called before proceeding. So, by stubbing this out, we simply pass in a dummy object and immediately call the callback.</p>
+
+<p>Make sure the tests pass:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>movie service
+  when not stubbed
+    GET /api/v1/movies
+      ✓ should <span class="k">return </span>all movies <span class="o">(</span>47ms<span class="o">)</span>
+  when stubbed
+    GET /api/v1/movies
+      ✓ should <span class="k">return </span>all movies
+</code></pre></div></div>
+
+<p>Now, how do we know the call wasn’t actually made?</p>
+
+<ol>
+  <li>Kill the movie service server</li>
+  <li>Add a <code class="highlighter-rouge">.only</code> to the <code class="highlighter-rouge">describe</code> block - <code class="highlighter-rouge">describe.only('when stubbed', () =&gt; {</code></li>
+</ol>
+
+<p>Test again. It should still pass. Once done, remove the <code class="highlighter-rouge">.only</code> and fire the movie service back up.</p>
+
+<h3 id="fixture">Fixture</h3>
+
+<p>To keep things clean in the test cases and to make it easy to find and update the fake objects, let’s create a test fixtures file.</p>
+
+<p>Add a new folder to “test” called “fixtures”, and then add a new file to that folder called <em>movies.json</em>:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"all"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"success"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The Land Before Time"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Fantasy"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Jurassic Park"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Science Fiction"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Ice Age: Dawn of the Dinosaurs"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Action/Romance"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Import the file into <em>movies.service.test.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">movies</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./fixtures/movies.json'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Update <code class="highlighter-rouge">this.get.yields</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">this</span><span class="p">.</span><span class="kd">get</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span>
+  <span class="kc">null</span><span class="p">,</span> <span class="nx">movies</span><span class="p">.</span><span class="nx">all</span><span class="p">.</span><span class="nx">success</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">movies</span><span class="p">.</span><span class="nx">all</span><span class="p">.</span><span class="nx">success</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div></div>
+
+<p>Make sure the tests still pass!</p>
+
+<blockquote>
+  <p>You may also want to add the expected data for the assertions to the fixtures as well. Or: You could take it a few steps further and generate the actual test cases from the fixture file. Try this on your own.</p>
+</blockquote>
+
+<h3 id="get-single-movie">GET Single Movie</h3>
+
+<h4 id="integration-test">Integration test</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/movies/:id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should respond with a single movie'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies/4`</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'The Land Before Time'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the movie does not exist'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies/999`</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'That movie does not exist.'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Notice how we used the movie id of <code class="highlighter-rouge">4</code> in the first test. This makes for a brittle test, since it will fail if that movie is removed or the name is updated in the movie service. Sure, we do have control over the data in this service, but in most cases you will not have this luxury.</p>
+
+<h4 id="unit-test">Unit test</h4>
+
+<p>Add the fixture to the <em>movies.json</em> file:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"single"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"success"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The Land Before Time"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Fantasy"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"failure"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">404</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"That movie does not exist."</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Then, add the test cases:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/movies/:id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should respond with a single movie'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="nx">single</span><span class="p">.</span><span class="nx">success</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="kd">get</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">body</span><span class="p">));</span>
+    <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies/4`</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'The Land Before Time'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the movie does not exist'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="nx">single</span><span class="p">.</span><span class="nx">failure</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="kd">get</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">body</span><span class="p">));</span>
+    <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies/999`</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'That movie does not exist.'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>movie service
+  when not stubbed
+    GET /api/v1/movies
+      ✓ should return all movies (40ms)
+    GET /api/v1/movies/:id
+      ✓ should respond with a single movie
+      ✓ should throw an error if the movie does not exist
+  when stubbed
+    GET /api/v1/movies
+      ✓ should return all movies
+    GET /api/v1/movies/:id
+      ✓ should respond with a single movie
+      ✓ should throw an error if the movie does not exist
+</code></pre></div></div>
+
+<h3 id="post">POST</h3>
+
+<h4 id="integration-test-1">Integration test</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /api/v1/movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return the movie that was added'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">method</span><span class="p">:</span> <span class="s1">'post'</span><span class="p">,</span>
+      <span class="na">body</span><span class="p">:</span> <span class="p">{</span>
+        <span class="na">name</span><span class="p">:</span> <span class="s1">'Titanic'</span><span class="p">,</span>
+        <span class="na">genre</span><span class="p">:</span> <span class="s1">'Drama'</span><span class="p">,</span>
+        <span class="na">rating</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+      <span class="p">},</span>
+      <span class="na">json</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="na">url</span><span class="p">:</span> <span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies`</span>
+    <span class="p">};</span>
+    <span class="nx">request</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">201</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests. They should pass the first time, but if you run them again, you should see the first test, <code class="highlighter-rouge">should return all movies</code>, fail:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Uncaught AssertionError: expected 4 to deeply equal 3
+</code></pre></div></div>
+
+<p>How can we fix this?</p>
+
+<ol>
+  <li>Remove the assertion altogether from the first test case</li>
+  <li>Add a <code class="highlighter-rouge">beforeEach</code> that removes any test data that was added from a previously ran test case (this will add additional requests, slowing down the test suite even more)</li>
+</ol>
+
+<p>Either way, this is not an easy issue to fix, especially if it’s a third-party service that you have no control over. This is one of the reasons why we’re stubbing in the first place - to limit the complexity. So, instead of trying to fix the integration test, let’s just remove it and focus solely on the unit tests:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">.</span><span class="nx">skip</span><span class="p">(</span><span class="s1">'when not stubbed'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<h4 id="unit-test-1">Unit Test</h4>
+
+<p>Start with the fixture:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"add"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"success"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">201</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Titanic"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Drama"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Next, stub the <code class="highlighter-rouge">post</code> method:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="kd">get</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'get'</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">post</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'post'</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">afterEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+  <span class="nx">request</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Add the test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /api/v1/movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return the movie that was added'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">body</span><span class="p">:</span> <span class="p">{</span>
+        <span class="na">name</span><span class="p">:</span> <span class="s1">'Titanic'</span><span class="p">,</span>
+        <span class="na">genre</span><span class="p">:</span> <span class="s1">'Drama'</span><span class="p">,</span>
+        <span class="na">rating</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+      <span class="p">},</span>
+      <span class="na">json</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="na">url</span><span class="p">:</span> <span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies`</span>
+    <span class="p">};</span>
+    <span class="kd">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="nx">add</span><span class="p">.</span><span class="nx">success</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">body</span><span class="p">));</span>
+    <span class="nx">request</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">201</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'Titanic'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Make sure the tests pass:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>movie service
+  when stubbed
+    GET /api/v1/movies
+      ✓ should return all movies
+    GET /api/v1/movies/:id
+      ✓ should respond with a single movie
+      ✓ should throw an error if the movie does not exist
+    POST /api/v1/movies
+      ✓ should return the movie that was added
+</code></pre></div></div>
+
+<p>What if the payload does not include the correct keys? Update the fixture:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"failure"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">400</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Something went wrong."</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Add a new <code class="highlighter-rouge">it</code> block:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the payload is malformed'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">body</span><span class="p">:</span> <span class="p">{</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Titanic'</span> <span class="p">},</span>
+    <span class="na">json</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="na">url</span><span class="p">:</span> <span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies`</span>
+  <span class="p">};</span>
+  <span class="kd">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="nx">add</span><span class="p">.</span><span class="nx">failure</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">body</span><span class="p">));</span>
+  <span class="nx">request</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+    <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+    <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="put">PUT</h3>
+
+<p>Fixture:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"update"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"success"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Titanic"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Drama"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"failure"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">404</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"That movie does not exist."</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Stub:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="kd">get</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'get'</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">post</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'post'</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">put</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'put'</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">afterEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+  <span class="nx">request</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+  <span class="nx">request</span><span class="p">.</span><span class="nx">put</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Tests:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'PUT /api/v1/movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return the movie that was updated'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">body</span><span class="p">:</span> <span class="p">{</span> <span class="na">rating</span><span class="p">:</span> <span class="mi">9</span> <span class="p">},</span>
+      <span class="na">json</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="na">url</span><span class="p">:</span> <span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies/5`</span>
+    <span class="p">};</span>
+    <span class="kd">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="nx">update</span><span class="p">.</span><span class="nx">success</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">put</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">body</span><span class="p">));</span>
+    <span class="nx">request</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'Titanic'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the movie does not exist'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">body</span><span class="p">:</span> <span class="p">{</span> <span class="na">rating</span><span class="p">:</span> <span class="mi">9</span> <span class="p">},</span>
+      <span class="na">json</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="na">url</span><span class="p">:</span> <span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies/5`</span>
+    <span class="p">};</span>
+    <span class="kd">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="nx">update</span><span class="p">.</span><span class="nx">failure</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">put</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">body</span><span class="p">));</span>
+    <span class="nx">request</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'That movie does not exist.'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="delete">DELETE</h3>
+
+<p>Fixture:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"delete"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"success"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Titanic"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"genre"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Drama"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"rating"</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"explicit"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"failure"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"res"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">404</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"content-type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"body"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"That movie does not exist."</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Stub:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="kd">get</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'get'</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">post</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'post'</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">put</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'put'</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="k">delete</span> <span class="o">=</span> <span class="nx">sinon</span><span class="p">.</span><span class="nx">stub</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="s1">'delete'</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">afterEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">request</span><span class="p">.</span><span class="kd">get</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+  <span class="nx">request</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+  <span class="nx">request</span><span class="p">.</span><span class="nx">put</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+  <span class="nx">request</span><span class="p">.</span><span class="k">delete</span><span class="p">.</span><span class="nx">restore</span><span class="p">();</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'DELETE /api/v1/movies/:id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return the movie that was deleted'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="k">delete</span><span class="p">.</span><span class="nx">success</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="k">delete</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">body</span><span class="p">));</span>
+    <span class="nx">request</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies/5`</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'Titanic'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the movie does not exist'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="k">delete</span><span class="p">.</span><span class="nx">failure</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="k">delete</span><span class="p">.</span><span class="nx">yields</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">res</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">body</span><span class="p">));</span>
+    <span class="nx">request</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">base</span><span class="p">}</span><span class="s2">/api/v1/movies/5`</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">body</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">headers</span><span class="p">[</span><span class="s1">'content-type'</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">contain</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+      <span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'That movie does not exist.'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests one final time to ensure they all pass:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>movie service
+  when stubbed
+    GET /api/v1/movies
+      ✓ should return all movies
+    GET /api/v1/movies/:id
+      ✓ should respond with a single movie
+      ✓ should throw an error if the movie does not exist
+    POST /api/v1/movies
+      ✓ should return the movie that was added
+      ✓ should throw an error if the payload is malformed
+    PUT /api/v1/movies
+      ✓ should return the movie that was updated
+      ✓ should throw an error if the movie does not exist
+    DELETE /api/v1/movies/:id
+      ✓ should return the movie that was deleted
+      ✓ should throw an error if the movie does not exist
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>You should now have a better understanding of both the <em>why</em> and <em>how</em> in terms of stubbing with Sinon. Even though this post focused on HTTP requests, you can apply the same logic to other areas of your application like client-side AJAX requests, database queries, and Redis lookups, to name a few.</p>
+
+<p>Turn back to the objectives. Read each aloud to yourself. Can you put each one into action?</p>
+
+<p>Finally, it’s important to stub HTTP calls to external services to avoid flaky tests, speed up the overall test suite, and make testing more predictable. Be sure to balance your stubbed tests with end-to-end tests in a staging environment to ensure the system works as expected.</p>
+
+<p>Grab the final code from the <a href="https://github.com/mjhea0/mocha-chai-sinon">mocha-chai-sinon</a> repo. Cheers!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon/';
+    this.page.identifier = 'http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

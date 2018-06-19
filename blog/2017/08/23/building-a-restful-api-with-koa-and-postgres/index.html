@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Building a RESTful API with Koa and Postgres</title>
+  <meta name="description" content="This article takes a test-driven approach to developing a RESTful API with Node, Koa, and Postgres.">
+  
+    
+    <meta name="keywords" content="node, koa, koa 2, async/await, postgres, knex, api, restful api, crud, mocha, chai, integration tests">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Building a RESTful API with Koa and Postgres">
+  <meta name="twitter:description" content="This article takes a test-driven approach to developing a RESTful API with Node, Koa, and Postgres.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Building a RESTful API with Koa and Postgres</h1>
+    
+    <p class="post-meta"><time datetime="2017-08-23T02:31:03-06:00" itemprop="datePublished">Aug 23, 2017</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/mocha/">mocha</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/koa/">koa</a>,
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>In this tutorial, you’ll learn how to develop a RESTful API with <a href="http://koajs.com/">Koa</a> 2 and Postgres. You’ll also be taking advantage of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function">async/await</a> functions, from ES2017, and test driven development (TDD).</p>
+
+<blockquote>
+  <p>This tutorial requires Node v<a href="https://nodejs.org/en/blog/release/v7.6.0/">7.6.0</a> or greater.</p>
+</blockquote>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/node-koa-api.png" style="max-width: 90%; border:0; box-shadow: none;" alt="node koa" />
+</div>
+<p><br /></p>
+
+<h4 id="parts">Parts</h4>
+
+<p>This article is part of a 4-part Koa and Sinon series…</p>
+
+<ol>
+  <li><a href="http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres">Building a RESTful API with Koa and Postgres</a> (this article)</li>
+  <li><a href="http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon">Stubbing HTTP Requests with Sinon</a></li>
+  <li><a href="http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa">User Authentication with Passport and Koa</a></li>
+  <li><a href="http://mherman.org/blog/2018/01/22/stubbing-node-authentication-middleware-with-sinon">Stubbing Node Authentication Middleware with Sinon</a></li>
+</ol>
+
+<h4 id="npm-dependencies">NPM Dependencies</h4>
+
+<ol>
+  <li>Koa v<a href="https://github.com/koajs/koa/releases/tag/2.3.0">2.3.0</a></li>
+  <li>Mocha v<a href="https://github.com/mochajs/mocha/releases/tag/v3.5.0">3.5.0</a></li>
+  <li>Chai v<a href="https://github.com/chaijs/chai/releases/tag/4.1.1">4.1.1</a></li>
+  <li>Chai HTTP v<a href="https://github.com/chaijs/chai-http/releases/tag/3.0.0">3.0.0</a></li>
+  <li>Knex v<a href="https://github.com/tgriesser/knex/releases/tag/0.13.0">0.13.0</a></li>
+  <li>pg v<a href="https://github.com/brianc/node-postgres/releases/tag/v7.1.2">7.1.2</a></li>
+  <li>koa-router v<a href="https://github.com/alexmingoia/koa-router/releases/tag/v7.2.1">7.2.1</a></li>
+  <li>koa-bodyparser v<a href="https://github.com/koajs/bodyparser/releases/tag/4.2.0">4.2.0</a></li>
+</ol>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#objectives" id="markdown-toc-objectives">Objectives</a></li>
+  <li><a href="#getting-started" id="markdown-toc-getting-started">Getting Started</a></li>
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#routes" id="markdown-toc-routes">Routes</a></li>
+  <li><a href="#next-steps" id="markdown-toc-next-steps">Next Steps</a></li>
+</ul>
+
+<h2 id="objectives">Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to…</p>
+
+<ol>
+  <li>Set up a project with Koa using test driven development</li>
+  <li>Write schema migration files with Knex to create new database tables</li>
+  <li>Generate database seed files with Knex and apply the seeds to the database</li>
+  <li>Set up the testing structure with Mocha and Chai</li>
+  <li>Perform the basic CRUD functions on a RESTful resource with Knex methods</li>
+  <li>Create a CRUD app, following RESTful best practices</li>
+  <li>Write integration tests</li>
+  <li>Write tests, and then write just enough code to pass the tests</li>
+  <li>Create routes with Koa Router</li>
+  <li>Parse the request body with koa-bodyparser</li>
+</ol>
+
+<h2 id="getting-started">Getting Started</h2>
+
+<h3 id="what-are-we-building">What are we building?</h3>
+
+<p>Your goal is to design a RESTful API, using test driven development, for a single resource - <code class="highlighter-rouge">movies</code>. The API itself should follow RESTful design principles, using the <a href="http://www.restapitutorial.com/lessons/httpmethods.html">basic HTTP verbs</a>: GET, POST, PUT, and DELETE.</p>
+
+<h3 id="what-is-koa">What is Koa?</h3>
+
+<p>Koa is a web framework for Node.js.</p>
+
+<p>Although it’s designed by the same team that created Express, it’s much lighter than Express though - so it comes with very little out of the box. It’s really just a tiny wrapper on top of Node’s <a href="https://nodejs.org/api/http.html#http_http">HTTP</a> module. Koa allows you - the developer - to pick and choose the tools you want to use from the <a href="https://github.com/koajs/koa/wiki">community</a>.</p>
+
+<p>It has native support for <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function">async/await</a>, which makes it easier and faster to develop an API since you don’t have to deal with [callbacks](https://en.wikipedia.org/wiki/Callback_(computer_programming%29) and <a href="http://callbackhell.com/">callback hell</a>.</p>
+
+<p>Finally, since Koa has similar patterns to Express, it’s relatively easy to pick up if you’ve worked at all with Express.</p>
+
+<blockquote>
+  <p><strong>NOTE</strong>: For more, review <a href="https://github.com/koajs/koa/blob/master/docs/koa-vs-express.md">Koa vs Express</a>.</p>
+</blockquote>
+
+<h3 id="tdd">TDD</h3>
+
+<p>Test Driven Development (TDD) is an iterative development cycle that emphasizes writing automated tests <em>before</em> writing the actual code.</p>
+
+<h4 id="why">Why?</h4>
+
+<ol>
+  <li>Helps break down problems into manageable pieces since you should have a better understanding of what you’re going to write</li>
+  <li>Forces you to write cleaner code</li>
+  <li>Prevents over coding</li>
+</ol>
+
+<h4 id="red-green-refactor">Red-Green-Refactor</h4>
+
+<p>TDD often follows the “Red-Green-Refactor” development cycle:</p>
+
+<ol>
+  <li><span style="color:red">RED</span>: Write a test, which should fail when you run it</li>
+  <li><span style="color:green">GREEN</span>: Write just enough code for the test to pass</li>
+  <li><span style="color:orange">REFACTOR</span>: Refactor code and retest, again and again (if necessary)</li>
+</ol>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Start by cloning down the base project:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/mjhea0/node-koa-api <span class="se">\</span>
+  <span class="nt">--branch</span> v1 <span class="nt">--single-branch</span>
+<span class="nv">$ </span><span class="nb">cd </span>node-koa-api
+</code></pre></div></div>
+
+<p>Then, check out the <a href="https://github.com/mjhea0/node-koa-api/releases/tag/v1">v1</a> tag to the master branch and install the dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git checkout tags/v1 <span class="nt">-b</span> master
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Run two quick sanity checks to make sure all is well:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm start
+It works!
+
+<span class="nv">$ </span>npm <span class="nb">test
+</span>Sample Test
+  ✓ should pass
+
+1 passing <span class="o">(</span>8ms<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Take a quick look at the project structure before moving on.</p>
+
+<h3 id="koa">Koa</h3>
+
+<p>As always, we’ll begin with the obligatory hello world. But first, since we’re following TDD, let’s write a quick test.</p>
+
+<p>Install <a href="https://github.com/chaijs/chai-http">Chai HTTP</a> so we can test HTTP calls:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install chai-http@3.0.0 <span class="nt">--save-dev</span>
+</code></pre></div></div>
+
+<p>Create a new file in the “test” directory called <em>routes.index.test.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../src/server/index'</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'routes : index'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+  <span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">it</span><span class="p">(</span><span class="s1">'should return json'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+      <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'hello, world!'</span><span class="p">);</span>
+        <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>So, within the second <code class="highlighter-rouge">describe</code> block, we have a single <code class="highlighter-rouge">it</code> statement, which defines a test case. In this simple case, we’re testing the response from a GET request to the main route, <code class="highlighter-rouge">/</code>.</p>
+
+<p>Run the test via <code class="highlighter-rouge">npm test</code>. You should see the following error since the server is not setup:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TypeError: app.address is not a <span class="k">function</span>
+</code></pre></div></div>
+
+<p>Next, let’s stand up a quick Koa server. Install Koa:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install koa@2.3.0 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Then, update <em>src/server/index.js</em> like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Koa</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Koa</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">PORT</span> <span class="o">=</span> <span class="mi">1337</span><span class="p">;</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+    <span class="na">message</span><span class="p">:</span> <span class="s1">'hello, world!'</span>
+  <span class="p">};</span>
+<span class="p">});</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">PORT</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Server listening on port: </span><span class="p">${</span><span class="nx">PORT</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">server</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Here, we created a new instance of Koa and then mounted a basic async function to the app. This function takes the Koa <a href="http://koajs.com/#context">context</a> as a parameter, <code class="highlighter-rouge">ctx</code>. It’s worth noting that this object encapsulates both the Node request and response objects. We then set the return value to <code class="highlighter-rouge">ctx.body</code>, which will be sent back as the response body when user hits any route.</p>
+
+<p>Run the Koa server, via <code class="highlighter-rouge">npm start</code>, and then navigate to <a href="http://localhost:1337/">http://localhost:1337/</a>. You should see:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"hello, world!"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Once done, kill the server and then run the tests. They should now pass.</p>
+
+<h3 id="database">Database</h3>
+
+<p>Moving right along, <a href="https://www.postgresql.org/download/">download</a> and install Postgres, if you don’t already have it, and then fire up the server on port 5432.</p>
+
+<p>Along with Postgres, we’ll use <a href="https://node-postgres.com/">pg</a> and <a href="http://knexjs.org/">Knex</a> to interact with the database itself:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install pg@7.1.2 knex@0.13.0 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Install Knex globally as well so you can use the CLI tool:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install knex@0.13.0 <span class="nt">-g</span>
+</code></pre></div></div>
+
+<p>Next, we need to create two new databases, one for our development environment and the other for test environment.</p>
+
+<p>Open psql in the terminal, and create the databases:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql
+psql <span class="o">(</span>9.6.1<span class="o">)</span>
+
+<span class="c"># CREATE DATABASE koa_api;</span>
+CREATE DATABASE
+<span class="c"># CREATE DATABASE koa_api_test;</span>
+CREATE DATABASE
+<span class="c"># \q</span>
+</code></pre></div></div>
+
+<p>With that, we can now initialize Knex.</p>
+
+<h3 id="knex">Knex</h3>
+
+<p>Run <code class="highlighter-rouge">knex init</code> in the project root to initialize a new <a href="http://knexjs.org/#knexfile">config file</a> called <em>knexfile.js</em>. Override the default info with:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'path'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">BASE_PATH</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'src'</span><span class="p">,</span> <span class="s1">'server'</span><span class="p">,</span> <span class="s1">'db'</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">test</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">client</span><span class="p">:</span> <span class="s1">'pg'</span><span class="p">,</span>
+    <span class="na">connection</span><span class="p">:</span> <span class="s1">'postgres://username:password@localhost:5432/koa_api_test'</span><span class="p">,</span>
+    <span class="na">migrations</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">BASE_PATH</span><span class="p">,</span> <span class="s1">'migrations'</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="na">seeds</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">BASE_PATH</span><span class="p">,</span> <span class="s1">'seeds'</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="na">development</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">client</span><span class="p">:</span> <span class="s1">'pg'</span><span class="p">,</span>
+    <span class="na">connection</span><span class="p">:</span> <span class="s1">'postgres://username:password@localhost:5432/koa_api'</span><span class="p">,</span>
+    <span class="na">migrations</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">BASE_PATH</span><span class="p">,</span> <span class="s1">'migrations'</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="na">seeds</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">BASE_PATH</span><span class="p">,</span> <span class="s1">'seeds'</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p><strong>NOTE:</strong> Make sure to replace <code class="highlighter-rouge">username</code> and <code class="highlighter-rouge">password</code> with your database username and password, respectively.</p>
+</blockquote>
+
+<p>Next, let’s create a new migration to define the database schema:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:make movies
+</code></pre></div></div>
+
+<p>This created a “src/server/db/migrations” folder with a timestamped migration file. Update the file like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">up</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">createTable</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">,</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">increments</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'name'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">().</span><span class="nx">unique</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">integer</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="kr">boolean</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">down</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">dropTable</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Add a new file to the “db” folder called <em>connection.js</em> to, well, connect to the database using the appropriate Knex configuration based on the environment (development, test, staging, production, etc.):</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">environment</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">||</span> <span class="s1">'development'</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../../../knexfile.js'</span><span class="p">)[</span><span class="nx">environment</span><span class="p">];</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'knex'</span><span class="p">)(</span><span class="nx">config</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Apply the migration to the development database:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:latest <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<p>Next, let’s create a seed file to populate the database with some initial data:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex seed:make movies_seed
+</code></pre></div></div>
+
+<p>This added a seed file to “src/server/db/seeds”; update it to match the database schema:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">seed</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">).</span><span class="nx">del</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="s1">'The Land Before Time'</span><span class="p">,</span>
+      <span class="na">genre</span><span class="p">:</span> <span class="s1">'Fantasy'</span><span class="p">,</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">false</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="s1">'Jurassic Park'</span><span class="p">,</span>
+      <span class="na">genre</span><span class="p">:</span> <span class="s1">'Science Fiction'</span><span class="p">,</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="s1">'Ice Age: Dawn of the Dinosaurs'</span><span class="p">,</span>
+      <span class="na">genre</span><span class="p">:</span> <span class="s1">'Action/Romance'</span><span class="p">,</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">false</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Apply the seed:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex seed:run <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<p>Finally, hop back into psql to ensure the database has been updated:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql
+psql <span class="o">(</span>9.6.1<span class="o">)</span>
+
+<span class="c"># \c koa_api</span>
+You are now connected to database <span class="s2">"koa_api"</span><span class="nb">.</span>
+<span class="c"># select * from movies;</span>
+ id |              name              |      genre      | rating | explicit
+<span class="nt">----</span>+--------------------------------+-----------------+--------+----------
+  1 | The Land Before Time           | Fantasy         |      7 | f
+  2 | Jurassic Park                  | Science Fiction |      9 | t
+  3 | Ice Age: Dawn of the Dinosaurs | Action/Romance  |      5 | f
+<span class="o">(</span>3 rows<span class="o">)</span>
+
+<span class="c"># \q</span>
+</code></pre></div></div>
+
+<h3 id="koa-router">Koa Router</h3>
+
+<p>Unlike Express, Koa does not provide any routing middleware. There are a number of options available, but we’ll use <a href="https://github.com/alexmingoia/koa-router">koa-router</a> due to its simplicity.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install koa-router@7.2.1 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Create a new folder called “routes” within “server”, and then add an <em>index.js</em> file to it:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Router</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-router'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">router</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Router</span><span class="p">();</span>
+
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+    <span class="na">message</span><span class="p">:</span> <span class="s1">'hello, world!'</span>
+  <span class="p">};</span>
+<span class="p">})</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Then, update <em>src/server/index.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Koa</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">indexRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/index'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Koa</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">PORT</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">1337</span><span class="p">;</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">indexRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">PORT</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Server listening on port: </span><span class="p">${</span><span class="nx">PORT</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">server</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Essentially, we moved the <code class="highlighter-rouge">/</code> route out of the main application file. Ensure the tests still pass before moving on.</p>
+
+<h2 id="routes">Routes</h2>
+
+<p>Again, we’ll take a test-first approach to writing our routes:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>URL</th>
+      <th>HTTP Verb</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>/api/v1/movies</td>
+      <td>GET</td>
+      <td>Return ALL movies</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>GET</td>
+      <td>Return a SINGLE movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies</td>
+      <td>POST</td>
+      <td>Add a movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>PUT</td>
+      <td>Update a movie</td>
+    </tr>
+    <tr>
+      <td>/api/v1/movies/:id</td>
+      <td>DELETE</td>
+      <td>Delete a movie</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Before diving in, let’s add some structure. First, add a new folder called “queries” to the “db” folder, and then add a file called <em>movies.js</em> to that newly created folder:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../connection'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>We’ll add the database queries associated with the <code class="highlighter-rouge">movies</code> resource to this file. Next, add a new route file called <em>movies.js</em> to “routes”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Router</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-router'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">queries</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../db/queries/movies'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">router</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Router</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">BASE_URL</span> <span class="o">=</span> <span class="s2">`/api/v1/movies`</span><span class="p">;</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Then, wire this file up to the main application in <em>src/server/index.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Koa</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">indexRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/index'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">movieRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/movies'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Koa</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">PORT</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">1337</span><span class="p">;</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">indexRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">movieRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">PORT</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Server listening on port: </span><span class="p">${</span><span class="nx">PORT</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">server</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Finally, add a new test file to “test” called <em>routes.movies.test.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../src/server/index'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../src/server/db/connection'</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'routes : movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+  <span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">latest</span><span class="p">();</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">seed</span><span class="p">.</span><span class="nx">run</span><span class="p">();</span> <span class="p">});</span>
+  <span class="p">});</span>
+
+  <span class="nx">afterEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">();</span>
+  <span class="p">});</span>
+
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>So, when the tests are ran, the <code class="highlighter-rouge">beforeEach()</code> is fired before any of test specs, applying the migrations to the test database. After the specs run, the database is rolled back to a pristine state in the <code class="highlighter-rouge">afterEach()</code>.</p>
+
+<p>With that, let’s add our routes!</p>
+
+<h3 id="get-all-movies">GET All Movies</h3>
+
+<p>Start with a test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return all movies'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/movies'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="c1">// there should be no errors</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="c1">// there should be a 200 status code</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="c1">// the response should be JSON</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"status": "success"}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"data": [3 movie objects]}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+      <span class="c1">// the first object in the data array should</span>
+      <span class="c1">// have the right keys</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Take note of the code comments. Review <a href="http://mherman.org/blog/2015/09/10/testing-node-js-with-mocha-and-chai/">Testing Node.js With Mocha and Chai</a> for more info. Run the test to make sure it fails:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Uncaught AssertionError: expected <span class="o">[</span>Error: Not Found] to not exist
+</code></pre></div></div>
+
+<p>To get the test to pass, add the route handler to <em>src/server/routes/movies.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="nx">BASE_URL</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">movies</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">getAllMovies</span><span class="p">();</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">movies</span>
+    <span class="p">};</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>Add the DB query to <em>src/server/db/queries/movies.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../connection'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">getAllMovies</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">getAllMovies</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>So, <code class="highlighter-rouge">getAllMovies()</code> returns a promise object. Then, within the <code class="highlighter-rouge">async</code> function, execution stops at the <code class="highlighter-rouge">await</code>. Execution continues once the promise is resolved.</p>
+
+<p>Run the tests to ensure they pass:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>routes : index
+  GET /
+    ✓ should <span class="k">return </span>json
+
+routes : movies
+  GET /api/v1/movies
+    ✓ should <span class="k">return </span>all movies
+
+Sample Test
+  ✓ should pass
+
+
+3 passing <span class="o">(</span>177ms<span class="o">)</span>
+</code></pre></div></div>
+
+<h3 id="get-single-movie">GET Single Movie</h3>
+
+<p>What if we just want a single movie?</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/movies/:id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should respond with a single movie'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/movies/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="c1">// there should be no errors</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="c1">// there should be a 200 status code</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="c1">// the response should be JSON</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"status": "success"}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"data": 1 movie object}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Make sure the test fails, and then add the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">BASE_URL</span><span class="p">}</span><span class="s2">/:id`</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">movie</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">getSingleMovie</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">movie</span>
+    <span class="p">};</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>Add the query as well:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getSingleMovie</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">where</span><span class="p">({</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Don’t forget to export it:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">getAllMovies</span><span class="p">,</span>
+  <span class="nx">getSingleMovie</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The test should now pass. Before moving on though, what happens if the movie ID does not exist? Start with a test to find out.</p>
+
+<p>Add an <code class="highlighter-rouge">it</code> block to the previous <code class="highlighter-rouge">describe</code> block:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the movie does not exist'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+  <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/movies/9999999'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// there should an error</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="c1">// there should be a 404 status code</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+    <span class="c1">// the response should be JSON</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+    <span class="c1">// the JSON response body should have a</span>
+    <span class="c1">// key-value pair of {"status": "error"}</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+    <span class="c1">// the JSON response body should have a</span>
+    <span class="c1">// key-value pair of {"message": "That movie does not exist."}</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'That movie does not exist.'</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Make sure the test fails before updating the code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">BASE_URL</span><span class="p">}</span><span class="s2">/:id`</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">movie</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">getSingleMovie</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">movie</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+        <span class="na">data</span><span class="p">:</span> <span class="nx">movie</span>
+      <span class="p">};</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+        <span class="na">message</span><span class="p">:</span> <span class="s1">'That movie does not exist.'</span>
+      <span class="p">};</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>The test should now pass.</p>
+
+<h3 id="post">POST</h3>
+
+<p>How about adding a new movie to the database?</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /api/v1/movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return the movie that was added'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/api/v1/movies'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="s1">'Titanic'</span><span class="p">,</span>
+      <span class="na">genre</span><span class="p">:</span> <span class="s1">'Drama'</span><span class="p">,</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="c1">// there should be no errors</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="c1">// there should be a 201 status code</span>
+      <span class="c1">// (indicating that something was "created")</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">201</span><span class="p">);</span>
+      <span class="c1">// the response should be JSON</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"status": "success"}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"data": 1 movie object}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+      <span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Koa does not parse the request body by default, so we need to add middleware for body parsing. <a href="https://github.com/koajs/bodyparser">koa-bodyparser</a> is a popular choice:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install koa-bodyparser@4.2.0 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Add the requirement to <em>src/server/index.js</em>, and then make sure to mount the middleware to the app before the routes:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">Koa</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">bodyParser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'koa-bodyparser'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">indexRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/index'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">movieRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/movies'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Koa</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">PORT</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">1337</span><span class="p">;</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">indexRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">movieRoutes</span><span class="p">.</span><span class="nx">routes</span><span class="p">());</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">PORT</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`Server listening on port: </span><span class="p">${</span><span class="nx">PORT</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">server</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Add the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">BASE_URL</span><span class="p">}</span><span class="s2">`</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">movie</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">addMovie</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">movie</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">201</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+        <span class="na">data</span><span class="p">:</span> <span class="nx">movie</span>
+      <span class="p">};</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+        <span class="na">message</span><span class="p">:</span> <span class="s1">'Something went wrong.'</span>
+      <span class="p">};</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>DB query:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">addMovie</span><span class="p">(</span><span class="nx">movie</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">insert</span><span class="p">(</span><span class="nx">movie</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>What if the payload does not include the correct keys? Add a new <code class="highlighter-rouge">it</code> block:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the payload is malformed'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/api/v1/movies'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="na">name</span><span class="p">:</span> <span class="s1">'Titanic'</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// there should an error</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="c1">// there should be a 400 status code</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+    <span class="c1">// the response should be JSON</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+    <span class="c1">// the JSON response body should have a</span>
+    <span class="c1">// key-value pair of {"status": "error"}</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+    <span class="c1">// the JSON response body should have a message key</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Then update the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">BASE_URL</span><span class="p">}</span><span class="s2">`</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">movie</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">addMovie</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">movie</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">201</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+        <span class="na">data</span><span class="p">:</span> <span class="nx">movie</span>
+      <span class="p">};</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+        <span class="na">message</span><span class="p">:</span> <span class="s1">'Something went wrong.'</span>
+      <span class="p">};</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="s1">'Sorry, an error has occurred.'</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<h3 id="put">PUT</h3>
+
+<p>Test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'PUT /api/v1/movies'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return the movie that was updated'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">movie</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">movieObject</span> <span class="o">=</span> <span class="nx">movie</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">`/api/v1/movies/</span><span class="p">${</span><span class="nx">movieObject</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="s2">`</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+        <span class="na">rating</span><span class="p">:</span> <span class="mi">9</span>
+      <span class="p">})</span>
+      <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="c1">// there should be no errors</span>
+        <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="c1">// there should be a 200 status code</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="c1">// the response should be JSON</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"status": "success"}</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"data": 1 movie object}</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+          <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+        <span class="p">);</span>
+        <span class="c1">// ensure the movie was in fact updated</span>
+        <span class="kd">const</span> <span class="nx">newMovieObject</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">newMovieObject</span><span class="p">.</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="nx">movieObject</span><span class="p">.</span><span class="nx">rating</span><span class="p">);</span>
+        <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">BASE_URL</span><span class="p">}</span><span class="s2">/:id`</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">movie</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">updateMovie</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">movie</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+        <span class="na">data</span><span class="p">:</span> <span class="nx">movie</span>
+      <span class="p">};</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+        <span class="na">message</span><span class="p">:</span> <span class="s1">'That movie does not exist.'</span>
+      <span class="p">};</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="s1">'Sorry, an error has occurred.'</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>DB query:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">updateMovie</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">movie</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">movie</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">where</span><span class="p">({</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">})</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Did you notice that we are already handling a case where the movie does not exist in the route handler? Let’s add a test for that:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the movie does not exist'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/api/v1/movies/9999999'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="na">rating</span><span class="p">:</span> <span class="mi">9</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// there should an error</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="c1">// there should be a 404 status code</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+    <span class="c1">// the response should be JSON</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+    <span class="c1">// the JSON response body should have a</span>
+    <span class="c1">// key-value pair of {"status": "error"}</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+    <span class="c1">// the JSON response body should have a</span>
+    <span class="c1">// key-value pair of {"message": "That movie does not exist."}</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'That movie does not exist.'</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="delete">DELETE</h3>
+
+<p>Test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'DELETE /api/v1/movies/:id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return the movie that was deleted'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">movies</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">movieObject</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+      <span class="kd">const</span> <span class="nx">lengthBeforeDelete</span> <span class="o">=</span> <span class="nx">movies</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+      <span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s2">`/api/v1/movies/</span><span class="p">${</span><span class="nx">movieObject</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="s2">`</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="c1">// there should be no errors</span>
+        <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="c1">// there should be a 200 status code</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="c1">// the response should be JSON</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"status": "success"}</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"data": 1 movie object}</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+          <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'genre'</span><span class="p">,</span> <span class="s1">'rating'</span><span class="p">,</span> <span class="s1">'explicit'</span>
+        <span class="p">);</span>
+        <span class="c1">// ensure the movie was in fact deleted</span>
+        <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">).</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">updatedMovies</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="nx">updatedMovies</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="nx">lengthBeforeDelete</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+          <span class="nx">done</span><span class="p">();</span>
+        <span class="p">});</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the movie does not exist'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/api/v1/movies/9999999'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="c1">// there should an error</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="c1">// there should be a 404 status code</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+      <span class="c1">// the response should be JSON</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"status": "error"}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"message": "That movie does not exist."}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'That movie does not exist.'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">BASE_URL</span><span class="p">}</span><span class="s2">/:id`</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">movie</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">deleteMovie</span><span class="p">(</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">movie</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+        <span class="na">data</span><span class="p">:</span> <span class="nx">movie</span>
+      <span class="p">};</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span>
+      <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+        <span class="na">message</span><span class="p">:</span> <span class="s1">'That movie does not exist.'</span>
+      <span class="p">};</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="s1">'Sorry, an error has occurred.'</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">deleteMovie</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'movies'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">del</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">where</span><span class="p">({</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">})</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Run the tests to ensure all pass:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>routes : index
+  GET /
+    ✓ should return json
+
+routes : movies
+  GET /api/v1/movies
+    ✓ should return all movies
+  GET /api/v1/movies/:id
+    ✓ should respond with a single movie
+    ✓ should throw an error if the movie does not exist
+  POST /api/v1/movies
+    ✓ should return the movie that was added
+    ✓ should throw an error if the payload is malformed
+  PUT /api/v1/movies
+    ✓ should return the movie that was updated
+    ✓ should throw an error if the movie does not exist
+  DELETE /api/v1/movies/:id
+    ✓ should return the movie that was deleted
+    ✓ should throw an error if the movie does not exist
+
+Sample Test
+  ✓ should pass
+
+
+11 passing (697ms)
+</code></pre></div></div>
+
+<h2 id="next-steps">Next Steps</h2>
+
+<p>With that, you now have a basic Koa RESTful API up and running.</p>
+
+<p>Test your knowledge by adding additional test cases and error handlers to cover anything missed. You may also want to convert an existing Express app over to Koa. Check out the <a href="https://github.com/koajs/examples">Koa Examples</a> repo for more code examples.</p>
+
+<p>Add end-to-end tests with <a href="http://mherman.org/blog/2017/03/19/functional-testing-with-testcafe/#.WZxCvnd95E4">TestCafe</a>.</p>
+
+<p>This tutorial took advantage of async/await functions in Koa version 2. If you’re interested in comparing this pattern to the generator pattern found in Koa 1, review the code in the <a href="https://github.com/mjhea0/koa-api">Koa API</a> repo.</p>
+
+<p>Finally, check out the following posts that build on the Koa app built in this post:</p>
+
+<ol>
+  <li><a href="http://mherman.org/blog/2017/11/06/stubbing-http-requests-with-sinon">Stubbing HTTP Requests with Sinon</a></li>
+  <li><a href="http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa">User Authentication with Passport and Koa</a></li>
+  <li><a href="http://mherman.org/blog/2018/01/22/stubbing-node-authentication-middleware-with-sinon">Stubbing Node Authentication Middleware with Sinon</a></li>
+</ol>
+
+<p>Grab the final code from the <a href="https://github.com/mjhea0/node-koa-api/releases/tag/v2">v2</a> tag of  <a href="https://github.com/mjhea0/node-koa-api">node-koa-api</a> repo. There’s <a href="http://mherman.org/presentations/node-koa-api">slides</a> as well.</p>
+
+<p>Please add questions and/or comments below. Cheers!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres/';
+    this.page.identifier = 'http://mherman.org/blog/2017/08/23/building-a-restful-api-with-koa-and-postgres/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

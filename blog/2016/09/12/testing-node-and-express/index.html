@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Testing Node and Express</title>
+  <meta name="description" content="This article takes a test-first approach to developing a RESTful API with Node, Express, Mocha, Chai, knex, Postgres, faker.js, and express-validator.">
+  
+    
+    <meta name="keywords" content="node, express, postgres, knex, api, restful api, crud, mocha, chai, integration tests, integration, unit tests, unit, faker, fixtures, test fixtures, validator, validations, express validations, tdd">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2016/09/12/testing-node-and-express/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Testing Node and Express">
+  <meta name="twitter:description" content="This article takes a test-first approach to developing a RESTful API with Node, Express, Mocha, Chai, knex, Postgres, faker.js, and express-validator.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Testing Node and Express</h1>
+    
+    <p class="post-meta"><time datetime="2016-09-12T01:09:13-06:00" itemprop="datePublished">Sep 12, 2016</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/mocha/">mocha</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This tutorial looks at how to test an <a href="https://expressjs.com/">Express</a> CRUD app with <a href="http://mochajs.org/">Mocha</a> and <a href="http://chaijs.com/">Chai</a>. Although we’ll be writing both <a href="http://stackoverflow.com/questions/5357601/whats-the-difference-between-unit-tests-and-integration-tests">unit and integration tests</a>, the focus will be on the latter so that the tests run against the database in order to test the full functionality of our app. Postgres will be used, but feel free to use your favorite relational database.</p>
+
+<p>Let’s get to it!</p>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#objectives" id="markdown-toc-objectives">Objectives</a></li>
+  <li><a href="#why-test" id="markdown-toc-why-test">Why Test?</a></li>
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#database-setup" id="markdown-toc-database-setup">Database Setup</a></li>
+  <li><a href="#test-structure" id="markdown-toc-test-structure">Test Structure</a></li>
+  <li><a href="#schema-migrations" id="markdown-toc-schema-migrations">Schema Migrations</a></li>
+  <li><a href="#database-seed" id="markdown-toc-database-seed">Database Seed</a></li>
+  <li><a href="#integration-tests" id="markdown-toc-integration-tests">Integration Tests</a></li>
+  <li><a href="#unit-tests" id="markdown-toc-unit-tests">Unit Tests</a></li>
+  <li><a href="#test-fixtures" id="markdown-toc-test-fixtures">Test Fixtures</a></li>
+  <li><a href="#validation" id="markdown-toc-validation">Validation</a></li>
+  <li><a href="#refactor" id="markdown-toc-refactor">Refactor</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="objectives">Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to…</p>
+
+<ol>
+  <li>Discuss the benefits of automating tests</li>
+  <li>Set up a project with knex.js</li>
+  <li>Write schema migration files with knex to create new database tables</li>
+  <li>Generate <a href="https://en.wikipedia.org/wiki/Database_seeding">database seed</a> files with knex and apply the seeds to the database</li>
+  <li>Perform the basic CRUD functions on a RESTful resource with knex methods</li>
+  <li>Set up the testing structure with Mocha and Chai</li>
+  <li>Write integration tests</li>
+  <li>Write unit tests</li>
+  <li>Write tests, and then write just enough code to pass the tests</li>
+  <li>Create <a href="https://expressjs.com/en/guide/routing.html">Express routes</a></li>
+  <li>Practice test driven development</li>
+  <li>Create a CRUD app, following RESTful best practices</li>
+  <li>Generate fake test data (<a href="https://en.wikipedia.org/wiki/Test_fixture">test fixtures</a>) with <a href="https://github.com/marak/Faker.js/">faker.js</a></li>
+  <li>Validate request parameters with <a href="https://github.com/ctavan/express-validator">express-validator</a></li>
+</ol>
+
+<h2 id="why-test">Why Test?</h2>
+
+<p>Are you currently manually testing your app?</p>
+
+<p>When you push new code do you manually test all features in your app to ensure the new code doesn’t break existing functionality? How about when you’re fixing a bug? Do you manually test your app? How many times - ten, twenty, thirty times?</p>
+
+<p>Stop wasting time!</p>
+
+<p>If you do any sort of manual testing write an automated test instead. Your future self will thank you.</p>
+
+<p>Need more convincing? Testing…</p>
+
+<ol>
+  <li>Helps break down problems into manageable pieces</li>
+  <li>Forces you to write cleaner code</li>
+  <li>Prevents over coding</li>
+  <li>Let’s you sleep at night (because you <em>actually</em> know that your code works)</li>
+</ol>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>To quickly create an app boilerplate install the following <a href="https://www.npmjs.com/package/generator-galvanize-express">generator</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> generator-galvanize-express@1.0.5
+</code></pre></div></div>
+
+<p>Make sure you have <a href="http://mochajs.org/">Mocha</a>, <a href="http://chaijs.com/">Chai</a>, <a href="http://gulpjs.com/">Gulp</a>, and <a href="http://yeoman.io/">Yeoman</a> installed globally as well:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> mocha@3.0.2 chai@3.5.0 yo@1.8.5 gulp@3.9.1
+</code></pre></div></div>
+
+<p>Create a new project directory, and then run the generator to scaffold a new app:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>yo galvanize-express
+</code></pre></div></div>
+
+<blockquote>
+  <p><strong>NOTE:</strong> Add your name for the MIT License and opt not to add Gulp Notify.</p>
+</blockquote>
+
+<p>Open the project in your favorite text editor, and then review the project structure as the dependencies are installed:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Finally, let’s run the app to make sure all is well:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp
+</code></pre></div></div>
+
+<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your favorite browser. You should see:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Welcome to Express!
+The sum is 3
+</code></pre></div></div>
+
+<h2 id="database-setup">Database Setup</h2>
+
+<p>Make sure the Postgres database server is running, and then create two new databases in <a href="http://postgresguide.com/utilities/psql.html">psql</a>, for development and testing:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># create database express_tdd;</span>
+CREATE DATABASE
+<span class="c"># create database express_tdd_testing;</span>
+CREATE DATABASE
+<span class="c">#</span>
+</code></pre></div></div>
+
+<p>Install Knex and <a href="https://github.com/brianc/node-postgres">pg</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install knex@0.11.10 pg@6.1.0 <span class="nt">--save-dev</span>
+</code></pre></div></div>
+
+<p>Run <code class="highlighter-rouge">knex init</code> to generate a new <em><a href="http://knexjs.org/#knexfile">knexfile.js</a></em> file in the project root, which is used to store database config. Update the file like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">development</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">client</span><span class="p">:</span> <span class="s1">'postgresql'</span><span class="p">,</span>
+    <span class="na">connection</span><span class="p">:</span> <span class="s1">'postgres://localhost:5432/express_tdd'</span><span class="p">,</span>
+    <span class="na">migrations</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/src/server/db/migrations'</span>
+    <span class="p">},</span>
+    <span class="na">seeds</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/src/server/db/seeds'</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="na">test</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">client</span><span class="p">:</span> <span class="s1">'postgresql'</span><span class="p">,</span>
+    <span class="na">connection</span><span class="p">:</span> <span class="s1">'postgres://localhost:5432/express_tdd_testing'</span><span class="p">,</span>
+    <span class="na">migrations</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/src/server/db/migrations'</span>
+    <span class="p">},</span>
+    <span class="na">seeds</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/src/server/db/seeds'</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Here, different database configuration is used based on the app’s environment, either <code class="highlighter-rouge">development</code> or <code class="highlighter-rouge">test</code>. The <a href="https://en.wikipedia.org/wiki/Environment_variable">environment variable</a> <code class="highlighter-rouge">NODE_ENV</code> is used to change the environment. <code class="highlighter-rouge">NODE_ENV</code> defaults to <code class="highlighter-rouge">development</code>, so when we run our tests, we’ll need to update the variable to <code class="highlighter-rouge">test</code> in order to pull in the proper config.</p>
+
+<p>Next, let’s init the database connection. Create a new folder within “server” called “db” and then add a file called <em>knex.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">environment</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../../../knexfile.js'</span><span class="p">)[</span><span class="nx">environment</span><span class="p">];</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'knex'</span><span class="p">)(</span><span class="nx">config</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>The database connection is established by passing the proper environment (via the environment variable <code class="highlighter-rouge">NODE_ENV</code>) to <em>knexfile.js</em> which returns the associated object that is passed to the <code class="highlighter-rouge">knex</code> library in the third line above.</p>
+
+<blockquote>
+  <p><strong>NOTE</strong>: Now is a great time to init a new git repo and make your first commit!</p>
+</blockquote>
+
+<h2 id="test-structure">Test Structure</h2>
+
+<p>With that complete, let’s look at the current test structure. In the project root, you’ll notice a “test” directory, which as you probably guessed contains the test specs. Two sample tests have been created, plus there is some basic configuration set up for <a href="https://github.com/jshint/jshint">JSHint</a> and <a href="http://jscs.info/">JSCS</a> so that the code is linted against the style config and conventions defined in the <em>.jscsrc</em>  and <em>jshintrc</em> files, respectively.</p>
+
+<p>Run the tests:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm <span class="nb">test</span>
+</code></pre></div></div>
+
+<p>They all should pass:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>jscs
+  ✓ should pass <span class="k">for </span>working directory <span class="o">(</span>357ms<span class="o">)</span>
+
+routes : index
+  GET /
+    ✓ should render the index <span class="o">(</span>88ms<span class="o">)</span>
+  GET /404
+    ✓ should throw an error
+
+jshint
+  ✓ should pass <span class="k">for </span>working directory <span class="o">(</span>247ms<span class="o">)</span>
+
+controllers : index
+  sum<span class="o">()</span>
+    ✓ should <span class="k">return </span>a total
+    ✓ should <span class="k">return </span>an error
+
+
+6 passing <span class="o">(</span>724ms<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Glance at the sample tests. Notice how we updated the environment variable at the top of each test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Remember what this does? Scroll back up to the previous section if you forgot. Now, when we run the tests, knex is initialized with the <code class="highlighter-rouge">test</code> config.</p>
+
+<h2 id="schema-migrations">Schema Migrations</h2>
+
+<p>To keep the code simple, let’s use one CRUD resource - <code class="highlighter-rouge">users</code>:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>HTTP Method</th>
+      <th>CRUD Method</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>users</td>
+      <td>GET</td>
+      <td>CREATE</td>
+      <td>get all users</td>
+    </tr>
+    <tr>
+      <td>users/:id</td>
+      <td>GET</td>
+      <td>CREATE</td>
+      <td>get a single user</td>
+    </tr>
+    <tr>
+      <td>users</td>
+      <td>POST</td>
+      <td>READ</td>
+      <td>add a single user</td>
+    </tr>
+    <tr>
+      <td>users/:id</td>
+      <td>PUT</td>
+      <td>UPDATE</td>
+      <td>update a single user</td>
+    </tr>
+    <tr>
+      <td>users/:id</td>
+      <td>DELETE</td>
+      <td>DELETE</td>
+      <td>delete a single user</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Init a new knex migration:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:make users
+</code></pre></div></div>
+
+<p>This command created a new migration file in the “src/server/db/migrations” folder. Now we can create the table along with the individual fields:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field Name</th>
+      <th>Data Type</th>
+      <th>Constraints</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>id</td>
+      <td>integer</td>
+      <td>not null, unique</td>
+    </tr>
+    <tr>
+      <td>username</td>
+      <td>string</td>
+      <td>not null, unique</td>
+    </tr>
+    <tr>
+      <td>email</td>
+      <td>string</td>
+      <td>not null, unique</td>
+    </tr>
+    <tr>
+      <td>created_at</td>
+      <td>timestamp</td>
+      <td>Not null, default to current date and time</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Add the following code to the migration file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">up</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">createTable</span><span class="p">(</span><span class="s1">'users'</span><span class="p">,</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">increments</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'username'</span><span class="p">).</span><span class="nx">unique</span><span class="p">().</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'email'</span><span class="p">).</span><span class="nx">unique</span><span class="p">().</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">timestamp</span><span class="p">(</span><span class="s1">'created_at'</span><span class="p">).</span><span class="nx">defaultTo</span><span class="p">(</span><span class="nx">knex</span><span class="p">.</span><span class="nx">fn</span><span class="p">.</span><span class="nx">now</span><span class="p">());</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">down</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">dropTable</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Apply the migration:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:latest <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<p>Make sure the schema was applied within psql:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># \c express_tdd</span>
+You are now connected to database <span class="s2">"express_tdd"</span><span class="nb">.</span>
+<span class="c"># \dt</span>
+                   List of relations
+ Schema |         Name         | Type  |     Owner
+<span class="nt">--------</span>+----------------------+-------+---------------
+ public | knex_migrations      | table | michaelherman
+ public | knex_migrations_lock | table | michaelherman
+ public | users                | table | michaelherman
+<span class="o">(</span>3 rows<span class="o">)</span>
+
+<span class="c"># select * from users;</span>
+ id | username | email | created_at
+<span class="nt">----</span>+----------+-------+------------
+<span class="o">(</span>0 rows<span class="o">)</span>
+</code></pre></div></div>
+
+<h2 id="database-seed">Database Seed</h2>
+
+<p>We need to <a href="https://en.wikipedia.org/wiki/Database_seeding">seed</a> the database to add dummy data to the database so we have something to work with. Init a new seed, which will add a new seed file to “src/server/db/seeds/”:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex seed:make users
+</code></pre></div></div>
+
+<p>Update the file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>exports.seed <span class="o">=</span> <span class="o">(</span>knex, Promise<span class="o">)</span> <span class="o">=&gt;</span> <span class="o">{</span>
+  // Deletes ALL existing entries
+  <span class="k">return </span>knex<span class="o">(</span><span class="s1">'users'</span><span class="o">)</span>.del<span class="o">()</span>
+  .then<span class="o">(()</span> <span class="o">=&gt;</span> <span class="o">{</span>
+    <span class="k">return </span>Promise.all<span class="o">([</span>
+      // Inserts seed entries
+      knex<span class="o">(</span><span class="s1">'users'</span><span class="o">)</span>.insert<span class="o">({</span>
+        username: <span class="s1">'michael'</span>,
+        email: <span class="s1">'michael@mherman.org'</span>
+      <span class="o">})</span>,
+      knex<span class="o">(</span><span class="s1">'users'</span><span class="o">)</span>.insert<span class="o">({</span>
+        username: <span class="s1">'michaeltwo'</span>,
+        email: <span class="s1">'michael@realpython.org'</span>
+      <span class="o">})</span>
+    <span class="o">])</span><span class="p">;</span>
+  <span class="o">})</span><span class="p">;</span>
+<span class="o">}</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Run the seed:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex seed:run <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<p>Then make sure the data is in the database:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># select * from users;</span>
+ id |  username  |         email          |          created_at
+<span class="nt">----</span>+------------+------------------------+-------------------------------
+  1 | michael    | michael@mherman.org    | 2016-09-08 15:08:00.31772-06
+  2 | michaeltwo | michael@realpython.org | 2016-09-08 15:08:00.320299-06
+<span class="o">(</span>2 rows<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Set up complete.</p>
+
+<h2 id="integration-tests">Integration Tests</h2>
+
+<p>We’ll be taking a test first approach to development, roughly following these steps for each endpoint:</p>
+
+<ol>
+  <li>Write test</li>
+  <li>Run the test (it should fail)</li>
+  <li>Write code</li>
+  <li>Run the test (it should pass)</li>
+</ol>
+
+<p>Start by thinking about the expected input (JSON payload) and output (JSON object) for each RESTful endpoint:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>HTTP</th>
+      <th>Input</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>users</td>
+      <td>GET</td>
+      <td>none</td>
+      <td>array of objects</td>
+    </tr>
+    <tr>
+      <td>users/:id</td>
+      <td>GET</td>
+      <td>none</td>
+      <td>single object</td>
+    </tr>
+    <tr>
+      <td>users</td>
+      <td>POST</td>
+      <td>user object</td>
+      <td>single object</td>
+    </tr>
+    <tr>
+      <td>users/:id</td>
+      <td>PUT</td>
+      <td>user object</td>
+      <td>single object</td>
+    </tr>
+    <tr>
+      <td>users/:id</td>
+      <td>DELETE</td>
+      <td>none</td>
+      <td>single object</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The input user object will always look something like:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"michael"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"michael@herman.com"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Likewise, the output will always have the following structure:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="s2">"either an array of objects or a single object"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Create a new file in the “test/integration” directory called “routes.users.test.js” and add the following code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../../src/server/app'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../../src/server/db/knex'</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'routes : users'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+  <span class="nx">beforeEach</span><span class="p">((</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">latest</span><span class="p">()</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">knex</span><span class="p">.</span><span class="nx">seed</span><span class="p">.</span><span class="nx">run</span><span class="p">()</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="nx">done</span><span class="p">();</span>
+        <span class="p">})</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+
+  <span class="nx">afterEach</span><span class="p">((</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>What’s happening here? Think about it on your own. Turn to Google if necessary. Still have questions? Comment below.</p>
+
+<p>With that, let’s start writing some code…</p>
+
+<h3 id="get-all-users">GET ALL Users</h3>
+
+<p>Add the first test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/users'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should respond with all users'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/users'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="c1">// there should be no errors</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="c1">// there should be a 200 status code</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="c1">// the response should be JSON</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"status": "success"}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"data": [2 user objects]}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+      <span class="c1">// the first object in the data array should</span>
+      <span class="c1">// have the right keys</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">,</span> <span class="s1">'created_at'</span>
+      <span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Take note of the inline code comments. Need more explanation? Read over <a href="http://mherman.org/blog/2015/09/10/testing-node-js-with-mocha-and-chai/#.V9W8aJMrJE4">Testing Node.js With Mocha and Chai</a>. Run the test to make sure it fails. Now write the code to get the test pass, following these steps:</p>
+
+<h4 id="update-the-route-config-srcserverconfigroute-configjs">Update the route config (src/server/config/route-config.js)</h4>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">routeConfig</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="s1">'use strict'</span><span class="p">;</span>
+
+  <span class="nx">routeConfig</span><span class="p">.</span><span class="nx">init</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="c1">// *** routes *** //</span>
+    <span class="kd">const</span> <span class="nx">routes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../routes/index'</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">userRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../routes/users'</span><span class="p">);</span>
+
+    <span class="c1">// *** register routes *** //</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="nx">routes</span><span class="p">);</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/api/v1/users'</span><span class="p">,</span> <span class="nx">userRoutes</span><span class="p">);</span>
+
+  <span class="p">};</span>
+
+<span class="p">})(</span><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Now we have a new set of routes set up that we can use within <em>src/server/routes/users.js</em>, which we need to add…</p>
+
+<h4 id="set-up-new-routes">Set up new routes</h4>
+
+<p>Create the <em>users.js</em> file in “src/server/routes/”, and then add in the route boilerplate:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../db/knex'</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Now we can add in the route handler with the knex methods for retrieving all users from the <code class="highlighter-rouge">users</code> table:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">users</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">users</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">err</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm <span class="nb">test</span>
+</code></pre></div></div>
+
+<p>You should see the test passing:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>routes : users
+  GET /api/v1/users
+    ✓ should respond with all users
+</code></pre></div></div>
+
+<h3 id="get-single-user">GET Single User</h3>
+
+<p>Moving on, we can just copy and paste the previous test and use that boilerplate to write the next test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/users/:id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should respond with a single user'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/users/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="c1">// there should be no errors</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="c1">// there should be a 200 status code</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="c1">// the response should be JSON</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"status": "success"}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"data": 1 user object}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">,</span> <span class="s1">'created_at'</span>
+      <span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the test. Watch it fail. Write the code to get it to pass:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">userID</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">where</span><span class="p">({</span>
+    <span class="na">id</span><span class="p">:</span> <span class="nx">userID</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">users</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">users</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">err</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="post">POST</h3>
+
+<p>Test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /api/v1/users'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should respond with a success message along with a single user that was added'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/api/v1/users'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">username</span><span class="p">:</span> <span class="s1">'ryan'</span><span class="p">,</span>
+      <span class="na">email</span><span class="p">:</span> <span class="s1">'ryan@ryan.com'</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="c1">// there should be no errors</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="c1">// there should be a 201 status code</span>
+      <span class="c1">// (indicating that something was "created")</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">201</span><span class="p">);</span>
+      <span class="c1">// the response should be JSON</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"status": "success"}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="c1">// the JSON response body should have a</span>
+      <span class="c1">// key-value pair of {"data": 1 user object}</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+        <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">,</span> <span class="s1">'created_at'</span>
+      <span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">newUsername</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span><span class="p">;</span>
+  <span class="kd">const</span> <span class="nx">newEmail</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">email</span><span class="p">;</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">insert</span><span class="p">({</span>
+    <span class="na">username</span><span class="p">:</span> <span class="nx">newUsername</span><span class="p">,</span>
+    <span class="na">email</span><span class="p">:</span> <span class="nx">newEmail</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">201</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">user</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">err</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="put">PUT</h3>
+
+<p>Test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'PUT /api/v1/users'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should respond with a success message along with a single user that was updated'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">userObject</span> <span class="o">=</span> <span class="nx">user</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">`/api/v1/users/</span><span class="p">${</span><span class="nx">userObject</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="s2">`</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+        <span class="na">username</span><span class="p">:</span> <span class="s1">'updatedUser'</span><span class="p">,</span>
+        <span class="na">email</span><span class="p">:</span> <span class="s1">'updated@user.com'</span>
+      <span class="p">})</span>
+      <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="c1">// there should be no errors</span>
+        <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="c1">// there should be a 200 status code</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="c1">// the response should be JSON</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"status": "success"}</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"data": 1 user object}</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+          <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">,</span> <span class="s1">'created_at'</span>
+        <span class="p">);</span>
+        <span class="c1">// ensure the user was in fact updated</span>
+        <span class="kd">var</span> <span class="nx">newUserObject</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">newUserObject</span><span class="p">.</span><span class="nx">username</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="nx">userObject</span><span class="p">.</span><span class="nx">username</span><span class="p">);</span>
+        <span class="nx">newUserObject</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="nx">userObject</span><span class="p">.</span><span class="nx">email</span><span class="p">);</span>
+        <span class="c1">// redundant</span>
+        <span class="nx">newUserObject</span><span class="p">.</span><span class="nx">username</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'updatedUser'</span><span class="p">);</span>
+        <span class="nx">newUserObject</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'updated@user.com'</span><span class="p">);</span>
+        <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">userID</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="nx">updatedUsername</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span><span class="p">;</span>
+  <span class="kd">const</span> <span class="nx">updatedEmail</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">email</span><span class="p">;</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">update</span><span class="p">({</span>
+    <span class="na">username</span><span class="p">:</span> <span class="nx">updatedUsername</span><span class="p">,</span>
+    <span class="na">email</span><span class="p">:</span> <span class="nx">updatedEmail</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">where</span><span class="p">({</span>
+    <span class="na">id</span><span class="p">:</span> <span class="nx">userID</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">user</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">err</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="delete">DELETE</h3>
+
+<p>Test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'DELETE /api/v1/users/:id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should respond with a success message along with a single user that was deleted'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">users</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">userObject</span> <span class="o">=</span> <span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+      <span class="kd">const</span> <span class="nx">lengthBeforeDelete</span> <span class="o">=</span> <span class="nx">users</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+      <span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s2">`/api/v1/users/</span><span class="p">${</span><span class="nx">userObject</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="s2">`</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="c1">// there should be no errors</span>
+        <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="c1">// there should be a 200 status code</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="c1">// the response should be JSON</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"status": "success"}</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+        <span class="c1">// the JSON response body should have a</span>
+        <span class="c1">// key-value pair of {"data": 1 user object}</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span>
+          <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">,</span> <span class="s1">'created_at'</span>
+        <span class="p">);</span>
+        <span class="c1">// ensure the user was in fact deleted</span>
+        <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">updatedUsers</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="nx">updatedUsers</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="nx">lengthBeforeDelete</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+          <span class="nx">done</span><span class="p">();</span>
+        <span class="p">});</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">userID</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">del</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">where</span><span class="p">({</span>
+    <span class="na">id</span><span class="p">:</span> <span class="nx">userID</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">user</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+      <span class="na">data</span><span class="p">:</span> <span class="nx">err</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run all your tests. All should pass.</p>
+
+<h2 id="unit-tests">Unit Tests</h2>
+
+<p>New business requirement!</p>
+
+<p>We need a route to return all users created after a certain date. Since we already know how to write routes, let’s add a helper function that takes an array of users and a year that then returns an array of users created on or after the specified date. We can then use this function in a future route handler.</p>
+
+<p>Steps:</p>
+
+<ol>
+  <li>Write a unit test</li>
+  <li>Run the tests (the unit test should fail)</li>
+  <li>Write the code to pass the test</li>
+  <li>Run the tests (all should pass!)</li>
+</ol>
+
+<h3 id="write-a-unit-test">Write a unit test</h3>
+
+<p>Create a new file called <em>controllers.users.test.js</em> within the “test/unit/” directory:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+
+<span class="kd">const</span> <span class="nx">usersController</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../../src/server/controllers/users'</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'controllers : users'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+  <span class="nx">describe</span><span class="p">(</span><span class="s1">'filterByYear()'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// add code here</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Now add the body of the test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">userArray</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span>
+    <span class="na">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="na">username</span><span class="p">:</span> <span class="s1">'michael'</span><span class="p">,</span>
+    <span class="na">email</span><span class="p">:</span> <span class="s1">'michael@mherman.org'</span><span class="p">,</span>
+    <span class="na">created_at</span><span class="p">:</span> <span class="s1">'2016-09-10T16:44:28.015Z'</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="na">id</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="na">username</span><span class="p">:</span> <span class="s1">'mike'</span><span class="p">,</span>
+    <span class="na">email</span><span class="p">:</span> <span class="s1">'mike@mherman.org'</span><span class="p">,</span>
+    <span class="na">created_at</span><span class="p">:</span> <span class="s1">'2015-09-10T16:44:28.015Z'</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="na">id</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="na">username</span><span class="p">:</span> <span class="s1">'mike'</span><span class="p">,</span>
+    <span class="na">email</span><span class="p">:</span> <span class="s1">'mike@mherman.org'</span><span class="p">,</span>
+    <span class="na">created_at</span><span class="p">:</span> <span class="s1">'2014-09-10T16:44:28.015Z'</span>
+  <span class="p">}</span>
+<span class="p">];</span>
+<span class="nx">it</span><span class="p">(</span><span class="s1">'should return all users created on or after (&gt;=) specified year'</span><span class="p">,</span>
+<span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">usersController</span><span class="p">.</span><span class="nx">filterByYear</span><span class="p">(</span><span class="nx">userArray</span><span class="p">,</span> <span class="mi">2015</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">total</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="nx">total</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h4 id="whats-happening">What’s happening?</h4>
+
+<p>Within the <code class="highlighter-rouge">it</code> block we passed in the <code class="highlighter-rouge">userArray</code>, a year, and a callback function to a function called <code class="highlighter-rouge">filterByYear()</code>. This then asserts that a error does not exist and that the length of the response (<code class="highlighter-rouge">total</code>) is 2.</p>
+
+<p>Run the tests. Watch them fail. Add the code…</p>
+
+<h3 id="write-the-code-to-pass-the-unit-test">Write the code to pass the unit test</h3>
+
+<p>Create a new controller within “src/server/controllers” called <em>users.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">filterByYear</span><span class="p">(</span><span class="nx">arrayOfUsers</span><span class="p">,</span> <span class="nx">year</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">arrayOfUsers</span><span class="p">.</span><span class="nx">filter</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">date</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">created_at</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">date</span><span class="p">.</span><span class="nx">getFullYear</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="nx">year</span><span class="p">;</span>
+  <span class="p">});</span>
+  <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">response</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">filterByYear</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Confused? Add an inline comment above each line, describing <em>what</em> the code does and, in some cases, <em>why</em> the code does what it does.</p>
+
+<p>Run the tests. Do they pass? They should.</p>
+
+<p>Now you can use that function in a new route to finish the business requirement. Do this on your own. Be sure to write the integration test first!</p>
+
+<h2 id="test-fixtures">Test Fixtures</h2>
+
+<p><a href="https://github.com/marak/Faker.js/">faker.js</a> is a powerful library for generating fake data. In our case, we can use faker to generate test data
+for our unit tests. Such data is often called a <a href="https://en.wikipedia.org/wiki/Test_fixture">test fixture</a>.</p>
+
+<p>Install faker:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm install faker@3.1.0 <span class="nt">--save-dev</span>
+</code></pre></div></div>
+
+<h3 id="code">Code</h3>
+
+<p>Since we don’t really (or maybe <em>really</em> don’t?) know what the test is going to look like, let’s start with writing a quick script to generate test data. Create a new file within the “test” directory called <em>generate.test.data.js</em>, and then add the following code to it:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">faker</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'faker'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">createUserObject</span><span class="p">(</span>
+  <span class="nx">yearOne</span><span class="p">,</span> <span class="nx">yearTwo</span><span class="p">,</span> <span class="nx">amountToCreate</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">userArray</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nx">amountToCreate</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">userArray</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span>
+      <span class="na">id</span><span class="p">:</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">random</span><span class="p">.</span><span class="nx">uuid</span><span class="p">(),</span>
+      <span class="na">username</span><span class="p">:</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">internet</span><span class="p">.</span><span class="nx">userName</span><span class="p">(),</span>
+      <span class="na">email</span><span class="p">:</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">internet</span><span class="p">.</span><span class="nx">email</span><span class="p">(),</span>
+      <span class="na">created_at</span><span class="p">:</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">between</span><span class="p">(</span><span class="nx">yearOne</span><span class="p">,</span> <span class="nx">yearTwo</span><span class="p">)</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+  <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">userArray</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This function generates an array of user objects, each object is generated randomly using faker.js <a href="https://github.com/marak/Faker.js/#api">methods</a>. We could use that data directly in the test, but let’s first save the data to a fixture file for easy use. Update the file like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">faker</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'faker'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'fs'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'path'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">createUserObject</span><span class="p">(</span>
+  <span class="nx">yearOne</span><span class="p">,</span> <span class="nx">yearTwo</span><span class="p">,</span> <span class="nx">amountToCreate</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">userArray</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nx">amountToCreate</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">userArray</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span>
+      <span class="na">id</span><span class="p">:</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">random</span><span class="p">.</span><span class="nx">uuid</span><span class="p">(),</span>
+      <span class="na">username</span><span class="p">:</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">internet</span><span class="p">.</span><span class="nx">userName</span><span class="p">(),</span>
+      <span class="na">email</span><span class="p">:</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">internet</span><span class="p">.</span><span class="nx">email</span><span class="p">(),</span>
+      <span class="na">created_at</span><span class="p">:</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">between</span><span class="p">(</span><span class="nx">yearOne</span><span class="p">,</span> <span class="nx">yearTwo</span><span class="p">)</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+  <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">userArray</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">createUserObject</span><span class="p">(</span><span class="mi">2010</span><span class="p">,</span> <span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">beforeDates</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">createUserObject</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2016</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">onOrAfterDates</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">userArray</span> <span class="o">=</span> <span class="nx">beforeDates</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">onOrAfterDates</span><span class="p">);</span>
+      <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span>
+        <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'test.data.json'</span><span class="p">),</span>
+        <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">userArray</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Now we can generate two arrays -</p>
+
+<ol>
+  <li>One with data <em>before</em> a specific date</li>
+  <li>The other with data <em>on or after</em> that specific date</li>
+</ol>
+
+<p>Before saving to a file, we concatenated the two arrays into one. You’ll see why this was necessary when the test is created. For now, run the script from the project root:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>node <span class="nb">test</span>/generate.test.data.js
+</code></pre></div></div>
+
+<p>You should see a new fixture file called <em>test.data.json</em> in the “test” folder. The data in this file can now be used in a test.</p>
+
+<h3 id="test">Test</h3>
+
+<p>Add the following test to <em>controllers.users.test.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'filterByYear() with helper'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return all users created on or after (&gt;=) specified year'</span><span class="p">,</span>
+  <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">testDataFile</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span>
+      <span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'test.data.json'</span><span class="p">);</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">testDataFile</span><span class="p">,</span> <span class="s1">'utf8'</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">usersController</span><span class="p">.</span><span class="nx">filterByYear</span><span class="p">(</span>
+        <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">),</span> <span class="mi">2015</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">total</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="nx">total</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+        <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Make sure to require in <code class="highlighter-rouge">fs</code> and <code class="highlighter-rouge">path</code> at the top:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'fs'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'path'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Run the tests again!</p>
+
+<h2 id="validation">Validation</h2>
+
+<p>Thus far we have not tested for possible errors. For example, what happens if the email address provided with a POST request is not properly formatted? Or if an invalid ID is used with a PUT request?</p>
+
+<p>We can start by validating parameters with <a href="https://github.com/ctavan/express-validator">express-validator</a>.</p>
+
+<h3 id="install">Install</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install express-validator@2.20.8 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Then <code class="highlighter-rouge">require</code> the module at the top of <em>src/server/config/main-config.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">expressValidator</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express-validator'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Mount the validator to the app middleware just below the body parser:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">({</span> <span class="na">extended</span><span class="p">:</span> <span class="kc">false</span> <span class="p">}));</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">expressValidator</span><span class="p">());</span>
+</code></pre></div></div>
+
+<h3 id="test-1">Test</h3>
+
+<p>Add the first test to the <code class="highlighter-rouge">GET /api/v1/users/:id'</code> describe block:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if the user id is null'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+  <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s2">`/api/v1/users/</span><span class="p">${</span><span class="kc">null</span><span class="p">}</span><span class="s2">`</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'Validation failed'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">failures</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Add the second test to the <code class="highlighter-rouge">POST /api/v1/users</code> describe block:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error when a username is not provided'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/api/v1/users'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="na">username</span><span class="p">:</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="na">email</span><span class="p">:</span> <span class="s1">'111111'</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'Validation failed'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">failures</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+    <span class="c1">// ensure the user was not added</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">where</span><span class="p">({</span>
+      <span class="na">email</span><span class="p">:</span> <span class="s1">'111111'</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">user</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="code-1">Code</h3>
+
+<p>To add the proper validation, create a new file called <em>validation.js</em> within the “routes” directory:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">validateUserResources</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">===</span> <span class="s1">'GET'</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">checkParams</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'Must be valid'</span><span class="p">).</span><span class="nx">notEmpty</span><span class="p">().</span><span class="nx">isInt</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">===</span> <span class="s1">'POST'</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">checkBody</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'Username cannot be empty'</span><span class="p">).</span><span class="nx">notEmpty</span><span class="p">();</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">checkBody</span><span class="p">(</span><span class="s1">'email'</span><span class="p">,</span> <span class="s1">'Must be a valid email'</span><span class="p">).</span><span class="nx">isEmail</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">===</span> <span class="s1">'PUT'</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">checkParams</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'Must be valid'</span><span class="p">).</span><span class="nx">notEmpty</span><span class="p">().</span><span class="nx">isInt</span><span class="p">();</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">checkBody</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'Username cannot be empty'</span><span class="p">).</span><span class="nx">notEmpty</span><span class="p">();</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">checkBody</span><span class="p">(</span><span class="s1">'email'</span><span class="p">,</span> <span class="s1">'Must be a valid email'</span><span class="p">).</span><span class="nx">isEmail</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">===</span> <span class="s1">'DELETE'</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">checkParams</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'Must be valid'</span><span class="p">).</span><span class="nx">notEmpty</span><span class="p">().</span><span class="nx">isInt</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="kd">const</span> <span class="nx">errors</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">validationErrors</span><span class="p">();</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s1">'Validation failed'</span><span class="p">,</span>
+      <span class="na">failures</span><span class="p">:</span> <span class="nx">errors</span>
+    <span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">validateUserResources</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Here, with express-validator, parameters are validated using either <code class="highlighter-rouge">req.checkParams</code> or <code class="highlighter-rouge">req.checkBody</code> and then errors are aggregated together with <code class="highlighter-rouge">req.validationErrors()</code>.</p>
+
+<p>Require this module in the user routes:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">validate</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./validation'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Add the <code class="highlighter-rouge">validateUserResources</code> to all the route handlers except the handler to GET ALL users, like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span>
+  <span class="nx">validate</span><span class="p">.</span><span class="nx">validateUserResources</span><span class="p">,</span>
+  <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="p">...</span>
+  <span class="p">})</span>
+</code></pre></div></div>
+
+<p>Finish the remaining route handlers, and then run the tests. All should pass:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>jscs
+  ✓ should pass <span class="k">for </span>working directory <span class="o">(</span>633ms<span class="o">)</span>
+
+routes : index
+  GET /
+    ✓ should render the index <span class="o">(</span>71ms<span class="o">)</span>
+  GET /404
+    ✓ should throw an error
+
+routes : users
+  GET /api/v1/users
+    ✓ should respond with all users <span class="o">(</span>53ms<span class="o">)</span>
+  GET /api/v1/users/:id
+    ✓ should respond with a single user
+    ✓ should throw an error <span class="k">if </span>the user id is null
+  POST /api/v1/users
+    ✓ should respond with a success message along with a single user that was added <span class="o">(</span>129ms<span class="o">)</span>
+    ✓ should throw an error when a username is not provided
+  PUT /api/v1/users/:id
+    ✓ should respond with a success message along with a single user that was updated
+  DELETE /api/v1/users/:id
+    ✓ should respond with a success message along with a single user that was deleted
+
+jshint
+  ✓ should pass <span class="k">for </span>working directory <span class="o">(</span>661ms<span class="o">)</span>
+
+controllers : index
+  sum<span class="o">()</span>
+    ✓ should <span class="k">return </span>a total
+    ✓ should <span class="k">return </span>an error
+
+controllers : users
+  filterByYear<span class="o">()</span>
+    ✓ should <span class="k">return </span>all users created on or after <span class="o">(&gt;=)</span> specified year
+  filterByYear<span class="o">()</span> with helper
+    ✓ should <span class="k">return </span>all users created on or after <span class="o">(&gt;=)</span> specified year
+
+15 passing <span class="o">(</span>3s<span class="o">)</span>
+</code></pre></div></div>
+
+<p>We are still not handling all errors. What else could go wrong? Think about edge cases. Then write tests. Do this on your own.</p>
+
+<h2 id="refactor">Refactor</h2>
+
+<p>Finally, let’s make our code a bit more modular by refactoring out unnecessary logic from the route handlers.</p>
+
+<p>Within the “db” folder, add a file called <em>queries.users.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./knex'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">getAllUsers</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">select</span><span class="p">(</span><span class="s1">'*'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">users</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">users</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">getAllUsers</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>This function now handles all the knex logic, and it can now be used anywhere in the project. Be sure to update the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">userQueries</span><span class="p">.</span><span class="nx">getAllUsers</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">users</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span><span class="p">,</span>
+        <span class="na">data</span><span class="p">:</span> <span class="nx">err</span>
+      <span class="p">});</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+        <span class="na">data</span><span class="p">:</span> <span class="nx">users</span>
+      <span class="p">});</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Don’t forget to add the requirement:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">userQueries</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../db/queries.users'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Run the tests again. They all should still pass! Notice how we were able to refactor with confidence (without fear of the code breaking) since we had proper test coverage. Finish refactoring out all of the knex logic to <em>queries.users.js</em>. Test again when done.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Turn back to the objectives. Read each aloud to yourself. Can you put each one into action?</p>
+
+<p>The testing process may seem daunting and unnecessary at first, but you will see just how necessary it is as your projects grow and become more complex. Continue to practice by incorporating tests whenever you begin a new project.</p>
+
+<p>The full code can be found in the <a href="https://github.com/mjhea0/express-testing-mocha-knex">express-testing-mocha-knex</a> repository.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://mherman.org/blog/2016/09/12/testing-node-and-express/';
+    this.page.identifier = 'http://mherman.org/blog/2016/09/12/testing-node-and-express/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

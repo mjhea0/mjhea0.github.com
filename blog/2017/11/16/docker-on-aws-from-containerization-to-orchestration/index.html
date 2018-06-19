@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Docker on AWS: from containerization to orchestration</title>
+  <meta name="description" content="This tutorial details how to take a number of containerized microservices running on a single EC2 instance and scale them out to Amazon&#39;s container orchestration service, EC2 Container Service (ECS).">
+  
+    
+    <meta name="keywords" content="aws, aws ecs, amazon ecs, docker, amazon ec2 container service, microservice, microservices, node, react, reactjs, javascript, containerization, orchestration, ec2">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2017/11/16/docker-on-aws-from-containerization-to-orchestration/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Docker on AWS: from containerization to orchestration">
+  <meta name="twitter:description" content="This tutorial details how to take a number of containerized microservices running on a single EC2 instance and scale them out to Amazon&#39;s container orchestration service, EC2 Container Service ...">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Docker on AWS: from containerization to orchestration</h1>
+    
+    <p class="post-meta"><time datetime="2017-11-16T01:23:24-07:00" itemprop="datePublished">Nov 16, 2017</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/aws/">aws</a>,
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/docker/">docker</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/microservices/">microservices</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/react/">react</a>,
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/devops/">devops</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>In this post, we’ll take a number of containerized microservices running on a single EC2 instance and scale them out to Amazon’s container orchestration service, <a href="https://aws.amazon.com/ecs/">EC2 Container Service</a> (ECS).</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/docker-aws/aws-docker.png" style="max-width: 100%; border:0; box-shadow: none;" alt="aws and docker" />
+</div>
+
+<p><br /></p>
+
+<p>We’ll be using the following tools…</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tool</th>
+      <th>Use Cases</th>
+      <th>Version</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Docker</td>
+      <td>Containerization and distribution</td>
+      <td><a href="https://docs.docker.com/release-notes/docker-ce/#17090-ce-2017-09-26">17.09.0-ce</a></td>
+    </tr>
+    <tr>
+      <td>AWS ECS</td>
+      <td>Container orchestration and management</td>
+      <td><a href="https://github.com/aws/amazon-ecs-agent/releases/tag/v1.15.0">1.15.0</a> (service agent)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><em>Updates:</em></p>
+
+<ul>
+  <li>Nov 25, 2017: Updated the Inbound Rules on the Security Group.</li>
+</ul>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#prerequisites" id="markdown-toc-prerequisites">Prerequisites</a></li>
+  <li><a href="#objectives" id="markdown-toc-objectives">Objectives</a></li>
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#containerization" id="markdown-toc-containerization">Containerization</a></li>
+  <li><a href="#orchestration" id="markdown-toc-orchestration">Orchestration</a></li>
+  <li><a href="#next-steps" id="markdown-toc-next-steps">Next Steps</a></li>
+</ul>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p>This post assumes prior knowledge of Docker and some experience working with a Docker-based microservice stack. You should also be familiar with the following AWS services - <a href="https://aws.amazon.com/vpc/">VPC</a>, <a href="https://aws.amazon.com/elasticloadbalancing/">ELB</a>, <a href="https://aws.amazon.com/ec2/">EC2</a>, and <a href="https://aws.amazon.com/iam/">IAM</a>.</p>
+
+<p>Refer to the following resources for more info:</p>
+
+<ol>
+  <li><a href="http://mherman.org/blog/2017/05/11/developing-microservices-node-react-docker">Developing Microservices - Node, React, and Docker</a></li>
+  <li><a href="https://testdriven.io">Microservices with Docker, Flask, and React</a> - full course, powered by the fine folks at <a href="https://testdriven.io">testdriven.io</a>!</li>
+</ol>
+
+<h2 id="objectives">Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to…</p>
+
+<ol>
+  <li>Explain what <em>container orchestration</em> is and why you may need to incorporate an orchestration tool into your deployment process</li>
+  <li>Discuss the pros and cons of using EC2 Container Service (ECS) over other <em>orchestration tools</em> like Kubernetes, Mesos, and Docker Swarm</li>
+  <li>Configure an <em>Application Load Balancer</em> (ALB) along with <em>ECS</em> to run a set of microservices</li>
+  <li>Integrate <em>Amazon EC2 Container Registry</em> (ECR) into the deployment process</li>
+  <li>Send <em>container logs</em> to CloudWatch</li>
+  <li>Update a running container via a <em>zero-downtime deployment</em> strategy to not disrupt the current users or your application</li>
+  <li>Explain the types of <em>scaling</em> that are available to you</li>
+</ol>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Fork the <a href="https://github.com/mjhea0/microservice-ping-pong">microservice-ping-pong</a> repo, clone it down, and then check out the <a href="https://github.com/mjhea0/microservice-ping-pong/releases/tag/v1">v1</a> tag to the master branch:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/YOUR_GITHUB_NAME/microservice-ping-pong
+<span class="nv">$ </span><span class="nb">cd </span>microservice-ping-pong
+<span class="nv">$ </span>git checkout tags/v1 <span class="nt">-b</span> master
+</code></pre></div></div>
+
+<p>Take note of the <em>docker-compose.yml</em> file to see an overview of the  project structure:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.3'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">node-john</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">node-john</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">./services/node</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">node-base</span>
+    <span class="s">...</span>
+
+  <span class="na">node-paul</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">node-paul</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">node-base</span>
+    <span class="s">...</span>
+
+  <span class="na">node-george</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">node-george</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">node-base</span>
+    <span class="s">...</span>
+
+  <span class="na">node-ringo</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">node-ringo</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">node-base</span>
+    <span class="s">...</span>
+
+  <span class="na">client</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">node-client</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">./services/client</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
+    <span class="s">...</span>
+
+  <span class="na">nginx</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">node-nginx</span>
+    <span class="na">build</span><span class="pi">:</span> <span class="s">./services/nginx</span>
+    <span class="s">...</span>
+</code></pre></div></div>
+
+<p>So, that’s one Nginx container and one React container as well as four Node containers. Also, did you notice that we’re using the same image to build each of the Node containers?</p>
+
+<div style="text-align:left;">
+
+<table style="margin:0;">
+<thead>
+<tr>
+<th> Container    </th>
+<th> Image    </th>
+<th> Tech    </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> node-john   </td>
+<td> node-base </td>
+<td> NodeJs  </td>
+</tr>
+<tr>
+<td> node-paul   </td>
+<td> node-base </td>
+<td> NodeJS  </td>
+</tr>
+<tr>
+<td> node-george </td>
+<td> node-base </td>
+<td> NodeJS  </td>
+</tr>
+<tr>
+<td> node-ringo  </td>
+<td> node-base </td>
+<td> NodeJS </td>
+</tr>
+<tr>
+<td> client      </td>
+<td> client    </td>
+<td> ReactJS </td>
+</tr>
+<tr>
+<td> nginx       </td>
+<td> nginx     </td>
+<td> Nginx   </td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p></p>
+
+<p>Feel free to fire up the app locally:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> node-base ./services/node
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">REACT_APP_BASE_URL</span><span class="o">=</span>http://DOCKER_MACHINE_IP
+<span class="nv">$ </span>docker-compose up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p><a href="/assets/img/blog/docker-aws/ping.png"><img src="/assets/img/blog/docker-aws/ping.png" alt="ping pong app" /></a></p>
+
+<p>The functionality is quite simple: When the end user clicks on one of the letters, an AJAX request is sent to the <code class="highlighter-rouge">node-john</code> container, which then triggers a series of container-to-container requests:</p>
+
+<ol>
+  <li><code class="highlighter-rouge">node-john</code> requests <code class="highlighter-rouge">node-paul</code></li>
+  <li><code class="highlighter-rouge">node-paul</code> requests <code class="highlighter-rouge">node-george</code></li>
+  <li><code class="highlighter-rouge">node-george</code> requests <code class="highlighter-rouge">node-ringo</code></li>
+</ol>
+
+<p>Once complete, a response is sent back to the client with the following array:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+  </span><span class="s2">"meow from node-paul:3000"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"meow from node-george:3000"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"meow from node-ringo:3000"</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Nothing special. Just a basic app, meant to highlight some aspects of how networking works in Docker land.</p>
+
+<h2 id="containerization">Containerization</h2>
+
+<p>Next, let’s deploy the cluster to a single Amazon EC2 instance with Docker <a href="https://docs.docker.com/compose/">Compose</a> and <a href="https://docs.docker.com/machine/">Machine</a>.</p>
+
+<h3 id="docker-machine">Docker Machine</h3>
+
+<p>Assuming you already have an AWS account <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/get-set-up-for-amazon-ec2.html">setup</a> along with <a href="https://aws.amazon.com/iam/">IAM</a> and your AWS credentials are stored in an <em>~/.aws/credentials</em> file, create a new host on an EC2 instance:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine create <span class="nt">--driver</span> amazonec2 ping-pong
+</code></pre></div></div>
+
+<blockquote>
+  <p>For more, review the <a href="https://docs.docker.com/machine/examples/aws/">Amazon Web Services (AWS) EC2 example</a> from Docker.</p>
+</blockquote>
+
+<p>Once done, set it as the active host and point the Docker client at it:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine env ping-pong
+<span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env ping-pong<span class="k">)</span>
+</code></pre></div></div>
+
+<p>Grab the IP address associated with the new EC2 instance and use it to set the <code class="highlighter-rouge">REACT_APP_BASE_URL</code> environment variable:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine ip ping-pong
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">REACT_APP_BASE_URL</span><span class="o">=</span>http://DOCKER_MACHINE_IP
+</code></pre></div></div>
+
+<blockquote>
+  <p>The <code class="highlighter-rouge">REACT_APP_BASE_URL</code> environment variable must be set at the build-time, so it is available <em>before</em> we kick off Create React App’s production build process. See <em>services/client/Dockerfile</em> for more info.</p>
+</blockquote>
+
+<p>Build and tag the <code class="highlighter-rouge">node-base</code> image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> node-base ./services/node
+</code></pre></div></div>
+
+<p>Fire up the containers:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p>Make sure to expose port 80 in the <a href="https://stackoverflow.com/questions/26338301/ec2-how-to-add-port-8080-in-security-group">Security Group</a>, and then test it out in the browser:</p>
+
+<div>
+  <img src="/assets/img/blog/docker-aws/ping3.png" style="max-width: 80%; border:0; box-shadow: none;" alt="ping pong app" />
+</div>
+
+<p>Back in your terminal, open the Docker <a href="https://docs.docker.com/compose/reference/logs/">logs</a> with a <a href="https://docs.docker.com/compose/reference/logs/">follow</a> flag:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose logs <span class="nt">-f</span>
+</code></pre></div></div>
+
+<p>Then, with your terminal window and browser side-by-side on your screen, click on of the letters:</p>
+
+<p><a href="/assets/img/blog/docker-aws/ping2.png"><img src="/assets/img/blog/docker-aws/ping2.png" alt="ping pong app" /></a></p>
+
+<p>You should see a number of POST requests in the terminal, as the containers ping each other.</p>
+
+<p>It’s important to note that the majority of your apps can live on a single instance like this. Spin up Postgres on <a href="https://aws.amazon.com/rds/">RDS</a> and possibly a message queue on <a href="https://aws.amazon.com/sqs/">SQS</a> and you should be good for a while. As your app grows and you add feature after feature, you may that you need to create separate services and scale them independency from the whole. At that point, it may be time to start looking at ECS.</p>
+
+<p>With that, let’s look at how scale this out to multiple EC2 instances with <a href="https://aws.amazon.com/ecs/">ECS</a>…</p>
+
+<h2 id="orchestration">Orchestration</h2>
+
+<blockquote>
+  <p>If you’re completely new to ECS, please review the <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_GetStarted.html">Getting Started with Amazon ECS</a> guide.</p>
+</blockquote>
+
+<h3 id="what-is-container-orchestration">What is container orchestration?</h3>
+
+<p>As you move from deploying containers on a single machine to deploying them across a number of machines, you need an orchestration tool to manage the arrangement and coordination of the containers across the entire system. This is where ECS fits in along with a number of other orchestration tools - like <a href="https://kubernetes.io/">Kubernetes</a>, <a href="http://mesos.apache.org/">Mesos</a>, and <a href="https://docs.docker.com/engine/swarm/">Docker Swarm</a>.</p>
+
+<div>
+  <img src="/assets/img/blog/docker-aws/kubernetes-vs-docker-swarm-vs-mesos.png" style="max-width: 40%; border:0; box-shadow: none;" alt="kubernetes vs docker swarm vs mesos" />
+</div>
+
+<p></p>
+
+<h3 id="why-ecs">Why ECS?</h3>
+
+<p>ECS is simpler to set up and easier to use and you have the full power of AWS behind it, so you can easily integrate it into other AWS services (which we will be doing shortly). In short, you get scheduling, service discovery, load balancing, and auto-scaling out-of-the-box. Plus, you can take full advantage of EC2’s multiple availability-zones.</p>
+
+<p>If you’re already on AWS and have no desire to leave, then it makes sense to use AWS.</p>
+
+<p>Keep in mind, that ECS is often lagging behind Kubernetes, in terms of features, though. If you’re looking for the most features and portability and you don’t mind installing and managing the tool, then Kubernetes, Docker Swarm, or Mesos may be right for you.</p>
+
+<p>One last thing to take note of is that since ECS is closed-source, there isn’t a true way to run an environment locally in order to achieve  development-to-production parity.</p>
+
+<blockquote>
+  <p>For more, review the <a href="https://blog.kublr.com/choosing-the-right-containerization-and-cluster-management-tool-fdfcec5700df">Choosing the Right Containerization and Cluster Management Tool</a> blog post.</p>
+</blockquote>
+
+<h3 id="orchestration-feature-wish-list">Orchestration feature wish-list</h3>
+
+<p>Most orchestration tools come with a core set of features. You can find those features below along with the associated AWS service…</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Info</th>
+      <th>AWS Service</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Health checks</td>
+      <td>Verify when a task is ready to accept traffic</td>
+      <td>ALB</td>
+    </tr>
+    <tr>
+      <td>Path-based routing</td>
+      <td>Forward requests based on the URL path</td>
+      <td>ALB</td>
+    </tr>
+    <tr>
+      <td>Dynamic port-mapping</td>
+      <td>Ports are assigned dynamically when a new container is spun up</td>
+      <td>ALB</td>
+    </tr>
+    <tr>
+      <td>Zero-downtime deployments</td>
+      <td>Deployments do not disrupt the users</td>
+      <td>ALB</td>
+    </tr>
+    <tr>
+      <td>Service discovery</td>
+      <td>Automatic detection of new containers and services</td>
+      <td>ALB, ECS</td>
+    </tr>
+    <tr>
+      <td>High availability</td>
+      <td>Containers are evenly distributed across Availability Zones</td>
+      <td>ECS</td>
+    </tr>
+    <tr>
+      <td>Auto scaling</td>
+      <td>Automatically scaling resources up or down based on fluctuations in traffic patterns or metrics (like CPU usage)</td>
+      <td>ECS</td>
+    </tr>
+    <tr>
+      <td>Provisioning</td>
+      <td>New containers should select hosts based on resources and configuration</td>
+      <td>ECS</td>
+    </tr>
+    <tr>
+      <td>Container storage</td>
+      <td>Private image storage and management</td>
+      <td>ECR</td>
+    </tr>
+    <tr>
+      <td>Container logs</td>
+      <td>Centralized storage of container logs</td>
+      <td>CloudWatch</td>
+    </tr>
+    <tr>
+      <td>Monitoring</td>
+      <td>Ability to monitor basic stats like CPU usage, memory, I/O, and network usage as well as set alarms and create events</td>
+      <td>CloudWatch</td>
+    </tr>
+    <tr>
+      <td>Secrets management</td>
+      <td>Sensitive info should be encrypted and stored in a centralized store</td>
+      <td>Parameter Store, KMS, IAM</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="elastic-load-balancer">Elastic Load Balancer</h3>
+
+<p>The <a href="https://aws.amazon.com/elasticloadbalancing/">Elastic Load Balancer</a> distributes incoming application traffic and scales resources as needed to meet traffic needs.</p>
+
+<p>A load balancer is one of (if not) the most important parts of your applications since it needs to always be up, routing traffic to healthy back-ends, and ready to scale at a moment’s notice.</p>
+
+<p>There are currently <a href="https://aws.amazon.com/elasticloadbalancing/details/#details">three types</a> of Elastic Load Balancers to choose from. We’ll be using the Application Load Balancer since it provides support for <a href="http://docs.aws.amazon.com/elasticloadbalancing/latest/application/tutorial-load-balancer-routing.html">path-based routing</a> and <a href="https://aws.amazon.com/premiumsupport/knowledge-center/dynamic-port-mapping-ecs/">dynamic port-mapping</a> and it also enables zero-downtime deployments. The Application Load Balancer is one of those AWS services that makes ECS so powerful. In fact, before it’s <a href="https://aws.amazon.com/blogs/aws/new-aws-application-load-balancer/">release</a>, ECS was not a viable orchestration solution.</p>
+
+<p>To set up, click “Load Balancers” in the <a href="https://console.aws.amazon.com/ec2">EC2 Dashboard</a>. Click “Create Load Balancer”, and then select the “Create” button under “Application Load Balancer”.</p>
+
+<h4 id="configure-load-balancer">Configure Load Balancer</h4>
+
+<ul>
+  <li>“Name”: <code class="highlighter-rouge">microservice-ping-pong-alb</code></li>
+  <li>“VPC”: Select the <a href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html">default VPC</a> to keep things simple</li>
+  <li>“Availability Zones”: Select at least two available subnets</li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/configure-load-balancer1.png"><img src="/assets/img/blog/docker-aws/configure-load-balancer1.png" alt="configure load balancer" /></a></p>
+
+<h4 id="configure-security-settings">Configure Security Settings</h4>
+
+<p>Skip this for now.</p>
+
+<h4 id="configure-security-groups">Configure Security Groups</h4>
+
+<p>Create a new <a href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html">Security Group</a> called <code class="highlighter-rouge">microservice-ping-pong-security-group</code>, making sure to open up port 80.</p>
+
+<p><a href="/assets/img/blog/docker-aws/configure-load-balancer2.png"><img src="/assets/img/blog/docker-aws/configure-load-balancer2.png" alt="configure load balancer" /></a></p>
+
+<h4 id="configure-routing">Configure Routing</h4>
+
+<ul>
+  <li>“Name”: <code class="highlighter-rouge">microservice-ping-pong-client-tg</code></li>
+  <li>“Port”: <code class="highlighter-rouge">3000</code></li>
+  <li>“Path”: /</li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/configure-load-balancer3.png"><img src="/assets/img/blog/docker-aws/configure-load-balancer3.png" alt="configure load balancer" /></a></p>
+
+<h4 id="register-targets">Register Targets</h4>
+
+<p>Do not assign any instances manually since this will be managed by ECS. Review and then create the new load balancer.</p>
+
+<p>Once created, take note of the new Security Group:</p>
+
+<p><a href="/assets/img/blog/docker-aws/load-balancer.png"><img src="/assets/img/blog/docker-aws/load-balancer.png" alt="aws ecs load balancer" /></a></p>
+
+<p>With that, we also need to set up Target Groups and Listeners:</p>
+
+<p><a href="/assets/img/blog/docker-aws/elastic-load-balancing.png"><img src="/assets/img/blog/docker-aws/elastic-load-balancing.png" alt="elastic load balancing " /></a></p>
+
+<h3 id="target-groups">Target Groups</h3>
+
+<p><a href="http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html">Target Groups</a> are attached to the Application Load Balancer and are used to route traffic to the containers found in the ECS Service.</p>
+
+<p>You may have already noticed, but a Target Group called <code class="highlighter-rouge">microservice-ping-pong-client-tg</code> was already created when we set up the Application Load Balancer, so we just need to set up one more.</p>
+
+<p>Within the <a href="https://console.aws.amazon.com/ec2">EC2 Dashboard</a>, click “Target Groups”, and then create the following Target Group:</p>
+
+<ul>
+  <li>“Target group name”: <code class="highlighter-rouge">microservice-ping-pong-node-tg</code></li>
+  <li>“Port”: <code class="highlighter-rouge">3000</code></li>
+  <li>Then, under “Health check settings” set the “Path” to <code class="highlighter-rouge">/ping</code>.</li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/configure-target-group.png"><img src="/assets/img/blog/docker-aws/configure-target-group.png" alt="configure target groups" /></a></p>
+
+<h3 id="listeners">Listeners</h3>
+
+<p>Back on the “Load Balancers” page on the <a href="https://console.aws.amazon.com/ec2">EC2 Dashboard</a>, click the <code class="highlighter-rouge">microservice-ping-pong-alb</code> Load Balancer, and then select the “Listeners” tab. Here, we can add <a href="http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html">Listeners</a> to the load balancer, which are then forwarded to a specific Target Group.</p>
+
+<p>There should already be a listener for “HTTP : 80”. Click the “View/edit rules &gt;” link, and then insert three new rules:</p>
+
+<ol>
+  <li>If <code class="highlighter-rouge">/</code>, Then <code class="highlighter-rouge">microservice-ping-pong-client-tg</code></li>
+  <li>If <code class="highlighter-rouge">/ping</code>, Then <code class="highlighter-rouge">microservice-ping-pong-client-tg</code></li>
+  <li>If <code class="highlighter-rouge">/start</code>, Then <code class="highlighter-rouge">microservice-ping-pong-client-tg</code></li>
+</ol>
+
+<p><a href="/assets/img/blog/docker-aws/load-balancer-listeners.png"><img src="/assets/img/blog/docker-aws/load-balancer-listeners.png" alt="aws ecr" /></a></p>
+
+<h3 id="ecr">ECR</h3>
+
+<p>Next, we’ll set up <a href="https://aws.amazon.com/ecr/">EC2 Container Registry</a> (ECR), a private image registry.</p>
+
+<p>Navigate to the <a href="https://console.aws.amazon.com/ecs">ECS Console</a>, click “Repositories” on the navigation pane, and then click the “Create repository” button. Add the following repositories, making sure to follow the build, tag, and push commands after each is created:</p>
+
+<ol>
+  <li><code class="highlighter-rouge">microservice-ping-pong/client</code></li>
+  <li><code class="highlighter-rouge">microservice-ping-pong/node</code></li>
+</ol>
+
+<blockquote>
+  <p>Be sure to update the value of the <code class="highlighter-rouge">REACT_APP_BASE_URL</code> environment variable to the Load Balancer’s “DNS name”.</p>
+</blockquote>
+
+<p>Example build, tag, and push:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>aws ecr get-login <span class="nt">--no-include-email</span> <span class="nt">--region</span> us-east-1
+<span class="nv">$ </span>docker build <span class="nt">-t</span> microservice-ping-pong/client ./services/client
+<span class="nv">$ </span>docker tag microservice-ping-pong/client:latest <span class="se">\</span>
+  AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/microservice-ping-pong/client:latest
+<span class="nv">$ </span>docker push <span class="se">\</span>
+  AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/microservice-ping-pong/client:latest
+</code></pre></div></div>
+
+<h4 id="why-only-two-images">Why only two images?</h4>
+
+<p>Well, we’ll use the Application Load Balancer instead of Nginx in our stack so we won’t need that image or container. For the Node containers, just like before, we can use one image to create all four containers since they are identical.</p>
+
+<p><a href="/assets/img/blog/docker-aws/ecr.png"><img src="/assets/img/blog/docker-aws/ecr.png" alt="aws ecr" /></a></p>
+
+<p>Did you notice that we tagged the image with <code class="highlighter-rouge">latest</code> in the example above? This is an anti-pattern. Tags can (and should) be used for version control as well as denoting which environment the image should belong to - like development, pre-prod/staging, or production.</p>
+
+<p>For example, you could use both the commit git commit SHA1 hash (to associate the image back to a specific commit to help with debugging) along with and the environment name.</p>
+
+<p><code class="highlighter-rouge">/$PROJECT/$ENVIRONMENT:$SHA1</code></p>
+
+<h3 id="ecs">ECS</h3>
+
+<p>The <a href="https://aws.amazon.com/ecs/">EC2 Container Service</a> (ECS) has four main components:</p>
+
+<ol>
+  <li>Task Definitions</li>
+  <li>Tasks</li>
+  <li>Services</li>
+  <li>Clusters</li>
+</ol>
+
+<p>In short, Task Definitions are used to spin up Tasks that get assigned to a Service, which is then assigned to a Cluster.</p>
+
+<p><img src="/assets/img/blog/docker-aws/ecs.png" alt="ecs" /></p>
+
+<h4 id="clusters">Clusters</h4>
+
+<p>An <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_clusters.html">ECS Cluster</a> is just a group of EC2 container instances managed by ECS.</p>
+
+<p>To create a Cluster, click “Clusters” on the <a href="https://console.aws.amazon.com/ecs">ECS Console</a> sidebar, and then click the “Create Cluster” button.</p>
+
+<ol>
+  <li>“Cluster name”: <code class="highlighter-rouge">microservice-ping-pong-cluster</code></li>
+  <li>“EC2 instance type”: <code class="highlighter-rouge">t2.small</code></li>
+  <li>“Number of instances”: <code class="highlighter-rouge">2</code></li>
+  <li>“Key pair”: Select an existing <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html">Key Pair</a> or create a new one</li>
+  <li>Select the default VPC and the previously created Security Group along with the appropriate subnets</li>
+</ol>
+
+<p><a href="/assets/img/blog/docker-aws/configure-cluster.png"><img src="/assets/img/blog/docker-aws/configure-cluster.png" alt="configure cluster" /></a></p>
+
+<p>Navigate to the Cluster once it’s up, and then click the “ECS Instances” tab. From there, click the “Actions” dropdown and select “View Cluster Resources” to ensure all is well:</p>
+
+<p><a href="/assets/img/blog/docker-aws/cluster.png"><img src="/assets/img/blog/docker-aws/cluster.png" alt="aws ecs cluster" /></a></p>
+
+<h4 id="task-definitions">Task Definitions</h4>
+
+<p><a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html">Task Definitions</a> define which containers make up the overall application and how much resources are allocated to each container. You can think of them as blueprints.</p>
+
+<p>Within the <a href="https://console.aws.amazon.com/ecs">ECS Console</a>, click “Task Definitions” and then “Create new Task Definition”.</p>
+
+<p>First, Update the “Task Definition Name” to <code class="highlighter-rouge">microservice-ping-pong-client-td</code> and then add a new container:</p>
+
+<ul>
+  <li>“Container name”: <code class="highlighter-rouge">client</code></li>
+  <li>“Image”: <code class="highlighter-rouge">AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/microservice-ping-pong/client:latest</code></li>
+  <li>“Memory Limits (MB)”: <code class="highlighter-rouge">300</code> soft limit</li>
+  <li>“Port mappings”: <code class="highlighter-rouge">0</code> host, <code class="highlighter-rouge">3000</code> container</li>
+</ul>
+
+<blockquote>
+  <p>We set the host port for the client service to 0 so that a port is dynamically assigned when the Task is spun up.</p>
+</blockquote>
+
+<ul>
+  <li>“Log configuration”: It’s a good idea to configure logs, via <a href="http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_LogConfiguration.html">LogConfiguration</a>, to pipe logs to <a href="https://console.aws.amazon.com/cloudwatch/">CloudWatch</a>. To set up, we need to create a new Log Group. Simply navigate to <a href="https://console.aws.amazon.com/cloudwatch">CloudWatch</a>, click “Logs” on the navigation pane, click the “Actions” drop-down button, and then select “Create log group”. Name the group <code class="highlighter-rouge">microservice-ping-pong-client</code>.</li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/configure-task-def.png"><img src="/assets/img/blog/docker-aws/configure-task-def.png" alt="configure task def" /></a></p>
+
+<p><a href="/assets/img/blog/docker-aws/configure-task-def2.png"><img src="/assets/img/blog/docker-aws/configure-task-def2.png" alt="configure task def" /></a></p>
+
+<p>Then, set up a single Task Definition for each of the Node containers:</p>
+
+<ul>
+  <li>“Name”: <code class="highlighter-rouge">microservice-ping-pong-node-td</code></li>
+  <li>“Container”:
+    <ul>
+      <li>“Container name”: <code class="highlighter-rouge">node-john</code></li>
+      <li>“Image”: <code class="highlighter-rouge">AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/microservice-ping-pong/node:latest</code></li>
+      <li>“Memory Limits (MB)”: <code class="highlighter-rouge">300</code> soft limit</li>
+      <li>“Port mappings”: <code class="highlighter-rouge">0</code> host, <code class="highlighter-rouge">3000</code> container</li>
+      <li>“Links”: <code class="highlighter-rouge">node-paul</code>, <code class="highlighter-rouge">node-george</code>, <code class="highlighter-rouge">node-ringo</code></li>
+      <li>“Log configuration”: <code class="highlighter-rouge">microservice-ping-pong-node</code></li>
+    </ul>
+  </li>
+  <li>“Container”:
+    <ul>
+      <li>“Container name”: <code class="highlighter-rouge">node-paul</code></li>
+      <li>“Image”: <code class="highlighter-rouge">AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/microservice-ping-pong/node:latest</code></li>
+      <li>“Memory Limits (MB)”: <code class="highlighter-rouge">300</code> soft limit</li>
+      <li>“Port mappings”: <code class="highlighter-rouge">0</code> host, <code class="highlighter-rouge">3000</code> container</li>
+      <li>“Log configuration”: <code class="highlighter-rouge">microservice-ping-pong-node</code></li>
+    </ul>
+  </li>
+  <li>“Container”:
+    <ul>
+      <li>“Container name”: <code class="highlighter-rouge">node-george</code></li>
+      <li>“Image”: <code class="highlighter-rouge">AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/microservice-ping-pong/node:latest</code></li>
+      <li>“Memory Limits (MB)”: <code class="highlighter-rouge">300</code> soft limit</li>
+      <li>“Port mappings”: <code class="highlighter-rouge">0</code> host, <code class="highlighter-rouge">3000</code> container</li>
+      <li>“Log configuration”: <code class="highlighter-rouge">microservice-ping-pong-node</code></li>
+    </ul>
+  </li>
+  <li>“Container”:
+    <ul>
+      <li>“Container name”: <code class="highlighter-rouge">node-ringo</code></li>
+      <li>“Image”: <code class="highlighter-rouge">AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/microservice-ping-pong/node:latest</code></li>
+      <li>“Memory Limits (MB)”: <code class="highlighter-rouge">300</code> soft limit</li>
+      <li>“Port mappings”: <code class="highlighter-rouge">0</code> host, <code class="highlighter-rouge">3000</code> container</li>
+      <li>“Log configuration”: <code class="highlighter-rouge">microservice-ping-pong-node</code></li>
+    </ul>
+  </li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/task-defs.png"><img src="/assets/img/blog/docker-aws/task-defs.png" alt="aws ecs task definitions" /></a></p>
+
+<h4 id="services">Services</h4>
+
+<p><a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html">Services</a> instantiate the containers from the Task Definitions and run them on EC2 boxes within an ECS Cluster. Such instances are called <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_run_task.html">Tasks</a>. To create a new Service, on the “Services” tab within the newly created Cluster, click “Create”.</p>
+
+<p>Add the following Services…</p>
+
+<h5 id="client">Client</h5>
+
+<ul>
+  <li>“Task Definition”: <code class="highlighter-rouge">microservice-ping-pong-client-td:LATEST_REVISION_NUMBER</code></li>
+  <li>“Service name”: <code class="highlighter-rouge">microservice-ping-pong-client-service</code></li>
+  <li>“Number of tasks”: 1</li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/configure-service1.png"><img src="/assets/img/blog/docker-aws/configure-service1.png" alt="configure service" /></a></p>
+
+<p>Click “Next”. On the “Configure network” step, select the “Application Load Balancer” under “Load balancer type”.</p>
+
+<ul>
+  <li>“Load balancer name”: <code class="highlighter-rouge">microservice-ping-pong-alb</code></li>
+  <li>“Container name : port”: <code class="highlighter-rouge">client:0:3000</code></li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/configure-service2.png"><img src="/assets/img/blog/docker-aws/configure-service2.png" alt="configure service" /></a></p>
+
+<p>Click “Add to load balancer”.</p>
+
+<ul>
+  <li>“Listener port”: <code class="highlighter-rouge">80:HTTP</code></li>
+  <li>“Target group name”: <code class="highlighter-rouge">microservice-ping-pong-client-tg</code></li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/configure-service3.png"><img src="/assets/img/blog/docker-aws/configure-service3.png" alt="configure service" /></a></p>
+
+<p>Click the next button a few times, and then “Create Service”.</p>
+
+<h5 id="node">Node</h5>
+
+<ul>
+  <li>“Task Definition”: <code class="highlighter-rouge">microservice-ping-pong-node-td:LATEST_REVISION_NUMBER</code></li>
+  <li>“Service name”: <code class="highlighter-rouge">microservice-ping-pong-node-service</code></li>
+  <li>“Number of tasks”: 1</li>
+</ul>
+
+<p>Click “Next”. On the “Configure network” step, select the “Application Load Balancer” under “Load balancer type”.</p>
+
+<ul>
+  <li>“Load balancer name”: <code class="highlighter-rouge">microservice-ping-pong-alb</code></li>
+  <li>“Container name : port”: <code class="highlighter-rouge">node-john:0:3000</code></li>
+</ul>
+
+<p>Click “Add to load balancer”.</p>
+
+<ul>
+  <li>“Listener port”: <code class="highlighter-rouge">80:HTTP</code></li>
+  <li>“Target group name”: <code class="highlighter-rouge">microservice-ping-pong-node-tg</code></li>
+</ul>
+
+<p><a href="/assets/img/blog/docker-aws/ecs-services.png"><img src="/assets/img/blog/docker-aws/ecs-services.png" alt="aws ecs services" /></a></p>
+
+<h3 id="sanity-check">Sanity Check</h3>
+
+<p>Navigate to the <a href="https://console.aws.amazon.com/ec2">EC2 Dashboard</a>, and click “Target Groups”. Make sure <code class="highlighter-rouge">microservice-ping-pong-client-tg</code> and <code class="highlighter-rouge">microservice-ping-pong-node-tg</code> have a single registered instance each. Both instances should also be <em>unhealthy</em> because they failed their respective health checks.</p>
+
+<p>To get them to pass the health checks, we need to add another inbound rule to the Security Group associated with the containers (which we defined when we configured the Cluster), <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/create-application-load-balancer.html#alb-sec-group">allowing</a> traffic from the Load Balancer to reach the containers.</p>
+
+<h3 id="inbound-rule">Inbound Rule</h3>
+
+<p>Within the <a href="https://console.aws.amazon.com/ec2">EC2 Dashboard</a>, click “Security Groups” and select the Security group associated with the containers, which is the same group assigned to the Load Balancer). Click the “Inbound” tab and then click “Edit”</p>
+
+<p>Add a new rule:</p>
+
+<ol>
+  <li>“Type”: <code class="highlighter-rouge">All traffic</code></li>
+  <li>“Port Range”: <code class="highlighter-rouge">0 - 65535</code></li>
+  <li>“Source”: Choose <code class="highlighter-rouge">Custom</code>, then add the Security Group ID</li>
+</ol>
+
+<p>Once added, the next time a container is added to each of the Target Groups, the instance should be <em>healthy</em>:</p>
+
+<p><a href="/assets/img/blog/docker-aws/target-groups.png"><img src="/assets/img/blog/docker-aws/target-groups.png" alt="aws target groups" /></a></p>
+
+<p>Then, navigate back to the Load Balancer and grab the “DNS name” from the “Description” tab. Test each endpoint in your browser:</p>
+
+<ol>
+  <li><a href="http://LOAD_BALANCER_DNS_NAME">http://LOAD_BALANCER_DNS_NAME</a></li>
+  <li><a href="http://LOAD_BALANCER_DNS_NAME/ping">http://LOAD_BALANCER_DNS_NAME/ping</a></li>
+  <li><a href="http://LOAD_BALANCER_DNS_NAME/start">http://LOAD_BALANCER_DNS_NAME/start</a></li>
+</ol>
+
+<p>Essentially, when the Service was spun up, ECS automatically discovered and associated the new Cluster instances with the Application Load Balancer.</p>
+
+<p><a href="/assets/img/blog/docker-aws/elastic-load-balancing-ecs.png"><img src="/assets/img/blog/docker-aws/elastic-load-balancing-ecs.png" alt="elastic load balancing and ecs " /></a></p>
+
+<h3 id="zero-downtime-deployments">Zero Downtime Deployments</h3>
+
+<p>Check you understanding and try this on your own.</p>
+
+<h4 id="steps">Steps</h4>
+
+<ol>
+  <li>Make a quick change to the app locally.</li>
+  <li>Build, tag, and push the new images.</li>
+  <li>
+    <p>Add a new revision to the task definition.</p>
+
+    <p><a href="/assets/img/blog/docker-aws/task-def-revision.png"><img src="/assets/img/blog/docker-aws/task-def-revision.png" alt="task definition revision " /></a></p>
+  </li>
+  <li>
+    <p>Update the service.</p>
+
+    <p><a href="/assets/img/blog/docker-aws/service-update1.png"><img src="/assets/img/blog/docker-aws/service-update1.png" alt="update service " /></a></p>
+
+    <p><a href="/assets/img/blog/docker-aws/service-update2.png"><img src="/assets/img/blog/docker-aws/service-update2.png" alt="update service " /></a></p>
+  </li>
+</ol>
+
+<h4 id="what-happens-next">What happens next?</h4>
+
+<ol>
+  <li>
+    <p>Once you update the Service, ECS will pick up on these changes and instantiate the Task Definitions, creating new Tasks that will spin up on the Cluster instances.</p>
+
+    <p><a href="/assets/img/blog/docker-aws/service-update3.png"><img src="/assets/img/blog/docker-aws/service-update3.png" alt="update service " /></a></p>
+  </li>
+  <li>
+    <p>ALB will run health checks on the new instances once they are up.</p>
+
+    <ul>
+      <li>
+        <p>If the health checks pass, traffic is forwarded appropriately to the new Tasks while the old Tasks are spun down.</p>
+
+        <p><a href="/assets/img/blog/docker-aws/service-update4.png"><img src="/assets/img/blog/docker-aws/service-update4.png" alt="update service " /></a></p>
+      </li>
+      <li>
+        <p>If the health checks fail, the new Tasks are spun down.</p>
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<p>The health checks are the last line of defense after your own unit, integration, and functional tests.</p>
+
+<div>
+  <img src="/assets/img/blog/docker-aws/ping4.png" style="max-width: 80%; border:0; box-shadow: none;" alt="ping pong app" />
+</div>
+
+<h3 id="autoscaling">Autoscaling</h3>
+
+<p>You can scale up or down at both the Cluster (adding additional EC2 instances) and Service (adding more Tasks to an existing instance) level.</p>
+
+<h4 id="cluster">Cluster</h4>
+
+<p>To manually scale, navigate to the Cluster and click the “ECS Instances” tab. Then, click the “Scale ECS Instances” button and provide the desired number of instances you’d like to scale up (or down) to.</p>
+
+<p><a href="/assets/img/blog/docker-aws/scale-by-cluster.png"><img src="/assets/img/blog/docker-aws/scale-by-cluster.png" alt="scale by cluster " /></a></p>
+
+<p>You can automate this process by setting up an <a href="http://docs.aws.amazon.com/autoscaling/latest/userguide/AutoScalingGroup.html">Auto Scaling Group</a>. Review the <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch_alarm_autoscaling.html">Scaling Container Instances with CloudWatch Alarms</a> tutorial for more info.</p>
+
+<h4 id="service">Service</h4>
+
+<p>You can also scale Tasks up (or down) at the Service-level.</p>
+
+<p><a href="/assets/img/blog/docker-aws/service-auto-scaling.png"><img src="/assets/img/blog/docker-aws/service-auto-scaling.png" alt="service auto scaling " /></a></p>
+
+<p><a href="/assets/img/blog/docker-aws/service-auto-scaling2.png"><img src="/assets/img/blog/docker-aws/service-auto-scaling2.png" alt="service auto scaling " /></a></p>
+
+<p>For more on this, review the <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service_autoscaling_tutorial.html">Service Auto Scaling with CloudWatch Service Utilization Metrics</a> tutorial.</p>
+
+<h2 id="next-steps">Next Steps</h2>
+
+<p>That’s it!</p>
+
+<h3 id="check-your-understanding">Check your understanding</h3>
+
+<ol>
+  <li>Add CI/CD (via <a href="http://mherman.org/blog/2017/09/18/on-demand-test-environments-with-docker-and-aws-ecs">Circle CI</a> or <a href="https://medium.com/@YadavPrakshi/automate-zero-downtime-deployment-with-amazon-ecs-and-lambda-c4e49953273d">AWS Lambda</a>) and Postgres via RDS (<a href="https://testdriven.io">example</a>)</li>
+  <li>Turn back to the feature wish-list. Implement anything not covered.</li>
+  <li>Did you notice that we didn’t add any of the environment variables from the Docker Compose file to the Task Definitions? Why does the app still work? Update the Task Definitions on your own.</li>
+</ol>
+
+<h3 id="resources">Resources</h3>
+
+<ol>
+  <li><a href="http://mherman.org/presentations/microservice-ping-pong">Slides</a></li>
+  <li><a href="https://github.com/mjhea0/microservice-ping-pong">Repo</a></li>
+  <li><strong><em><a href="http://testdriven.io/">Testdriven.io</a> - full tutorial!</em></strong> ❤️</li>
+  <li><a href="https://www.packtpub.com/books/content/how-to-build-12-factor-design-microservices-on-docker-part-1">How to Build 12 Factor Microservices on Docker</a></li>
+  <li><a href="https://github.com/wsargent/docker-cheat-sheet">Docker Cheat Sheet</a></li>
+</ol>
+
+<p>Cheers!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://mherman.org/blog/2017/11/16/docker-on-aws-from-containerization-to-orchestration/';
+    this.page.identifier = 'http://mherman.org/blog/2017/11/16/docker-on-aws-from-containerization-to-orchestration/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>
