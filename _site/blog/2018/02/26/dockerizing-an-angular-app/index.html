@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Dockerizing an Angular App</title>
+  <meta name="description" content="This tutorial demonstrates how to Dockerize an Angular app.">
+  
+    
+    <meta name="keywords" content="docker, angular, javascript, containerization, multistage builds, nginx, protractor, karma">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://mherman.org/blog/2018/02/26/dockerizing-an-angular-app/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Dockerizing an Angular App">
+  <meta name="twitter:description" content="This tutorial demonstrates how to Dockerize an Angular app.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Dockerizing an Angular App</h1>
+    
+    <p class="post-meta"><time datetime="2018-02-26T01:00:00-07:00" itemprop="datePublished">Feb 26, 2018</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/docker/">docker</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/angular/">angular</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p><a href="https://www.docker.com/">Docker</a> is a containerization tool used to streamline application development and deployment workflows across various environments.</p>
+
+<p>This tutorial shows how to Dockerize an <a href="https://angular.io/">Angular</a> app, built with the <a href="https://cli.angular.io/">Angular CLI</a>, using Docker along with Docker Compose and Docker Machine for both development and production. We’ll specifically focus on-</p>
+
+<ol>
+  <li>Setting up an image for development with code hot-reloading that includes an instance of Chrome for Karma testing</li>
+  <li>Configuring a lean, production-ready image using multistage builds</li>
+</ol>
+
+<p><em>Dependencies:</em></p>
+
+<ul>
+  <li>Docker v17.12.0-ce</li>
+  <li>Angular CLI v1.7.1</li>
+  <li>Node v9.6.1</li>
+</ul>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#docker" id="markdown-toc-docker">Docker</a></li>
+  <li><a href="#docker-machine" id="markdown-toc-docker-machine">Docker Machine</a></li>
+  <li><a href="#production" id="markdown-toc-production">Production</a></li>
+</ul>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Install the <a href="https://github.com/angular/angular-cli">Angular CLI</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> @angular/cli@1.7.1
+</code></pre></div></div>
+
+<p>Generate a new app:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ng new something-clever
+<span class="nv">$ </span><span class="nb">cd </span>something-clever
+</code></pre></div></div>
+
+<h2 id="docker">Docker</h2>
+
+<p>Add a <em>Dockerfile</em> to the project root:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># base image
+FROM node:9.6.1
+
+# install chrome for protractor tests
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" &gt;&gt; /etc/apt/sources.list.d/google.list'
+RUN apt-get update &amp;&amp; apt-get install -yq google-chrome-stable
+
+# set working directory
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+
+# add `/usr/src/app/node_modules/.bin` to $PATH
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+
+# install and cache app dependencies
+COPY package.json /usr/src/app/package.json
+RUN npm install
+RUN npm install -g @angular/cli@1.7.1
+
+# add app
+COPY . /usr/src/app
+
+# start app
+CMD ng serve --host 0.0.0.0
+</code></pre></div></div>
+
+<p>Add a <em>.dockerignore</em> as well:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node_modules
+.git
+</code></pre></div></div>
+
+<p>This will greatly speed up the Docker build process as our local dependencies and git repo will not be sent to the Docker daemon.</p>
+
+<p>Build and tag the Docker image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> something-clever <span class="nb">.</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>If the <code class="highlighter-rouge">RUN npm install -g @angular/cli@1.7.1</code> results in an infinite loop, you may need to add an <code class="highlighter-rouge">--unsafe</code> flag:</p>
+
+  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RUN npm install -g @angular/cli@1.7.1 --unsafe
+</code></pre></div>  </div>
+  <p>Review this <a href="https://github.com/angular/angular-cli/issues/7389">issue</a> for more info.</p>
+</blockquote>
+
+<p>Then, spin up the container once the build is done:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 4200:4200 <span class="se">\</span>
+  <span class="nt">--rm</span> <span class="se">\</span>
+  something-clever
+</code></pre></div></div>
+
+<p>Open your browser to <a href="http://localhost:4200">http://localhost:4200</a> and you should see the app. Try making a change to the <code class="highlighter-rouge">AppComponent</code>’s template (<em>src/app/app.component.html</em>) within your code editor. You should see the app hot-reload. Kill the server once done.</p>
+
+<p>Use the <code class="highlighter-rouge">-d</code> flag to run the container in the background:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-d</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 4200:4200 <span class="se">\</span>
+  <span class="nt">--name</span> something-clever-container <span class="se">\</span>
+  something-clever
+</code></pre></div></div>
+
+<p>Once up, update the Karma config to run Chrome in headless mode:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">browsers</span><span class="p">:</span> <span class="p">[</span><span class="s1">'ChromeHeadless'</span><span class="p">],</span>
+<span class="nx">customLaunchers</span><span class="p">:</span> <span class="p">{</span>
+  <span class="s1">'ChromeHeadless'</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nl">base</span><span class="p">:</span> <span class="s1">'Chrome'</span><span class="p">,</span>
+    <span class="nx">flags</span><span class="p">:</span> <span class="p">[</span><span class="s1">'--no-sandbox'</span><span class="p">,</span> <span class="s1">'--headless'</span><span class="p">,</span> <span class="s1">'--disable-gpu'</span><span class="p">,</span> <span class="s1">'--remote-debugging-port=9222'</span><span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">},</span>
+</code></pre></div></div>
+
+<p>Run the unit and e2e tests:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker <span class="nb">exec</span> <span class="nt">-it</span> something-clever-container ng <span class="nb">test</span> <span class="nt">--watch</span><span class="o">=</span><span class="nb">false</span>
+<span class="nv">$ </span>ng e2e
+</code></pre></div></div>
+
+<p>Stop and then remove the container once done:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker stop something-clever-container
+<span class="nv">$ </span>docker rm something-clever-container
+</code></pre></div></div>
+
+<p>Want to use <a href="https://docs.docker.com/compose/">Docker Compose</a>? Add a <em>docker-compose.yml</em> file to the project root:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">something-clever</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">something-clever</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">/usr/src/app/node_modules'</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">4200:4200'</span>
+</code></pre></div></div>
+
+<p>Take note of the volumes. Without the <a href="https://success.docker.com/article/Different_Types_of_Volumes">anonymous</a> volume (<code class="highlighter-rouge">'/usr/src/app/node_modules'</code>), the <em>node_modules</em> directory would essentially disappear by the mounting of the host directory at runtime:</p>
+
+<ul>
+  <li><em>Build</em> - The <code class="highlighter-rouge">node_modules</code> directory is created.</li>
+  <li><em>Run</em> - The current directory is copied into the container, overwriting the <code class="highlighter-rouge">node_modules</code> that were just installed when the container was built.</li>
+</ul>
+
+<p>Build the image and fire up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p>Ensure the app is running in the browser and test hot-reloading again. Try both the unit and e2e tests as well:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose run something-clever ng <span class="nb">test</span> <span class="nt">--watch</span><span class="o">=</span><span class="nb">false</span>
+<span class="nv">$ </span>ng e2e
+</code></pre></div></div>
+
+<p>Stop the container before moving on:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose stop
+</code></pre></div></div>
+
+<h2 id="docker-machine">Docker Machine</h2>
+
+<p>To get hot-reloading to work with <a href="https://docs.docker.com/machine/">Docker Machine</a> and <a href="https://docs.docker.com/machine/get-started/">VirtualBox</a> you’ll need to enable a polling mechanism via <a href="https://github.com/paulmillr/chokidar">chokidar</a> (which wraps <code class="highlighter-rouge">fs.watch</code>, <code class="highlighter-rouge">fs.watchFile</code>, and <code class="highlighter-rouge">fsevents</code>).</p>
+
+<p>Create a new Machine:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine create <span class="nt">-d</span> virtualbox clever
+<span class="nv">$ </span>docker-machine env clever
+<span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env clever<span class="k">)</span>
+</code></pre></div></div>
+
+<p>Grab the IP address:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine ip clever
+</code></pre></div></div>
+
+<p>Then, build the images:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> something-clever <span class="nb">.</span>
+</code></pre></div></div>
+
+<p>And run the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 4200:4200 <span class="se">\</span>
+  <span class="nt">--rm</span> <span class="se">\</span>
+  something-clever
+</code></pre></div></div>
+
+<p>Test the app again in the browser at <a href="http://DOCKER_MACHINE_IP:4200">http://DOCKER_MACHINE_IP:4200</a>. Also, confirm that auto reload is <em>not</em> working. You can try with Docker Compose as well, but the result will be the same.</p>
+
+<p>To get hot-reload working, we need to add an environment variable:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 4200:4200 <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">CHOKIDAR_USEPOLLING</span><span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
+  <span class="nt">--rm</span> <span class="se">\</span>
+  something-clever
+</code></pre></div></div>
+
+<p>Test it out again. Then, kill the server and add the environment variable to the <em>docker-compose.yml</em> file:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">something-clever</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">something-clever</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">/usr/src/app/node_modules'</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">4200:4200'</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">CHOKIDAR_USEPOLLING=true</span>
+</code></pre></div></div>
+
+<p>Spin up the container. Run the unit tests. Update the <code class="highlighter-rouge">baseUrl</code> in <em>protractor.conf.js</em> with the Docker Machine IP before running the e2e tests.</p>
+
+<h2 id="production">Production</h2>
+
+<p>Let’s create a separate Dockerfile for use in production called <em>Dockerfile-prod</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#########################
+### build environment ###
+#########################
+
+# base image
+FROM node:9.6.1 as builder
+
+# install chrome for protractor tests
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" &gt;&gt; /etc/apt/sources.list.d/google.list'
+RUN apt-get update &amp;&amp; apt-get install -yq google-chrome-stable
+
+# set working directory
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+
+# add `/usr/src/app/node_modules/.bin` to $PATH
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+
+# install and cache app dependencies
+COPY package.json /usr/src/app/package.json
+RUN npm install
+RUN npm install -g @angular/cli@1.7.1 --unsafe
+
+# add app
+COPY . /usr/src/app
+
+# run tests
+RUN ng test --watch=false
+
+# generate build
+RUN npm run build
+
+##################
+### production ###
+##################
+
+# base image
+FROM nginx:1.13.9-alpine
+
+# copy artifact build from the 'build environment'
+COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
+
+# expose port 80
+EXPOSE 80
+
+# run nginx
+CMD ["nginx", "-g", "daemon off;"]
+</code></pre></div></div>
+
+<p>Two important things to note:</p>
+
+<ol>
+  <li>
+    <p>First, we take advantage of <a href="https://docs.docker.com/engine/userguide/eng-image/multistage-build/">multistage builds</a> to create a temporary image used for building the artifact that is then copied over to the production image. The temporary build image is discarded along with the original files, folders, and dependencies associated with the image. This produces a lean, production-ready image.</p>
+
+    <p>In other words, the only thing kept from the first image is the compiled distribution code.</p>
+
+    <blockquote>
+      <p>Check out the <a href="https://blog.alexellis.io/mutli-stage-docker-builds/">Builder pattern vs. Multi-stage builds in Docker</a> blog post for more info on multistage builds.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>Next, the unit tests are run in the build process, so the build will fail if the tests do not succeed.</p>
+  </li>
+</ol>
+
+<p>Using the production Dockerfile, build and tag the Docker image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-f</span> Dockerfile-prod <span class="nt">-t</span> something-clever-prod <span class="nb">.</span>
+</code></pre></div></div>
+
+<p>Spin up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-p</span> 80:80 <span class="nt">--rm</span> something-clever-prod
+</code></pre></div></div>
+
+<p>Assuming you are still using the same Docker Machine, navigate to <a href="http://DOCKER_MACHINE_IP">http://DOCKER_MACHINE_IP</a> in your browser.</p>
+
+<p>Test with a new Docker Compose file as well called <em>docker-compose-prod.yml</em>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">something-clever-prod</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">something-clever-prod</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile-prod</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">80:80'</span>
+</code></pre></div></div>
+
+<p>Fire up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose <span class="nt">-f</span> docker-compose-prod.yml up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p>Test it out once more in your browser. Then, break a test in <em>src/app/app.component.spec.ts</em> and re-build. It should fail:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ERROR: Service <span class="s1">'something-clever-prod'</span> failed to build:
+The <span class="nb">command</span> <span class="s1">'/bin/sh -c ng test --watch=false'</span> returned a non-zero code: 1
+</code></pre></div></div>
+
+<p>If you’re done, go ahead and destroy the Machine:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env <span class="nt">-u</span><span class="k">)</span>
+<span class="nv">$ </span>docker-machine rm clever
+</code></pre></div></div>
+
+<hr />
+
+<p>Cheers!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://mherman.org/blog/2018/02/26/dockerizing-an-angular-app/';
+    this.page.identifier = 'http://mherman.org/blog/2018/02/26/dockerizing-an-angular-app/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>
