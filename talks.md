@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| June 14, 2018   | [Docker for Python Developers][36] | [DockerCon 2018][37] |
 | May 9, 2018   | [Going Serverless with OpenFaaS, Kubernetes, and Python][34] | [PyCon 2018][35] |
 | February 11, 2018   | [Developing and Testing Microservices with Flask, React, and Docker][33] | [PyTennessee 2018][15] |
 | November 15, 2017 | [Docker on AWS: from EC2 to ECS][31] | [AWS Greater Denver][32] |
@@ -75,3 +76,5 @@ Here's a list of talks and trainings I've given over the years...
 [33]: http://mherman.org/presentations/pytn-2018
 [34]: http://mherman.org/presentations/pycon-2018
 [35]: https://us.pycon.org/2018/
+[36]: http://mherman.org/presentations/dockercon-2018
+[37]: https://2018.dockercon.com/
