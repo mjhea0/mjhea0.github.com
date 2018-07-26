@@ -19,6 +19,8 @@ This tutorial looks at how to set up a local authentication strategy with Node, 
 
 <br>
 
+*Last updated on July, 25 2018 to update a failing test.*
+
 #### Parts
 
 This article is part of a 4-part Koa and Sinon series...
@@ -465,7 +467,7 @@ router.get('/auth/register', async (ctx) => {
 module.exports = router;
 ```
 
-Create the "views" folder, and then add the *register.html* template:
+Add another new file called *users.js* to "src/server/db/queries". Leave the file empty for now. Create the "views" folder, and then add the *register.html* template:
 
 ```html
 <!DOCTYPE html>
@@ -578,6 +580,7 @@ describe('POST /auth/register', () => {
       password: 'herman'
     })
     .end((err, res) => {
+      should.not.exist(err);
       res.redirects[0].should.contain('/auth/status');
       done();
     });
@@ -612,7 +615,7 @@ router.post('/auth/register', async (ctx) => {
 
 Here, if the user is successfully added to the database, we call the `login` method, [from koa-passport](https://github.com/rkusa/koa-passport/blob/master/lib/framework/koa.js#L44), to trigger the creation of the session and then redirect the user to `/auth/status`
 
-For the `addUser()` helper, add another new file called *users.js* to "src/server/db/queries":
+For the `addUser()` helper, add the following code to *src/server/db/queries/users.js*:
 
 ```javascript
 const knex = require('../connection');
