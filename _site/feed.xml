@@ -5,7 +5,7 @@
   
   <link href="http://mherman.org/feed.xml" rel="self" type="application/atom+xml" />
   <link href="http://mherman.org/" rel="alternate" type="text/html" />
-  <updated>2018-08-01T07:45:55-06:00</updated>
+  <updated>2018-08-20T06:44:53-06:00</updated>
   <id>http://mherman.org//</id>
 
   
@@ -22,6 +22,222 @@
     </author>
   
 
+  
+  
+    <entry>
+      
+      <title type="html">Setting Up a Kubernetes Cluster on Ubuntu 18.04</title>
+      
+      <link href="http://mherman.org/blog/2018/08/20/setting-up-a-kubernetes-cluster-on-ubuntu/" rel="alternate" type="text/html" title="Setting Up a Kubernetes Cluster on Ubuntu 18.04" />
+      <published>2018-08-20T01:00:00-06:00</published>
+      <updated>2018-08-20T01:00:00-06:00</updated>
+      <id>http://mherman.org/blog/2018/08/20/setting-up-a-kubernetes-cluster-on-ubuntu</id>
+      <content type="html" xml:base="http://mherman.org/blog/2018/08/20/setting-up-a-kubernetes-cluster-on-ubuntu/">&lt;p&gt;In this tutorial, we’ll spin up a Kubernetes cluster on Ubuntu 18.04.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This guide uses Ubuntu 18.04 droplets on &lt;a href=&quot;https://m.do.co/c/d8f211a4b4c2&quot;&gt;DigitalOcean&lt;/a&gt;. Feel free to swap out DigitalOcean for a different cloud hosting provider or your own on-premise environment.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;em&gt;Dependencies&lt;/em&gt;:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Docker v18.06.0-ce&lt;/li&gt;
+  &lt;li&gt;Kubernetes v1.11.2&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 class=&quot;no_toc&quot; id=&quot;contents&quot;&gt;Contents&lt;/h2&gt;
+
+&lt;ul id=&quot;markdown-toc&quot;&gt;
+  &lt;li&gt;&lt;a href=&quot;#provision-the-machines&quot; id=&quot;markdown-toc-provision-the-machines&quot;&gt;Provision the Machines&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#configure-the-master-node&quot; id=&quot;markdown-toc-configure-the-master-node&quot;&gt;Configure the Master Node&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#configure-the-worker-nodes&quot; id=&quot;markdown-toc-configure-the-worker-nodes&quot;&gt;Configure the Worker Nodes&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#sanity-check&quot; id=&quot;markdown-toc-sanity-check&quot;&gt;Sanity Check&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;provision-the-machines&quot;&gt;Provision the Machines&lt;/h2&gt;
+
+&lt;p&gt;Following along with the DigitalOcean example?&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://m.do.co/c/d8f211a4b4c2&quot;&gt;Sign up&lt;/a&gt; for an account (if you don’t already have one).&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.digitalocean.com/community/tutorials/how-to-use-the-digitalocean-api-v2&quot;&gt;Generate&lt;/a&gt; an access token so you can access the DigitalOcean API.&lt;/li&gt;
+  &lt;li&gt;Spin up three new &lt;a href=&quot;https://www.digitalocean.com/pricing/&quot;&gt;droplets&lt;/a&gt; (one master and two workers) that have 4 GB of memory and 2 vCPUs either from the DigitalOcean console or &lt;a href=&quot;https://github.com/digitalocean/doctl&quot;&gt;doctl&lt;/a&gt;, the DigitalOcean.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;doctl&lt;/code&gt; example:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# authenticate&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;doctl auth init
+
+&lt;span class=&quot;c&quot;&gt;# spin up the droplets&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;i &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;1 2 3&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do
+    &lt;/span&gt;doctl compute droplet create &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+      node-&lt;span class=&quot;nv&quot;&gt;$i&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;--region&lt;/span&gt; nyc1 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;--image&lt;/span&gt; ubuntu-18-04-x64 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;--size&lt;/span&gt; 4gb
+&lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Wait a few seconds for the droplets to spin up, and then run:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;doctl compute droplet list
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You should see something like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ID         Name    Public IPv4     Memory  VCPUs  Disk  Region  Image             Status
+106096338  node-1  142.93.198.67   4096    2      60    nyc1    Ubuntu 18.04 x64  active
+106096340  node-2  142.93.198.167  4096    2      60    nyc1    Ubuntu 18.04 x64  active
+106096345  node-3  142.93.206.39   4096    2      60    nyc1    Ubuntu 18.04 x64  active
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Take note of the public IP addresses.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Refer to the &lt;a href=&quot;https://www.digitalocean.com/community/tutorials/how-to-use-doctl-the-official-digitalocean-command-line-client&quot;&gt;How To Use Doctl&lt;/a&gt; guide for more info on using the &lt;code class=&quot;highlighter-rouge&quot;&gt;doctl&lt;/code&gt; CLI tool.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;configure-the-master-node&quot;&gt;Configure the Master Node&lt;/h2&gt;
+
+&lt;p&gt;SSH into the machine that will serve as the Kubernetes &lt;a href=&quot;https://kubernetes.io/docs/concepts/overview/components/#master-components&quot;&gt;master&lt;/a&gt;, and then run the following commands…&lt;/p&gt;
+
+&lt;h3 id=&quot;install-dependencies&quot;&gt;Install Dependencies&lt;/h3&gt;
+
+&lt;p&gt;Install Docker along with-&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/&quot;&gt;kubeadm&lt;/a&gt; - bootstraps a Kubernetes cluster&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/generated/kubelet/&quot;&gt;kubelet&lt;/a&gt; - configures containers to run on a host&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/tools/install-kubectl/&quot;&gt;kubectl&lt;/a&gt; - deploys and manages apps on Kubernetes&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt-get update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt-get install &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; apt-transport-https
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; https://download.docker.com/linux/ubuntu/gpg | &lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-key add -
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;add-apt-repository &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&quot;deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt install &lt;span class=&quot;nt&quot;&gt;-qy&lt;/span&gt; docker-ce
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;deb http://apt.kubernetes.io/ kubernetes-xenial main&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /etc/apt/sources.list.d/kubernetes.list
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt-get update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt-get install &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; kubeadm kubelet kubectl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;configure-kubernetes&quot;&gt;Configure Kubernetes&lt;/h3&gt;
+
+&lt;p&gt;Init Kubernetes:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubeadm init &lt;span class=&quot;nt&quot;&gt;--apiserver-advertise-address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;lt;MASTER_IP&amp;gt; &lt;span class=&quot;nt&quot;&gt;--pod-network-cidr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;192.168.1.0/16
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Be sure to replace &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;MASTER_IP&amp;gt;&lt;/code&gt; with the machine’s IP address.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Take note of the join token command. For example:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubeadm join 142.93.198.67:6443 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;--token&lt;/span&gt; 58f5m6.rms4ycepgmtvjl9z &lt;span class=&quot;nt&quot;&gt;--discovery-token-ca-cert-hash&lt;/span&gt; sha256:&amp;lt;&lt;span class=&quot;nb&quot;&gt;hash&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then, create a new user:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;adduser michael
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;usermod &lt;span class=&quot;nt&quot;&gt;-aG&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;michael
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;su - michael
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Set up the Kubernetes config as the user you created:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;mkdir &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;cp &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; /etc/kubernetes/admin.conf &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube/config
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;chown &lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;id &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;:&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;id &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;/.kube/config
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Again, as the new user, deploy a &lt;a href=&quot;https://github.com/coreos/flannel&quot;&gt;flannel&lt;/a&gt; network to the cluster:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl apply &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;configure-the-worker-nodes&quot;&gt;Configure the Worker Nodes&lt;/h2&gt;
+
+&lt;p&gt;The following commands should be run on each of the worker machines.&lt;/p&gt;
+
+&lt;h3 id=&quot;install-dependencies-1&quot;&gt;Install Dependencies&lt;/h3&gt;
+
+&lt;p&gt;Again, install Docker, kubeadm, kubelet, and kubectl:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt-get update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt-get install &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; apt-transport-https
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; https://download.docker.com/linux/ubuntu/gpg | &lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-key add -
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;add-apt-repository &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&quot;deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt install &lt;span class=&quot;nt&quot;&gt;-qy&lt;/span&gt; docker-ce
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;deb http://apt.kubernetes.io/ kubernetes-xenial main&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /etc/apt/sources.list.d/kubernetes.list
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt-get update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt-get install &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt; kubeadm kubelet kubectl
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;configure-kubernetes-1&quot;&gt;Configure Kubernetes&lt;/h3&gt;
+
+&lt;p&gt;Using the join command from above, join the worker to the cluster.&lt;/p&gt;
+
+&lt;h2 id=&quot;sanity-check&quot;&gt;Sanity Check&lt;/h2&gt;
+
+&lt;p&gt;Back on the master node, run the following command as the user you created:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;kubectl get nodes
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You should see something similar to:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME      STATUS    ROLES     AGE       VERSION
+node-1    Ready     master    28m       v1.11.2
+node-2    Ready     &amp;lt;none&amp;gt;    3m        v1.11.2
+node-3    Ready     &amp;lt;none&amp;gt;    35s       v1.11.2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That’s it!&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Remove the droplets once done:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;i &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;1 2 3&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do
+    &lt;/span&gt;doctl compute droplet delete node-&lt;span class=&quot;nv&quot;&gt;$i&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content>
+
+      
+      
+      
+      
+      
+
+      
+        <author>
+            <name>Michael Herman</name>
+          
+          
+        </author>
+      
+
+      
+        <category term="kubernetes" />
+      
+        <category term="docker" />
+      
+
+      
+
+      
+        <summary type="html">In this tutorial, we’ll spin up a Kubernetes cluster on Ubuntu 18.04.</summary>
+      
+
+      
+      
+    </entry>
+  
   
   
     <entry>
@@ -19286,206 +19502,6 @@ controllers : users
 
       
         <summary type="html">This tutorial looks at how to test an Express CRUD app with Mocha and Chai. Although we’ll be writing both unit and integration tests, the focus will be on the latter so that the tests run against the database in order to test the full functionality of our app. Postgres will be used, but feel free to use your favorite relational database.</summary>
-      
-
-      
-      
-    </entry>
-  
-  
-  
-    <entry>
-      
-      <title type="html">Atom for Web Developers</title>
-      
-      <link href="http://mherman.org/blog/2016/08/16/atom-for-web-developers/" rel="alternate" type="text/html" title="Atom for Web Developers" />
-      <published>2016-08-16T01:25:39-06:00</published>
-      <updated>2016-08-16T01:25:39-06:00</updated>
-      <id>http://mherman.org/blog/2016/08/16/atom-for-web-developers</id>
-      <content type="html" xml:base="http://mherman.org/blog/2016/08/16/atom-for-web-developers/">&lt;p&gt;This is a no frills look at &lt;a href=&quot;https://atom.io/&quot;&gt;Atom&lt;/a&gt;, a powerful, open-source text editor maintained by the GitHub team.&lt;/p&gt;
-
-&lt;div style=&quot;text-align:center;&quot;&gt;
-  &lt;img src=&quot;/assets/img/blog/atom/atom-logo.png&quot; style=&quot;max-width: 100%; border:0; box-shadow: none;&quot; alt=&quot;atom logo&quot; /&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 class=&quot;no_toc&quot; id=&quot;contents&quot;&gt;Contents&lt;/h2&gt;
-
-&lt;ul id=&quot;markdown-toc&quot;&gt;
-  &lt;li&gt;&lt;a href=&quot;#keyboard-shortcuts&quot; id=&quot;markdown-toc-keyboard-shortcuts&quot;&gt;Keyboard Shortcuts&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;#settings&quot; id=&quot;markdown-toc-settings&quot;&gt;Settings&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;#packages&quot; id=&quot;markdown-toc-packages&quot;&gt;Packages&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;#conclusion&quot; id=&quot;markdown-toc-conclusion&quot;&gt;Conclusion&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Atom comes with a number of &lt;a href=&quot;http://flight-manual.atom.io/using-atom/&quot;&gt;features&lt;/a&gt; right out of the box. However, its true power comes from the &lt;a href=&quot;https://atom.io/packages&quot;&gt;package management system&lt;/a&gt;, allowing you to customize the editor to meet your specific development needs.&lt;/p&gt;
-
-&lt;p&gt;New to Atom? Start by reading the first two chapters from the &lt;a href=&quot;http://flight-manual.atom.io/&quot;&gt;Atom Flight Manual&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;: This tutorial is meant for full-stack JavaScript developers, and it uses Atom version &lt;a href=&quot;https://github.com/atom/atom/releases/tag/v1.8.0&quot;&gt;1.8.0&lt;/a&gt;.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;This is a companion piece to &lt;a href=&quot;http://mherman.org/blog/2015/02/05/sublime-text-for-web-developers/#.V5QIBZOAOko&quot;&gt;Sublime Text for Web Developers&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;keyboard-shortcuts&quot;&gt;Keyboard Shortcuts&lt;/h2&gt;
-
-&lt;p&gt;Remember: The goal is to never take your hands off the keyboard!&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;strong&gt;Command Palette&lt;/strong&gt; (&lt;em&gt;CMD-SHIFT-P&lt;/em&gt;) - Opens the powerful &lt;em&gt;&lt;a href=&quot;https://github.com/atom/command-palette&quot;&gt;Command Palette&lt;/a&gt;&lt;/em&gt;, where you can access all Atom commands and packages.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Hide/Show the Sidebar&lt;/strong&gt; (&lt;em&gt;CMD-K&lt;/em&gt;, &lt;em&gt;CMD-B&lt;/em&gt;) or (&lt;em&gt;CMD-\&lt;/em&gt;) - Toggles the sidebar.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Comment Your Code&lt;/strong&gt; (&lt;em&gt;CMD-/&lt;/em&gt;) - Highlight the code you want to comment out, then comment it out. If you do not highlight anything, this command will comment out the current line.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Highlight an entire line&lt;/strong&gt; (&lt;em&gt;CMD-L&lt;/em&gt;)&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Duplicate line&lt;/strong&gt; (&lt;em&gt;CMD-SHIFT-D&lt;/em&gt;)&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Move line Up or Down&lt;/strong&gt; (&lt;em&gt;CMD-CTRL-Up/Down Arrow&lt;/em&gt;)&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Multi-Edit&lt;/strong&gt; (&lt;em&gt;CMD-D&lt;/em&gt;) - Simply select the word you want to edit, and press &lt;em&gt;CMD-D&lt;/em&gt; repeatedly until you have selected all the words you want to update. Go too far? Use &lt;em&gt;CMD-U&lt;/em&gt; to unselect.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Change the language&lt;/strong&gt; (&lt;em&gt;CTRL-SHIFT-L&lt;/em&gt;)&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Settings&lt;/strong&gt; (&lt;em&gt;CMD-,&lt;/em&gt;) - Opens the &lt;em&gt;Settings&lt;/em&gt; menu where you can update settings, download and configure packages, and change themes.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Check out the &lt;a href=&quot;https://github.com/mjhea0/atom-keyboard-shortcuts&quot;&gt;Atom shortcut cheat sheet&lt;/a&gt; for more handy keyboard shortcuts.&lt;/p&gt;
-
-&lt;h2 id=&quot;settings&quot;&gt;Settings&lt;/h2&gt;
-
-&lt;p&gt;Much like Sublime Text, you can customize &lt;em&gt;almost&lt;/em&gt; every aspect of Atom.&lt;/p&gt;
-
-&lt;p&gt;Start by reading over the &lt;a href=&quot;http://flight-manual.atom.io/using-atom/sections/basic-customization/&quot;&gt;Basic Customization guide&lt;/a&gt; to learn how to update the global and language-specific settings. If you’re just getting started, I recommend leaving the settings just as they are, since Atom comes with a solid set of defaults.&lt;/p&gt;
-
-&lt;p&gt;That said, you may way to update the UI and syntax themes from the &lt;em&gt;Settings&lt;/em&gt; menu. The Flatland Dark &lt;a href=&quot;https://atom.io/themes/flatland-dark-ui&quot;&gt;UI&lt;/a&gt; and &lt;a href=&quot;https://atom.io/themes/flatland-dark&quot;&gt;Syntax&lt;/a&gt; themes are rather pleasing…&lt;/p&gt;
-
-&lt;div style=&quot;text-align:center;&quot;&gt;
-  &lt;img src=&quot;/assets/img/blog/atom/atom-flatland.png&quot; style=&quot;max-width: 100%; border:0; box-shadow: none;&quot; alt=&quot;atom flatland theme&quot; /&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;…but make sure to &lt;a href=&quot;https://atom.io/themes&quot;&gt;experiment on your own&lt;/a&gt;!&lt;/p&gt;
-
-&lt;h2 id=&quot;packages&quot;&gt;Packages&lt;/h2&gt;
-
-&lt;p&gt;Again, like Sublime Text, Atom’s core features can be extended via the powerful &lt;a href=&quot;https://atom.io/packages&quot;&gt;package management system&lt;/a&gt;. Navigate to the Settings menu to download and/or configure packages.&lt;/p&gt;
-
-&lt;h3 id=&quot;linter&quot;&gt;Linter&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://atom.io/packages/linter&quot;&gt;Linter&lt;/a&gt; is the base package (and API) for a &lt;a href=&quot;http://atomlinter.github.io/&quot;&gt;number of language-specific linters&lt;/a&gt;. There’s support for all the main languages. Start with the following linters to start checking for style and syntactic errors:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;a href=&quot;https://atom.io/packages/linter-jshint&quot;&gt;linter-jshint&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://atom.io/packages/linter-csslint&quot;&gt;linter-csslint&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://atom.io/packages/linter-htmlhint&quot;&gt;linter-htmlhint&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://atom.io/packages/linter-json-lint&quot;&gt;linter-json-lint&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;highlight-selected&quot;&gt;Highlight Selected&lt;/h3&gt;
-
-&lt;p&gt;With &lt;a href=&quot;https://atom.io/packages/highlight-selected&quot;&gt;Highlight Selected&lt;/a&gt; you double click a word to highlight every instance of it in the open file.&lt;/p&gt;
-
-&lt;h3 id=&quot;docblockr&quot;&gt;docblockr&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://atom.io/packages/docblockr&quot;&gt;docblockr&lt;/a&gt; simplifies the writing of documentation. Once installed, simply press ENTER after you type &lt;em&gt;\&lt;/em&gt;** to add a basic comment:&lt;/p&gt;
-
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cm&quot;&gt;/**
- * 	
- **/&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;If the line directly after contains a function, then the name and parameters are parsed and added to the comments.&lt;/p&gt;
-
-&lt;p&gt;Try it out:&lt;/p&gt;
-
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;getTotalActiveLessons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;chapters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;total&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;chapters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;reduce&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;acc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;chapter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;active&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;chapter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;lessons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;lesson&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;lesson&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;lessonActive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;acc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;active&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]);&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;total&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Given the above function, add an opening block (&lt;code class=&quot;highlighter-rouge&quot;&gt;/**&lt;/code&gt;), and then when you press ENTER it automatically creates the base documentation:&lt;/p&gt;
-
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cm&quot;&gt;/**
- * [getTotalActiveLessons description]
- * @param  {[type]} chapters [description]
- * @return {[type]}          [description]
-**/&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;getTotalActiveLessons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;chapters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;total&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;chapters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;reduce&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;acc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;chapter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;active&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;chapter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;lessons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;lesson&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;lesson&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;lessonActive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;acc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;active&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]);&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;total&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;file-icons&quot;&gt;File Icons&lt;/h3&gt;
-
-&lt;p&gt;As the name suggests, &lt;a href=&quot;https://atom.io/packages/file-icons&quot;&gt;File Icons&lt;/a&gt; adds icons to a filename within the sidebar tree based on the file type “for improved visual grepping”. In other words, you can find a file from the tree at a quick glance. You can specify whether you want the icons in color or not as well.&lt;/p&gt;
-
-&lt;h3 id=&quot;emmet&quot;&gt;Emmet&lt;/h3&gt;
-
-&lt;p&gt;Type an abbreviation about the HTML or CSS you want and &lt;a href=&quot;https://atom.io/packages/emmet&quot;&gt;Emmet&lt;/a&gt; expands it out for you. For example, pressing TAB after &lt;code class=&quot;highlighter-rouge&quot;&gt;ul#sample-id&amp;gt;li.sample-class*2&lt;/code&gt; will output:&lt;/p&gt;
-
-&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;ul&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;sample-id&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;li&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;sample-class&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;nt&quot;&gt;&amp;lt;li&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;sample-class&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/ul&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Check out the &lt;a href=&quot;http://docs.emmet.io/abbreviations/syntax/&quot;&gt;abbreviation syntax&lt;/a&gt; for more info.&lt;/p&gt;
-
-&lt;h3 id=&quot;less-than-slash&quot;&gt;less-than-slash&lt;/h3&gt;
-
-&lt;p&gt;If you’re used to Sublime Text, then you will definitely want &lt;a href=&quot;https://atom.io/packages/less-than-slash&quot;&gt;less-than-slash&lt;/a&gt;, as you can close out a tag when you type &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;/&lt;/code&gt;.&lt;/p&gt;
-
-&lt;h3 id=&quot;todo-show&quot;&gt;Todo Show&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://atom.io/packages/todo-show&quot;&gt;Todo Show&lt;/a&gt; summarizes all &lt;code class=&quot;highlighter-rouge&quot;&gt;TODO&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;FIXME&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;CHANGED&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;XXX&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;IDEA&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;HACK&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;NOTE&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;REVIEW&lt;/code&gt; comments, scattered throughout your code, in a nice organized list.&lt;/p&gt;
-
-&lt;p&gt;Press &lt;em&gt;CTRL-SHIFT-T&lt;/em&gt; to activate:&lt;/p&gt;
-
-&lt;div style=&quot;text-align:center;&quot;&gt;
-  &lt;img src=&quot;/assets/img/blog/atom/atom-todo-show.png&quot; style=&quot;max-width: 100%; border:0; box-shadow: none;&quot; alt=&quot;atom todo show&quot; /&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;That’s it. Start here, but be sure to check out all the &lt;a href=&quot;https://atom.io/packages&quot;&gt;Atom packages&lt;/a&gt; (nearly 5,000 as of writing!) to fully personalize your development environment. Can’t find a package? Put your coding skills to use and write your own package, and then support the community by open sourcing the package!&lt;/p&gt;
-
-&lt;p&gt;Comment below with any packages that I missed. Cheers!&lt;/p&gt;</content>
-
-      
-      
-      
-      
-      
-
-      
-        <author>
-            <name>Michael Herman</name>
-          
-          
-        </author>
-      
-
-      
-        <category term="atom" />
-      
-        <category term="code editor" />
-      
-
-      
-
-      
-        <summary type="html">This is a no frills look at Atom, a powerful, open-source text editor maintained by the GitHub team.</summary>
       
 
       
