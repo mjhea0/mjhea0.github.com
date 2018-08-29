@@ -6,7 +6,6 @@ date: 2012-11-09 15:50
 comments: true
 toc: true
 categories: excel
-permalink: 51-new-excel-2013-functions
 redirect_from:
   - /blog/2012/11/09/51-new-excel-2013-functions/
 ---
