@@ -8,6 +8,8 @@ categories:
 categories: [node, testing, static types]
 keywords: "node, express, flow, flowtype, RESTful API, tdd, jest, yarn, test-driven development, static types"
 description: "This tutorial takes a test-first approach to developing a RESTful API with NodeJS, ExpressJS, and Flow, and Jest."
+redirect_from:
+  - /blog/2016/12/23/building-a-restful-api-with-node-and-flow/
 ---
 
 This tutorial details how to develop a RESTful API with [NodeJS](https://nodejs.org/en/), [ExpressJS](http://expressjs.com/), and [Flow](https://flowtype.org/) using test-driven development (TDD).

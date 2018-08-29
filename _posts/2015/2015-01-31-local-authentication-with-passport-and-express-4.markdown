@@ -8,6 +8,8 @@ toc: true
 categories: [node, auth]
 keywords: "node, express, passport, authentication"
 description: "This article details how to add user authentication to Node/Express 4 with Passport.js"
+redirect_from:
+  - /blog/2015/01/31/local-authentication-with-passport-and-express-4/
 ---
 
 This post demonstrates how to add user authentication to Node/Express with Passport.js.

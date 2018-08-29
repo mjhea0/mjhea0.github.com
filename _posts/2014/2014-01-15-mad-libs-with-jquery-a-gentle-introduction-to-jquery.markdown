@@ -6,6 +6,8 @@ date: 2014-01-15 19:39
 comments: true
 toc: true
 categories: front-end
+redirect_from:
+  - /blog/2014/01/15/mad-libs-with-jquery-a-gentle-introduction-to-jquery/
 ---
 
 Did you ever play Mad Libs as a kid? If not, the rules are simple: You fill out a random list of words based on a part of speech - e.g, nouns, verbs, adjectives, and adverbs - without knowing the underlying context. These words are then inserted into a story. When read, the results are generally humorous, causing much laughter.

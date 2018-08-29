@@ -6,6 +6,8 @@ date: 2014-01-29 10:51
 comments: true
 toc: true
 categories: meteor
+redirect_from:
+  - /blog/2014/01/29/meteor-dot-js-in-action-create-an-app-test-with-laika/
 ---
 
 <div style="text-align:center;">

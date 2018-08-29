@@ -6,6 +6,8 @@ date: 2014-05-04 18:43
 comments: true
 toc: true
 categories: ruby
+redirect_from:
+  - /blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/
 ---
 
 Spam is irritating.

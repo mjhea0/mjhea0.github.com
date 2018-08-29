@@ -8,6 +8,8 @@ toc: true
 categories: [node, swagger]
 keywords: "node, express, swagger, api, restful api, crud"
 description: "Let's look at how to describe a RESTful API using Swagger and NodeJS."
+redirect_from:
+  - /blog/2016/05/26/swagger-and-nodejs/
 ---
 
 This tutorial details how to describe a RESTFul API using [Swagger](http://swagger.io/) along with Node and Express.

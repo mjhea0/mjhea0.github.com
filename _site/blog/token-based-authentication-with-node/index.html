@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Token-Based Authentication with Node</title>
+  <meta name="description" content="This tutorial takes a test-first approach to implementing token-based authentication in a NodeJS app using JSON Web Tokens (JWTs).">
+  
+    
+    <meta name="keywords" content="node, express, authentication, postgres, jwts, tokens">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/token-based-authentication-with-node/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Token-Based Authentication with Node">
+  <meta name="twitter:description" content="This tutorial takes a test-first approach to implementing token-based authentication in a NodeJS app using JSON Web Tokens (JWTs).">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Token-Based Authentication with Node</h1>
+    
+    <p class="post-meta"><time datetime="2016-10-28T01:36:51-06:00" itemprop="datePublished">Oct 28, 2016</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/mocha/">mocha</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/auth/">auth</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This tutorial takes a test-first approach to implementing token-based authentication in a Node app using JSON Web Tokens (JWTs) and Postgres.</p>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#objectives" id="markdown-toc-objectives">Objectives</a></li>
+  <li><a href="#introduction" id="markdown-toc-introduction">Introduction</a></li>
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#database-setup" id="markdown-toc-database-setup">Database Setup</a></li>
+  <li><a href="#jwt-setup" id="markdown-toc-jwt-setup">JWT Setup</a></li>
+  <li><a href="#route-setup" id="markdown-toc-route-setup">Route Setup</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="objectives">Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to…</p>
+
+<ol>
+  <li>Discuss the benefits of using JWTs versus sessions and cookies</li>
+  <li>Implement user authentication using JWTs</li>
+  <li>Write tests to create and verify JWTs and user authentication</li>
+  <li>Practice test-driven development</li>
+</ol>
+
+<h2 id="introduction">Introduction</h2>
+
+<p><a href="https://jwt.io/">JSON Web Tokens</a> (or JWTs) provide a means of authenticating every request from the client to the server in a stateless, secure way. On the server, JWTs are generated by signing user information via a secret key, which are then securely stored on the client. This form of auth works well with modern, single page applications. For more on this, along with the pros and cons of using JWTs vs. session and cookie-based auth, please review the following articles:</p>
+
+<ol>
+  <li><a href="https://dzone.com/articles/cookies-vs-tokens-the-definitive-guide">Cookies vs Tokens: The Definitive Guide</a></li>
+  <li><a href="http://stackoverflow.com/questions/17000835/token-authentication-vs-cookies">Token Authentication vs. Cookies</a></li>
+</ol>
+
+<blockquote>
+  <p><strong>NOTE:</strong> Keep in mind that since a JWT is <a href="http://stackoverflow.com/questions/454048/what-is-the-difference-between-encrypting-and-signing-in-asymmetric-encryption">signed rather than encrypted</a> it should never contain sensitive information like a user’s password.</p>
+</blockquote>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Start by cloning the project structure:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/mjhea0/node-token-auth <span class="nt">--branch</span> v1 <span class="nt">--single-branch</span> <span class="nt">-b</span> master
+</code></pre></div></div>
+
+<blockquote>
+  <p><strong>NOTE</strong>: This project structure is based off of the Express boilerplate from the following <a href="https://www.npmjs.com/package/generator-galvanize-express">generator</a> (v1.2.4). What are the differences?</p>
+</blockquote>
+
+<p>Install the dependencies, and then fire up the app by running <code class="highlighter-rouge">gulp</code> to make sure all is well. Kill the server. Run the tests with <code class="highlighter-rouge">npm test</code>. They all should pass.</p>
+
+<p>This is optional, but it’s a good idea to create a new Github repository and update the remote:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git remote set-url origin &lt;newurl&gt;
+</code></pre></div></div>
+
+<h2 id="database-setup">Database Setup</h2>
+
+<p>We’ll be using <a href="http://knexjs.org/">Knex.js</a> to interact with the database.</p>
+
+<blockquote>
+  <p><strong>NOTE</strong>: Are you new to <a href="http://knexjs.org/">Knex.js</a>? Check out the <a href="http://knexjs.org/">documentation</a> along with the “Database Setup” section of the <a href="http://mherman.org/blog/2016/09/12/testing-node-and-express/">Testing Node and Express</a> blog post for more information on how to use it to interact with Postgres.</p>
+</blockquote>
+
+<h3 id="migrations">Migrations</h3>
+
+<p>First, fire up your local Postgres server and create two new databases:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql
+<span class="c"># create database node_token_auth;</span>
+CREATE DATABASE
+<span class="c"># create database node_token_auth_test;</span>
+CREATE DATABASE
+</code></pre></div></div>
+
+<p>Generate a new migration template:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:make users
+</code></pre></div></div>
+
+<p>Then update the newly created file in “src/server/db/migrations/”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">up</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">createTable</span><span class="p">(</span><span class="s1">'users'</span><span class="p">,</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">increments</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'username'</span><span class="p">).</span><span class="nx">unique</span><span class="p">().</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'password'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="kr">boolean</span><span class="p">(</span><span class="s1">'admin'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">().</span><span class="nx">defaultTo</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">timestamp</span><span class="p">(</span><span class="s1">'created_at'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">().</span><span class="nx">defaultTo</span><span class="p">(</span><span class="nx">knex</span><span class="p">.</span><span class="nx">raw</span><span class="p">(</span><span class="s1">'now()'</span><span class="p">));</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">down</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">dropTable</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Apply the migration:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:latest <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<h3 id="sanity-check">Sanity Check</h3>
+
+<p>Did it work?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql
+<span class="c"># \c node_token_auth</span>
+<span class="c"># \d</span>
+
+                     List of relations
+ Schema |          Name          |   Type   |     Owner
+<span class="nt">--------</span>+------------------------+----------+---------------
+ public | knex_migrations        | table    | michaelherman
+ public | knex_migrations_id_seq | sequence | michaelherman
+ public | knex_migrations_lock   | table    | michaelherman
+ public | users                  | table    | michaelherman
+ public | users_id_seq           | sequence | michaelherman
+<span class="o">(</span>5 rows<span class="o">)</span>
+</code></pre></div></div>
+
+<h2 id="jwt-setup">JWT Setup</h2>
+
+<p>First install the <a href="https://www.npmjs.com/package/jwt-simple">jwt-simple</a> package for managing JSON Web Tokens:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install jwt-simple@0.5.0 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p><strong>NOTE:</strong> As the name suggests, jwt-simple is a minimal JWT library. It is not recommended for a production app. <a href="https://github.com/auth0/node-jsonwebtoken">jsonwebtoken</a> is a more robust option. Want a challenge? Use jsonwebtoken for the app in this blog post.</p>
+</blockquote>
+
+<h3 id="encode-token">Encode Token</h3>
+
+<p>Create a new folder called “auth” in “src/server/”. Then add a file called <em>local.js</em> to the “auth” folder:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">moment</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'moment'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">jwt</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'jwt-simple'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">encodeToken</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">playload</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">exp</span><span class="p">:</span> <span class="nx">moment</span><span class="p">().</span><span class="nx">add</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="s1">'days'</span><span class="p">).</span><span class="nx">unix</span><span class="p">(),</span>
+    <span class="na">iat</span><span class="p">:</span> <span class="nx">moment</span><span class="p">().</span><span class="nx">unix</span><span class="p">(),</span>
+    <span class="na">sub</span><span class="p">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span>
+  <span class="p">};</span>
+  <span class="k">return</span> <span class="nx">jwt</span><span class="p">.</span><span class="nx">encode</span><span class="p">(</span><span class="nx">playload</span><span class="p">,</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">TOKEN_SECRET</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">encodeToken</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Given a user object, this function creates and returns a token from the <code class="highlighter-rouge">playload</code> and the secret key, <code class="highlighter-rouge">process.env.TOKEN_SECRET</code>. Put simply, the payload is where we add metadata about the token and information about the user. This info is often referred to as <a href="https://scotch.io/tutorials/the-anatomy-of-a-json-web-token#payload">JWT Claims</a>. In the code above we utilize the following “claims”:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">exp</code>: expiration date of the token</li>
+  <li><code class="highlighter-rouge">iat</code>: the time the token is generated</li>
+  <li><code class="highlighter-rouge">sub</code>: the subject of the token (the user whom it identifies)</li>
+</ul>
+
+<p>The secret key must be random and only accessible server-side. Use the <a href="https://github.com/broofa/node-uuid">node-uuid</a> library or Python to generate a key:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>python
+<span class="o">&gt;&gt;&gt;</span> import os
+<span class="o">&gt;&gt;&gt;</span> os.urandom<span class="o">(</span>24<span class="o">)</span>
+b<span class="s1">'\xf8%\xa8\xf2INz\xcc:\x171\xeei\x82\xce\x81Y\xc2HJ\xe5\x01\xf3$'</span>
+<span class="o">&gt;&gt;&gt;</span>
+</code></pre></div></div>
+
+<p>Then add the key to a new file called <em>.env</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TOKEN_SECRET=\xf8%\xa8\xf2INz\xcc:\x171\xeei\x82\xce\x81Y\xc2HJ\xe5\x01\xf3$
+</code></pre></div></div>
+
+<p>Don’t forget to install <a href="https://www.npmjs.com/package/moment">Moment</a> for managing dates:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install moment@2.15.2 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Before moving on, let’s write a quick unit test. Add the following code to a new file called <em>auth.local.test.js</em> in “test/unit”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+
+<span class="kd">const</span> <span class="nx">localAuth</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../../src/server/auth/local'</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'auth : local'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Now add a test to the <code class="highlighter-rouge">describe</code> block:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'encodeToken()'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return a token'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">localAuth</span><span class="p">.</span><span class="nx">encodeToken</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">});</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+    <span class="nx">results</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'string'</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests. They should pass.</p>
+
+<h3 id="decode-token">Decode Token</h3>
+
+<p>To decode a token, add the following code to <em>src/server/auth/local.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">decodeToken</span><span class="p">(</span><span class="nx">token</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">payload</span> <span class="o">=</span> <span class="nx">jwt</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="nx">token</span><span class="p">,</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">TOKEN_SECRET</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="nx">now</span> <span class="o">=</span> <span class="nx">moment</span><span class="p">().</span><span class="nx">unix</span><span class="p">();</span>
+  <span class="c1">// check if the token has expired</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">now</span> <span class="o">&gt;</span> <span class="nx">payload</span><span class="p">.</span><span class="nx">exp</span><span class="p">)</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">'Token has expired.'</span><span class="p">);</span>
+  <span class="k">else</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">payload</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Export the function:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">encodeToken</span><span class="p">,</span>
+  <span class="nx">decodeToken</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Then add a test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'decodeToken()'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return a payload'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">localAuth</span><span class="p">.</span><span class="nx">encodeToken</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">});</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">token</span><span class="p">);</span>
+    <span class="nx">token</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'string'</span><span class="p">);</span>
+    <span class="nx">localAuth</span><span class="p">.</span><span class="nx">decodeToken</span><span class="p">(</span><span class="nx">token</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">sub</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Make sure the tests pass before moving on.</p>
+
+<h2 id="route-setup">Route Setup</h2>
+
+<p>Now we can configure our routes using a test-first approach:</p>
+
+<ul>
+  <li>/auth/register</li>
+  <li>/auth/login</li>
+  <li>/auth/logout</li>
+  <li>/auth/user</li>
+</ul>
+
+<p>Add the following code to a new file called <em>routes.auth.test.js</em> in “test/integration”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../../src/server/app'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../../src/server/db/connection'</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'routes : auth'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+  <span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">latest</span><span class="p">();</span> <span class="p">});</span>
+  <span class="p">});</span>
+
+  <span class="nx">afterEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">();</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>This is a common boilerplate for integration tests with <a href="http://chaijs.com/">Chai</a> assertions and <a href="https://github.com/chaijs/chai-http">Chai HTTP</a> for simulating client requests. For more info, check out <a href="http://mherman.org/blog/2016/04/28/test-driven-development-with-node/#.V-U1PZMrJE4">Test Driven Development With Node, Postgres, and Knex (Red/Green/Refactor)</a>.</p>
+
+<h3 id="register">Register</h3>
+
+<p>Start with a test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /auth/register'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should register a new user'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/auth/register'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">username</span><span class="p">:</span> <span class="s1">'michael'</span><span class="p">,</span>
+      <span class="na">password</span><span class="p">:</span> <span class="s1">'herman'</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">redirects</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="s1">'status'</span><span class="p">,</span> <span class="s1">'token'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests. You should see the following error:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Uncaught AssertionError: expected <span class="o">[</span>Error: Not Found] to not exist
+</code></pre></div></div>
+
+<p>Now let’s write the code to get the test to pass. First, register the new set of auth routes in <em>route-config.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">routeConfig</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="s1">'use strict'</span><span class="p">;</span>
+
+  <span class="nx">routeConfig</span><span class="p">.</span><span class="nx">init</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="c1">// *** routes *** //</span>
+    <span class="kd">const</span> <span class="nx">routes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../routes/index'</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">authRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../routes/auth'</span><span class="p">);</span>
+
+    <span class="c1">// *** register routes *** //</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="nx">routes</span><span class="p">);</span>
+    <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/auth'</span><span class="p">,</span> <span class="nx">authRoutes</span><span class="p">);</span>
+
+  <span class="p">};</span>
+
+<span class="p">})(</span><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Then add a new file to the “route” folder called auth.js:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+<span class="kd">const</span> <span class="nx">localAuth</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../auth/local'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">authHelpers</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../auth/_helpers'</span><span class="p">);</span>
+
+<span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/register'</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span>  <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">authHelpers</span><span class="p">.</span><span class="nx">createUser</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">localAuth</span><span class="p">.</span><span class="nx">encodeToken</span><span class="p">(</span><span class="nx">user</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">token</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">token</span><span class="p">:</span> <span class="nx">token</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>This route simply handles the creation of a new user. To finish, add a <code class="highlighter-rouge">createUser()</code> function to <em>src/server/auth/_helpers.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">bcrypt</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'bcryptjs'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../db/connection'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">createUser</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">salt</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">genSaltSync</span><span class="p">();</span>
+  <span class="kd">const</span> <span class="nx">hash</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">hashSync</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="nx">salt</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">insert</span><span class="p">({</span>
+    <span class="na">username</span><span class="p">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span>
+    <span class="na">password</span><span class="p">:</span> <span class="nx">hash</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">returning</span><span class="p">(</span><span class="s1">'*'</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">createUser</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Since you should <em>never</em> store plain text passwords, install <a href="https://www.npmjs.com/package/bcryptjs">bcrypt.js</a> for salting and hashing:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install bcryptjs@2.3.0 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Run the tests to ensure they still pass.</p>
+
+<h3 id="login">Login</h3>
+
+<p>This time, let’s look at how to handle both a success and an error…</p>
+
+<h4 id="handle-success">Handle Success</h4>
+
+<p>Again, start with a test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /auth/login'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should login a user'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">username</span><span class="p">:</span> <span class="s1">'jeremy'</span><span class="p">,</span>
+      <span class="na">password</span><span class="p">:</span> <span class="s1">'johnson123'</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">redirects</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">include</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="s1">'status'</span><span class="p">,</span> <span class="s1">'token'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">token</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>You should see the following failure after running the tests:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Uncaught AssertionError: expected <span class="o">[</span>Error: Not Found] to not exist
+</code></pre></div></div>
+
+<p>Now, update the code. Start by adding the route handler to <em>src/server/routes/auth.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/login'</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">username</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span><span class="p">;</span>
+  <span class="kd">const</span> <span class="nx">password</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">password</span><span class="p">;</span>
+  <span class="k">return</span> <span class="nx">authHelpers</span><span class="p">.</span><span class="nx">getUser</span><span class="p">(</span><span class="nx">username</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">response</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">authHelpers</span><span class="p">.</span><span class="nx">comparePass</span><span class="p">(</span><span class="nx">password</span><span class="p">,</span> <span class="nx">response</span><span class="p">.</span><span class="nx">password</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">response</span><span class="p">;</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">response</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">localAuth</span><span class="p">.</span><span class="nx">encodeToken</span><span class="p">(</span><span class="nx">response</span><span class="p">);</span> <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">token</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+      <span class="na">token</span><span class="p">:</span> <span class="nx">token</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Then add the <code class="highlighter-rouge">getUser()</code> and <code class="highlighter-rouge">comparePass()</code> functions to <em>src/server/auth/_helpers.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getUser</span><span class="p">(</span><span class="nx">username</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">where</span><span class="p">({</span><span class="nx">username</span><span class="p">}).</span><span class="nx">first</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">comparePass</span><span class="p">(</span><span class="nx">userPassword</span><span class="p">,</span> <span class="nx">databasePassword</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">bool</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">compareSync</span><span class="p">(</span><span class="nx">userPassword</span><span class="p">,</span> <span class="nx">databasePassword</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">bool</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">'bad pass silly money'</span><span class="p">);</span>
+  <span class="k">else</span> <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Make sure to export the functions:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">createUser</span><span class="p">,</span>
+  <span class="nx">getUser</span><span class="p">,</span>
+  <span class="nx">comparePass</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Run the tests. You should see:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Uncaught AssertionError: expected <span class="o">[</span>Error: Internal Server Error] to not exist
+</code></pre></div></div>
+
+<p>Why? The user does not exist in the database. To fix this, we just need to seed the database before the tests are ran. Create a new seed file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex seed:make users
+</code></pre></div></div>
+
+<p>Then add the following code to the newly created seed file in <em>src/server/db/seeds/users.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">bcrypt</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'bcryptjs'</span><span class="p">);</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">seed</span> <span class="o">=</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">del</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">salt</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">genSaltSync</span><span class="p">();</span>
+    <span class="kd">const</span> <span class="nx">hash</span> <span class="o">=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nx">hashSync</span><span class="p">(</span><span class="s1">'johnson123'</span><span class="p">,</span> <span class="nx">salt</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span>
+      <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+        <span class="na">username</span><span class="p">:</span> <span class="s1">'jeremy'</span><span class="p">,</span>
+        <span class="na">password</span><span class="p">:</span> <span class="nx">hash</span>
+      <span class="p">})</span>
+    <span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Back in the test file, update the <code class="highlighter-rouge">beforeEach()</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">latest</span><span class="p">();</span> <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">seed</span><span class="p">.</span><span class="nx">run</span><span class="p">();</span> <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests again. They should pass.</p>
+
+<blockquote>
+  <p><strong>NOTE:</strong> We did not write any unit tests to cover the <code class="highlighter-rouge">comparePass()</code> function. Do this on your own. Think about what needs to be covered. What if the user does not exist? What if the password is incorrect? Compare your tests to the tests I wrote in the <a href="https://github.com/mjhea0/node-token-auth">repo</a>.</p>
+</blockquote>
+
+<h4 id="handle-error">Handle Error</h4>
+
+<p>Add another <code class="highlighter-rouge">it</code> block to the previous test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should not login an unregistered user'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="na">username</span><span class="p">:</span> <span class="s1">'michael'</span><span class="p">,</span>
+    <span class="na">password</span><span class="p">:</span> <span class="s1">'johnson123'</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>The tests should still pass. What other errors should we handle? Think about this for a moment. How would you handle an expired token? Start with a test! Once done, move on…</p>
+
+<h3 id="user">User</h3>
+
+<p>Once logged in, users should have access to the <code class="highlighter-rouge">/user</code> endpoint. Start with the tests:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /auth/user'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return a success'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/auth/login'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">username</span><span class="p">:</span> <span class="s1">'jeremy'</span><span class="p">,</span>
+      <span class="na">password</span><span class="p">:</span> <span class="s1">'johnson123'</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">error</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+      <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/auth/user'</span><span class="p">)</span>
+      <span class="p">.</span><span class="kd">set</span><span class="p">(</span><span class="s1">'authorization'</span><span class="p">,</span> <span class="s1">'Bearer '</span> <span class="o">+</span> <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">token</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">should</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'success'</span><span class="p">);</span>
+        <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should throw an error if a user is not logged in'</span><span class="p">,</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/auth/user'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">((</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">should</span><span class="p">.</span><span class="nx">exist</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'application/json'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">eql</span><span class="p">(</span><span class="s1">'Please log in'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests, and then add the route handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/user'</span><span class="p">,</span>
+  <span class="nx">authHelpers</span><span class="p">.</span><span class="nx">ensureAuthenticated</span><span class="p">,</span>
+  <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span>  <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+    <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span><span class="p">,</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Add a <code class="highlighter-rouge">ensureAuthenticated()</code> function to <em>src/server/auth/_helpers.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">ensureAuthenticated</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">headers</span> <span class="o">&amp;&amp;</span> <span class="nx">req</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">authorization</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="s1">'Please log in'</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+  <span class="c1">// decode the token</span>
+  <span class="kd">var</span> <span class="nx">header</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">authorization</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">header</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+  <span class="nx">localAuth</span><span class="p">.</span><span class="nx">decodeToken</span><span class="p">(</span><span class="nx">token</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">payload</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">401</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+        <span class="na">status</span><span class="p">:</span> <span class="s1">'Token has expired'</span>
+      <span class="p">});</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="c1">// check if the user still exists in the db</span>
+      <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'users'</span><span class="p">).</span><span class="nx">where</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">payload</span><span class="p">.</span><span class="nx">sub</span><span class="p">)}).</span><span class="nx">first</span><span class="p">()</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">next</span><span class="p">();</span>
+      <span class="p">})</span>
+      <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+          <span class="na">status</span><span class="p">:</span> <span class="s1">'error'</span>
+        <span class="p">});</span>
+      <span class="p">});</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Add the dependency:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">localAuth</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./local'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>And export the function:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">createUser</span><span class="p">,</span>
+  <span class="nx">getUser</span><span class="p">,</span>
+  <span class="nx">comparePass</span><span class="p">,</span>
+  <span class="nx">ensureAuthenticated</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Run the tests. All should pass.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In this tutorial, we went through the process of adding authentication to a NodeJS app with JSON Web Tokens. Turn back to the objectives. Can you put each one into action? What did you learn?</p>
+
+<p>What’s next? Try adding:</p>
+
+<ol>
+  <li>Authorization</li>
+  <li>Logout (make sure to <a href="http://stackoverflow.com/questions/21978658/invalidating-json-web-tokens">invalidate</a> the token)</li>
+  <li>Two factor authentication</li>
+</ol>
+
+<p>Next time, we will incorporate the client to show the full auth process:</p>
+
+<ol>
+  <li>Client logs in and the credentials are sent to the server</li>
+  <li>Server generates a token (if the credentials are correct)</li>
+  <li>Client receives and stores the token</li>
+  <li>Client then sends token to server on subsequent requests</li>
+</ol>
+
+<p><em>New post is up, showing the client-side workflow: <a href="http://mherman.org/blog/2017/01/05/token-based-authentication-with-angular">Token-Based Authentication With Angular</a>!</em></p>
+
+<p>Feel free to share your comments, questions, or tips in the comments below. The full code can be found in the <a href="https://github.com/mjhea0/node-token-auth">node-token-auth</a> repository. Cheers!</p>
+
+<blockquote>
+  <p>Check out the <a href="https://news.ycombinator.com/item?id=13301105">HN Discussion</a> as well!</p>
+</blockquote>
+
+<p>Did you enjoy this post? Please share. Sharing is caring.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/token-based-authentication-with-node/';
+    this.page.identifier = 'http://localhost:4000/blog/token-based-authentication-with-node/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

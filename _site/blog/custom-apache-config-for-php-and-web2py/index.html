@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Custom Apache Config for PHP and Web2Py</title>
+  <meta name="description" content="Contents">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/custom-apache-config-for-php-and-web2py/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Custom Apache Config for PHP and Web2Py">
+  <meta name="twitter:description" content="Contents">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Custom Apache Config for PHP and Web2Py</h1>
+    
+    <p class="post-meta"><time datetime="2013-08-25T15:34:00-06:00" itemprop="datePublished">Aug 25, 2013</time> • 
+  
+  
+    
+  
+    
+  
+    
+      <a href="/categories/python/">python</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/web2py/">web2py</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#problem" id="markdown-toc-problem">Problem</a></li>
+  <li><a href="#solution" id="markdown-toc-solution">Solution</a></li>
+  <li><a href="#steps" id="markdown-toc-steps">Steps</a></li>
+</ul>
+
+<h2 id="problem">Problem</h2>
+
+<p>As you probably know, the web2py admin must be hosted on a secured domain. We set a client up with a basic CRM system under the domain http://crm.maindomain.com, which worked perfectly until a GeoTrust SSL Certificate was installed.</p>
+
+<p>Since the purchased GeoTrust certificate was just for a single domain, there was no way to access the web2py admin unless another dedicated IP address was purchased - which the site owner did not want to pay for.</p>
+
+<p>Fortunately, there is a work around.</p>
+
+<h2 id="solution">Solution</h2>
+
+<p>After hours of research/tests, the identified solution was to configure the web2py application, as well as the admin, under the main domain:</p>
+
+<ul>
+  <li>App: https://maindomain.com/crm</li>
+  <li>Admin: https://maindomain.com/crm/admin</li>
+</ul>
+
+<p>Essentially, any URL pattern that fell under /crm/ would be served by web2py, while all other URLS would be served by an existing Joomla application.</p>
+
+<h2 id="steps">Steps</h2>
+
+<ol>
+  <li>Transfer the apache SSL configuration from the current crm domain (crm.mainpage.com) to the main domain (mainpage.com):</li>
+</ol>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># mv /usr/local/apache/conf/userdata/ssl/2/main/crm.maindomain.com /usr/local/apache/conf/userdata/ssl/2/main/maindomain.com</span>
+</code></pre></div></div>
+
+<ol>
+  <li>Update the apache config <code class="highlighter-rouge">/usr/local/apache/conf/userdata/ssl/2/main/maindomain.com/wsgi.conf</code>:</li>
+</ol>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ServerName maindomain.com
+ServerAlias crm.maindomain.com www.maindomain.com
+
+WSGIScriptAlias /crm /home/main/python/maindomain.com/app/app.wsgi
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: Make sure to also comment out ‘UserDir disabled’ and all apache Rewrite lines</p>
+</blockquote>
+
+<ol>
+  <li>Update web2py routing configuration, <code class="highlighter-rouge">/home/main/python/maindomain.com/app/web2py/routes.py</code>:</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">routers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">BASE</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">default_application</span><span class="o">=</span><span class="s">'CRM'</span><span class="p">,</span>
+    <span class="n">path_prefix</span><span class="o">=</span><span class="s">'crm'</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<ol>
+  <li>Rebuild apache config:</li>
+</ol>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># /scripts/rebuildhttpdconf</span>
+</code></pre></div></div>
+
+<ol>
+  <li>Restart apache:</li>
+</ol>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># /scripts/restartsrv_httpd</span>
+</code></pre></div></div>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/custom-apache-config-for-php-and-web2py/';
+    this.page.identifier = 'http://localhost:4000/blog/custom-apache-config-for-php-and-web2py/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

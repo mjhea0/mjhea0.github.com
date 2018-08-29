@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Node, Express, and MongoDB - a primer</title>
+  <meta name="description" content="This article details how to create a basic web app with Node, Express, and MongoDB.">
+  
+    
+    <meta name="keywords" content="node, express, mongodb, mongoose">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/node-and-mongoose-a-primer/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Node, Express, and MongoDB - a primer">
+  <meta name="twitter:description" content="This article details how to create a basic web app with Node, Express, and MongoDB.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Node, Express, and MongoDB - a primer</h1>
+    
+    <p class="post-meta"><time datetime="2014-12-31T02:28:00-07:00" itemprop="datePublished">Dec 31, 2014</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Welcome. Using Node, Express, and Mongoose, let’s create an interactive form.</p>
+
+<blockquote>
+  <p>Before you start, make sure you have <a href="http://nodejs.org/download/">Node</a> installed for your specific operating system. This tutorial also uses <a href="http://expressjs.com/">Express</a> v4.9.0 and <a href="http://mongoosejs.com/">Mongoose</a> v3.8.21.</p>
+</blockquote>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#sanity-check" id="markdown-toc-sanity-check">Sanity check</a></li>
+  <li><a href="#routes" id="markdown-toc-routes">Routes</a></li>
+  <li><a href="#jade" id="markdown-toc-jade">Jade</a></li>
+  <li><a href="#add-route-handler-for-create" id="markdown-toc-add-route-handler-for-create">Add route handler for <code class="highlighter-rouge">/create</code></a></li>
+  <li><a href="#setup-mongoose" id="markdown-toc-setup-mongoose">Setup Mongoose</a></li>
+  <li><a href="#handling-form-get-requests" id="markdown-toc-handling-form-get-requests">Handling form GET requests</a></li>
+  <li><a href="#update-formjade-to-display-comments" id="markdown-toc-update-formjade-to-display-comments">Update <em>form.jade</em> to display comments</a></li>
+  <li><a href="#handling-form-post-requests" id="markdown-toc-handling-form-post-requests">Handling form POST requests</a></li>
+  <li><a href="#sanity-check-1" id="markdown-toc-sanity-check-1">Sanity Check</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Start by installing the Express generator, which will be used to create a basic project for us:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> express-generator@4
+</code></pre></div></div>
+
+<blockquote>
+  <p>The <code class="highlighter-rouge">-g</code> flag means that we’re installing this on our entire system.</p>
+</blockquote>
+
+<p>Navigate to a convenient directory, like your “Desktop” or “Documents”, then create your app:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>express node-mongoose-form
+</code></pre></div></div>
+
+<p>Check out the project structure:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── app.js
+├── bin
+│   └── www
+├── package.json
+├── public
+│   ├── images
+│   ├── javascripts
+│   └── stylesheets
+│       └── style.css
+├── routes
+│   ├── index.js
+│   └── users.js
+└── views
+    ├── error.jade
+    ├── index.jade
+    └── layout.jade
+</code></pre></div></div>
+
+<p>Don’t worry about the files and folders for now. Just know that we have created a boilerplate that could be used for a number of Node applications. This took care of the heavy lifting, adding common files and functions associated with all apps.</p>
+
+<p>Notice the <em>package.json</em> file. This stores your project’s dependencies, which we still need to install:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd </span>node-mongoose-form
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Now let’s install one last dependency:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install mongoose <span class="nt">--save</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>The <code class="highlighter-rouge">--save</code> flag adds the dependencies and their versions to the <em>package.json</em> file. Take a look.</p>
+</blockquote>
+
+<h2 id="sanity-check">Sanity check</h2>
+
+<p>Let’s test our setup by running the app:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm start
+</code></pre></div></div>
+
+<p>Navigate to <a href="http://localhost:3000/">http://localhost:3000/</a> in your browser and you should see the “Welcome to Express” text.</p>
+
+<h3 id="supervisor">Supervisor</h3>
+
+<p>I highly recommend setting up <a href="https://github.com/isaacs/node-supervisor">Supervisor</a> so that you can run your app and watch for code changes. Check out the above link to learn more.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install supervisor <span class="nt">-g</span>
+</code></pre></div></div>
+
+<p>Kill the server by pressing CTRL-C.</p>
+
+<p>Once installed, let’s update the <em>package.json</em> file to utilize Supervisor to run our program.</p>
+
+<p>Simply change this-</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"scripts"</span><span class="p">:</span> <span class="p">{</span>
+  <span class="s2">"start"</span><span class="p">:</span> <span class="s2">"node ./bin/www"</span>
+<span class="p">},</span>
+</code></pre></div></div>
+
+<p>To this:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"scripts"</span><span class="p">:</span> <span class="p">{</span>
+  <span class="s2">"start"</span><span class="p">:</span> <span class="s2">"supervisor ./bin/www"</span>
+<span class="p">},</span>
+</code></pre></div></div>
+
+<p>Let’s test again:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm start
+</code></pre></div></div>
+
+<p>In your terminal you should see:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Watching directory <span class="s1">'node-mongoose-form'</span> <span class="k">for </span>changes.
+</code></pre></div></div>
+
+<p>If you see that, you know it’s working right. Essentially, Supervisor is watching that directory for code changes, and if they do occur, then it will refresh your app for you so you don’t have to constantly kill the server then start it back up. It saves a lot of time and keystrokes.</p>
+
+<p>Awesome. With the setup out of the way, let’s get our hands dirty and actually build something!</p>
+
+<h2 id="routes">Routes</h2>
+
+<p>Grab your favorite text editor, and then open the main file, <em>app.js</em>, which houses all of the business logic. Take a look at the routes:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="nx">routes</span><span class="p">);</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/users'</span><span class="p">,</span> <span class="nx">users</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Understanding how routes work as well as how to trace all the files associated with an individual route is an important skill to learn. You’ll be able to approach most applications and understand how they work just by starting with the routes.</p>
+
+<p>Let’s look at this route:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/users'</span><span class="p">,</span> <span class="nx">users</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Here, we know that this route is associated with the <code class="highlighter-rouge">/users</code> endpoint. What’s an endpoint? Simply navigate to <a href="http://localhost:3000/users">http://localhost:3000/users</a>.</p>
+
+<p>So the end user navigates to that endpoint and expects <em>something</em> to happen. That could mean some HTML is rendered or perhaps JSON is returned. That’s not important at this point. For now, let’s look at how Node handles that logic for “handling routes”.</p>
+
+<p>Also, within that route, you can see the variable <code class="highlighter-rouge">users</code>. Where is this file this file? It’s at the top, and it loads in another file within our app:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/users'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Open that file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+<span class="cm">/* GET users listing. */</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">'respond with a resource'</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>What’s happening here? We won’t touch everything but essentially when that endpoint is hit it responds by sending text in the form of a response to the end user - “respond with a resource”. Now, of course you don’t always have to send text. You could respond with a template or view like a Jade file that gets rendered into HTML. We’ll look at how this works in just a minute when we add our own routes.</p>
+
+<p><strong>Make sure you understand everything in this section before moving on. This is very important</strong>.</p>
+
+<h3 id="add-a-new-route">Add a new route</h3>
+
+<p>Let’s now add a new route that renders an HTML form to the end user.</p>
+
+<p>Start by adding the route handler in the <em>app.js</em> file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/form'</span><span class="p">,</span> <span class="nx">form</span><span class="p">);</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>Remember this simply means <code class="highlighter-rouge">app.use('/ENDPOINT', VARIABLE_NAME);</code>,</p>
+</blockquote>
+
+<p>Use the <code class="highlighter-rouge">form</code> variable to require a JS file within our routes folder.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">form</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/form'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Take a look in the terminal. You should see an error, indicating Node can’t find that ‘./routes/form’ module. We need to create it!</p>
+
+<p>Create that JS file/module by saving an empty file called <em>form.js</em> to the “routes” directory. Add the following code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+<span class="cm">/* GET form. */</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">'My funky form'</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>Remember what this code <code class="highlighter-rouge">res.send('My funky form');</code> should do? If not, review the previous section.</p>
+</blockquote>
+
+<p>Navigate to <a href="http://localhost:3000/form">http://localhost:3000/form</a>. You should see the text “‘My funky form” on the page. Sweet.</p>
+
+<h2 id="jade">Jade</h2>
+
+<p>Jade is a templating language, which compiles down to HTML. It makes it easy to separate logic from markup.</p>
+
+<p>Take a quick look at the <em>layout.jade</em> and <em>index.jade</em> files within the “views” folder. There’s a relationship between those two files. It’s called inheritance. We define the base structure in the <em>layout</em> file, which contains common structure that can be reused in multiple places.</p>
+
+<p>Do you see the <code class="highlighter-rouge">block</code> keyword?</p>
+
+<p>What really happens when the <em>index</em> file is rendered is that it first inherits the base template because of the <code class="highlighter-rouge">extends</code> keywords. So, the <em>layout</em> template then gets rendered, which eventually pulls in the child template, overwriting the <code class="highlighter-rouge">block</code> keyword with:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>h1= title
+  p Welcome to #{title}
+</code></pre></div></div>
+
+<p>Hope that makes sense. If not, check out <a href="http://www.learnjade.com/tour/template-inheritance/">this</a> resource for more info.</p>
+
+<h3 id="setup-formjade">Setup <em>form.jade</em></h3>
+
+<p>Create a new file called “form.jade” in the “views” directory, and then add the following code:</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+</code></pre></div></div>
+
+<p>The same thing is happening here with inheritance. If you’re unfamiliar with Jade syntax, <code class="highlighter-rouge">title</code> is essentially a variable, which we can pass in from <code class="highlighter-rouge">./routes/form.js</code>.</p>
+
+<p>Update <code class="highlighter-rouge">./routes/form.js</code> by changing-</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">'My funky form'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>To:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">'form'</span><span class="p">,</span> <span class="p">{</span> <span class="na">title</span><span class="p">:</span> <span class="s1">'My funky form'</span> <span class="p">});</span>
+</code></pre></div></div>
+
+<p>This just says, “When a user hits the <code class="highlighter-rouge">/form</code> endpoint, render the <em>form.jade</em> file and pass in <code class="highlighter-rouge">My funky form</code> as the title.”</p>
+
+<blockquote>
+  <p>Keep in mind that all Jade files are converted to HTML. Browsers can’t read the Jade syntax, so it must be in HTML by the time the end user sees it.</p>
+</blockquote>
+
+<p>Ready to test? Simple refresh <a href="http://localhost:3000/form">http://localhost:3000/form</a>.</p>
+
+<p>Did it work? If yes, move on. If not, go back through this section and review. Look in your terminal as well to see the error(s). If you’re having problems, don’t beat yourself up. It’s all part of learning!</p>
+
+<h3 id="update-formjade">Update <em>form.jade</em></h3>
+
+<p>So, let’s update the Jade syntax to load a form.</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>extends layout
+
+block content
+  //- passed into layout.jade when form.jade is rendered
+  block content
+    h1= title
+    form(method="post" action="/create")
+      label(for="comment") Got something to say:
+      input(type="text", name="comment", value=comment)
+      input(type="submit", value="Save")
+</code></pre></div></div>
+
+<p>I’m not going to touch on all the Jade syntax, but essentially, we have just a basic HTML form to submit comments.</p>
+
+<p>Refresh your browser. Do you see the form? Try clicking save. What happens? Well, you just tried to send a POST request to the <code class="highlighter-rouge">/create</code> endpoint, which does not exist. Let’s set it up.</p>
+
+<h2 id="add-route-handler-for-create">Add route handler for <code class="highlighter-rouge">/create</code></h2>
+
+<p>Open <em>app.js</em> and add a new route:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/create'</span><span class="p">,</span> <span class="nx">form</span><span class="p">);</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>Notice how we’re using the same <code class="highlighter-rouge">form</code> variable. What does this mean?</p>
+</blockquote>
+
+<p>Open <em>form.js</em> to add the logic for this new route:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+<span class="cm">/* GET form. */</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">'form'</span><span class="p">,</span> <span class="p">{</span> <span class="na">title</span><span class="p">:</span> <span class="s1">'My funky form'</span> <span class="p">});</span>
+<span class="p">});</span>
+
+<span class="cm">/* POST form. */</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">comment</span><span class="p">);</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">'form'</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Test this out again. Now, when you submit the form, we have the <code class="highlighter-rouge">/create</code> endpoint setup, which then grabs the text from the input box via <code class="highlighter-rouge">req.body.comment</code>. Make sure the text is consoled to your terminal.</p>
+
+<p>Okay. So, we are handling the routes, rendering the right template, let’s now setup Mongoose to save the data from our form.</p>
+
+<h2 id="setup-mongoose">Setup Mongoose</h2>
+
+<p><a href="http://mongoosejs.com/">Mongoose</a> is awesome. Start with defining the Schema, which then maps to a collection in Mongo. It utilizes OOP.</p>
+
+<p>Create a file called <em>database.js</em> in your app’s root directory, then add the following code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'mongoose'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Schema</span>   <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Schema</span><span class="p">({</span>
+    <span class="na">title</span> <span class="p">:</span> <span class="nb">String</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">'comments'</span><span class="p">,</span> <span class="nx">Comment</span><span class="p">);</span>
+
+<span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s1">'mongodb://localhost/node-comment'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Here, we required/included the Mongoose library along with a reference to the <code class="highlighter-rouge">Schema()</code> method. As said, you always start with defining the schema, then we linked it to collection called “comments”. Finally, we opened a connection to an instance of our local MongoDB.</p>
+
+<blockquote>
+  <p>If you don’t have the MongoDB server running. Do so now. Open a new terminal window, and run the command <code class="highlighter-rouge">sudo mongod</code>.</p>
+</blockquote>
+
+<p>Next, open <em>app.js</em> and require the Mongoose config at the very top of the file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// mongoose config</span>
+<span class="nx">require</span><span class="p">(</span><span class="s1">'./database'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>With Mongoose setup, we need to update <em>form.js</em> to create (via POST) and read (via GET) data from the Mongo collection.</p>
+
+<h2 id="handling-form-get-requests">Handling form GET requests</h2>
+
+<p>Open <em>form.js</em>. Require Mongoose as well as the <code class="highlighter-rouge">comments</code> model, which we already created:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">mongoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'mongoose'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">'comments'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Now, update the function handling GET requests:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* GET form. */</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">Comment</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">comments</span><span class="p">){</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">comments</span><span class="p">)</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+      <span class="s1">'form'</span><span class="p">,</span>
+      <span class="p">{</span><span class="na">title</span> <span class="p">:</span> <span class="s1">'My funky form'</span><span class="p">,</span> <span class="na">comments</span> <span class="p">:</span> <span class="nx">comments</span><span class="p">}</span>
+    <span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">Comment.find()</code> grabs all comments from the Mongo collection, which we assign to the variable <code class="highlighter-rouge">comments</code>. We can now use that variable in our Jade file.</p>
+
+<h2 id="update-formjade-to-display-comments">Update <em>form.jade</em> to display comments</h2>
+
+<p>Let’s add a loop to iterate through the comments and then display the <code class="highlighter-rouge">title</code> key from the collection.</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>extends layout
+
+block content
+  //- passed into layout.jade when form.jade is rendered
+  block content
+    h1= title
+    form(method="post" action="/create")
+      label(for="comment") Got something to say:
+      input(type="text", name="comment", value=comment)
+      input(type="submit", value="Save")
+    br
+    - for comment in comments
+      p= comment.title
+</code></pre></div></div>
+
+<blockquote>
+  <p>Do you remember where we set the <code class="highlighter-rouge">title</code> key? Check out the database schema in <em>database.js</em>.</p>
+</blockquote>
+
+<p>Before this will actually work - e.g., display comments - we first need to add the logic to insert data into the Mongo collection.</p>
+
+<h2 id="handling-form-post-requests">Handling form POST requests</h2>
+
+<p>Back in <em>form.js</em>, update the function handling POST requests:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* POST form. */</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">new</span> <span class="nx">Comment</span><span class="p">({</span><span class="na">title</span> <span class="p">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">comment</span><span class="p">})</span>
+  <span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">'form'</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>The simply saves a new comment, which again is grabbed from the form via <code class="highlighter-rouge">req.body.comment</code>.</p>
+
+<h2 id="sanity-check-1">Sanity Check</h2>
+
+<p>Refresh you app. Add some comments. If you’ve done everything correctly, the comments should be displayed beneath the form.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>That’s it. Grab the code from the <a href="https://github.com/mjhea0/node-form-refresh">repository</a>. Cheers!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/node-and-mongoose-a-primer/';
+    this.page.identifier = 'http://localhost:4000/blog/node-and-mongoose-a-primer/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

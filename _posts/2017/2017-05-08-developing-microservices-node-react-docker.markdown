@@ -7,6 +7,8 @@ toc: true
 categories: [docker, microservices, node, react]
 keywords: "docker, microservice, microservices, node, react, reactjs, javascript"
 description: "This tutorial details how to quickly spin up a reproducible development environment with Docker to manage a number of Node.js microservices."
+redirect_from:
+  - /blog/2017/05/11/developing-microservices-node-react-docker/
 ---
 
 In this post you will learn how to quickly spin up a reproducible development environment with Docker to manage a number of Node.js microservices.

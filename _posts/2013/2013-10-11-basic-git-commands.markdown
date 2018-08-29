@@ -6,6 +6,8 @@ date: 2013-10-11 11:19
 comments: true
 toc: true
 categories: git
+redirect_from:
+  - /blog/2013/10/11/basic-git-commands/
 ---
 
 Here you will find a quick, high-level overview of some of the major Git commands along with short descriptions and examples. For simplicity, the commands are divided into four sections: *initializing*, *staging*, *committing*, and *maintaining*. Specifically, we will be covering these commands: `config`, `init`, `clone`, `add`, `status`, `commit`, `push`, `pull`, `log`, and `reset`.

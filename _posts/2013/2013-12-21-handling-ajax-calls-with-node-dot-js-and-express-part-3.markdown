@@ -6,6 +6,8 @@ date: 2013-12-21 14:34
 comments: true
 toc: true
 categories: node
+redirect_from:
+  - /blog/2013/12/21/handling-ajax-calls-with-node-dot-js-and-express-part-3/
 ---
 
 Here is an index of all the articles in the series that have been published to date:

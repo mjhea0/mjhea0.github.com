@@ -8,6 +8,8 @@ toc: true
 categories: angular
 keywords: "angular, boilerplate, gulp, template, browserify"
 description: "This article details how to seed an Angular project using Gulp and Browserify."
+redirect_from:
+  - /blog/2014/08/14/kickstarting-angular-with-gulp/
 ---
 
 Let's develop an Angular boilerplate. Why? Despite the plethora of Angular seeds/generators/templates/boilerplates/starters/etc. on Github, none of them will ever do *exactly* what you want unless you build your own, piece by piece. By designing your own, you will better understand each component as well as how each fits into the greater project. Stop fighting against a boilerplate that just doesn't fit your needs and start from scratch. Keep it simple, as you learn the process.

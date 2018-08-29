@@ -8,6 +8,8 @@ toc: true
 categories: [node]
 keywords: "node, express, postgres, api, restful api, crud"
 description: "This article details how to build a RESTful API with Node, Express, and Postgres."
+redirect_from:
+  - /blog/2016/03/13/designing-a-restful-api-with-node-and-postgres/
 ---
 
 In this tutorial we'll create a RESTful web service with JavaScript, Node, Express, Postgres, and pg-promise.

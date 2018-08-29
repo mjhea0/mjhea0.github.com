@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Dockerizing a React App</title>
+  <meta name="description" content="Let&#39;s look at how to Dockerize a React app.">
+  
+    
+    <meta name="keywords" content="docker, react, reactjs, javascript, containerization, create-react-app, create react app, multistage builds, nginx, react-router, react router">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/dockerizing-a-react-app/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Dockerizing a React App">
+  <meta name="twitter:description" content="Let&#39;s look at how to Dockerize a React app.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Dockerizing a React App</h1>
+    
+    <p class="post-meta"><time datetime="2017-12-07T01:23:24-07:00" itemprop="datePublished">Dec 7, 2017</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/docker/">docker</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/react/">react</a>
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p><a href="https://www.docker.com/">Docker</a> is a technology that helps to speed up the development and deployment processes. If you’re working with microservices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.</p>
+
+<p>This tutorial demonstrates how to Dockerize a React app using the <a href="https://github.com/facebookincubator/create-react-app">Create React App</a> generator. We’ll specifically focus on-</p>
+
+<ol>
+  <li>Setting up a development environment with code hot-reloading</li>
+  <li>Configuring a production-ready image using multistage builds</li>
+</ol>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/docker-logo.png" style="max-width: 100%; border:0; box-shadow: none;" alt="docker" />
+</div>
+
+<p><br /></p>
+
+<p><em>Updates:</em></p>
+
+<ul>
+  <li>Feb 26, 2018: Updated to the latest versions of Node, React, and Nginx.</li>
+  <li>Feb 14, 2018: Added an anonymous volume; detailed how to configure Nginx to work properly with React Router.</li>
+  <li>Jan 17, 2018: Added a production build section that uses multistage Docker builds.</li>
+</ul>
+
+<p><em>We will be using:</em></p>
+
+<ul>
+  <li>Docker v17.12.0-ce</li>
+  <li>Create React App v1.5.2</li>
+  <li>Node v9.6.1</li>
+</ul>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#docker" id="markdown-toc-docker">Docker</a></li>
+  <li><a href="#docker-machine" id="markdown-toc-docker-machine">Docker Machine</a></li>
+  <li><a href="#production" id="markdown-toc-production">Production</a></li>
+  <li><a href="#react-router-and-nginx" id="markdown-toc-react-router-and-nginx">React Router and Nginx</a></li>
+  <li><a href="#next-steps" id="markdown-toc-next-steps">Next Steps</a></li>
+</ul>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Install <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> create-react-app@1.5.2
+</code></pre></div></div>
+
+<p>Generate a new app:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>create-react-app sample-app
+<span class="nv">$ </span><span class="nb">cd </span>sample-app
+</code></pre></div></div>
+
+<h2 id="docker">Docker</h2>
+
+<p>Add a <em>Dockerfile</em> to the project root:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># base image
+FROM node:9.6.1
+
+# set working directory
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+
+# add `/usr/src/app/node_modules/.bin` to $PATH
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+
+# install and cache app dependencies
+COPY package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.1 -g --silent
+
+# start app
+CMD ["npm", "start"]
+</code></pre></div></div>
+
+<blockquote>
+  <p>Silencing the NPM output, via <code class="highlighter-rouge">--silent</code>, is a personal choice. It’s often frowned upon, though, since it can swallow errors. Keep this in mind so you don’t waste time debugging.</p>
+</blockquote>
+
+<p>Add a <em>.dockerignore</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node_modules
+</code></pre></div></div>
+
+<p>This will greatly speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.</p>
+
+<p>Build and tag the Docker image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> sample-app <span class="nb">.</span>
+</code></pre></div></div>
+
+<p>Then, spin up the container once the build is done:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
+  <span class="nt">--rm</span> <span class="se">\</span>
+  sample-app
+</code></pre></div></div>
+
+<p>Open your browser to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see the app. Try making a change to the <code class="highlighter-rouge">App</code> component within your code editor. You should see the app hot-reload. Kill the server once done.</p>
+
+<p>Want to use <a href="https://docs.docker.com/compose/">Docker Compose</a>? Add a <em>docker-compose.yml</em> file to the project root:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">sample-app</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">sample-app</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">/usr/src/app/node_modules'</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">3000:3000'</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">NODE_ENV=development</span>
+</code></pre></div></div>
+
+<p>Take note of the volumes. Without the data volume (<code class="highlighter-rouge">'/usr/src/app/node_modules'</code>), the <em>node_modules</em> directory would be overwritten by the mounting of the host directory at runtime:</p>
+
+<ul>
+  <li><em>Build</em> - The <code class="highlighter-rouge">node_modules</code> directory is created.</li>
+  <li><em>Run</em> - The current directory is mounted into the container, overwriting the <code class="highlighter-rouge">node_modules</code> that were just installed when the container was built.</li>
+</ul>
+
+<p>Build the image and fire up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p>Ensure the app is running in the browser and test hot-reloading again. Bring down the container before moving on:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose stop
+</code></pre></div></div>
+
+<h2 id="docker-machine">Docker Machine</h2>
+
+<p>To get hot-reloading to work with <a href="https://docs.docker.com/machine/">Docker Machine</a> and <a href="https://docs.docker.com/machine/get-started/">VirtualBox</a> you’ll need to <a href="https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#troubleshooting">enable</a> a polling mechanism via <a href="https://github.com/paulmillr/chokidar">chokidar</a> (which wraps <code class="highlighter-rouge">fs.watch</code>, <code class="highlighter-rouge">fs.watchFile</code>, and <code class="highlighter-rouge">fsevents</code>).</p>
+
+<p>Create a new Machine:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine create <span class="nt">-d</span> virtualbox sample
+<span class="nv">$ </span>docker-machine env sample
+<span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env sample<span class="k">)</span>
+</code></pre></div></div>
+
+<p>Grab the IP address:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-machine ip sample
+</code></pre></div></div>
+
+<p>Then, build the images and run the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> sample-app <span class="nb">.</span>
+
+<span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
+  <span class="nt">--rm</span> sample-app
+</code></pre></div></div>
+
+<p>Test the app again in the browser at <a href="http://DOCKER_MACHINE_IP:3000/">http://DOCKER_MACHINE_IP:3000/</a>. Also, confirm that auto reload is <em>not</em> working. You can try with Docker Compose as well, but the result will be the same.</p>
+
+<p>To get hot-reload working, we need to add an environment variable:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
+  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
+  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
+  <span class="nt">-p</span> 3000:3000 <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">CHOKIDAR_USEPOLLING</span><span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
+  <span class="nt">--rm</span> sample-app
+</code></pre></div></div>
+
+<p>Test it out again. You could add the variable to a <em>.env</em> file, however you  won’t need it for a production build.</p>
+
+<p>Updated <em>docker-compose.yml</em> file:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">sample-app</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">sample-app</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">/usr/src/app/node_modules'</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">3000:3000'</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">NODE_ENV=development</span>
+      <span class="pi">-</span> <span class="s">CHOKIDAR_USEPOLLING=true</span>
+</code></pre></div></div>
+
+<h2 id="production">Production</h2>
+
+<p>Let’s create a separate Dockerfile for use in production called <em>Dockerfile-prod</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># build environment
+FROM node:9.6.1 as builder
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+COPY package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.1 -g --silent
+COPY . /usr/src/app
+RUN npm run build
+
+# production environment
+FROM nginx:1.13.9-alpine
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+</code></pre></div></div>
+
+<p>Here, we take advantage of <a href="https://docs.docker.com/engine/userguide/eng-image/multistage-build/">multistage builds</a> to create a temporary image used for building the artifact that is then copied over to the production image. The temporary build image is discarded along with the original files and folders associated with the image. This produces a lean, production-ready image.</p>
+
+<blockquote>
+  <p>Check out the <a href="https://blog.alexellis.io/mutli-stage-docker-builds/">Builder pattern vs. Multi-stage builds in Docker</a> blog post for more info on multistage builds.</p>
+</blockquote>
+
+<p>Using the production Dockerfile, build and tag the Docker image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-f</span> Dockerfile-prod <span class="nt">-t</span> sample-app-prod <span class="nb">.</span>
+</code></pre></div></div>
+
+<p>Spin up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-p</span> 80:80 <span class="nt">--rm</span> sample-app-prod
+</code></pre></div></div>
+
+<p>Assuming you are still using the same Docker Machine, navigate to <a href="http://DOCKER_MACHINE_IP">http://DOCKER_MACHINE_IP</a> in your browser.</p>
+
+<p>Test with a new Docker Compose file as well called <em>docker-compose-prod.yml</em>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+
+<span class="na">services</span><span class="pi">:</span>
+
+  <span class="na">sample-app-prod</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">sample-app-prod</span>
+    <span class="na">build</span><span class="pi">:</span>
+      <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
+      <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile-prod</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">80:80'</span>
+</code></pre></div></div>
+
+<p>Fire up the container:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose <span class="nt">-f</span> docker-compose-prod.yml up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p>Test it out once more in your browser. Then, if you’re done, go ahead and destroy the Machine:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>docker-machine env <span class="nt">-u</span><span class="k">)</span>
+<span class="nv">$ </span>docker-machine rm sample
+</code></pre></div></div>
+
+<h2 id="react-router-and-nginx">React Router and Nginx</h2>
+
+<p>If you are using <a href="https://reacttraining.com/react-router/">React Router</a>, then you’ll need to change the default Nginx config at build time:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+</code></pre></div></div>
+
+<p>Add the changes to <em>Dockerfile-prod</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># build environment
+FROM node:9.6.1 as builder
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+COPY package.json /usr/src/app/package.json
+RUN npm install --silent
+RUN npm install react-scripts@1.1.1 -g --silent
+COPY . /usr/src/app
+RUN npm run build
+
+# production environment
+FROM nginx:1.13.9-alpine
+RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+</code></pre></div></div>
+
+<p>Create the following two folders along with a <em>default.conf</em> file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>└── conf
+    └── conf.d
+        └── default.conf
+</code></pre></div></div>
+
+<p><em>default.conf</em>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+  listen 80;
+  location / {
+    root   /usr/share/nginx/html;
+    index  index.html index.htm;
+    try_files $uri $uri/ /index.html;
+  }
+  error_page   500 502 503 504  /50x.html;
+  location = /50x.html {
+    root   /usr/share/nginx/html;
+  }
+}
+</code></pre></div></div>
+
+<h2 id="next-steps">Next Steps</h2>
+
+<p>With that, you should now be able to add React to a larger Docker-powered project for both development and production environments. If you’d like to learn more about working with React and Docker along with building and testing microservices, check out <a href="https://testdriven.io/">Microservices with Docker, Flask, and React</a>.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/dockerizing-a-react-app/';
+    this.page.identifier = 'http://localhost:4000/blog/dockerizing-a-react-app/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

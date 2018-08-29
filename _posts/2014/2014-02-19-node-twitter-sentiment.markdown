@@ -6,6 +6,8 @@ date: 2014-02-19 10:33
 comments: true
 toc: true
 categories: node
+redirect_from:
+  - /blog/2014/02/19/node-twitter-sentiment/
 ---
 
 In this tutorial we'll be building an app to pull in real-time Tweets using a Twitter client library for Node called [Twit](https://github.com/ttezel/twit) along with [NodeJS](http://nodejs.org/), [Express](http://expressjs.com/), and [Sentimental](https://www.npmjs.org/package/Sentimental) (for sentiment analysis).

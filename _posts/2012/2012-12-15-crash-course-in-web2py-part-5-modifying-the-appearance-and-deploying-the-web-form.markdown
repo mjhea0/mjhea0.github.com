@@ -6,6 +6,8 @@ date: 2012-12-10 07:39
 comments: true
 toc: true
 categories: [python, web2py]
+redirect_from:
+  - /blog/2012/12/10/crash-course-in-web2py-part-5-modifying-the-appearance-and-deploying-the-web-form/
 ---
 
 You made it. In this final tutorial I'll show you how to easily modify the form's appearance, and we'll deploy the app to PythonAnywhere.

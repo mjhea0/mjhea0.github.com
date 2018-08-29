@@ -6,6 +6,8 @@ date: 2013-08-06 14:07
 comments: true
 toc: true
 categories: crowdfunding
+redirect_from:
+  - /blog/2013/08/06/kickstarting-at-the-local-level/
 ---
 
 After successfully funding [Real Python](http://www.kickstarter.com/projects/1369857650/real-python-for-web-development-featuring-web2py) via Kickstarter, I have become more and more interested in the types of people (or companies) who use Kickstarter as a means of raising capital.

@@ -7,6 +7,8 @@ toc: true
 categories: [node, static types, testing]
 keywords: "node, express, typescript, RESTful API, TypeScript, tdd, test-driven development, static types"
 description: "This tutorial takes a test-first approach to developing a RESTful API with NodeJS, ExpressJS, and TypeScript."
+redirect_from:
+  - /blog/2016/11/05/developing-a-restful-api-with-node-and-typescript/
 ---
 
 This tutorial details how to develop a RESTful API with [NodeJS](https://nodejs.org/en/), [ExpressJS](http://expressjs.com/), and [TypeScript](https://www.typescriptlang.org/) using test-driven development (TDD).

@@ -8,6 +8,8 @@ toc: true
 categories: [angular, testing]
 keywords: "angular, angularJS, testing, karma, protractor, e2e tests, unit tests, mocha, chai"
 description: "In Part 2 of Testing AngularJS with Protractor and Karma we'll look at end to end testing with Protractor."
+redirect_from:
+  - /blog/2015/04/26/testing-angularjs-with-protractor-and-karma-part-2/
 ---
 
 **This article details how to test a simple AngularJS application using unit tests and end-to-end (E2E) tests.**

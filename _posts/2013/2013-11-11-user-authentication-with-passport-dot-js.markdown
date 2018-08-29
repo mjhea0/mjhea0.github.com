@@ -6,6 +6,8 @@ date: 2013-11-11 07:45
 comments: true
 toc: true
 categories: [node, auth]
+redirect_from:
+  - /blog/2013/11/11/user-authentication-with-passport-dot-js/
 ---
 
 In this post I'll demonstrate how to add user authentication to Node.js with Passport.js.

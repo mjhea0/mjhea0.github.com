@@ -6,6 +6,8 @@ date: 2013-09-07 14:02
 comments: true
 toc: true
 categories: startups
+redirect_from:
+  - /blog/2013/09/07/whats-the-difference-between-a-pre-order-and-an-mvp/
 ---
 
 You may have a great idea for a product but no money to actually produce it. You could attempt to raise funding from investors, but then you'll have to give up a significant portion of what you might earn from your product (and control). Offering your customers a chance to fund the production of what you're selling can help you get your product out into the world, and still make some money in the process. Even better, a pre-order can effectively show you if there's a demand for what you want to build. If not enough people are prepared to pre-order your product, you can cancel the project and move on to something that makes more sense.

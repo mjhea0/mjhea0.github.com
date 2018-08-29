@@ -6,6 +6,8 @@ date: 2014-06-12 07:39
 comments: true
 toc: true
 categories: angular
+redirect_from:
+  - /blog/2014/06/12/primer-on-angularjs-service-types/
 ---
 
 {% if page.toc %}

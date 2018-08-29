@@ -6,6 +6,8 @@ date: 2014-04-15 20:34
 comments: true
 toc: true
 categories: node
+redirect_from:
+  - /blog/2014/04/15/handling-ajax-calls-with-node-dot-js-and-express-part-5/
 ---
 
 Articles in the series:

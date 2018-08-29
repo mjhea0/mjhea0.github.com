@@ -8,6 +8,8 @@ toc: true
 categories: node
 keywords: "swig, template engine web development, node, nodejs"
 description: "Here we look at the basics of using Swig, a template engine for Node."
+redirect_from:
+  - /blog/2015/08/23/primer-on-swig-templating/
 ---
 
 Let's look at the basics of [Swig](http://node-swig.github.io/swig-templates/), "a simple, powerful, and extendable JavaScript Template Engine" for NodeJS.

@@ -6,6 +6,8 @@ date: 2014-03-18 11:55
 comments: true
 toc: true
 categories: node
+redirect_from:
+  - /blog/2014/03/18/node-twitter-sentiment-part-2/
 ---
 
 This is for the [Node-js-Denver-Boulder](http://www.meetup.com/Node-js-Denver-Boulder/) Meetup <3 Cheers!

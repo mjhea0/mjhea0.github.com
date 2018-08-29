@@ -7,6 +7,8 @@ toc: true
 categories: [angular, auth]
 keywords: "angular, javascript, authentication, auth, ngrx, ngrx store, ngrx effects"
 description: "This tutorial demonstrates how to add authentication to Angular using NGRX Store and Effects."
+redirect_from:
+  - /blog/2018/04/17/authentication-in-angular-with-ngrx/
 ---
 
 In this tutorial, we'll add authentication to Angular using [NGRX](https://github.com/ngrx/platform) Store and Effects.
@@ -366,7 +368,7 @@ Start with the template:
 </div>
 ```
 
-Since Angular now automatically adds a `novalidate` attribute to forms, we used the `ngNativeValidate` [directive](https://github.com/angular/angular/blob/master/packages/forms/src/directives/ng_no_validate_directive.ts) to turn the browser's native form validation back on.  
+Since Angular now automatically adds a `novalidate` attribute to forms, we used the `ngNativeValidate` [directive](https://github.com/angular/angular/blob/master/packages/forms/src/directives/ng_no_validate_directive.ts) to turn the browser's native form validation back on.
 
 > Feel free to use Angular's [form validation](https://angular.io/guide/form-validation).
 

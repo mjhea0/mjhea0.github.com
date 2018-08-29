@@ -6,6 +6,8 @@ date: 2013-06-13 08:06
 comments: true
 toc: true
 categories: ruby
+redirect_from:
+  - /blog/2013/06/13/up-and-running-with-espresso-rapid-web-development-in-the-browser/
 ---
 
 > Please note: The developer of Espresso is no longer maintaining the project. I revived it for the sake of this tutorial, but I will not be maintaining it either. If you wish to take on this awesome project, please contact me. Cheers!

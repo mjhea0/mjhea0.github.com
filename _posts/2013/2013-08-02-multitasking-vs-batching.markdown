@@ -6,6 +6,8 @@ date: 2013-08-02 17:14
 comments: true
 toc: true
 categories: news
+redirect_from:
+  - /blog/2013/08/02/multitasking-vs-batching/
 ---
 
 When work starts piling up, how do you approach your long to do list? The only thing you’re thinking about is how fast you can get this all done. So you start working on everything at once, because that SHOULD get everything done. But then you realize you have started everything, finished nothing, and quality seems to have been compromised for time.

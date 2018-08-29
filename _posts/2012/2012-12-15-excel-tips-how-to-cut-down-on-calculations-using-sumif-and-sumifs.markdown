@@ -6,6 +6,8 @@ date: 2012-12-12 20:23
 comments: true
 toc: true
 categories: excel
+redirect_from:
+  - /blog/2012/12/12/excel-tips-how-to-cut-down-on-calculations-using-sumif-and-sumifs/
 ---
 
 The SUMIF and SUMIFS function in Microsoft Excel is a simple, yet powerful calculation tool. This tutorial will show you how this function works, as well as provide examples of how to use it. Most of you are aware that the SUM function calculates the total of a cell range. SUMIF takes this calculation step a bit further. It says, "Only **SUM** the numbers _in this range_ **IF** a cell _in this range_ contains a specific value."

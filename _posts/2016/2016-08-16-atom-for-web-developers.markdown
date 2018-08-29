@@ -7,6 +7,8 @@ toc: true
 categories: [atom, code editor]
 keywords: "atom, atom.io, atom setup"
 description: "This article details how to set up Atom for web development."
+redirect_from:
+  - /blog/2016/08/16/atom-for-web-developers/
 ---
 
 This is a no frills look at [Atom](https://atom.io/), a powerful, open-source text editor maintained by the GitHub team.
@@ -84,7 +86,7 @@ With [Highlight Selected](https://atom.io/packages/highlight-selected) you doubl
 
 ```javascript
 /**
- * 	
+ *
  **/
 ```
 

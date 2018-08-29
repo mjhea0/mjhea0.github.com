@@ -7,6 +7,8 @@ toc: true
 categories: [aws, docker, microservices, node, react, devops]
 keywords: "aws, aws ecs, amazon ecs, docker, amazon ec2 container service, microservice, microservices, node, react, reactjs, javascript, containerization, orchestration, ec2"
 description: "This tutorial details how to take a number of containerized microservices running on a single EC2 instance and scale them out to Amazon's container orchestration service, EC2 Container Service (ECS)."
+redirect_from:
+  - /blog/2017/11/16/docker-on-aws-from-containerization-to-orchestration/
 ---
 
 In this post, we'll take a number of containerized microservices running on a single EC2 instance and scale them out to Amazon's container orchestration service, [EC2 Container Service](https://aws.amazon.com/ecs/) (ECS).

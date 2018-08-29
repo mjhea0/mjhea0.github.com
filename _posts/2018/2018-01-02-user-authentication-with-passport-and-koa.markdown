@@ -7,6 +7,8 @@ toc: true
 categories: [node, koa, auth, mocha, testing]
 keywords: "node, koa, passport, authentication, postgres, koa 2, postgres, redis"
 description: "This post demonstrates how to add user authentication to a Koa app with Passport.js."
+redirect_from:
+  - /blog/2018/01/02/user-authentication-with-passport-and-koa/
 ---
 
 [Passport](http://www.passportjs.org/) is a library that provides a simple authentication middleware for Node.js.

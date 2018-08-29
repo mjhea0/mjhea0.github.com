@@ -8,6 +8,8 @@ toc: true
 categories: [node, mocha, testing]
 keywords: "node, express, postgres, knex, api, restful api, crud, mocha, chai, integration tests"
 description: "This article takes a test-driven approach to developing a RESTful API with Node, Express, Knex, and Postgres."
+redirect_from:
+  - /blog/2016/04/28/test-driven-development-with-node/
 ---
 
 Today we will be developing a RESTful API with [Node](https://nodejs.org), [Express](http://expressjs.com/), [Knex](http://knexjs.org/) - a SQL query builder - and [PostgreSQL](http://www.postgresql.org/) using test driven development (TDD).

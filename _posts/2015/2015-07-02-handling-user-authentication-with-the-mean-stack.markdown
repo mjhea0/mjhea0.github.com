@@ -9,6 +9,8 @@ categories: [angular, node, auth]
 
 keywords: "mean, web development, mongo, mongodb, express, expressjs, node, nodejs, angular, angularjs, authentication, login, mean stack"
 description: "Here we look at how to handle user authentication with the MEAN stack."
+redirect_from:
+  - /blog/2015/07/02/handling-user-authentication-with-the-mean-stack/
 ---
 
 <div style="text-align:center;">

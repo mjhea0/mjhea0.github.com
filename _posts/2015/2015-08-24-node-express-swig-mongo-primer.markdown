@@ -8,6 +8,8 @@ toc: true
 categories: [node]
 keywords: "node, express, mongodb, mongoose, swig"
 description: "This article details how to create a basic web app with Node, Express, Swig, and MongoDB."
+redirect_from:
+  - /blog/2015/08/24/node-express-swig-mongo-primer/
 ---
 
 Let's create a basic CRUD app using Node, Express, Swig, and MongoDB.

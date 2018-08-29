@@ -7,6 +7,8 @@ toc: true
 categories: [aws, docker, microservices, node, react, devops]
 keywords: "aws, aws ecs, amazon ecs, docker, amazon ec2 container service, microservice, microservices, node, react, reactjs, javascript"
 description: "This tutorial details how to spin up reproducible, on-demand test environments with Docker, Amazon EC2 Container Service (ECS), and Circle CI."
+redirect_from:
+  - /blog/2017/09/18/on-demand-test-environments-with-docker-and-aws-ecs/
 ---
 
 In this tutorial, we'll look at how to spin up reproducible (and easily-destructible), on-demand test environments with [Docker](http://docker.com/), [Amazon EC2 Container Service](https://aws.amazon.com/ecs/) (ECS), and [Circle CI](https://circleci.com/) (for continuous integration and delivery).

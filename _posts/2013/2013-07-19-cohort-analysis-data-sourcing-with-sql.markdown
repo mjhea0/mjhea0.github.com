@@ -6,6 +6,8 @@ date: 2013-07-19 09:48
 comments: true
 toc: true
 categories: analytics
+redirect_from:
+  - /blog/2013/07/19/cohort-analysis-data-sourcing-with-sql/
 ---
 
 As an online business owner, you hope that engagement increases over time, leading to a longer period of retention. This is rarely the case, though. The majority of web applications see a gradual decrease in user engagement, eventually leading to churn. Your goal then is to stretch out the length of engagement as long as possible. The best way to measure this is through cohort analysis.

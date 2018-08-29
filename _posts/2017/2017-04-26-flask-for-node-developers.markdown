@@ -7,6 +7,8 @@ toc: true
 categories: [node, python]
 keywords: "python, flask, RESTful API, CRUD"
 description: "Let's build a RESTful API with Python and Flask."
+redirect_from:
+  - /blog/2017/04/26/flask-for-node-developers/
 ---
 
 Today we'll be going through how to build a basic CRUD server-side application using Python and [Flask](http://flask.pocoo.org/), geared toward JavaScript developers versed in Node and Express. Similar to [Express](https://expressjs.com/), [Flask](http://flask.pocoo.org/) is a simple, yet powerful micro-framework for Python, perfect for RESTful APIs.

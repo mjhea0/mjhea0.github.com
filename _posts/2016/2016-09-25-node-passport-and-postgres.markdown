@@ -7,6 +7,8 @@ toc: true
 categories: [node, mocha, testing, auth]
 keywords: "node, express, passport, authentication, postgres"
 description: "This tutorial takes a test-first approach to implementing authentication in a Node app using Passport and Postgres."
+redirect_from:
+  - /blog/2016/09/25/node-passport-and-postgres/
 ---
 
 This tutorial takes a test-first approach to implementing authentication in a Node app using Passport and Postgres.

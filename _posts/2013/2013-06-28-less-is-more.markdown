@@ -6,6 +6,8 @@ date: 2013-06-28 10:52
 comments: true
 toc: true
 categories: startups
+redirect_from:
+  - /blog/2013/06/28/less-is-more/
 ---
 
 *"The average attention span in 2012 was 8 seconds"*

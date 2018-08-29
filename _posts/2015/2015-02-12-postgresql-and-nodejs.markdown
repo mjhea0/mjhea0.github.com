@@ -8,6 +8,8 @@ toc: true
 categories: [node, angular]
 keywords: "node, express, angular, postgres"
 description: "This article details how to build a todo app with Node, Express, Angular, and Postgres."
+redirect_from:
+  - /blog/2015/02/12/postgresql-and-nodejs/
 ---
 
 Today we're going to build a CRUD todo single page application with Node, Express, Angular, and PostgreSQL.

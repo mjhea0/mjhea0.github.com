@@ -6,6 +6,8 @@ date: 2014-01-23 08:23
 comments: true
 toc: true
 categories: startups
+redirect_from:
+  - /blog/2014/01/23/so-you-want-be-an-entrepreneur/
 ---
 
 Welcome!

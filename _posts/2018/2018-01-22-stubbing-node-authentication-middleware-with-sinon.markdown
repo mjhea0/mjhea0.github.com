@@ -7,6 +7,8 @@ toc: true
 categories: [node, koa, auth, mocha, testing]
 keywords: "node, node.js, koa, testing, sinon, sinon.js, stub, mock, passport, authentication, koa 2 javascript, unit tests, unit testing, mocha, chai"
 description: "This post looks at how to stub Passport authentication middleware with Sinon.js during test runs."
+redirect_from:
+  - /blog/2018/01/22/stubbing-node-authentication-middleware-with-sinon/
 ---
 
 [Last time](http://mherman.org/blog/2018/01/02/user-authentication-with-passport-and-koa/) we looked at how to set up [Passport](http://www.passportjs.org/) local authentication with Node and Koa. We took a test-first approach and wrote the majority of tests first. That said, there were a two routes that we could not test (`/auth/status` and `/auth/logout`) since they required us to to bypass the `isAuthenticated()` method and manually set a cookie.

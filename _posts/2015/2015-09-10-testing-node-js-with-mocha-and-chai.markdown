@@ -8,6 +8,8 @@ toc: true
 categories: [node, mocha, testing]
 keywords: "mocha, chai, node, testing, node.js, integration tests, unit tests"
 description: "Let's look at how to test a Node.JS application with Mocha and Chai."
+redirect_from:
+  - /blog/2015/09/10/testing-node-js-with-mocha-and-chai/
 ---
 
 This post serves as an introduction to testing a Node.js RESTful API with [Mocha](http://mochajs.org/) (v2.3.1), a JavaScript testing framework.

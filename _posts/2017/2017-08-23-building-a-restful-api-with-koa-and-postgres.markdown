@@ -7,6 +7,8 @@ toc: true
 categories: [node, mocha, koa, testing]
 keywords: "node, koa, koa 2, async/await, postgres, knex, api, restful api, crud, mocha, chai, integration tests"
 description: "This article takes a test-driven approach to developing a RESTful API with Node, Koa, and Postgres."
+redirect_from:
+  - /blog/2017/08/23/building-a-restful-api-with-koa-and-postgres/
 ---
 
 In this tutorial, you'll learn how to develop a RESTful API with [Koa](http://koajs.com/) 2 and Postgres. You'll also be taking advantage of [async/await](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function) functions, from ES2017, and test driven development (TDD).
@@ -60,7 +62,7 @@ By the end of this tutorial, you will be able to...
 
 ### What are we building?
 
-Your goal is to design a RESTful API, using test driven development, for a single resource - `movies`. The API itself should follow RESTful design principles, using the [basic HTTP verbs](http://www.restapitutorial.com/lessons/httpmethods.html): GET, POST, PUT, and DELETE.  
+Your goal is to design a RESTful API, using test driven development, for a single resource - `movies`. The API itself should follow RESTful design principles, using the [basic HTTP verbs](http://www.restapitutorial.com/lessons/httpmethods.html): GET, POST, PUT, and DELETE.
 
 ### What is Koa?
 

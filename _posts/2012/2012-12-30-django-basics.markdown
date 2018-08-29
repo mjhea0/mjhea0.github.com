@@ -6,6 +6,8 @@ date: 2012-12-30 09:48
 comments: true
 toc: true
 categories: [python, django]
+redirect_from:
+  - /blog/2012/12/30/django-basics/
 ---
 
 

@@ -7,6 +7,8 @@ toc: true
 categories: [kubernetes, docker]
 keywords: "kubernetes, docker"
 description: "This tutorial demonstrates how to spin up a Kubernetes cluster on Ubuntu 18.04."
+redirect_from:
+  - /blog/2018/08/20/setting-up-a-kubernetes-cluster-on-ubuntu/
 ---
 
 In this tutorial, we'll spin up a Kubernetes cluster on Ubuntu 18.04.

@@ -6,6 +6,9 @@ date: 2013-05-27 20:43
 comments: true
 toc: true
 categories: news
+redirect_from:
+  - /blog/2013/05/27/what-am-i-good-at/
+
 ---
 
 What am I good at? What is my talent? What makes me stand out? These are the questions we ask ourselves over and over again and somehow can not seem to come up with the perfect answer. This is because we are blinded, we are blinded by our own bias on who we are and what we should be. But discovering the answers to these questions is crucial in branding yourself. You need to know what your strengths are in order to build upon them and make them better

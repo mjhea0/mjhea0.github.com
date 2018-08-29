@@ -5,6 +5,8 @@ title: "Understand your Support System Better with Sentiment Analysis"
 date: 2013-01-09 09:13
 comments:
 categories: analytics
+redirect_from:
+  - /blog/2013/01/09/understand-your-support-system-better-with-sentiment-analysis/
 ---
 
 There’s more to evaluating success than monitoring your bottom line. While analyzing your support system on a macro level helps to ensure your costs are going down and earnings are rising, taking a micro approach to your business gives you a thorough appreciation of your business’ performance. Sentiment analysis helps you to clearly see whether your business practices are leading to higher customer satisfaction, or if you’re on the verge of running clients away.

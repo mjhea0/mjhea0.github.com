@@ -7,6 +7,8 @@ toc: true
 categories: [angular, auth]
 keywords: "angular, angularjs, authentication, jwts, tokens"
 description: "Here we look at how to add user authentication to Angular using JSON Web Tokens (JWTs)."
+redirect_from:
+  - /blog/2017/01/05/token-based-authentication-with-angular/
 ---
 
 In the [Token-Based Authentication With Node](http://mherman.org/blog/2016/10/28/token-based-authentication-with-node) tutorial, we looked at how to add token-based authentication to a Node app using JSON Web Tokens (JWTs). This time, we'll build out the client-side by showing how to add auth to Angular using JWTs.
@@ -568,7 +570,7 @@ function authStatusController(authService) {
     })
     .catch((err) => {
       console.log(err);
-    });      
+    });
   }
 }
 ```

@@ -7,6 +7,8 @@ toc: true
 categories: [node, mocha, testing]
 keywords: "node, express, postgres, knex, api, restful api, crud, mocha, chai, integration tests, integration, unit tests, unit, faker, fixtures, test fixtures, validator, validations, express validations, tdd"
 description: "This article takes a test-first approach to developing a RESTful API with Node, Express, Mocha, Chai, knex, Postgres, faker.js, and express-validator."
+redirect_from:
+  - /blog/2016/09/12/testing-node-and-express/
 ---
 
 This tutorial looks at how to test an [Express](https://expressjs.com/) CRUD app with [Mocha](http://mochajs.org/) and [Chai](http://chaijs.com/). Although we'll be writing both [unit and integration tests](http://stackoverflow.com/questions/5357601/whats-the-difference-between-unit-tests-and-integration-tests), the focus will be on the latter so that the tests run against the database in order to test the full functionality of our app. Postgres will be used, but feel free to use your favorite relational database.

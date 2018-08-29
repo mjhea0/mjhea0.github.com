@@ -6,6 +6,8 @@ date: 2013-11-10 08:28
 comments: true
 toc: true
 categories: [node, auth]
+redirect_from:
+  - /blog/2013/11/10/social-authentication-with-passport-dot-js/
 ---
 
 In this post we'll add social authentication - Facebook, Twitter, Github, Google, and Instagram - to Node.js.

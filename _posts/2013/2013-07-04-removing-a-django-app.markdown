@@ -6,6 +6,8 @@ date: 2013-07-04 09:43
 comments: true
 toc: true
 categories: [python, django]
+redirect_from:
+  - /blog/2013/07/04/removing-a-django-app/
 ---
 
 In order to completely uninstall a Django application you have to not only delete the database tables - but you also need to remove the related [contenttypes](https://docs.djangoproject.com/en/1.7/ref/contrib/contenttypes/).

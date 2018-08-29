@@ -8,6 +8,8 @@ toc: true
 categories: [docker, node, devops]
 keywords: "node, docker, web development, express, continuous integration, tutum, docker compose, continuous delivery"
 description: "This article details how to set up your local development environment with Docker as well as continuous integration and delivery, step by step."
+redirect_from:
+  - /blog/2015/03/06/node-with-docker-continuous-integration-and-delivery/
 ---
 
 Welcome.

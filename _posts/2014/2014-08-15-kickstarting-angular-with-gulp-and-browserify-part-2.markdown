@@ -8,6 +8,8 @@ toc: true
 categories: angular
 keywords: "angular, boilerplate, gulp, template, browserify"
 description: "This article details how to seed an Angular project using Gulp and Browserify."
+redirect_from:
+  - /blog/2014/08/15/kickstarting-angular-with-gulp-and-browserify-part-2/
 ---
 
 Hello. Welcome to the second half. [Last time](http://mherman.org/blog/2014/08/14/kickstarting-angular-with-gulp), we built a nice Angular starter project, utilizing Gulp and Bower. Let's take this a step further and add the power of [Browserify](http://browserify.org/) into the mix. Before you read any further, check out the [Introduction](https://github.com/substack/browserify-handbook#introduction) to the [Browserify Handbook](https://github.com/substack/browserify-handbook) to learn about the problems that Browserify solves.

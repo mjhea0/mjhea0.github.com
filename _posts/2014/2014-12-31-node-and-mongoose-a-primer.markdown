@@ -8,6 +8,8 @@ toc: true
 categories: node
 keywords: "node, express, mongodb, mongoose"
 description: "This article details how to create a basic web app with Node, Express, and MongoDB."
+redirect_from:
+  - /blog/2014/12/31/node-and-mongoose-a-primer/
 ---
 
 Welcome. Using Node, Express, and Mongoose, let's create an interactive form.

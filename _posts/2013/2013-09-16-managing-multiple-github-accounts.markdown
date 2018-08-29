@@ -6,6 +6,8 @@ date: 2013-09-16 07:43
 comments: true
 toc: true
 categories: github
+redirect_from:
+  - /blog/2013/09/16/managing-multiple-github-accounts/
 ---
 
 Let's look at how to manage multiple Github accounts from one computer. In essence, it's simply a matter of balancing both your git and ssh configurations - which actually is not as bad as it might seem.

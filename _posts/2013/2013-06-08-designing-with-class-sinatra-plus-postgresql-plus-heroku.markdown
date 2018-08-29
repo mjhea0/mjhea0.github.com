@@ -6,6 +6,8 @@ date: 2013-06-08 07:37
 comments: true
 toc: true
 categories: ruby
+redirect_from:
+  - /blog/2013/06/08/designing-with-class-sinatra-plus-postgresql-plus-heroku/
 ---
 
 Know a little Ruby? Ready to start web development? Before jumping to Rails, get your hands dirty with Sinatra. It's the perfect learning tool. My recommendation: Start with a basic dynamic website, backed with SQLite. Create and manage your database tables with raw SQL. Practice deploying on Heroku. Practice.

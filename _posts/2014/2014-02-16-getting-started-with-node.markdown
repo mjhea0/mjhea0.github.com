@@ -6,6 +6,8 @@ date: 2014-02-16 07:57
 comments: true
 toc: true
 categories: node
+redirect_from:
+  - /blog/2014/02/16/getting-started-with-node/
 ---
 
 For the [Node-js-Denver-Boulder Meetup](http://www.meetup.com/Node-js-Denver-Boulder/) <3

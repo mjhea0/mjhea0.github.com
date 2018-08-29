@@ -6,6 +6,8 @@ date: 2013-04-28 13:20
 comments: true
 toc: true
 categories: analytics
+redirect_from:
+  - /blog/2013/04/28/charting-best-practices-proper-data-visualization/
 ---
 
 

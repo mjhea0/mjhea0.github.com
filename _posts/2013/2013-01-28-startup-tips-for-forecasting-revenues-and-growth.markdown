@@ -6,6 +6,8 @@ date: 2013-01-28 17:48
 comments: true
 toc: true
 categories: finance
+redirect_from:
+  - /blog/2013/01/28/startup-tips-for-forecasting-revenues-and-growth/
 ---
 
 Ready to launch a new business idea, but want to know what you are getting into first?  How can you do this if the business doesn’t officially exist yet?

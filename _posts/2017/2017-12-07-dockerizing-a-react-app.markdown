@@ -7,6 +7,8 @@ toc: true
 categories: [docker, react]
 keywords: "docker, react, reactjs, javascript, containerization, create-react-app, create react app, multistage builds, nginx, react-router, react router"
 description: "Let's look at how to Dockerize a React app."
+redirect_from:
+  - /blog/2017/12/07/dockerizing-a-react-app/
 ---
 
 [Docker](https://www.docker.com/) is a technology that helps to speed up the development and deployment processes. If you're working with microservices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.

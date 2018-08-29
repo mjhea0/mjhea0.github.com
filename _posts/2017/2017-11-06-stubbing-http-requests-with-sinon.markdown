@@ -7,6 +7,8 @@ toc: true
 categories: [node, mocha, testing]
 keywords: "node, node.js, testing, sinon, sinon.js, stub, mock, javascript, unit tests, unit testing, mocha, chai, api, RESTful api"
 description: "Let's look at how to stub HTTP requests with Sinon.js during test runs."
+redirect_from:
+  - /blog/2017/11/06/stubbing-http-requests-with-sinon/
 ---
 
 This tutorial details how to stub HTTP requests with [Sinon.js](http://sinonjs.org/) during test runs.
@@ -424,7 +426,7 @@ describe('when stubbed', () => {
 });
 ```
 
-Here, we use the [yields](http://sinonjs.org/releases/v1.17.7/stubs/) method to automatically call the callback passed to `get()`. Remember how `request` works? After the request is sent, the function waits until the callback is called before proceeding. So, by stubbing this out, we simply pass in a dummy object and immediately call the callback.  
+Here, we use the [yields](http://sinonjs.org/releases/v1.17.7/stubs/) method to automatically call the callback passed to `get()`. Remember how `request` works? After the request is sent, the function waits until the callback is called before proceeding. So, by stubbing this out, we simply pass in a dummy object and immediately call the callback.
 
 Make sure the tests pass:
 

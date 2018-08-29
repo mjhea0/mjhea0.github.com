@@ -8,6 +8,8 @@ toc: true
 categories: [node, auth]
 keywords: "node, express, passport, authentication, social auth"
 description: "Let's look at how to set up Social Authentication with Passport."
+redirect_from:
+  - /blog/2015/09/26/social-authentication-in-node-dot-js-with-passport/
 ---
 
 [Passport](https://github.com/jaredhanson/passport) is a library that provides a mechanism for easily setting up an authentication/registration system with support for [several frameworks and auth providers](https://github.com/jaredhanson/passport#strategies). In this tutorial, we’ll demonstrate in detail how to integrate this library into a Node.JS/Express 4 application to provide user authentication through LinkedIn, Github, and Twitter using OAuth 2.0.

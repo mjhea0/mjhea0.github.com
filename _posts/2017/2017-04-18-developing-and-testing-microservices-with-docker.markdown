@@ -7,6 +7,8 @@ toc: true
 categories: [docker, microservices, node, testing]
 keywords: "docker, microservice, microservices, node, javascript"
 description: "Let's build and test a number of services with Docker."
+redirect_from:
+  - /blog/2017/04/18/developing-and-testing-microservices-with-docker/
 ---
 
 Often, when developing applications with a microservice architecture, you cannot fully test out all services until you deploy to a staging server. This takes much too long to get feedback. Docker helps to speed up this process by making it easier to link together small, independent services locally.
@@ -355,7 +357,7 @@ locations-service:
   ports:
     - '3001:3001'
   environment:
-    - DATABASE_URL=postgres://admin:admin@locations-db:5432/node_docker_api_locations_dev     
+    - DATABASE_URL=postgres://admin:admin@locations-db:5432/node_docker_api_locations_dev
     - DATABASE_TEST_URL=postgres://admin:admin@locations-db:5432/node_docker_api_locations_test
     - NODE_ENV=${NODE_ENV}
     - TOKEN_SECRET=changeme

@@ -6,6 +6,8 @@ date: 2013-08-25 15:34
 comments: true
 toc: true
 categories: [python, web2py]
+redirect_from:
+  - /blog/2013/08/25/custom-apache-config-for-php-and-web2py/
 ---
 
 {% if page.toc %}

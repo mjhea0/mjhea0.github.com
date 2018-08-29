@@ -6,6 +6,8 @@ date: 2013-10-20 01:12
 comments: true
 toc: true
 categories: node
+redirect_from:
+  - /blog/2013/10/20/handling-ajax-calls-with-node-dot-js-and-express-scraping-craigslist/
 ---
 
 This tutorial is meant for someone who's finished a basic Hello World project with Node and Express and ready to take another step. In short, I'll show you how to **search/scrape/crawl Craigslist using AJAX along with Node and Express.** I assume you're working from a Unix-based environment, already have Node and Express installed, and understand how to navigate the terminal.

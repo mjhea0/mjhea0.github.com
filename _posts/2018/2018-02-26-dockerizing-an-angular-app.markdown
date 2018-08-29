@@ -7,9 +7,11 @@ toc: true
 categories: [docker, angular]
 keywords: "docker, angular, javascript, containerization, multistage builds, nginx, protractor, karma"
 description: "This tutorial demonstrates how to Dockerize an Angular app."
+redirect_from:
+  - /blog/2018/02/26/dockerizing-an-angular-app/
 ---
 
-[Docker](https://www.docker.com/) is a containerization tool used to streamline application development and deployment workflows across various environments.  
+[Docker](https://www.docker.com/) is a containerization tool used to streamline application development and deployment workflows across various environments.
 
 This tutorial shows how to Dockerize an [Angular](https://angular.io/) app, built with the [Angular CLI](https://cli.angular.io/), using Docker along with Docker Compose and Docker Machine for both development and production. We'll specifically focus on-
 
@@ -324,7 +326,7 @@ Two important things to note:
 
     > Check out the [Builder pattern vs. Multi-stage builds in Docker](https://blog.alexellis.io/mutli-stage-docker-builds/) blog post for more info on multistage builds.
 
-1. Next, the unit tests are run in the build process, so the build will fail if the tests do not succeed.  
+1. Next, the unit tests are run in the build process, so the build will fail if the tests do not succeed.
 
 Using the production Dockerfile, build and tag the Docker image:
 

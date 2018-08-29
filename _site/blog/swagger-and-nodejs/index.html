@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Swagger and NodeJS</title>
+  <meta name="description" content="Let&#39;s look at how to describe a RESTful API using Swagger and NodeJS.">
+  
+    
+    <meta name="keywords" content="node, express, swagger, api, restful api, crud">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/swagger-and-nodejs/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Swagger and NodeJS">
+  <meta name="twitter:description" content="Let&#39;s look at how to describe a RESTful API using Swagger and NodeJS.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Swagger and NodeJS</h1>
+    
+    <p class="post-meta"><time datetime="2016-05-26T01:22:46-06:00" itemprop="datePublished">May 26, 2016</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/swagger/">swagger</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This tutorial details how to describe a RESTFul API using <a href="http://swagger.io/">Swagger</a> along with Node and Express.</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/swagger/node-swagger.png" style="max-width: 100%; border:0; box-shadow: none;" alt="node swagger api" />
+</div>
+
+<p><em>Updates:</em></p>
+
+<ul>
+  <li>11/20/2017: Updated to align with the Swagger v2.0 spec.</li>
+</ul>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#objectives" id="markdown-toc-objectives">Objectives</a></li>
+  <li><a href="#swagger" id="markdown-toc-swagger">Swagger</a></li>
+  <li><a href="#getting-started" id="markdown-toc-getting-started">Getting Started</a></li>
+  <li><a href="#generating-the-swagger-spec" id="markdown-toc-generating-the-swagger-spec">Generating the Swagger Spec</a></li>
+  <li><a href="#updating-the-route-handlers" id="markdown-toc-updating-the-route-handlers">Updating the Route Handlers</a></li>
+  <li><a href="#adding-swagger-ui" id="markdown-toc-adding-swagger-ui">Adding Swagger UI</a></li>
+</ul>
+
+<h2 id="objectives">Objectives</h2>
+
+<p>By the end of this tutorial, you will be able to…</p>
+
+<ol>
+  <li>Describe the purpose of Swagger</li>
+  <li>Generate a <a href="http://swagger.io/specification/">Swagger Spec</a> based on an existing RESTful API developed with Node, Express, and Postgres
+    <ul>
+      <li>Set up the <a href="https://github.com/swagger-api/swagger-ui">Swagger UI</a> for testing and interacting with the API</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="swagger">Swagger</h2>
+
+<p>Swagger is a <a href="http://swagger.io/specification/">specification</a> for describing, producing, consuming, testing, and visualizing a RESTful API. It provides a number of <a href="http://swagger.io/tools/">tools</a> for automatically generating documentation based on a given endpoint.</p>
+
+<p>Now when you make changes to your code, your documentation is updated and synchronized with the API so that consumers can quickly learn which resources are available, how to access them, and what to expect (status code, content-type, etc.) when interacting with the various endpoints.</p>
+
+<h2 id="getting-started">Getting Started</h2>
+
+<h3 id="starting-a-new-project">Starting a New Project</h3>
+
+<p>If you’re starting a new project, you can easily generate the <a href="http://swagger.io/specification/">Swagger Specification</a> and project boilerplate using the <a href="http://swagger.io/swagger-editor/">Swagger Editor</a>. Test it out <a href="http://editor.swagger.io/#/">here</a>.</p>
+
+<p>If you don’t like the generated project structure, you can just export the JSON (or YAML) spec file and then use a custom generator, like <a href="https://github.com/krakenjs/swaggerize-express">Swaggerize Express</a>, to generate the boilerplate. Then when you need to make changes to the API, you can just update the spec file. Simple.</p>
+
+<h3 id="updating-an-existing-project">Updating an Existing Project</h3>
+
+<p>For this tutorial, we will be generating the Swagger spec based on the code from a previously created project that has the following RESTful endpoints:</p>
+
+<table style="font-size:18px;border-spacing:12px 0px;border-collapse:separate;border:1px solid black;">
+<thead>
+<tr>
+<th style="text-align:center"><strong>URL</strong></th>
+<th style="text-align:center"><strong>HTTP Verb</strong></th>
+<th style="text-align:center"><strong>Action</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/puppies</td>
+<td>GET</td>
+<td>Return ALL puppies</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>GET</td>
+<td>Return a SINGLE puppy</td>
+</tr>
+<tr>
+<td>/api/puppies</td>
+<td>POST</td>
+<td>Add a puppy</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>PUT</td>
+<td>Update a puppy</td>
+</tr>
+<tr>
+<td>/api/puppies/:id</td>
+<td>DELETE</td>
+<td>Delete a puppy</td>
+</tr>
+</tbody>
+</table>
+
+<p>Clone down the project:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/mjhea0/node-postgres-promises.git node-swagger-api
+<span class="nv">$ </span><span class="nb">cd </span>node-swagger-api
+<span class="nv">$ </span>git checkout tags/v1 <span class="nt">-b</span> swagger
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<blockquote>
+  <p>Want to learn how this project was created? Check out the <a href="http://mherman.org/blog/2016/03/13/designing-a-restful-api-with-node-and-postgres/#.V0N4PZMrJE4">Designing a RESTful API With Node and Postgres</a> post.</p>
+</blockquote>
+
+<p>This project uses Postgres, so run create the database and apply the schema:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql <span class="nt">-f</span> puppies.sql
+</code></pre></div></div>
+
+<p>Run the server, and then navigate to <a href="http://localhost:3000/api/puppies">http://localhost:3000/api/puppies</a> in your browser of choice. You should see:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tyler"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"breed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Shih-tzu"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"age"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"sex"</span><span class="p">:</span><span class="w"> </span><span class="s2">"M"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Retrieved ALL puppies"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Test out each endpoint to make sure everything works before moving on.</p>
+
+<h2 id="generating-the-swagger-spec">Generating the Swagger Spec</h2>
+
+<p>To generate the <a href="http://swagger.io/specification/">Swagger specification</a>, we will be using <a href="https://github.com/Surnet/swagger-jsdoc">swagger-jsdoc</a>.</p>
+
+<p>Install swagger-jsdoc:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install swagger-jsdoc@1.3.0 <span class="nt">--save</span>
+</code></pre></div></div>
+
+<p>Add the requirement to <em>app.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">swaggerJSDoc</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'swagger-jsdoc'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Then add the following code to <em>app.js</em> just below <code class="highlighter-rouge">var app = express();</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// swagger definition</span>
+<span class="kd">var</span> <span class="nx">swaggerDefinition</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">info</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">title</span><span class="p">:</span> <span class="s1">'Node Swagger API'</span><span class="p">,</span>
+    <span class="na">version</span><span class="p">:</span> <span class="s1">'1.0.0'</span><span class="p">,</span>
+    <span class="na">description</span><span class="p">:</span> <span class="s1">'Demonstrating how to describe a RESTful API with Swagger'</span><span class="p">,</span>
+  <span class="p">},</span>
+  <span class="na">host</span><span class="p">:</span> <span class="s1">'localhost:3000'</span><span class="p">,</span>
+  <span class="na">basePath</span><span class="p">:</span> <span class="s1">'/'</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="c1">// options for the swagger docs</span>
+<span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="c1">// import swaggerDefinitions</span>
+  <span class="na">swaggerDefinition</span><span class="p">:</span> <span class="nx">swaggerDefinition</span><span class="p">,</span>
+  <span class="c1">// path to the API docs</span>
+  <span class="na">apis</span><span class="p">:</span> <span class="p">[</span><span class="s1">'./routes/*.js'</span><span class="p">],</span>
+<span class="p">};</span>
+
+<span class="c1">// initialize swagger-jsdoc</span>
+<span class="kd">var</span> <span class="nx">swaggerSpec</span> <span class="o">=</span> <span class="nx">swaggerJSDoc</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Take note of the comments above. This code essentially initializes swagger-jsdoc and adds the appropriate metadata to the Swagger specification.</p>
+
+<p>Add the route to serve up the Swagger spec:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// serve swagger</span>
+<span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/swagger.json'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">setHeader</span><span class="p">(</span><span class="s1">'Content-Type'</span><span class="p">,</span> <span class="s1">'application/json'</span><span class="p">);</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">swaggerSpec</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Fire up the server and navigate to <a href="http://localhost:3000/swagger.json">http://localhost:3000/swagger.json</a> to see the basic spec:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Node Swagger API"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Demonstrating how to describe a RESTful API with Swagger"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"localhost:3000"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"basePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"swagger"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.0"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"paths"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"definitions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"responses"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"securityDefinitions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Now we need to update the routes…</p>
+
+<h2 id="updating-the-route-handlers">Updating the Route Handlers</h2>
+
+<p>swagger-jsdoc uses <a href="http://usejsdoc.org/">JSDoc</a>-style comments to generate the Swagger spec. So, add such comments, in YAML, to the route handlers that describe their functionality.</p>
+
+<h3 id="get-all">GET ALL</h3>
+
+<p>Add the comments in <em>/routes/index.js</em> just above the handler, like so:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * @swagger
+ * /api/puppies:
+ *   get:
+ *     tags:
+ *       - Puppies
+ *     description: Returns all puppies
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: An array of puppies
+ *         schema:
+ *           $ref: '#/definitions/Puppy'
+ */</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/puppies'</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">getAllPuppies</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>This should be fairly self-explanatory. We have an <code class="highlighter-rouge">/api/puppies</code> endpoint that returns a 200 response to a GET request. The <code class="highlighter-rouge">$ref</code> is used to re-use definitions to keep the code DRY.</p>
+
+<p>Add the following code above the previous code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * @swagger
+ * definitions:
+ *   Puppy:
+ *     properties:
+ *       name:
+ *         type: string
+ *       breed:
+ *         type: string
+ *       age:
+ *         type: integer
+ *       sex:
+ *         type: string
+ */</span>
+</code></pre></div></div>
+
+<p>Now we can use that definition for each of the HTTP methods.</p>
+
+<p>For more information and examples, please see the <a href="http://swagger.io/specification/">Swagger Specification</a>.</p>
+
+<h3 id="get-single">GET Single</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * @swagger
+ * /api/puppies/{id}:
+ *   get:
+ *     tags:
+ *       - Puppies
+ *     description: Returns a single puppy
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         description: Puppy's id
+ *         in: path
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: A single puppy
+ *         schema:
+ *           $ref: '#/definitions/Puppy'
+ */</span>
+</code></pre></div></div>
+
+<h3 id="post">POST</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * @swagger
+ * /api/puppies:
+ *   post:
+ *     tags:
+ *       - Puppies
+ *     description: Creates a new puppy
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: puppy
+ *         description: Puppy object
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Puppy'
+ *     responses:
+ *       200:
+ *         description: Successfully created
+ */</span>
+</code></pre></div></div>
+
+<h3 id="put">PUT</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * @swagger
+ * /api/puppies/{id}:
+ *   put:
+ *     tags: Puppies
+ *     description: Updates a single puppy
+ *     produces: application/json
+ *     parameters:
+ *       name: puppy
+ *       in: body
+ *       description: Fields for the Puppy resource
+ *       schema:
+ *         type: array
+ *         $ref: '#/definitions/Puppy'
+ *     responses:
+ *       200:
+ *         description: Successfully updated
+ */</span>
+</code></pre></div></div>
+
+<h3 id="delete">DELETE</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * @swagger
+ * /api/puppies/{id}:
+ *   delete:
+ *     tags:
+ *       - Puppies
+ *     description: Deletes a single puppy
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         description: Puppy's id
+ *         in: path
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: Successfully deleted
+ */</span>
+</code></pre></div></div>
+
+<p>Check out the updated spec at <a href="http://localhost:3000/swagger.json">http://localhost:3000/swagger.json</a>.</p>
+
+<h2 id="adding-swagger-ui">Adding Swagger UI</h2>
+
+<p>Finally, download the <a href="https://github.com/swagger-api/swagger-ui">Swagger UI repo</a>, add the “dist” folder from the downloaded repo to the “public” folder in the project directory, and then rename the directory to “api-docs”.</p>
+
+<p>Now within <em>index.html</em> inside the “api-docs” directory just update this line-</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>url = "http://petstore.swagger.io/v2/swagger.json";
+</code></pre></div></div>
+
+<p>To-</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>url = "http://localhost:3000/swagger.json";
+</code></pre></div></div>
+
+<p>Finally, navigate to <a href="http://localhost:3000/api-docs/">http://localhost:3000/api-docs/</a> in your browser to test out the API endpoints:</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/swagger/swagger-ui.png" style="max-width: 100%; border:0; box-shadow: none;" alt="Swagger UI" />
+</div>
+
+<hr />
+
+<p>Download the <a href="https://github.com/mjhea0/node-swagger-api">code</a> from the repo. Cheers!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/swagger-and-nodejs/';
+    this.page.identifier = 'http://localhost:4000/blog/swagger-and-nodejs/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

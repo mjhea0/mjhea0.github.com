@@ -7,6 +7,8 @@ toc: true
 categories: [node, testing]
 keywords: "node, node.js, testing, TestCafe, javascript, automated tests, functional testing, end-to-end testing, e2e, e2e tests"
 description: "Let's look at how to write end-to-end tests with TestCafe."
+redirect_from:
+  - /blog/2017/03/19/functional-testing-with-testcafe/
 ---
 
 Today we are going to dive into the world of functional web testing with [TestCafe](https://devexpress.github.io/testcafe/).

@@ -7,6 +7,8 @@ toc: true
 categories: [node, mocha, testing, auth]
 keywords: "node, express, authentication, postgres, jwts, tokens"
 description: "This tutorial takes a test-first approach to implementing token-based authentication in a NodeJS app using JSON Web Tokens (JWTs)."
+redirect_from:
+  - /blog/2016/10/28/token-based-authentication-with-node/
 ---
 
 This tutorial takes a test-first approach to implementing token-based authentication in a Node app using JSON Web Tokens (JWTs) and Postgres.

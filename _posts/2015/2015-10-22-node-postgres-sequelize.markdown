@@ -8,6 +8,8 @@ toc: true
 categories: [node]
 keywords: "node, express, sequelize, postgres, migrations"
 description: "This article details how to build a basic CRUD app with Node, Express, Sequelize, and PostgreSQL."
+redirect_from:
+  - /blog/2015/10/22/node-postgres-sequelize/
 ---
 
 Let's build a CRUD app with Node (v4.1.1), Express (v4.13.1), Sequelize (v3.12.2), and PostgreSQL (9.4.4).
