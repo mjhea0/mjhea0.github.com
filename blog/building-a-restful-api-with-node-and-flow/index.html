@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Building a RESTful API with Node, Flow, and Jest</title>
+  <meta name="description" content="This tutorial takes a test-first approach to developing a RESTful API with NodeJS, ExpressJS, and Flow, and Jest.">
+  
+    
+    <meta name="keywords" content="node, express, flow, flowtype, RESTful API, tdd, jest, yarn, test-driven development, static types">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/building-a-restful-api-with-node-and-flow/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Building a RESTful API with Node, Flow, and Jest">
+  <meta name="twitter:description" content="This tutorial takes a test-first approach to developing a RESTful API with NodeJS, ExpressJS, and Flow, and Jest.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Building a RESTful API with Node, Flow, and Jest</h1>
+    
+    <p class="post-meta"><time datetime="2016-12-23T00:59:54-07:00" itemprop="datePublished">Dec 23, 2016</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/static-types/">static types</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This tutorial details how to develop a RESTful API with <a href="https://nodejs.org/en/">NodeJS</a>, <a href="http://expressjs.com/">ExpressJS</a>, and <a href="https://flowtype.org/">Flow</a> using test-driven development (TDD).</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/flow-logo.jpeg" style="max-width: 45%; border:0; box-shadow: none;" alt="flow logo" />
+</div>
+
+<p><br /></p>
+
+<p>We’ll be going full-Facebook with this application (FaceStack), utilizing:</p>
+
+<ul>
+  <li><a href="https://flowtype.org/">Flow</a> for type checking</li>
+  <li><a href="http://babeljs.io/">Babel</a> for transpilation</li>
+  <li><a href="https://facebook.github.io/jest/">Jest</a> for our testing framework</li>
+  <li>(Optionally) <a href="https://yarnpkg.com/">Yarn</a> to replace <a href="https://www.npmjs.com/">NPM</a></li>
+</ul>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#server-setup" id="markdown-toc-server-setup">Server Setup</a></li>
+  <li><a href="#test-setup" id="markdown-toc-test-setup">Test Setup</a></li>
+  <li><a href="#first-endpoint" id="markdown-toc-first-endpoint">First Endpoint</a></li>
+  <li><a href="#rounding-out-crud" id="markdown-toc-rounding-out-crud">Rounding out CRUD</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Create a new directory to hold the project:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mkdir flow-node-api
+<span class="nv">$ </span><span class="nb">cd </span>flow-node-api
+</code></pre></div></div>
+
+<h3 id="transpilation">Transpilation</h3>
+
+<p>To start, let’s get Babel transpilation up and running. We’ll use <a href="http://gulpjs.com/">Gulp</a> to automate the build process.</p>
+
+<blockquote>
+  <p><strong>NOTE:</strong> We’ll use <a href="https://yarnpkg.com/">yarn</a> here to download and manage dependencies, but you can use <code class="highlighter-rouge">npm</code> just as easily if you wish. Anytime you see a <code class="highlighter-rouge">yarn add</code> or <code class="highlighter-rouge">yarn remove</code> just substitute in a <code class="highlighter-rouge">npm install</code> or <code class="highlighter-rouge">npm rm</code>. The only difference is that yarn does the <code class="highlighter-rouge">--save</code> part for you and with <code class="highlighter-rouge">npm</code> you must be explicit.</p>
+</blockquote>
+
+<p>Go ahead and add <code class="highlighter-rouge">gulp</code>, <code class="highlighter-rouge">gulp-babel</code>, and <code class="highlighter-rouge">gulp-sourcemaps</code> to your project, and create a <em>gulpfile.js</em> to start writing our Gulp tasks in:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>yarn init <span class="nt">-y</span>
+<span class="nv">$ </span>yarn add gulp@3.9.1 gulp-babel@6.1.2 gulp-sourcemaps@1.9.1
+<span class="nv">$ </span>touch gulpfile.js
+</code></pre></div></div>
+
+<p>Also, install Gulp globally (if necessary), so you can run Gulp tasks from the command line:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>yarn global add gulp-cli@1.2.2
+</code></pre></div></div>
+
+<p>We’re going to write all of our source code in the “src” directory, so the first  Gulp task will need to:</p>
+
+<ol>
+  <li>Grab all of the JavaScript files inside of “src”</li>
+  <li>Pipe the files through Babel</li>
+  <li>Deliver them to the “build” directory</li>
+</ol>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">babel</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-babel'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">sourcemaps</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-sourcemaps'</span><span class="p">);</span>
+
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'scripts'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">'src/**/*.js'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">sourcemaps</span><span class="p">.</span><span class="nx">init</span><span class="p">())</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">babel</span><span class="p">())</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">sourcemaps</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">'.'</span><span class="p">))</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="s1">'build'</span><span class="p">));</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Pretty straightforward. Time to test!</p>
+
+<p>Add a “src” directory, and then create a file inside of it called <em>index.js</em>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mkdir src <span class="o">&amp;&amp;</span> touch src/index.js
+</code></pre></div></div>
+
+<p>Put some kind of JavaScript statement inside of your newly created file, like:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// src/index.js</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Hello World!'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Run the Gulp task, and then run the transpiled version of <em>index.js</em>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp scripts
+<span class="nv">$ </span>node build/index.js
+Hello World!
+</code></pre></div></div>
+
+<p>Nice! However, do you really want to manually type <code class="highlighter-rouge">gulp scripts</code> in to build the project <em>every</em> time changes are made? Of course not. So, let’s set up a <code class="highlighter-rouge">watch</code> and a <code class="highlighter-rouge">default</code> task with Gulp to make this easier.</p>
+
+<p>Add the following to <code class="highlighter-rouge">gulpfile.js</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'watch'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'scripts'</span><span class="p">],</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">gulp</span><span class="p">.</span><span class="nx">watch</span><span class="p">(</span><span class="s1">'src/**/*.js'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'scripts'</span><span class="p">]);</span>
+<span class="p">});</span>
+
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'default'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'watch'</span><span class="p">]);</span>
+</code></pre></div></div>
+
+<p>Now you can just run <code class="highlighter-rouge">gulp</code> from the command line, and it will listen for changes to our JavaScript files inside of “src” and re-run the <code class="highlighter-rouge">scripts</code> task whenever it detects changes.</p>
+
+<h3 id="flow">Flow</h3>
+
+<p>Moving on, to use <a href="https://flowtype.org/">Flow</a>, we’ll use the <code class="highlighter-rouge">gulp-flowtype</code> plugin to interface with Flow. Download the dependency and head back over to <code class="highlighter-rouge">gulpfile.js</code>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>yarn add <span class="nt">--dev</span> gulp-flowtype@1.0.0
+</code></pre></div></div>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// ...</span>
+<span class="kd">const</span> <span class="nx">flow</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'gulp-flowtype'</span><span class="p">);</span>
+<span class="c1">// ...</span>
+
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'flow'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">'src/**/*.js'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">flow</span><span class="p">({</span> <span class="na">killFlow</span><span class="p">:</span> <span class="kc">false</span> <span class="p">}));</span>
+<span class="p">});</span>
+<span class="c1">// ...</span>
+
+<span class="c1">// update the watch task as well</span>
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'watch'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'flow'</span><span class="p">,</span> <span class="s1">'scripts'</span><span class="p">],</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">gulp</span><span class="p">.</span><span class="nx">watch</span><span class="p">(</span><span class="s1">'src/**/*.js'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'flow'</span><span class="p">,</span> <span class="s1">'scripts'</span><span class="p">]);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>This is all well and good, but we’re going to configure a few more parts before we move forward. We need to tell Babel to strip out all of our Flow <a href="https://flowtype.org/docs/type-annotations.html">type annotations</a>. While we’re doing that, we might as well install the other Babel dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>yarn add babel-plugin-transform-flow-strip-types@6.21.0
+<span class="nv">$ </span>yarn add babel-polyfill@6.20.0 babel-preset-latest@6.16.0
+</code></pre></div></div>
+
+<p>With those installed create a <em>.babelrc</em> file in the root of the project, and add these settings:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"presets"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"latest"</span><span class="p">],</span><span class="w">
+  </span><span class="s2">"plugins"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"transform-flow-strip-types"</span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Finally, we need a <em>.flowconfig</em> to tell Flow that this is a project with Flow annotated code. If you have the Flow CLI installed, you can do this with <code class="highlighter-rouge">flow init</code>. If you don’t, just create a file called <em>.flowconfig</em>  file and paste this in:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[ignore]
+
+[include]
+
+[libs]
+
+[options]
+</code></pre></div></div>
+
+<p>Whew. Now that we’ve done all that configuring, let’s make sure it’s all working by testing out some Flow type annotations. If you’re familiar with <a href="http://mherman.org/blog/2016/11/05/developing-a-restful-api-with-node-and-typescript/">TypeScript</a>, this syntax will look very familiar. There are some notable differences, but in general TypeScript and Flow look pretty similar. Let’s start with a simple function that adds two numbers together.</p>
+
+<p>Run the default gulp task:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gulp
+</code></pre></div></div>
+
+<p>Replace the contents of <em>src/index.js</em> with the following:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// @flow</span>
+
+<span class="kd">function</span> <span class="nx">testFunc</span><span class="p">(</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="mi">10</span> <span class="o">*</span> <span class="nx">item</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">testFunc</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">testFunc</span><span class="p">(</span><span class="s1">'banana'</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>Since Gulp is watching for changes, you should automatically see the output from Flow as soon as you save the file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>src/index.js:4
+  4:   <span class="k">return </span>10 <span class="k">*</span> item<span class="p">;</span>
+                   ^^^^ string. This <span class="nb">type </span>is incompatible with
+  4:   <span class="k">return </span>10 <span class="k">*</span> item<span class="p">;</span>
+              ^^^^^^^^^ number
+</code></pre></div></div>
+
+<p>Excellent! Flow is doing its job. Here, it’s telling us that when we try to call <code class="highlighter-rouge">testFunc('banana')</code> we’re going to run into issues because <code class="highlighter-rouge">testFunc</code> is clearly expecting its argument to be a number, not a string. Notice the <code class="highlighter-rouge">// @flow</code> comment that’s now at the top of the file. This tells Flow that this file should be <a href="https://en.wikipedia.org/wiki/Type_system#Type_checking">typechecked</a>. If you don’t put this comment at the top of the file you’re working on, Flow will ignore it. Keep this in mind as you develop your application.</p>
+
+<p>If you read the post on TypeScript (<a href="http://mherman.org/blog/2016/11/05/developing-a-restful-api-with-node-and-typescript">Developing a RESTful API With Node and TypeScript</a>), you may already be wondering how we can use types with third-party libraries. Well, with Flow there’s a command line tool called <a href="https://github.com/flowtype/flow-typed">flow-typed</a> that is used to manage libdefs (library definitions) for Flow.</p>
+
+<p>First, install <code class="highlighter-rouge">flow-typed</code> globally:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>yarn global add flow-typed@2.0.0
+</code></pre></div></div>
+
+<p>The nice thing about <code class="highlighter-rouge">flow-typed</code> is that we don’t really have to manage it too much. It reads <code class="highlighter-rouge">package.json</code> and automatically downloads the libdefs for our dependencies and stores them in “flow-typed”.</p>
+
+<p>To install the libdefs for the packages we’re using so far just run:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>flow-typed install <span class="nt">--flowVersion</span><span class="o">=</span>0.36.0
+</code></pre></div></div>
+
+<p>For packages that have no official libdef in the flow-typed repository, a stub is generated. Unfortunately, if you want to omit the <code class="highlighter-rouge">--flowVersion=0.36.0</code> flag, you’ll need to install <code class="highlighter-rouge">flow-bin</code> and have it listed as a dependency in <em>package.json</em>.</p>
+
+<p>Before moving forward, we need to make one more change to our Gulp task for Flow. Now that we’ve got <code class="highlighter-rouge">flow-typed</code>, tell Flow where we’re keeping these definitions:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="s1">'flow'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="s1">'src/**/*.js'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">flow</span><span class="p">({</span>
+    <span class="na">killFlow</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="na">declarations</span><span class="p">:</span> <span class="s1">'./flow-typed'</span>
+  <span class="p">}));</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Great! We’ve got Flow type checking our code, and Babel is stripping out our type annotations and transpiling.</p>
+
+<p>Let’s construct the basics of the server.</p>
+
+<h2 id="server-setup">Server Setup</h2>
+
+<p>We’re going to use <em>src/index.js</em> as the entry point for our Express API along with the <a href="https://github.com/visionmedia/debug">debug</a> module to set up simple logging. Install it with <code class="highlighter-rouge">yarn</code> (<code class="highlighter-rouge">yarn add debug@2.4.5</code>) or <code class="highlighter-rouge">npm</code> (<code class="highlighter-rouge">npm install debug@2.4.5 --save</code>), and then wipe everything out of <em>index.js</em> and replace it with the following:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// @flow</span>
+
+<span class="s1">'use strict'</span>
+
+<span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">http</span> <span class="k">from</span> <span class="s1">'http'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">debug</span> <span class="k">from</span> <span class="s1">'debug'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">Api</span> <span class="k">from</span> <span class="s1">'./Api'</span><span class="p">;</span>
+
+<span class="c1">// ErrnoError interface for use in onError</span>
+<span class="nx">declare</span> <span class="kr">interface</span> <span class="nx">ErrnoError</span> <span class="kd">extends</span> <span class="nb">Error</span> <span class="p">{</span>
+  <span class="nx">errno</span><span class="p">?:</span> <span class="nx">number</span><span class="p">;</span>
+  <span class="nx">code</span><span class="p">?:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="nx">path</span><span class="p">?:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="nx">syscall</span><span class="p">?:</span> <span class="nx">string</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">const</span> <span class="nx">logger</span> <span class="o">=</span> <span class="nx">debug</span><span class="p">(</span><span class="s1">'flow-api:startup'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">app</span><span class="p">:</span> <span class="nx">Api</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Api</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">DEFAULT_PORT</span><span class="p">:</span> <span class="nx">number</span> <span class="o">=</span> <span class="mi">3000</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">port</span><span class="p">:</span> <span class="nx">string</span> <span class="o">|</span> <span class="nx">number</span> <span class="o">=</span> <span class="nx">normalizePort</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">server</span><span class="p">:</span> <span class="nx">http</span><span class="p">.</span><span class="nx">Server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">express</span><span class="p">);</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">port</span><span class="p">);</span>
+<span class="nx">server</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="nx">onError</span><span class="p">);</span>
+<span class="nx">server</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'listening'</span><span class="p">,</span> <span class="nx">onListening</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">normalizePort</span><span class="p">(</span><span class="nx">val</span><span class="p">:</span> <span class="nx">any</span><span class="p">):</span> <span class="nx">number</span> <span class="o">|</span> <span class="nx">string</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">port</span><span class="p">:</span> <span class="nx">number</span> <span class="o">=</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">val</span> <span class="o">===</span> <span class="s1">'string'</span><span class="p">)</span> <span class="p">?</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="p">:</span> <span class="nx">val</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">port</span> <span class="o">&amp;&amp;</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">port</span><span class="p">))</span> <span class="k">return</span> <span class="nx">port</span><span class="p">;</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">port</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="nx">port</span><span class="p">;</span>
+  <span class="k">else</span> <span class="k">return</span> <span class="nx">DEFAULT_PORT</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">onError</span><span class="p">(</span><span class="nx">error</span><span class="p">:</span> <span class="nx">ErrnoError</span><span class="p">):</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">syscall</span> <span class="o">!==</span> <span class="s1">'listen'</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span><span class="p">;</span>
+  <span class="kd">let</span> <span class="na">bind</span><span class="p">:</span> <span class="nx">string</span> <span class="o">=</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">port</span> <span class="o">===</span> <span class="s1">'string'</span><span class="p">)</span> <span class="p">?</span> <span class="s2">`Pipe </span><span class="p">${</span><span class="nx">port</span><span class="p">}</span><span class="s2">`</span> <span class="p">:</span> <span class="s2">`Port </span><span class="p">${</span><span class="nx">port</span><span class="p">.</span><span class="nx">toString</span><span class="p">()}</span><span class="s2">`</span><span class="p">;</span>
+
+  <span class="k">switch</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">code</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="s1">'EACCES'</span><span class="p">:</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">bind</span><span class="p">}</span><span class="s2"> requires elevated privileges`</span><span class="p">);</span>
+      <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="s1">'EADDRINUSE'</span><span class="p">:</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s2">`</span><span class="p">${</span><span class="nx">bind</span><span class="p">}</span><span class="s2"> is already in use`</span><span class="p">);</span>
+      <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="nl">default</span><span class="p">:</span>
+      <span class="k">throw</span> <span class="nx">error</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">onListening</span><span class="p">():</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="na">addr</span><span class="p">:</span> <span class="nx">string</span> <span class="o">=</span> <span class="nx">server</span><span class="p">.</span><span class="nx">address</span><span class="p">();</span>
+  <span class="kd">let</span> <span class="na">bind</span><span class="p">:</span> <span class="nx">string</span> <span class="o">=</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">addr</span> <span class="o">===</span> <span class="s1">'string'</span><span class="p">)</span> <span class="p">?</span> <span class="s2">`pipe </span><span class="p">${</span><span class="nx">addr</span><span class="p">}</span><span class="s2">`</span> <span class="p">:</span> <span class="s2">`port </span><span class="p">${</span><span class="nx">addr</span><span class="p">.</span><span class="nx">port</span><span class="p">}</span><span class="s2">`</span><span class="p">;</span>
+  <span class="nx">logger</span><span class="p">(</span><span class="s2">`Listening on </span><span class="p">${</span><span class="nx">bind</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Alright. This looks like a lot of code, but it’s mostly boilerplate with some fancy type annotations added. Let’s break it down real quick though anyways:</p>
+
+<ul>
+  <li>At the top we’ve got our Flow comment, imports, and our first bit of strictly Flow-enabled code - the <code class="highlighter-rouge">ErrnoError</code> interface declaration. This error type is used by Express. When using the <code class="highlighter-rouge">flow check</code> command from the official command line tool, Flow will not flag this as an error. For whatever reason, <code class="highlighter-rouge">gulp-flowtype</code> does. If you get a strange type check error, it may be worth it to install the Flow CLI and double check using <code class="highlighter-rouge">flow check</code>.</li>
+  <li>After the <code class="highlighter-rouge">ErrnoError</code> definition, we set up some data and instantiate the server by attaching our future Express app with <code class="highlighter-rouge">http.createServer</code>.</li>
+  <li><code class="highlighter-rouge">normalizePort</code> looks for the <code class="highlighter-rouge">$PORT</code> environment variable and sets the app’s port to its value. If it doesn’t exist, it sets the port to the default value - <code class="highlighter-rouge">3000</code>.</li>
+  <li><code class="highlighter-rouge">onError</code> is just our basic error handler for the HTTP server.</li>
+  <li><code class="highlighter-rouge">onListening</code> simply lets us know that our application has actually started and is listening for requests.</li>
+</ul>
+
+<p>Run <code class="highlighter-rouge">gulp</code>. Right now, you should see Flow complaining about trying to import the API:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>src/index.js:7
+  7: import Api from <span class="s1">'./Api'</span><span class="p">;</span>
+                     ^^^^^^^ ./Api. Required module not found
+</code></pre></div></div>
+
+<p>This makes sense because we don’t even have a file called <em>Api.js</em>, so let’s create it and set up the basic structure for the API. In this file, the third-party libraries we’ll be using are:</p>
+
+<ul>
+  <li><a href="http://expressjs.com/">Express</a> - web framework</li>
+  <li><a href="https://github.com/expressjs/body-parser">body-parser</a> - JSON body parser for HTTP requests</li>
+  <li><a href="https://github.com/expressjs/morgan">morgan</a> - request logging</li>
+</ul>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>yarn add express@4.14.0 body-parser@1.15.2 morgan@1.7.0
+<span class="nv">$ </span>flow-typed install <span class="nt">--flowVersion</span><span class="o">=</span>0.36.0
+<span class="nv">$ </span>touch src/Api.js
+</code></pre></div></div>
+
+<p>With the dependencies and libdefs acquired, we’re ready to build out the <code class="highlighter-rouge">Api.js</code> file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// @flow</span>
+
+<span class="k">import</span> <span class="nx">express</span> <span class="k">from</span> <span class="s1">'express'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">morgan</span> <span class="k">from</span> <span class="s1">'morgan'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">bodyParser</span> <span class="k">from</span> <span class="s1">'body-parser'</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="k">default</span> <span class="kd">class</span> <span class="nx">Api</span> <span class="p">{</span>
+  <span class="c1">// annotate with the express $Application type</span>
+  <span class="nl">express</span><span class="p">:</span> <span class="nx">express$Application</span><span class="p">;</span>
+
+  <span class="c1">// create the express instance, attach app-level middleware, attach routers</span>
+  <span class="kd">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">express</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">middleware</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">routes</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="c1">// register middlewares</span>
+  <span class="nx">middleware</span><span class="p">():</span> <span class="k">void</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">morgan</span><span class="p">(</span><span class="s1">'dev'</span><span class="p">));</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">({</span><span class="na">extended</span><span class="p">:</span> <span class="kc">false</span><span class="p">}));</span>
+  <span class="p">}</span>
+
+  <span class="c1">// connect resource routers</span>
+  <span class="nx">routes</span><span class="p">():</span> <span class="k">void</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">((</span><span class="na">req</span><span class="p">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="na">res</span><span class="p">:</span> <span class="nx">$Response</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span> <span class="na">message</span><span class="p">:</span> <span class="s1">'Hello Flow!'</span> <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Most of this file ends up just loading and initializing the libraries that we’re using. There are a few things to note though:</p>
+
+<ul>
+  <li>First, we create a field reference for the <code class="highlighter-rouge">Api.express</code> property, and tell Flow that it will be an object of type <code class="highlighter-rouge">express$Application</code> from Express.</li>
+  <li>The constructor initializes an instance of Express, and attaches it to the instance of <code class="highlighter-rouge">Api</code>. Then it calls the other two methods, <code class="highlighter-rouge">Api.middleware</code> and <code class="highlighter-rouge">Api.routes</code>.</li>
+  <li><code class="highlighter-rouge">Api.middleware</code> - Initializes and attaches our middleware modules to the app.</li>
+  <li><code class="highlighter-rouge">Api.routes</code> - Right now, it attaches a single route handler that returns some JSON. However, notice the Flow annotations on the parameters of the anonymous function. These correspond to the base arguments for an Express route handler: <code class="highlighter-rouge">$Request</code> and <code class="highlighter-rouge">$Response</code>. These refer to Express’ extended versions of Node’s <code class="highlighter-rouge">IncomingMessage</code> and <code class="highlighter-rouge">ServerResponse</code> objects, respectively.</li>
+</ul>
+
+<p>At this point, you may start to see a Flow error in your terminal that looks something like this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>src/index.js:12
+ 12: const server: Server <span class="o">=</span> http.createServer<span class="o">(</span>app.express<span class="o">)</span><span class="p">;</span>
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method <span class="sb">`</span>createServer<span class="sb">`</span>
+835:     requestListener?: <span class="o">(</span>request: IncomingMessage, response: ServerResponse<span class="o">)</span> <span class="o">=&gt;</span> void
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ <span class="k">function </span>type. Callable signature not found <span class="k">in</span><span class="nb">.</span> See lib: /private/tmp/flow/flowlib_120ceaae/node.js:835
+ 12: const server: Server <span class="o">=</span> http.createServer<span class="o">(</span>app.express<span class="o">)</span><span class="p">;</span>
+                                              ^^^^^^^^^^^ express<span class="nv">$Application</span>
+</code></pre></div></div>
+
+<p>It would appear that Flow doesn’t get the memo that when <code class="highlighter-rouge">app.express</code> is called, it does return a request handler. This seems to be an issue with the libdef for Express, because it declares that the <code class="highlighter-rouge">express$Application</code> constructor has a return type of <code class="highlighter-rouge">void</code>.</p>
+
+<blockquote>
+  <p><strong>NOTE:</strong> After unsuccessfully messing with the libdef for a while, I decided I knew that it worked better than Flow, and moved on. If the terminal output bugs you, go ahead and add this comment to the line above where <code class="highlighter-rouge">http.createServer</code> is called:</p>
+
+  <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// $FlowFixMe: express libdef issue</span>
+</code></pre></div>  </div>
+</blockquote>
+
+<p>Let’s go ahead and fire up the app and make sure everything is working as intended thus far. To run the app from the command line, you can run <code class="highlighter-rouge">node build/index.js</code>. However, we really should have a start script so we can just type <code class="highlighter-rouge">npm start</code> to run the server. Open up <code class="highlighter-rouge">package.json</code> and add the following:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"scripts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEBUG=</span><span class="se">\"</span><span class="s2">flow-api:*</span><span class="se">\"</span><span class="s2"> node build/index.js"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>The first part of the command just sets the <code class="highlighter-rouge">DEBUG</code> environment variable to <code class="highlighter-rouge">flow-api:*</code>, so that the <code class="highlighter-rouge">debug</code> module writes our logs to stdout. Now you can run <code class="highlighter-rouge">npm start</code>, and you should see:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> <span class="nv">DEBUG</span><span class="o">=</span><span class="s2">"flow-api:*"</span> node build/index.js
+
+  flow-api:startup Listening on port 3000 +0ms
+</code></pre></div></div>
+
+<p>Awesome! The server is listening. Now, if we hit any endpoint, it should send back our <code class="highlighter-rouge">{ message: "Hello Flow!" }</code> payload. You can use <a href="https://httpie.org/">httpie</a> for this kind of thing. If you’re on a Mac you can install it with Homebrew: <code class="highlighter-rouge">brew install httpie</code>. Then within a new terminal window run:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>http localhost:3000/
+</code></pre></div></div>
+
+<p>And you should see:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>→ HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Length: 25
+Content-Type: application/json<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>utf-8
+
+<span class="o">{</span>
+    <span class="s2">"message"</span>: <span class="s2">"Hello Flow!"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>And we’re up and running! At this point, we’ve got the base Express application up and running. Now we just need to build out a router that does something useful!</p>
+
+<h2 id="test-setup">Test Setup</h2>
+
+<p>Not so fast! Rather than jumping straight into the RESTful router, we’re going to set up our testing environment so that as we create endpoints and handlers we can test that they work as we expect. Since we’re using the FaceStack, we’ll use <a href="https://facebook.github.io/jest/">Jest</a> as well as <a href="https://github.com/WhoopInc/supertest-as-promised">supertest-as-promised</a> to interface with our Express API.</p>
+
+<p>Install the packages:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>yarn add <span class="nt">--dev</span> jest@18.0.0 supertest@2.0.1 supertest-as-promised@4.0.2
+</code></pre></div></div>
+
+<p>Open up <em>package.json</em> again and add a few lines to configure Jest:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"jest"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"transform"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="s2">".*"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;rootDir&gt;/node_modules/babel-jest"</span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>This just tells Jest to use Babel and our Babel configuration to interpret our test files and the files they test. To run our tests from the command line, we just need to add a test script to <code class="highlighter-rouge">package.json</code>:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"scripts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEBUG=</span><span class="se">\"</span><span class="s2">flow-api:*</span><span class="se">\"</span><span class="s2"> node build/index.js"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"test"</span><span class="p">:</span><span class="w"> </span><span class="s2">"jest"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Right now, if you run it, Jest is just going to tell you it couldn’t find any tests So, let’s fix that. Create a directory called <em>__tests__</em> in the project root, and inside of it add a file to hold our first test:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mkdir __tests__ <span class="o">&amp;&amp;</span> touch __tests__/first.test.js
+</code></pre></div></div>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nx">request</span> <span class="k">from</span> <span class="s1">'supertest-as-promised'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">Api</span> <span class="k">from</span> <span class="s1">'../src/Api'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Api</span><span class="p">().</span><span class="nx">express</span><span class="p">;</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'Flow API'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'hello test'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'string'</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'Hello Flow!'</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>This is a pretty simple test, but it should at least demonstrate the basic structure of what we’re doing here. If you’re saying to yourself, “Hey, this looks a lot like Jasmine!”,  you’re right it does, because Jest is built on top of Jasmine. Here’s a quick breakdown of this first test file:</p>
+
+<ul>
+  <li>We import the <code class="highlighter-rouge">Api</code> class and <code class="highlighter-rouge">supertest-as-promised</code> to create the interface to the API. This way we don’t have to manage starting and stopping the server or actually sending requests over a network connection.</li>
+  <li>We assert that we’re expecting a 200 status code.</li>
+  <li>When the response comes back, we assert that the payload should have a property called <code class="highlighter-rouge">message</code>, who’s value is a string, and that string should equal: “Hello Flow!”</li>
+</ul>
+
+<p>Go ahead and run the tests, <code class="highlighter-rouge">npm test</code>, and you should see this output:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span> jest
+
+ PASS  __tests__/first.test.js
+  Flow API
+    ✓ hello <span class="nb">test</span> <span class="o">(</span>42ms<span class="o">)</span>
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        2.03s
+Ran all <span class="nb">test </span>suites.
+GET / 200 4.059 ms - 25
+</code></pre></div></div>
+
+<p>With the test environment set up, let’s build out our first endpoint!</p>
+
+<h2 id="first-endpoint">First Endpoint</h2>
+
+<p>Now, we’re going to implement CRUD with a single resource - produce. You can use any resource you want or grab the fake data we used <a href="https://raw.githubusercontent.com/mjhea0/flow-node-api/master/data/produce.json">here</a>. In case you’re blanking on what CRUD means, we’re going to implement 4 actions that the API will support for the produce resource:</p>
+
+<ol>
+  <li>Create a produce item.</li>
+  <li>Read produce item(s).</li>
+  <li>Update a produce item.</li>
+  <li>Delete a produce item.</li>
+</ol>
+
+<p>We’ll start by implementing the <code class="highlighter-rouge">GET</code> handler that returns all the produce in our inventory, with the following shape:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>
+  <span class="nl">id</span><span class="p">:</span> <span class="nx">integer</span><span class="p">,</span>
+  <span class="nx">name</span><span class="p">:</span> <span class="nx">string</span><span class="p">,</span>
+  <span class="nx">quantity</span><span class="p">:</span> <span class="nx">integer</span><span class="p">,</span>
+  <span class="nx">price</span><span class="p">:</span> <span class="nx">integer</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p><strong>NOTE:</strong> The <code class="highlighter-rouge">id</code> property will not be supplied by the user, but assigned when an item is created by the API.</p>
+</blockquote>
+
+<p>Let’s start by first writing some tests that we can test our implementation against as we write it. Rename <em>first.test.js</em> to <em>ProduceRouter.test.js</em>, and replace the current <code class="highlighter-rouge">describe</code> block with these tests for the <code class="highlighter-rouge">GET</code> all endpoint:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'Flow API'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+
+  <span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/produce - get all produce'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// properties expected on an obj in the response</span>
+    <span class="kd">let</span> <span class="nx">expectedProps</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'quantity'</span><span class="p">,</span> <span class="s1">'price'</span><span class="p">];</span>
+    <span class="nx">it</span><span class="p">(</span><span class="s1">'should return JSON array'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/produce'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="c1">// check that it sends back an array</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">).</span><span class="nx">toBeInstanceOf</span><span class="p">(</span><span class="nb">Array</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+    <span class="nx">it</span><span class="p">(</span><span class="s1">'should return objs w/ correct props'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/produce'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="c1">// check for the expected properties</span>
+        <span class="kd">let</span> <span class="nx">sampleKeys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+        <span class="nx">expectedProps</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="nx">expect</span><span class="p">(</span><span class="nx">sampleKeys</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">key</span><span class="p">)).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+        <span class="p">});</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+    <span class="nx">it</span><span class="p">(</span><span class="s1">'shouldn</span><span class="se">\'</span><span class="s1">t return objs w/ extra props'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/produce'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="c1">// check for only expected properties</span>
+        <span class="kd">let</span> <span class="nx">extraProps</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]).</span><span class="nx">filter</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="o">!</span><span class="nx">expectedProps</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nx">extraProps</span><span class="p">.</span><span class="nx">length</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Inside of the outer <code class="highlighter-rouge">describe</code>, we’ve added a nested block to indicate that all of the tests inside of it are related and, thus, testing the same feature. These three tests are pretty basic and check that:</p>
+
+<ul>
+  <li>We get an array back.</li>
+  <li>The objects in the array have the required properties.</li>
+  <li>The objects in the array do not have extra properties.</li>
+</ul>
+
+<p>Run the tests from the terminal with <code class="highlighter-rouge">npm test</code> and you should see them all fail:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Flow API
+  GET /api/v1/produce - get all produce
+    ✕ should <span class="k">return </span>JSON array <span class="o">(</span>42ms<span class="o">)</span>
+    ✕ should <span class="k">return </span>objs w/ correct props <span class="o">(</span>9ms<span class="o">)</span>
+    ✕ shouldn<span class="s1">'t return objs w/ extra props (4ms)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 3 total
+Snapshots:   0 total
+Time:        1.835s, estimated 2s
+Ran all test suites.
+</span></code></pre></div></div>
+
+<p>Now, let’s get rid of all those errors and failed tests, and implement the endpoint.</p>
+
+<p>Create a new directory inside of “src” called “routers” and add a file called <em>ProduceRouter.js</em>. This is where we’ll implement the handler functions for all of the endpoints designated for the produce resource.</p>
+
+<blockquote>
+  <p><strong>NOTE:</strong> Remember - For Flow to type check the file, you have to add the <code class="highlighter-rouge">@flow</code> comment at the very top of the file!</p>
+</blockquote>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// @ flow</span>
+
+<span class="k">import</span> <span class="nx">inventory</span> <span class="k">from</span> <span class="s1">'../../data/produce'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">Router</span> <span class="p">}</span>  <span class="k">from</span> <span class="s1">'express'</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="k">default</span> <span class="kd">class</span> <span class="nx">ProduceRouter</span> <span class="p">{</span>
+  <span class="c1">// these fields must be type annotated, or Flow will complain!</span>
+  <span class="nl">router</span><span class="p">:</span> <span class="nx">Router</span><span class="p">;</span>
+  <span class="nl">path</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+
+  <span class="c1">// take the mount path as the constructor argument</span>
+  <span class="kd">constructor</span><span class="p">(</span><span class="nx">path</span> <span class="o">=</span> <span class="s1">'/api/v1/produce'</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// instantiate the express.Router</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">router</span> <span class="o">=</span> <span class="nx">Router</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">=</span> <span class="nx">path</span><span class="p">;</span>
+    <span class="c1">// glue it all together</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="cm">/**
+   * Return all items in the inventory
+   */</span>
+  <span class="nx">getAll</span><span class="p">(</span><span class="nx">req</span><span class="p">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="p">:</span> <span class="nx">$Response</span><span class="p">):</span> <span class="k">void</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">(</span><span class="nx">inventory</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="cm">/**
+   * Attach route handlers to their endpoints.
+   */</span>
+  <span class="nx">init</span><span class="p">():</span> <span class="k">void</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getAll</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">ProduceRouter</code> holds fields for an Express <code class="highlighter-rouge">Router</code> instance, and a <code class="highlighter-rouge">path</code> property that holds its mount point to the application. The constructor takes this mount point as its only argument and then attaches the endpoint handlers to their endpoints.</p>
+
+<blockquote>
+  <p><strong>NOTE:</strong>  The field type annotations for <code class="highlighter-rouge">router</code> and <code class="highlighter-rouge">path</code> are not strictly required (as far as I can tell). You can get rid of them, and Flow will not complain. But you can’t have field declarations without types. It doesn’t like that at all. I tend to use them because they’re a useful quick reference to the properties on an object.</p>
+</blockquote>
+
+<p>The <code class="highlighter-rouge">getAll</code> function has the basic function signature of an Express route handler, and it simply responds to requests with the full inventory list. Notice that the return type is <code class="highlighter-rouge">void</code>. This is because of the middleware architecture that Express is built on. Each middleware function is run in sequence, rather than returning a value from the handler.</p>
+
+<p>Finally, in <code class="highlighter-rouge">init</code> we will take each of our route handlers, and attach it to a mount path on the router. Each endpoint will be prefixed with the overall <code class="highlighter-rouge">Router</code> mount path that is passed to the <code class="highlighter-rouge">ProduceRouter</code> constructor. Right now, our <code class="highlighter-rouge">ProduceRouter</code> is responding to <code class="highlighter-rouge">GET</code> requests at the <code class="highlighter-rouge">/api/v1/produce</code> endpoint.</p>
+
+<p>We’re done in this file for now, but we’ll have to hop back over to <code class="highlighter-rouge">Api.js</code> in order to finish linking these things up.</p>
+
+<p>Add an import statement for <code class="highlighter-rouge">ProduceRouter</code> at the top:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nx">ProduceRouter</span> <span class="k">from</span> <span class="s1">'./routers/ProduceRouter'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>And then replace the <code class="highlighter-rouge">routes</code> function with:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// connect resource routers</span>
+<span class="nx">routes</span><span class="p">():</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="c1">// create an instance of ProduceRouter</span>
+  <span class="kd">const</span> <span class="nx">produceRouter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ProduceRouter</span><span class="p">();</span>
+
+  <span class="c1">// attach it to our express app</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">express</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">produceRouter</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span> <span class="nx">produceRouter</span><span class="p">.</span><span class="nx">router</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here, we simply create an instance of the <code class="highlighter-rouge">ProduceRouter</code> class, and attach it to the Express application path specified by its <code class="highlighter-rouge">path</code> property. Now cross your fingers and run <code class="highlighter-rouge">npm test</code>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PASS  __tests__/ProduceRouter.test.js
+ Flow API
+   GET /api/v1/produce - get all produce
+     ✓ should <span class="k">return </span>JSON array <span class="o">(</span>43ms<span class="o">)</span>
+     ✓ should <span class="k">return </span>objs w/ correct props <span class="o">(</span>10ms<span class="o">)</span>
+     ✓ shouldn<span class="s1">'t return objs w/ extra props (4ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        2.052s
+Ran all test suites.
+</span></code></pre></div></div>
+
+<p>Victory! Go ahead and pat yourself on the back, maybe stretch the legs or get a snack. We’ll work out the rest of the endpoints in the next section.</p>
+
+<h2 id="rounding-out-crud">Rounding out CRUD</h2>
+
+<p>We’ve already got one aspect of the “Read” part of CRUD complete. Let’s knock the other one out now. Rather than only being able to get the full list of items, we need to enable requesting items by their <code class="highlighter-rouge">id</code>s. First, we need some tests. Start by making sure that this <code class="highlighter-rouge">getById</code> handler will:</p>
+
+<ul>
+  <li>Return an object of the correct type.</li>
+  <li>Return the record that lines up with the <code class="highlighter-rouge">id</code> sent with the request.</li>
+  <li>Reject out-of-bounds <code class="highlighter-rouge">id</code>s.</li>
+</ul>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/produce/:id - get produce item by id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return an obj of type Produce'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/produce/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">reqKeys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'price'</span><span class="p">,</span> <span class="s1">'quantity'</span><span class="p">];</span>
+      <span class="kd">const</span> <span class="p">{</span><span class="nx">item</span><span class="p">}</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">;</span>
+      <span class="c1">// check it has correct keys</span>
+      <span class="nx">reqKeys</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">item</span><span class="p">)).</span><span class="nx">toContain</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
+      <span class="p">});</span>
+      <span class="c1">// check type of each field</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'number'</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">item</span><span class="p">.</span><span class="nx">name</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'string'</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">item</span><span class="p">.</span><span class="nx">quantity</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'number'</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="k">typeof</span> <span class="nx">item</span><span class="p">.</span><span class="nx">price</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'number'</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return a Produce w/ requested id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/produce/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">item</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">({</span>
+        <span class="na">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="na">name</span><span class="p">:</span> <span class="s1">'banana'</span><span class="p">,</span>
+        <span class="na">quantity</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+        <span class="na">price</span><span class="p">:</span> <span class="mi">1</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should 400 on a request for a nonexistant id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">([</span>
+      <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/produce/-32'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'No item found with id: -32'</span><span class="p">);</span>
+      <span class="p">}),</span>
+      <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/produce/99999'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'No item found with id: 99999'</span><span class="p">);</span>
+      <span class="p">})</span>
+    <span class="p">]);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run those new tests and make sure they fail like they should:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Flow API
+  GET /api/v1/produce - get all produce
+    ✓ should <span class="k">return </span>JSON array <span class="o">(</span>38ms<span class="o">)</span>
+    ✓ should <span class="k">return </span>objs w/ correct props <span class="o">(</span>8ms<span class="o">)</span>
+    ✓ shouldn<span class="s1">'t return objs w/ extra props (5ms)
+  GET /api/v1/produce/:id - get produce item by id
+    ✕ should return an obj of type Produce (6ms)
+    ✕ should return a Produce w/ requested id (2ms)
+    ✕ should 400 on a request for a nonexistant id (9ms)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 3 passed, 6 total
+Snapshots:   0 total
+Time:        1.857s, estimated 2s
+Ran all test suites.
+</span></code></pre></div></div>
+
+<p>Good. Now we can work on making them pass. This one isn’t so bad. We just need to parse the ID number from the request params, and find an item in the <code class="highlighter-rouge">inventory</code> array with the same ID.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Return an item from the inventory by ID.
+ */</span>
+<span class="nx">getById</span><span class="p">(</span><span class="nx">req</span><span class="p">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="p">:</span> <span class="nx">$Response</span><span class="p">):</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">id</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="nx">record</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">id</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">record</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s1">'Success!'</span><span class="p">,</span>
+      <span class="na">item</span><span class="p">:</span> <span class="nx">record</span>
+    <span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s2">`No item found with id: </span><span class="p">${</span><span class="nx">id</span><span class="p">}</span><span class="s2">`</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Not particularly exciting, but it works for now! Just make sure to add the handler as well:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getById</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>That does it for the “R” in CRUD.</p>
+
+<h3 id="post---create-a-new-item">POST - Create a New Item</h3>
+
+<p>Let’s knock out the “C” now. We’re going to allow <code class="highlighter-rouge">POST</code>s to the endpoint <code class="highlighter-rouge">/api/v1/produce</code> to be used for creating new items for the inventory. In addition, we’ll require that the <code class="highlighter-rouge">quantity</code>, <code class="highlighter-rouge">price</code>, and <code class="highlighter-rouge">name</code> properties are passed.</p>
+
+<p>Tests:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /api/v1/produce - create new item'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">peach</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">name</span><span class="p">:</span> <span class="s1">'peach'</span><span class="p">,</span>
+    <span class="na">quantity</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="na">price</span><span class="p">:</span> <span class="mi">6</span>
+  <span class="p">};</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should accept and add a valid new item'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/api/v1/produce'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">peach</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'Success!'</span><span class="p">);</span>
+      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/produce'</span><span class="p">);</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kd">let</span> <span class="nx">returnedPeach</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">name</span> <span class="o">===</span> <span class="s1">'peach'</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">returnedPeach</span><span class="p">.</span><span class="nx">quantity</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">returnedPeach</span><span class="p">.</span><span class="nx">price</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">6</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should reject post w/o name, price, or quantity'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">badItems</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="na">name</span><span class="p">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+        <span class="na">quantity</span><span class="p">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">quantity</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="na">quantity</span><span class="p">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">quantity</span><span class="p">,</span>
+        <span class="na">price</span><span class="p">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">price</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="na">name</span><span class="p">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+        <span class="na">price</span><span class="p">:</span> <span class="nx">peach</span><span class="p">.</span><span class="nx">price</span>
+      <span class="p">}</span>
+    <span class="p">];</span>
+    <span class="k">return</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">badItems</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">badItem</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/api/v1/produce'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">badItem</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">'Bad Request'</span><span class="p">)).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">}));</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Verify that the tests fail with <code class="highlighter-rouge">npm test</code>, then add another method to <code class="highlighter-rouge">ProduceRouter</code> called <code class="highlighter-rouge">postOne</code>.</p>
+
+<blockquote>
+  <p><strong>NOTE:</strong> I ended up also writing functions to parse the payload from the request, as well as one to re-write our JSON “database” file. You can either include those as helper methods somewhere in the same file as <code class="highlighter-rouge">ProduceRouter</code>, or define them in a different file and import it. If you decide to import it, make sure that you type annotate the function so that Flow can work with its types. I chose to define them in different files and export them from there.</p>
+</blockquote>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Add a new item to the inventory.
+ */</span>
+<span class="nx">postOne</span><span class="p">(</span><span class="nx">req</span><span class="p">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="p">:</span> <span class="nx">$Response</span><span class="p">):</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="na">received</span><span class="p">:</span> <span class="nx">Produce</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="o">=</span> <span class="nx">parseProduce</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="nx">newProduce</span> <span class="o">=</span> <span class="p">(</span><span class="nx">received</span><span class="p">)</span> <span class="p">?</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span> <span class="p">:</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">received</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">newProduce</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nx">genId</span><span class="p">(</span><span class="nx">received</span><span class="p">,</span> <span class="nx">inventory</span><span class="p">);</span>
+    <span class="nx">inventory</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">newProduce</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s1">'Success!'</span><span class="p">,</span>
+      <span class="na">item</span><span class="p">:</span> <span class="nx">newProduce</span>
+    <span class="p">});</span>
+    <span class="c1">// write updated inventory to the file</span>
+    <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">writePath</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="s2">`Inventory updated. Written to:\n\t</span><span class="p">${</span><span class="nx">path</span><span class="p">.</span><span class="nx">relative</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">),</span> <span class="nx">writePath</span><span class="p">)}</span><span class="s2">`</span><span class="p">);</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="s1">'Error writing to inventory file.'</span><span class="p">);</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s1">'Bad Request. Make sure that you submit an item with a name, quantity, and price.'</span>
+    <span class="p">});</span>
+    <span class="nx">logger</span><span class="p">(</span><span class="s1">'Malformed POST to /produce.'</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Create a new folder within “src” called “util”. Then add a <em>parsers.js</em> file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="kd">function</span> <span class="nx">parseProduce</span><span class="p">(</span><span class="nx">input</span><span class="p">:</span> <span class="nx">any</span><span class="p">):</span> <span class="kr">boolean</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">requirements</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span> <span class="na">key</span><span class="p">:</span> <span class="s1">'name'</span><span class="p">,</span> <span class="na">type</span><span class="p">:</span> <span class="s1">'string'</span> <span class="p">},</span>
+    <span class="p">{</span> <span class="na">key</span><span class="p">:</span> <span class="s1">'quantity'</span><span class="p">,</span> <span class="na">type</span><span class="p">:</span> <span class="s1">'number'</span> <span class="p">},</span>
+    <span class="p">{</span> <span class="na">key</span><span class="p">:</span> <span class="s1">'price'</span><span class="p">,</span> <span class="na">type</span><span class="p">:</span> <span class="s1">'number'</span> <span class="p">}</span>
+  <span class="p">];</span>
+  <span class="k">return</span> <span class="nx">requirements</span><span class="p">.</span><span class="nx">every</span><span class="p">((</span><span class="nx">req</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">input</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">key</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">typeof</span> <span class="nx">input</span><span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">===</span> <span class="nx">req</span><span class="p">.</span><span class="nx">type</span><span class="p">;</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>…and <em>save.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// @flow</span>
+
+<span class="k">import</span> <span class="nx">path</span> <span class="k">from</span> <span class="s1">'path'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">fs</span> <span class="k">from</span> <span class="s1">'fs'</span><span class="p">;</span>
+
+<span class="c1">// use a Flow type import to get our Produce type</span>
+<span class="k">import</span> <span class="nx">type</span> <span class="p">{</span><span class="nx">Produce</span><span class="p">}</span> <span class="k">from</span> <span class="s1">'./types'</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="k">default</span> <span class="kd">function</span> <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="p">:</span> <span class="nb">Array</span><span class="o">&lt;</span><span class="nx">Produce</span><span class="o">&gt;</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">string</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">outpath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'data'</span><span class="p">,</span> <span class="s1">'produce.json'</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// lets not write to the file if we're running tests</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">!==</span> <span class="s1">'test'</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">outpath</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">inventory</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">'</span><span class="err">\</span><span class="s1">t'</span><span class="p">),</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">?</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">:</span> <span class="nx">resolve</span><span class="p">(</span><span class="nx">outpath</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">function</span> <span class="nx">genId</span><span class="p">(</span><span class="na">prod</span><span class="p">:</span> <span class="nx">Produce</span><span class="p">,</span> <span class="na">inv</span><span class="p">:</span> <span class="nb">Array</span><span class="o">&lt;</span><span class="nx">Produce</span><span class="o">&gt;</span><span class="p">):</span> <span class="nx">number</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="na">maxId</span><span class="p">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="k">typeof</span> <span class="kc">undefined</span> <span class="o">=</span> <span class="nx">inv</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span><span class="p">;</span>
+  <span class="nx">inv</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">item</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">&amp;&amp;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">&gt;</span> <span class="nx">maxId</span><span class="p">)</span> <span class="nx">maxId</span> <span class="o">=</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+  <span class="p">});</span>
+  <span class="k">return</span> <span class="nx">maxId</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>We don’t have tests written currently for these, but they’re pretty simple functions. Most importantly, now we have a couple utility functions that we can reuse. We’ll definitely need to reuse <code class="highlighter-rouge">saveInventory</code> whenever we need to persist changes to the JSON file holding the inventory.</p>
+
+<p>Add the imports to <em>ProduceRouter.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nx">saveInventory</span><span class="p">,</span> <span class="p">{</span><span class="nx">genId</span><span class="p">}</span> <span class="k">from</span> <span class="s1">'../util/save'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">parseProduce</span> <span class="p">}</span> <span class="k">from</span> <span class="s1">'../util/parsers'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Then update the <code class="highlighter-rouge">init()</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Attach route handlers to their endpoints.
+ */</span>
+<span class="nx">init</span><span class="p">():</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getAll</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getById</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">postOne</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>With this code filled in, run <code class="highlighter-rouge">npm test</code> again and when you’ve got all green check marks, head on to the next section.</p>
+
+<h3 id="put---update-an-item">PUT - Update an Item</h3>
+
+<p>This route will allow requests to update the properties of a single item. We need to make sure that a user is unable to change the <code class="highlighter-rouge">id</code> property of the item so that they can’t create collisions. To solve this issue, we need to strip out all invalid keys from the submitted payload. But first, a few tests:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'PUT /api/v1/produce/:id - update an item'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'allows updates to props other than id'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/api/v1/produce/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span> <span class="na">quantity</span><span class="p">:</span> <span class="mi">20</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'Success!'</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">item</span><span class="p">.</span><span class="nx">quantity</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'rejects updates to id prop'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/api/v1/produce/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span> <span class="na">id</span><span class="p">:</span> <span class="mi">10</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">'Update failed'</span><span class="p">)).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Add the new handler to <code class="highlighter-rouge">ProduceRouter</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Update a Produce item by id.
+ */</span>
+<span class="nx">updateOneById</span><span class="p">(</span><span class="nx">req</span><span class="p">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="p">:</span> <span class="nx">$Response</span><span class="p">):</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="na">searchId</span><span class="p">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="o">=</span> <span class="nx">parseId</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="na">payload</span><span class="p">:</span> <span class="nx">any</span> <span class="o">=</span> <span class="nx">parseUpdate</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+  <span class="kd">let</span> <span class="na">toUpdate</span><span class="p">:</span> <span class="nx">Produce</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">searchId</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">toUpdate</span> <span class="o">&amp;&amp;</span> <span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">payload</span><span class="p">).</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">key</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">'quantity'</span> <span class="o">||</span> <span class="nx">key</span> <span class="o">===</span> <span class="s1">'price'</span><span class="p">)</span> <span class="nx">toUpdate</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">payload</span><span class="p">[</span><span class="nx">key</span><span class="p">]);</span>
+      <span class="k">else</span> <span class="nx">toUpdate</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">payload</span><span class="p">[</span><span class="nx">key</span><span class="p">];</span>
+    <span class="p">});</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s1">'Success!'</span><span class="p">,</span>
+      <span class="na">item</span><span class="p">:</span> <span class="nx">toUpdate</span>
+    <span class="p">});</span>
+    <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">writePath</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="s2">`Item updated. Inventory written to:\n\t</span><span class="p">${</span><span class="nx">path</span><span class="p">.</span><span class="nx">relative</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">),</span> <span class="nx">writePath</span><span class="p">)}</span><span class="s2">`</span><span class="p">);</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="s1">'Error writing to inventory file.'</span><span class="p">);</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s1">'Update failed. Make sure the item ID and submitted fields are correct.'</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Then, within <em>parsers.js</em>, add the <code class="highlighter-rouge">parseId()</code> and <code class="highlighter-rouge">parseUpdate()</code> helpers, which are used to clean the payload and requested item ID:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="kd">function</span> <span class="nx">parseUpdate</span><span class="p">(</span><span class="nx">input</span><span class="p">:</span> <span class="nx">any</span><span class="p">):</span> <span class="nx">any</span> <span class="o">|</span> <span class="kc">null</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">validKeys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'name'</span><span class="p">,</span> <span class="s1">'quantity'</span><span class="p">,</span> <span class="s1">'price'</span><span class="p">];</span>
+  <span class="kd">const</span> <span class="nx">trimmed</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">input</span><span class="p">).</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">obj</span><span class="p">,</span> <span class="nx">curr</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span> <span class="o">&amp;&amp;</span> <span class="nx">validKeys</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">curr</span><span class="p">)</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">obj</span><span class="p">[</span><span class="nx">curr</span><span class="p">]</span> <span class="o">=</span> <span class="nx">input</span><span class="p">[</span><span class="nx">curr</span><span class="p">];</span>
+      <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">},</span> <span class="p">{});</span>
+  <span class="k">return</span> <span class="p">(</span><span class="nx">trimmed</span> <span class="o">&amp;&amp;</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">trimmed</span><span class="p">).</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">?</span> <span class="nx">trimmed</span> <span class="p">:</span> <span class="kc">null</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">function</span> <span class="nx">parseId</span><span class="p">(</span><span class="na">input</span><span class="p">:</span> <span class="nx">any</span><span class="p">):</span> <span class="nx">number</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">'id'</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">input</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="s1">'string'</span><span class="p">)</span> <span class="p">?</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="p">:</span> <span class="nx">input</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+  <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>These are fairly straightforward. <code class="highlighter-rouge">parseUpdate</code> takes in the payload from the request, and strips out any keys that are not <code class="highlighter-rouge">name</code>, <code class="highlighter-rouge">quantity</code>, or <code class="highlighter-rouge">price</code>. Then it just simply returns the trimmed object if there’s still keys left, and <code class="highlighter-rouge">null</code> if not. <code class="highlighter-rouge">parseId</code> is even simpler: It looks for an <code class="highlighter-rouge">id</code> property on the payload, converts it to a number (if necessary), and returns.</p>
+
+<p>Update the import in <em>ProduceRouter.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">parseProduce</span><span class="p">,</span> <span class="nx">parseUpdate</span><span class="p">,</span> <span class="nx">parseId</span> <span class="p">}</span> <span class="k">from</span> <span class="s1">'../util/parsers'</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Then update the <code class="highlighter-rouge">init()</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Attach route handlers to their endpoints.
+ */</span>
+<span class="nx">init</span><span class="p">():</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getAll</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getById</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">postOne</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">updateOneById</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Run the tests again and ensure they pass. One more route to go!</p>
+
+<h3 id="delete---remove-an-item">DELETE - Remove an Item</h3>
+
+<p>This route will allow for deleting an item from the inventory by passing a valid <code class="highlighter-rouge">id</code> as a URL parameter. This is the same string route that the <code class="highlighter-rouge">getById</code> and <code class="highlighter-rouge">updateOneById</code> functions handle, but will use the <code class="highlighter-rouge">DELETE</code> HTTP method. Here’s a few basic tests:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'DELETE /api/v1/produce/:id - delete an item'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'deletes when given a valid ID'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/api/v1/produce/4'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'Success!'</span><span class="p">);</span>
+      <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">deleted</span><span class="p">.</span><span class="nx">id</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'responds w/ error if given invalid ID'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100</span><span class="p">].</span><span class="nx">map</span><span class="p">((</span><span class="nx">id</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="k">delete</span><span class="p">(</span><span class="s2">`/api/v1/produce/</span><span class="p">${</span><span class="nx">id</span><span class="p">}</span><span class="s2">`</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
+        <span class="nx">expect</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">message</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'No item found with given ID.'</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">}));</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Ensure those fail, and then add the implementation for the handler to <code class="highlighter-rouge">ProduceRouter</code> as <code class="highlighter-rouge">removeById</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Remove an item from the inventory by ID.
+ */</span>
+<span class="nx">removeById</span><span class="p">(</span><span class="nx">req</span><span class="p">:</span> <span class="nx">$Request</span><span class="p">,</span> <span class="nx">res</span><span class="p">:</span> <span class="nx">$Response</span><span class="p">):</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="na">searchId</span><span class="p">:</span> <span class="nx">number</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="o">=</span> <span class="nx">parseId</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">);</span>
+  <span class="kd">let</span> <span class="na">toDel</span><span class="p">:</span> <span class="nx">number</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">findIndex</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">searchId</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">toDel</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">deleted</span> <span class="o">=</span> <span class="nx">inventory</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="nx">toDel</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s1">'Success!'</span><span class="p">,</span>
+      <span class="nx">deleted</span>
+    <span class="p">});</span>
+    <span class="c1">// update json file</span>
+    <span class="nx">saveInventory</span><span class="p">(</span><span class="nx">inventory</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">writePath</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="s2">`Item deleted. Inventory written to:\n\t</span><span class="p">${</span><span class="nx">writePath</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">err</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="s1">'Error writing to inventory file.'</span><span class="p">);</span>
+      <span class="nx">logger</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">status</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
+      <span class="na">message</span><span class="p">:</span> <span class="s1">'No item found with given ID.'</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This obviously looks pretty similar to most of the other handlers. The only difference being that once we get a valid <code class="highlighter-rouge">id</code>, we search for the object it matches in the inventory, get its index, and then splice it out of the inventory array.</p>
+
+<p>Don’t forget the handler:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">this</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/:id'</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">removeById</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Run the tests one last time:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PASS  __tests__/ProduceRouter.test.js
+ Flow API
+   ✓ allows updates to props other than id <span class="o">(</span>4ms<span class="o">)</span>
+   GET /api/v1/produce - get all produce
+     ✓ should <span class="k">return </span>JSON array <span class="o">(</span>50ms<span class="o">)</span>
+     ✓ should <span class="k">return </span>objs w/ correct props <span class="o">(</span>11ms<span class="o">)</span>
+     ✓ shouldn<span class="s1">'t return objs w/ extra props (18ms)
+   GET /api/v1/produce/:id - get produce item by id
+     ✓ should return an obj of type Produce (8ms)
+     ✓ should return a Produce w/ requested id (6ms)
+     ✓ should 400 on a request for a nonexistant id (9ms)
+   POST /api/v1/produce - create new item
+     ✓ should accept and add a valid new item (27ms)
+     ✓ should reject post w/o name, price, or quantity (9ms)
+   PUT /api/v1/produce/:id - update an item
+     ✓ allows updates to props other than id (6ms)
+     ✓ rejects updates to id prop (7ms)
+   DELETE /api/v1/produce/:id - delete an item
+     ✓ deletes when given a valid ID (4ms)
+     ✓ responds w/ error if given invalid ID (11ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       13 passed, 13 total
+Snapshots:   0 total
+Time:        2.322s
+Ran all test suites.
+</span></code></pre></div></div>
+
+<p>Congratulations! You just built an Express API type checked with Flow!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>All in all, working with Flow is interesting, at the very least.</p>
+
+<p>After using both it and TypeScript, Flow’s type checking tends to be more strict, but you also spend more time trying to figure out what Flow is getting at and how to fix errors. Part of this is probably that the tooling support for TypeScript is vastly superior. Flow offers a lot of the same functionality that TypeScript does, but there’s a TypeScript tool for every single thing you could ever want. It simply isn’t the same for Flow. The community doesn’t seem to have embraced it with as much enthusiasm. The number of libdefs in the <code class="highlighter-rouge">flow-typed</code> repository versus <code class="highlighter-rouge">DefinitelyTyped</code> for TypeScript is tiny. This is probably the biggest problem you’d have to face in choosing to use Flow for static type analysis over TypeScript.</p>
+
+<p>That being said, Flow also offers some distinct advantages.</p>
+
+<p>It’s plug-n-play with Babel, so adding Flow to a project using Babel would probably be much less painful than converting it to use TypeScript. Both allow you to do so bit by bit, but Flow handles this more gracefully. TypeScript would usually like to just have you pass everything through the compiler and deal with the type errors as you can. Flow allows you to annotate <em>only</em> the files you want to type check, so adding it to an existing project is much easier. Actually, this is probably the best use case for Flow. It would be cumbersome to start a brand new project with such strict type checking. It definitely slows down the rapid iteration needed at the beginning of a project’s life. However, once the project gets to a certain size it’s easy to drop in Flow and clean up the errors file by file as you move forward.</p>
+
+<p>You can grab the code from the <a href="https://github.com/mjhea0/flow-node-api">flow-node-api</a> repo. Best!</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/building-a-restful-api-with-node-and-flow/';
+    this.page.identifier = 'http://localhost:4000/blog/building-a-restful-api-with-node-and-flow/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

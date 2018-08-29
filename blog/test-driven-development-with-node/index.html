@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Test Driven Development with Node, Postgres, and Knex (Red/Green/Refactor)</title>
+  <meta name="description" content="This article takes a test-driven approach to developing a RESTful API with Node, Express, Knex, and Postgres.">
+  
+    
+    <meta name="keywords" content="node, express, postgres, knex, api, restful api, crud, mocha, chai, integration tests">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/test-driven-development-with-node/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Test Driven Development with Node, Postgres, and Knex (Red/Green/Re...">
+  <meta name="twitter:description" content="This article takes a test-driven approach to developing a RESTful API with Node, Express, Knex, and Postgres.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Test Driven Development with Node, Postgres, and Knex (Red/Green/Refactor)</h1>
+    
+    <p class="post-meta"><time datetime="2016-04-28T02:07:39-06:00" itemprop="datePublished">Apr 28, 2016</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/mocha/">mocha</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/testing/">testing</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Today we will be developing a RESTful API with <a href="https://nodejs.org">Node</a>, <a href="http://expressjs.com/">Express</a>, <a href="http://knexjs.org/">Knex</a> - a SQL query builder - and <a href="http://www.postgresql.org/">PostgreSQL</a> using test driven development (TDD).</p>
+
+<p>This post assumes prior knowledge of:</p>
+
+<ul>
+  <li>SQL</li>
+  <li>Node/Express</li>
+  <li>NPM Packages</li>
+</ul>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#getting-started" id="markdown-toc-getting-started">Getting Started</a></li>
+  <li><a href="#developing-via-tdd" id="markdown-toc-developing-via-tdd">Developing via TDD</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="getting-started">Getting Started</h2>
+
+<p>Before we can start testing and writing code we need to set up our project, a database, and all the required dependencies…</p>
+
+<h3 id="project-setup">Project Setup</h3>
+
+<p>First, we need to create a basic boilerplate Express application. To do this, first install the <a href="http://expressjs.com/en/starter/generator.html">Express-Generator</a> globally:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install express-generator@4.13.1 <span class="nt">-g</span>
+</code></pre></div></div>
+
+<p>We can now generate a basic Express application boilerplate:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>express mocha-chai-knex
+<span class="nv">$ </span><span class="nb">cd </span>mocha-chai-knex
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Run <code class="highlighter-rouge">npm start</code> to ensure the application works. Once the server is running, navigate to <a href="http://localhost:3000/">http://localhost:3000/</a>, and you should see ‘Welcome to Express’ on the main page.</p>
+
+<h3 id="database-setup">Database Setup</h3>
+
+<p>Start by installing <a href="http://www.postgresql.org/">PostgreSQL</a> from the official <a href="http://www.postgresql.org/download/">download page</a>.</p>
+
+<blockquote>
+  <p>If you’re on a Mac we recommend using <a href="http://postgresapp.com/">Postgress.app</a>.</p>
+</blockquote>
+
+<p>As noted, we’ll be using <a href="http://knexjs.org/">Knex</a> to interact with our database. Knex is a SQL query builder that we can use with PostgreSQL to handle migrations, manage the schema, and query the database.</p>
+
+<p>Let’s start by installing <a href="http://knexjs.org/">Knex</a> and <a href="https://github.com/brianc/node-postgres">pg</a>, a module for interacting with Postgres.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install pg@4.5.3 knex@0.10.0 <span class="nt">--save</span>
+<span class="nv">$ </span>npm install knex@0.10.0 <span class="nt">-g</span>
+</code></pre></div></div>
+
+<p>Next, we need to create two new databases, one for developing and the other for testing. Open <a href="http://www.postgresql.org/docs/9.5/static/app-psql.html">psql</a> in the terminal, and create a new database:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>psql
+psql <span class="o">(</span>9.4.5<span class="o">)</span>
+Type <span class="s2">"help"</span> <span class="k">for </span>help.
+
+<span class="c"># CREATE DATABASE mocha_chai_tv_shows;</span>
+CREATE DATABASE
+<span class="c"># CREATE DATABASE mocha_chai_tv_shows_test;</span>
+CREATE DATABASE
+<span class="c"># \q</span>
+</code></pre></div></div>
+
+<p>With our database created we can initialize Knex.</p>
+
+<h3 id="knex-setup">Knex Setup</h3>
+
+<p>Run the following command to create <em>knexfile.js</em>, the <a href="http://knexjs.org/#knexfile">Knex configuration file</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex init
+Created ./knexfile.js
+</code></pre></div></div>
+
+<p>Update the default info to:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">test</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">client</span><span class="p">:</span> <span class="s1">'pg'</span><span class="p">,</span>
+    <span class="na">connection</span><span class="p">:</span> <span class="s1">'postgres://localhost/mocha_chai_tv_shows_test'</span><span class="p">,</span>
+    <span class="na">migrations</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/db/migrations'</span>
+    <span class="p">},</span>
+    <span class="na">seeds</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/db/seeds/test'</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="na">development</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">client</span><span class="p">:</span> <span class="s1">'pg'</span><span class="p">,</span>
+    <span class="na">connection</span><span class="p">:</span> <span class="s1">'postgres://localhost/mocha_chai_tv_shows'</span><span class="p">,</span>
+    <span class="na">migrations</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/db/migrations'</span>
+    <span class="p">},</span>
+    <span class="na">seeds</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/db/seeds/development'</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="na">production</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">client</span><span class="p">:</span> <span class="s1">'pg'</span><span class="p">,</span>
+    <span class="na">connection</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DATABASE_URL</span><span class="p">,</span>
+    <span class="na">migrations</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/db/migrations'</span>
+    <span class="p">},</span>
+    <span class="na">seeds</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">'/db/seeds/production'</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>This sets up three different settings for our databases:</p>
+
+<ol>
+  <li><code class="highlighter-rouge">test</code> - for testing on the local environment</li>
+  <li><code class="highlighter-rouge">development</code> - for developing, again on the local environment</li>
+  <li><code class="highlighter-rouge">production</code> - for the production environment</li>
+</ol>
+
+<p>Now, we can add schema migrations. <a href="https://en.wikipedia.org/wiki/Schema_migration">Migrations</a> allow us to define and update the database schema. We can create migrations in the terminal like so:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:make tv_shows
+</code></pre></div></div>
+
+<p>Now, knex has automatically added in a “db/migrations” folder, with a timestamped file inside of it. Here is where we define our schema. It should just contain two empty functions at the moment.</p>
+
+<p>Let’s add in our code to create and drop tables.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">up</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">createTable</span><span class="p">(</span><span class="s1">'shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">table</span><span class="p">){</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">increments</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'name'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">().</span><span class="nx">unique</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">integer</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="kr">boolean</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">down</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">dropTable</span><span class="p">(</span><span class="s1">'shows'</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Here, the <code class="highlighter-rouge">up</code> function creates the <code class="highlighter-rouge">shows</code> table while the <code class="highlighter-rouge">down</code> function drops the table. So we now have a schema defined, and a migration file ready to create that schema.</p>
+
+<p>Create a new file called <em>knex.js</em> inside the “db” folder. In this file we specify the environment (<code class="highlighter-rouge">test</code>, <code class="highlighter-rouge">development</code>, or <code class="highlighter-rouge">production</code>), require the <em>knexfile.js</em>, and export the configuration (based on the environment) for our database:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">environment</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">||</span> <span class="s1">'development'</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../knexfile.js'</span><span class="p">)[</span><span class="nx">environment</span><span class="p">];</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'knex'</span><span class="p">)(</span><span class="nx">config</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Apply the migrations to both databases:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex migrate:latest <span class="nt">--env</span> development
+<span class="nv">$ </span>knex migrate:latest <span class="nt">--env</span> <span class="nb">test</span>
+</code></pre></div></div>
+
+<h3 id="knex-seeds">Knex Seeds</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Database_seeding">Seeding</a> is simply the process of populating the database with initial data. Knex utilizes <a href="http://knexjs.org/#Seeds-CLI">seed files</a> for this.</p>
+
+<p>Run the following in your terminal to create a seed for development:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex seed:make shows_seed <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<p>This will generate a folder called “seeds/development” in the “db” directory of your project, and in that file there will be a boilerplate setup for inserting data into the database:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">seed</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span>
+    <span class="c1">// Deletes ALL existing entries</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'table_name'</span><span class="p">).</span><span class="nx">del</span><span class="p">(),</span>
+
+    <span class="c1">// Inserts seed entries</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'table_name'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="na">colName</span><span class="p">:</span> <span class="s1">'rowValue'</span><span class="p">}),</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'table_name'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="na">colName</span><span class="p">:</span> <span class="s1">'rowValue2'</span><span class="p">}),</span>
+    <span class="nx">knex</span><span class="p">(</span><span class="s1">'table_name'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="na">colName</span><span class="p">:</span> <span class="s1">'rowValue3'</span><span class="p">})</span>
+  <span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Let’s change the file so we’re inserting relevant data. Notice how there’s also built-in promises so that the data will be seeded in the order that we specify:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">seed</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'shows'</span><span class="p">).</span><span class="nx">del</span><span class="p">()</span> <span class="c1">// Deletes ALL existing entries</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="c1">// Inserts seed entries one by one in series</span>
+      <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'shows'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+        <span class="na">name</span><span class="p">:</span> <span class="s1">'Suits'</span><span class="p">,</span>
+        <span class="na">channel</span><span class="p">:</span> <span class="s1">'USA Network'</span><span class="p">,</span>
+        <span class="na">genre</span><span class="p">:</span> <span class="s1">'Drama'</span><span class="p">,</span>
+        <span class="na">rating</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="na">explicit</span><span class="p">:</span> <span class="kc">false</span>
+      <span class="p">});</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'shows'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+        <span class="na">name</span><span class="p">:</span> <span class="s1">'Game of Thrones'</span><span class="p">,</span>
+        <span class="na">channel</span><span class="p">:</span> <span class="s1">'HBO'</span><span class="p">,</span>
+        <span class="na">genre</span><span class="p">:</span> <span class="s1">'Fantasy'</span><span class="p">,</span>
+        <span class="na">rating</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+      <span class="p">});</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'shows'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+        <span class="na">name</span><span class="p">:</span> <span class="s1">'South Park'</span><span class="p">,</span>
+        <span class="na">channel</span><span class="p">:</span> <span class="s1">'Comedy Central'</span><span class="p">,</span>
+        <span class="na">genre</span><span class="p">:</span> <span class="s1">'Comedy'</span><span class="p">,</span>
+        <span class="na">rating</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+      <span class="p">});</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'shows'</span><span class="p">).</span><span class="nx">insert</span><span class="p">({</span>
+        <span class="na">name</span><span class="p">:</span> <span class="s1">'Mad Men'</span><span class="p">,</span>
+        <span class="na">channel</span><span class="p">:</span> <span class="s1">'AMC'</span><span class="p">,</span>
+        <span class="na">genre</span><span class="p">:</span> <span class="s1">'Drama'</span><span class="p">,</span>
+        <span class="na">rating</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="na">explicit</span><span class="p">:</span> <span class="kc">false</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Since JavaScript is asynchronous, the order that data is inserted can sometimes change. We want to make sure that the data is in the same order each time we run our seed file(s).</p>
+
+<p>Run the seed file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>knex seed:run <span class="nt">--env</span> development
+</code></pre></div></div>
+
+<p>Before moving on, follow the same process for the test seed. Just use the same data as the development seed.</p>
+
+<h3 id="mochachai-setup">Mocha/Chai Setup</h3>
+
+<p>With the database set up with data in it, we can start setting up our tests. Start by installing <a href="http://mochajs.org/">Mocha</a> (test runner) and <a href="http://chaijs.com/">Chai</a> (assertions) as well as <a href="https://github.com/chaijs/chai-http">ChaiHTTP</a> (HTTP request module for integration testing). Make sure to also install mocha globally, so that we can run tests from the command line.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install mocha@2.4.5 <span class="nt">-g</span>
+<span class="nv">$ </span>npm install mocha@2.4.5 chai@3.5.0 chai-http@2.0.1 <span class="nt">--save-dev</span>
+</code></pre></div></div>
+
+<p>By default, Mocha searches for tests with a “test” folder.</p>
+
+<blockquote>
+  <p>This configuration can be changed with a <a href="https://mochajs.org/#mochaopts">mocha.opts</a> file</p>
+</blockquote>
+
+<p>Add a “test” folder to the root directory, and in that folder add a file called <em>routes.spec.js</em>. Then update <em>routes/index.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+
+<span class="c1">// *** GET all shows *** //</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">'send shows back'</span><span class="p">);</span>
+<span class="p">});</span>
+
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Then within <em>app.js</em> update this line-</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="nx">routes</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>-to-</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/api/v1'</span><span class="p">,</span> <span class="nx">routes</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Now every single route in that file will be prefixed with ‘/api/v1’ Try it out. Fire up the server, and navigate to <a href="http://localhost:3000/api/v1/shows">http://localhost:3000/api/v1/shows</a>. You should see the string ‘send shows back’ in the browser.</p>
+
+<p>Finally, update this line in <em>app.js</em>-</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">logger</span><span class="p">(</span><span class="s1">'dev'</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>-to-</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">!==</span> <span class="s1">'test'</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">logger</span><span class="p">(</span><span class="s1">'dev'</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This <a href="http://stackoverflow.com/a/22710649/1799408">prevents</a> application log messages from displaying in the stdout when the tests are ran, making it much easier to read the output.</p>
+
+<p>And make sure the error handlers return JSON:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// error handlers</span>
+
+<span class="c1">// development error handler</span>
+<span class="c1">// will print stacktrace</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'env'</span><span class="p">)</span> <span class="o">===</span> <span class="s1">'development'</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">status</span> <span class="o">||</span> <span class="mi">500</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">message</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span>
+      <span class="na">error</span><span class="p">:</span> <span class="nx">err</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="c1">// production error handler</span>
+<span class="c1">// no stacktraces leaked to user</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">status</span> <span class="o">||</span> <span class="mi">500</span><span class="p">);</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span>
+    <span class="na">message</span><span class="p">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span>
+    <span class="na">error</span><span class="p">:</span> <span class="p">{}</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h2 id="developing-via-tdd">Developing via TDD</h2>
+
+<p>The premise behind Test Driven Development (TDD) is that you write tests first that fail which you then make pass. This process is often referred to as <a href="https://github.com/mjhea0/flaskr-tdd#test-driven-development">Red/Green/Refactor</a>.</p>
+
+<h3 id="test-setup">Test Setup</h3>
+
+<p>In our test file, we’ll need to start by including the necessary requirements for testing:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../app'</span><span class="p">);</span>
+
+
+
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'API Routes'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>The first line sets the <code class="highlighter-rouge">NODE_ENV</code> to <code class="highlighter-rouge">test</code> so that the correct Knex config is used from <em>knexfile.js</em>. The next line requires <code class="highlighter-rouge">chai</code>, the assertion module, giving us access to all the <code class="highlighter-rouge">chai</code> methods - like <code class="highlighter-rouge">should()</code>.</p>
+
+<blockquote>
+  <p>By utilizing <code class="highlighter-rouge">should()</code> we are using the <a href="http://chaijs.com/guide/styles/#should">should</a> assertion style. This is a personal preference. You could also use <a href="http://chaijs.com/guide/styles/#expect">expect</a> or <a href="http://chaijs.com/guide/styles/#assert">assert</a>.</p>
+</blockquote>
+
+<p>Then we require <code class="highlighter-rouge">chai-http</code>. This module allows us make http requests from within our test file. Next, we link to our app so that we can test the request-response cycle. Finally, the <code class="highlighter-rouge">describe</code> block underneath the requirements is the wrapper for the tests. Keep in mind that you can nest <code class="highlighter-rouge">describe</code> <a href="http://samwize.com/2014/02/08/a-guide-to-mochas-describe-it-and-setup-hooks/">blocks</a> to better organize your test structure by grouping similar tests together.</p>
+
+<h3 id="get-all-shows">GET all shows</h3>
+
+<h4 id="red">Red</h4>
+
+<p>In the first test case, which is nested inside the first <code class="highlighter-rouge">describe</code> block, we want to get ALL shows in our database:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return all shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/shows'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'array'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Suits'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'USA Network'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Drama'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+    <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>So, we have a <code class="highlighter-rouge">describe</code> block, and within that block, we have a single <code class="highlighter-rouge">it</code> statement. An <code class="highlighter-rouge">it</code> statement defines a specific test case. Here we hit the route ‘/api/v1/shows’ with a GET request and test that the actual response is the same as the expected response.</p>
+
+<p>Let’s break this test down…</p>
+
+<p>First, by removing the test conditions, we can look at the basic test structure:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">it</span><span class="p">(</span><span class="s1">'should return all shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+  <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/shows'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">done</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Since this is an asynchronous test, we need some way of telling the callback function that the test is complete. This is where the <code class="highlighter-rouge">done()</code> callback method comes into play. Once called (or if a two second timer is exceeded), Mocha knows that the test is finished running, and it can move on to the next test.</p>
+
+<p>Now let’s look at the assertions:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'array'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Suits'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'USA Network'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Drama'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>The first thing we generally want to do, is test that the response has a status of 200. After that, these tests will change depending on what we return in the route handler. In this case, we are expecting that the content type is JSON and that the response body will be an array (of objects) and have a length equal to four (since there are four rows in the database). Finally, we are testing the keys and values within the first object of the array.</p>
+
+<p>Try it out:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mocha
+</code></pre></div></div>
+
+<p>If all went well you should see this:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  API Routes
+    GET /api/v1/shows
+      1<span class="o">)</span> should <span class="k">return </span>all shows
+
+
+  0 passing <span class="o">(</span>59ms<span class="o">)</span>
+  1 failing
+
+  1<span class="o">)</span> API Routes GET /api/v1/shows should <span class="k">return </span>all shows:
+     Uncaught AssertionError: expected <span class="s1">'text/html; charset=utf-8'</span>
+     to include <span class="s1">'application/json'</span>
+</code></pre></div></div>
+
+<p>Essentially, the second assertion - <code class="highlighter-rouge">res.should.be.json;</code> - failed since we are sending plain text back. This is good! Remember: Red-Green-Refactor!</p>
+
+<p>We just need to update the route to get the test to pass.</p>
+
+<h4 id="green">Green</h4>
+
+<p>Before updating the route, let’s create a queries module for handling, well, the database queries. Create a new file called <em>queries.js</em> with the “db” folder, and add the following code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./knex.js'</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">Shows</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'shows'</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// *** queries *** //</span>
+
+<span class="kd">function</span> <span class="nx">getAll</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">Shows</span><span class="p">().</span><span class="nx">select</span><span class="p">();</span>
+<span class="p">}</span>
+
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">getAll</span><span class="p">:</span> <span class="nx">getAll</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Here, we made a reference to our database via the Knex config file, added a helper function for simplifying each individual query, and finally queried the database to get ALL shows.</p>
+
+<p>Update the route:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+<span class="kd">var</span> <span class="nx">queries</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../db/queries'</span><span class="p">);</span>
+
+
+<span class="c1">// *** GET all shows *** //</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">queries</span><span class="p">.</span><span class="nx">getAll</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">shows</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">(</span><span class="nx">shows</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">next</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Run mocha again and see what happens:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>API Routes
+  GET /api/v1/shows
+    ✓ should <span class="k">return </span>all shows <span class="o">(</span>128ms<span class="o">)</span>
+
+
+1 passing <span class="o">(</span>164ms<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Awesome! Just don’t forget the last step - refactor.</p>
+
+<h4 id="refactor">Refactor</h4>
+
+<p>What’s happening in the test database?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># psql</span>
+psql <span class="o">(</span>9.4.5<span class="o">)</span>
+Type <span class="s2">"help"</span> <span class="k">for </span>help.
+
+<span class="c"># \c mocha_chai_tv_shows_test</span>
+You are now connected to database <span class="s2">"mocha_chai_tv_shows"</span><span class="nb">.</span>
+<span class="nv">mocha_chai_tv_shows</span><span class="o">=</span><span class="c"># SELECT * FROM shows;</span>
+ id |      name       |    channel     |  genre  | rating | explicit
+<span class="nt">----</span>+-----------------+----------------+---------+--------+----------
+  1 | Suits           | USA Network    | Drama   |      3 | f
+  2 | Game of Thrones | HBO            | Fantasy |      5 | t
+  3 | South Park      | Comedy Central | Comedy  |      4 | t
+  4 | Mad Men         | AMC            | Drama   |      3 | f
+<span class="o">(</span>4 rows<span class="o">)</span>
+
+<span class="c">#\q</span>
+</code></pre></div></div>
+
+<p>Since we seeded the database earlier, there’s data already in there, which could affect other tests (especially when rows are added, changed, and/or dropped). In the test, we are asserting that the length of the array is four. Well, if we add an item then that’s going to change the length, and that first test will fail.</p>
+
+<p>Tests should be isolated from each other. So, we really should rollback the migrations before and after each test is ran, and then apply the migrations and re-seed the database before the next test is ran.</p>
+
+<p>This is where <code class="highlighter-rouge">beforeEach</code> and <code class="highlighter-rouge">afterEach</code> come into play:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">=</span> <span class="s1">'test'</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">chai</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">chaiHttp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'chai-http'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../app'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'../db/knex'</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">chai</span><span class="p">.</span><span class="nx">should</span><span class="p">();</span>
+
+<span class="nx">chai</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">chaiHttp</span><span class="p">);</span>
+
+<span class="nx">describe</span><span class="p">(</span><span class="s1">'API Routes'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">latest</span><span class="p">()</span>
+      <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">seed</span><span class="p">.</span><span class="nx">run</span><span class="p">()</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+          <span class="nx">done</span><span class="p">();</span>
+        <span class="p">});</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+
+  <span class="nx">afterEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">knex</span><span class="p">.</span><span class="nx">migrate</span><span class="p">.</span><span class="nx">rollback</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+
+  <span class="nx">describe</span><span class="p">(</span><span class="s1">'Get all shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">it</span><span class="p">(</span><span class="s1">'should get all shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+      <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/shows'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'array'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Suits'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'USA Network'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Drama'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+        <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Now, the migrations will run and the database will be re-seeded before each nested <code class="highlighter-rouge">describe</code> block, and the migrations will be rolled back after each block (which will also drop the data).</p>
+
+<blockquote>
+  <p>Why rollback before each test? If any errors occur during a test, it won’t reach the <code class="highlighter-rouge">afterEach</code> block. So we want to make sure that if an error occurs we still rollback the database.</p>
+</blockquote>
+
+<p>Run the tests again:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>API Routes
+  GET /api/v1/shows
+    ✓ should <span class="k">return </span>all shows <span class="o">(</span>52ms<span class="o">)</span>
+
+
+1 passing <span class="o">(</span>325ms<span class="o">)</span>
+</code></pre></div></div>
+
+<p>1 down, 4 to go!!!</p>
+
+<blockquote>
+  <p>Did you notice how the overall time is slightly slower? 325ms vs 164ms. This is because of the <code class="highlighter-rouge">beforeEach</code> and <code class="highlighter-rouge">afterEach</code>. Think about what’s happening, and why this would slow down the tests.</p>
+</blockquote>
+
+<h3 id="get-single-show">GET single show</h3>
+
+<p>We have our route and test built to get All shows, so the next step is to just get one show back.</p>
+
+<h4 id="red-1">Red</h4>
+
+<p>Based on our test seed, the first show that should (you never know for certain with async code) is <code class="highlighter-rouge">Suits</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>
+  <span class="nl">name</span><span class="p">:</span> <span class="s1">'Suits'</span><span class="p">,</span>
+  <span class="nx">channel</span><span class="p">:</span> <span class="s1">'USA Network'</span><span class="p">,</span>
+  <span class="nx">genre</span><span class="p">:</span> <span class="s1">'Drama'</span><span class="p">,</span>
+  <span class="nx">rating</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="nx">explicit</span><span class="p">:</span> <span class="kc">false</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>We can write out a test for a new route that will return just a single show and the meta information about it. Remember our last test? It returned an array of objects. This time it should be a <em>single</em> object since we will be searching for a <em>single</em> item in the database.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'GET /api/v1/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should return a single show'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/shows/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Suits'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'USA Network'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Drama'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>This is very similar to the previous test. We’re still testing for a status code of 200, and the response should be JSON. This time, we expect that <code class="highlighter-rouge">res.body</code> is an object. Each of the properties afterwards should be the properties of the item with id ‘1’ in the database. So now if we run the tests, the first assertion should fail because we haven’t written our route yet:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>API Routes
+  GET /api/v1/shows
+    ✓ should <span class="k">return </span>all shows
+  GET /api/v1/shows/:id
+    1<span class="o">)</span> should <span class="k">return </span>a single show
+
+
+1 passing <span class="o">(</span>383ms<span class="o">)</span>
+1 failing
+
+1<span class="o">)</span> API Routes GET /api/v1/shows/:id should <span class="k">return </span>a single show:
+   Uncaught AssertionError: expected <span class="o">{</span> Object <span class="o">(</span>domain, _events, ...<span class="o">)</span> <span class="o">}</span>
+   to have status code 200 but got 404
+</code></pre></div></div>
+
+<h4 id="green-1">Green</h4>
+
+<p>Add the query to <em>queries.js</em>, making sure to update <code class="highlighter-rouge">module.exports</code>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getSingle</span><span class="p">(</span><span class="nx">showID</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">Shows</span><span class="p">().</span><span class="nx">where</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">showID</span><span class="p">)).</span><span class="nx">first</span><span class="p">();</span>
+<span class="p">}</span>
+
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">getAll</span><span class="p">:</span> <span class="nx">getAll</span><span class="p">,</span>
+  <span class="na">getSingle</span><span class="p">:</span> <span class="nx">getSingle</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Then build out the route:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// *** GET single show *** //</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">queries</span><span class="p">.</span><span class="nx">getSingle</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">show</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">(</span><span class="nx">show</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">next</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Now run mocha, and let’s see if that worked:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>API Routes
+  GET /api/v1/shows
+    ✓ should <span class="k">return </span>all shows <span class="o">(</span>54ms<span class="o">)</span>
+  GET /api/v1/shows/:id
+    ✓ should <span class="k">return </span>a single show
+
+
+2 passing <span class="o">(</span>499ms<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Two routes down, two tests passing.</p>
+
+<h3 id="post">POST</h3>
+
+<p>We now want to add an item to our database.</p>
+
+<h4 id="red-2">Red</h4>
+
+<p>For time’s sake, write the test assuming you will get a JSON object back that contains the data added to the database:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'POST /api/v1/shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should add a show'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/api/v1/shows'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="s1">'Family Guy'</span><span class="p">,</span>
+      <span class="na">channel</span> <span class="p">:</span> <span class="s1">'Fox'</span><span class="p">,</span>
+      <span class="na">genre</span><span class="p">:</span> <span class="s1">'Comedy'</span><span class="p">,</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Family Guy'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Fox'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Comedy'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="p">});</span>
+</code></pre></div></div>
+
+<p>You can see here that our test block is slightly different than the previous two since we need to send information with the request to replicate how a client might send information to the server.</p>
+
+<h4 id="green-2">Green</h4>
+
+<p>With the test written and failing (did you remember to run the tests?), we can write the query and add the route (notice the pattern yet?).</p>
+
+<p>Query:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">show</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">Shows</span><span class="p">().</span><span class="nx">insert</span><span class="p">(</span><span class="nx">show</span><span class="p">,</span> <span class="s1">'id'</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Route:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// *** add show *** //</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/shows'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">queries</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">showID</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">getSingle</span><span class="p">(</span><span class="nx">showID</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">show</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">(</span><span class="nx">show</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">next</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">.insert()</code> returns an array containing the unique ID of the newly added item, so in order to return the actual data, we utilized the <code class="highlighter-rouge">getSingle()</code> query. This also ensures that the data has been inserted into the database correctly.</p>
+
+<p>Do the tests pass?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>API Routes
+  GET /api/v1/shows
+    ✓ should <span class="k">return </span>all shows <span class="o">(</span>50ms<span class="o">)</span>
+  GET /api/v1/shows/:id
+    ✓ should <span class="k">return </span>a single show
+  POST /api/v1/shows
+    ✓ should add a show <span class="o">(</span>71ms<span class="o">)</span>
+
+
+3 passing <span class="o">(</span>791ms<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Excellent. Just two routes left to go.</p>
+
+<h3 id="put">PUT</h3>
+
+<p>We need to test the edit route.</p>
+
+<h4 id="red-3">Red</h4>
+
+<p>Similar to our POST route we will need to send data to the server. In this case, we’ll utilize the ID of an existing show in the database and send along an object with the updated fields. Then we’ll assert that the show has been updated correctly.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'PUT /api/v1/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should update a show'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/api/v1/shows/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Suits'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'USA Network'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Drama'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>So here we are stating that the response body should contain the updated object from the database.</p>
+
+<h4 id="green-3">Green</h4>
+
+<p>You know the drill - Start with the query:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">update</span><span class="p">(</span><span class="nx">showID</span><span class="p">,</span> <span class="nx">updates</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">Shows</span><span class="p">().</span><span class="nx">where</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">showID</span><span class="p">)).</span><span class="nx">update</span><span class="p">(</span><span class="nx">updates</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Then update the route:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// *** update show *** //</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">queries</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">getSingle</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">show</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">(</span><span class="nx">show</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">next</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here, we again make two calls to the database. Once we’ve updated the item, we then nest another query to get that same item - which we then check to ensure that it has in fact been updated correctly.</p>
+
+<p>The tests should pass.</p>
+
+<h4 id="refactor-1">Refactor</h4>
+
+<p>What happens if we try to change the ID? Update the test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'PUT /api/v1/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should update a show'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/api/v1/shows/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">id</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Suits'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'USA Network'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Drama'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests now and they should fail:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>API Routes
+  GET /api/v1/shows
+    ✓ should <span class="k">return </span>all shows <span class="o">(</span>43ms<span class="o">)</span>
+  GET /api/v1/shows/:id
+    ✓ should <span class="k">return </span>a single show
+  POST /api/v1/shows
+    ✓ should add a show <span class="o">(</span>50ms<span class="o">)</span>
+  PUT /api/v1/shows/:id
+    1<span class="o">)</span> should update a show
+
+
+3 passing <span class="o">(</span>804ms<span class="o">)</span>
+1 failing
+
+1<span class="o">)</span> API Routes PUT /api/v1/shows/:id should update a show:
+   Uncaught AssertionError: expected <span class="s1">''</span> to be an object
+</code></pre></div></div>
+
+<p>Why? Because the updated ID of the test does not equal the ID passed in as a query parameter. What does this all mean? The unique ID should never change (unless it’s removed altogether).</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// *** update show *** //</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">'id'</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">422</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span>
+      <span class="na">error</span><span class="p">:</span> <span class="s1">'You cannot update the id field'</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+  <span class="nx">queries</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">queries</span><span class="p">.</span><span class="nx">getSingle</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">show</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">(</span><span class="nx">show</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">next</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Now, let’s revert the changes in the test, by removing <code class="highlighter-rouge">id: 20,</code>,  and add a new test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'PUT /api/v1/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should update a show'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/api/v1/shows/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Suits'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'USA Network'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Drama'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should NOT update a show if the id field is part of the request'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/api/v1/shows/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+      <span class="na">id</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+      <span class="na">rating</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+      <span class="na">explicit</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">422</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'error'</span><span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'You cannot update the id field'</span><span class="p">);</span>
+      <span class="nx">done</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Run the tests:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>API Routes
+  GET /api/v1/shows
+    ✓ should <span class="k">return </span>all shows <span class="o">(</span>49ms<span class="o">)</span>
+  GET /api/v1/shows/:id
+    ✓ should <span class="k">return </span>a single show
+  POST /api/v1/shows
+    ✓ should add a show <span class="o">(</span>51ms<span class="o">)</span>
+  PUT /api/v1/shows/:id
+    ✓ should update a show
+    ✓ should NOT update a show <span class="k">if </span>the id field is part of the request
+</code></pre></div></div>
+
+<p>Boom!</p>
+
+<h3 id="delete">DELETE</h3>
+
+<p>Now on to the final test - the delete.</p>
+
+<h4 id="red-4">Red</h4>
+
+<p>Again, let’s use the ID of the first item in our database as the starting point for the test:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">describe</span><span class="p">(</span><span class="s1">'DELETE /api/v1/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s1">'should delete a show'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+    <span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/api/v1/shows/1'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'object'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Suits'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'USA Network'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Drama'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+      <span class="nx">response</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+      <span class="nx">chai</span><span class="p">.</span><span class="nx">request</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+      <span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/api/v1/shows'</span><span class="p">)</span>
+      <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span> <span class="c1">// jshint ignore:line</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">be</span><span class="p">.</span><span class="nx">a</span><span class="p">(</span><span class="s1">'array'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">length</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'name'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Game of Thrones'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'channel'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">channel</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'HBO'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'genre'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">genre</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="s1">'Fantasy'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'rating'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">rating</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">should</span><span class="p">.</span><span class="nx">have</span><span class="p">.</span><span class="nx">property</span><span class="p">(</span><span class="s1">'explicit'</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">explicit</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+        <span class="nx">done</span><span class="p">();</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>The test ensure that the deleted show is returned and that the database no longer contains the show.</p>
+
+<h4 id="green-4">Green</h4>
+
+<p>Query:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">deleteItem</span><span class="p">(</span><span class="nx">showID</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">Shows</span><span class="p">().</span><span class="nx">where</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">showID</span><span class="p">)).</span><span class="nx">del</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Route:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// *** delete show *** //</span>
+<span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/shows/:id'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">queries</span><span class="p">.</span><span class="nx">getSingle</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">show</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">queries</span><span class="p">.</span><span class="nx">deleteItem</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">json</span><span class="p">(</span><span class="nx">show</span><span class="p">);</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">next</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">next</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>The Knex <code class="highlighter-rouge">delete()</code> function returns a number indicating the number of rows in the database that have been affected, so to return the deleted object, we must query for it first.</p>
+
+<p>Let’s run those tests!!</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>API Routes
+  GET /api/v1/shows
+    ✓ should <span class="k">return </span>all shows <span class="o">(</span>69ms<span class="o">)</span>
+  GET /api/v1/shows/:id
+    ✓ should <span class="k">return </span>a single show
+  POST /api/v1/shows
+    ✓ should add a show <span class="o">(</span>54ms<span class="o">)</span>
+  PUT /api/v1/shows/:id
+    ✓ should update a show
+    ✓ should NOT update a show <span class="k">if </span>the id field is part of the request
+  DELETE /api/v1/shows/:id
+    ✓ should delete a show
+
+
+6 passing <span class="o">(</span>1s<span class="o">)</span>
+</code></pre></div></div>
+
+<p>6 tests written. 5 routes built. All tests passing!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>So there you have it: A test-first approach to developing a RESTful API. Are we done? Not quite since we are not handling or testing for all possible errors.</p>
+
+<p>For example, what would happen if we tried to POST an item without all the required fields? Or if we tried to delete an item that isn’t in the database? Sure the <code class="highlighter-rouge">catch()</code> methods will handle these, but they are simply passing the request to the built-in error handlers. We should handle these better in the routes and throw back appropriate error messages and status codes.</p>
+
+<p>Try this out on your own. Be sure to grab the code from the <a href="https://github.com/mjhea0/mocha-chai-knex">repository</a>. Cheers!</p>
+
+<p><br /></p>
+
+<p style="font-size: 14px;">
+  <em>Edits made by <a href="https://www.linkedin.com/in/bbouley">Bradley Bouley</a>. Thank you!</em>
+</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/test-driven-development-with-node/';
+    this.page.identifier = 'http://localhost:4000/blog/test-driven-development-with-node/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

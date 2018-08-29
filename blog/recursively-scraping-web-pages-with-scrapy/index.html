@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Recursively Scraping Web Pages with Scrapy</title>
+  <meta name="description" content="In the first tutorial, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data in a CSV file. This tutorial continues from where we left off, adding to the existing code, in order to build a recursive crawler to scrape multiple pages.">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/recursively-scraping-web-pages-with-scrapy/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Recursively Scraping Web Pages with Scrapy">
+  <meta name="twitter:description" content="In the first tutorial, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data in a CSV file. This tutorial continues from where we le...">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Recursively Scraping Web Pages with Scrapy</h1>
+    
+    <p class="post-meta"><time datetime="2012-11-08T15:39:00-07:00" itemprop="datePublished">Nov 8, 2012</time> • 
+  
+  
+    
+  
+    
+  
+    
+      <a href="/categories/python/">python</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>In the first <a href="http://mherman.org/blog/2012/11/05/scraping-web-pages-with-scrapy/">tutorial</a>, I showed you how to write a crawler with Scrapy to scrape Craiglist Nonprofit jobs in San Francisco and store the data in a CSV file. <strong>This tutorial continues from where we left off, adding to the existing code, in order to build a recursive crawler to scrape multiple pages.</strong></p>
+
+<p><strong>Updates:</strong></p>
+<ul>
+  <li>09/18/2015 – Updated the Scrapy scripts</li>
+</ul>
+
+<blockquote>
+  <p>Check out the accompanying <a href="http://www.youtube.com/watch?v=P-_TpZ54Vcw">video</a>!</p>
+</blockquote>
+
+<h2 id="crawlspider">CrawlSpider</h2>
+
+<p>Last time, we created a new <a href="http://scrapy.org/">Scrapy</a>  (v0.16.5) project, updated the <code class="highlighter-rouge">Item</code> Class, and then wrote the spider to pull jobs from a single page. This time, we just need to do some basic changes to add the ability to follow links and scrape more than one page. The first change is that this spider will inherit from CrawlSpider and not BaseSpider.</p>
+
+<h2 id="rules">Rules</h2>
+
+<p>We need to add in some <code class="highlighter-rouge">Rules</code> objects to define how the crawler follows the links. We will be using the following <a href="https://scrapy.readthedocs.org/en/0.16/topics/spiders.html#crawling-rules">rules</a>:</p>
+
+<ul>
+  <li><strong>SgmlLinkExtractor</strong>: defines how you want the spider to follow the links
+    <ul>
+      <li>allow: defines the link href</li>
+      <li>restrict_xpaths: restricts the link to a certain Xpath</li>
+    </ul>
+  </li>
+  <li><strong>callback</strong>: calls the parsing function after each page is scraped</li>
+  <li><strong>follow</strong>: instructs whether to continue following the links as long as they exist</li>
+</ul>
+
+<blockquote>
+  <p>Please Note: Make sure you rename the parsing function to something besides “parse” as the CrawlSpider uses the parse method to implement its logic.</p>
+</blockquote>
+
+<h2 id="release">Release!</h2>
+
+<p>Once updated, the final code looks like this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">scrapy.contrib.spiders</span> <span class="kn">import</span> <span class="n">CrawlSpider</span><span class="p">,</span> <span class="n">Rule</span>
+<span class="kn">from</span> <span class="nn">scrapy.contrib.linkextractors.sgml</span> <span class="kn">import</span> <span class="n">SgmlLinkExtractor</span>
+<span class="kn">from</span> <span class="nn">scrapy.selector</span> <span class="kn">import</span> <span class="n">HtmlXPathSelector</span>
+<span class="kn">from</span> <span class="nn">craigslist_sample.items</span> <span class="kn">import</span> <span class="n">CraigslistSampleItem</span>
+
+<span class="k">class</span> <span class="nc">MySpider</span><span class="p">(</span><span class="n">CrawlSpider</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">"craigs"</span>
+    <span class="n">allowed_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s">"sfbay.craigslist.org"</span><span class="p">]</span>
+    <span class="n">start_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">"http://sfbay.craigslist.org/search/npo"</span><span class="p">]</span>
+
+    <span class="n">rules</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Rule</span><span class="p">(</span><span class="n">SgmlLinkExtractor</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="p">(),</span> <span class="n">restrict_xpaths</span><span class="o">=</span><span class="p">(</span><span class="s">'//a[@class="button next"]'</span><span class="p">,)),</span> <span class="n">callback</span><span class="o">=</span><span class="s">"parse_items"</span><span class="p">,</span> <span class="n">follow</span><span class="o">=</span> <span class="bp">True</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">parse_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="n">hxs</span> <span class="o">=</span> <span class="n">HtmlXPathSelector</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="n">titles</span> <span class="o">=</span> <span class="n">hxs</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s">'//span[@class="pl"]'</span><span class="p">)</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">titles</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">CraigslistSampleItem</span><span class="p">()</span>
+            <span class="n">item</span><span class="p">[</span><span class="s">"title"</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s">"a/text()"</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+            <span class="n">item</span><span class="p">[</span><span class="s">"link"</span><span class="p">]</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s">"a/@href"</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">()</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now run the following command to release the spider and save the scraped data to a CSV file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>scrapy crawl craigs <span class="nt">-o</span> items.csv <span class="nt">-t</span> csv
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p><em>In essence, this spider started crawling at http://sfbay.craigslist.org/search/npo/ and then followed the “next 100 postings” link at the bottom, scraping the next page, until there where no more links to crawl. Again, this can be used to create some powerful crawlers, so use with caution and set delays to throttle the crawling speed if necessary.</em></p>
+
+<p>You can find the source code on <a href="https://github.com/mjhea0/Scrapy-Samples">Github</a>.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/recursively-scraping-web-pages-with-scrapy/';
+    this.page.identifier = 'http://localhost:4000/blog/recursively-scraping-web-pages-with-scrapy/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>

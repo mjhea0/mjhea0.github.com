@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Designing with Class: Sinatra + PostgreSQL +  Heroku</title>
+  <meta name="description" content="Know a little Ruby? Ready to start web development? Before jumping to Rails, get your hands dirty with Sinatra. It’s the perfect learning tool. My recommendation: Start with a basic dynamic website, backed with SQLite. Create and manage your database tables with raw SQL. Practice deploying on Heroku. Practice.">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/designing-with-class-sinatra-plus-postgresql-plus-heroku/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="http://localhost:4000/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Designing with Class: Sinatra + PostgreSQL +  Heroku">
+  <meta name="twitter:description" content="Know a little Ruby? Ready to start web development? Before jumping to Rails, get your hands dirty with Sinatra. It’s the perfect learning tool. My recommendation: Start with a basic dynamic website...">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Designing with Class: Sinatra + PostgreSQL +  Heroku</h1>
+    
+    <p class="post-meta"><time datetime="2013-06-08T07:37:00-06:00" itemprop="datePublished">Jun 8, 2013</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/ruby/">ruby</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Know a little Ruby? Ready to start web development? Before jumping to Rails, get your hands dirty with Sinatra. It’s the perfect learning tool. My recommendation: Start with a basic dynamic website, backed with SQLite. Create and manage your database tables with raw SQL. Practice deploying on Heroku. Practice.</p>
+
+<p>Once you feel good, add another step. Perhaps switch to DataMapper or ActiveRecord for managing your database with objects. Add a more complex database, such as  PostgreSQL.</p>
+
+<p>Finally, get familiar with front-end. Start with Bootstrap. Play around with JavaScript.</p>
+
+<p><strong>Updates</strong>:</p>
+
+<ol>
+  <li>September 29, 2013: bootstrap 3, jQuery, css</li>
+  <li>November 21, 2013: added the ability to edit posts, demonstrated how to escape HTML</li>
+  <li>May 4, 2014: added a captcha to the new post form to help prevent spam (see blog post <a href="http://mherman.org/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/">here</a>)</li>
+</ol>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#in-this-tutorial-" id="markdown-toc-in-this-tutorial-">In this tutorial …</a></li>
+  <li><a href="#getting-started" id="markdown-toc-getting-started">Getting started</a></li>
+  <li><a href="#model" id="markdown-toc-model">Model</a></li>
+  <li><a href="#version-control" id="markdown-toc-version-control">Version Control</a></li>
+  <li><a href="#templates-and-views" id="markdown-toc-templates-and-views">Templates and views</a></li>
+  <li><a href="#validation-and-flash-messages" id="markdown-toc-validation-and-flash-messages">Validation and Flash Messages</a></li>
+  <li><a href="#styles" id="markdown-toc-styles">Styles</a></li>
+  <li><a href="#edit-posts" id="markdown-toc-edit-posts">Edit Posts</a></li>
+  <li><a href="#test-and-commit-to-git" id="markdown-toc-test-and-commit-to-git">Test and Commit to Git</a></li>
+  <li><a href="#properly-escaping" id="markdown-toc-properly-escaping">Properly Escaping</a></li>
+  <li><a href="#deploy" id="markdown-toc-deploy">Deploy</a></li>
+  <li><a href="#add-a-captcha" id="markdown-toc-add-a-captcha">Add a captcha</a></li>
+</ul>
+
+<h2 id="in-this-tutorial-">In this tutorial …</h2>
+
+<p>… we’ll be hitting the middle ground. You’ll be creating a basic blog app. Before you yawn and move on, we will be using some awesome tools/gems for rapid development:</p>
+
+<ul>
+  <li><strong>Sinatra</strong>: the web framework, of course</li>
+  <li><strong>PostgreSQL</strong>: the database management system</li>
+  <li><strong>ActiveRecord</strong>: the ORM</li>
+  <li><strong>sinatra-activerecord</strong>: ports ActiveRecord for Sinatra</li>
+  <li><strong>Tux</strong>: provides a Shell for Sinatra so we can interact with our application</li>
+</ul>
+
+<blockquote>
+  <p>This tutorial assumes you are running a Unix-based environment - e.g, Mac OSX, straight Linux, or Linux VM through Windows. I will also be using Sublime 2 as my text editor.</p>
+</blockquote>
+
+<h3 id="lets-get-sinatra-singing">Let’s get Sinatra singing!</h3>
+
+<h2 id="getting-started">Getting started</h2>
+
+<h3 id="start-by-creating-a-project-directory-somewhere-on-your-file-system">Start by creating a project directory somewhere on your file system:</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mkdir sinatra-blog
+</code></pre></div></div>
+
+<h3 id="setup-your-gems-using-a-gemfile-create-the-following-gemfile-no-extension-within-your-main-directory">Setup your gems using a Gemfile. Create the following <em>Gemfile</em> (no extension) within your main directory:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Gemfile</span>
+
+<span class="n">source</span> <span class="s1">'https://rubygems.org'</span>
+<span class="n">ruby</span> <span class="s2">"2.0.0"</span>
+
+<span class="n">gem</span> <span class="s2">"sinatra"</span>
+<span class="n">gem</span> <span class="s2">"activerecord"</span>
+<span class="n">gem</span> <span class="s2">"sinatra-activerecord"</span>
+<span class="n">gem</span> <span class="s1">'sinatra-flash'</span>
+<span class="n">gem</span> <span class="s1">'sinatra-redirect-with-flash'</span>
+
+<span class="n">group</span> <span class="ss">:development</span> <span class="k">do</span>
+ <span class="n">gem</span> <span class="s1">'sqlite3'</span>
+ <span class="n">gem</span> <span class="s2">"tux"</span>
+<span class="k">end</span>
+
+<span class="n">group</span> <span class="ss">:production</span> <span class="k">do</span>
+ <span class="n">gem</span> <span class="s1">'pg'</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Notice how we’re using SQLite3 for our development environment and PostgreSQL for production, in order to simply the dev process.</p>
+
+<h3 id="install-the-gems">Install the gems:</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>bundle install
+</code></pre></div></div>
+
+<p>This will create <em>Gemfile.lock</em>, displaying the exact versions of each gem that were installed.</p>
+
+<h3 id="create-a-configru-file-which-is-a-standard-convention-that-heroku-looks-for">Create a <em>config.ru</em> file, which is a standard convention that Heroku looks for.</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># config.ru</span>
+
+<span class="nb">require</span> <span class="s1">'./app'</span>
+<span class="n">run</span> <span class="no">Sinatra</span><span class="o">::</span><span class="no">Application</span>
+</code></pre></div></div>
+
+<h2 id="model">Model</h2>
+
+<h3 id="create-a-file-called-environmentsrb-and-include-the-following-code-for-our-database-configuration">Create a file called <em>environments.rb</em> and include the following code for our database configuration:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">configure</span> <span class="ss">:development</span> <span class="k">do</span>
+ <span class="n">set</span> <span class="ss">:database</span><span class="p">,</span> <span class="s1">'sqlite:///dev.db'</span>
+ <span class="n">set</span> <span class="ss">:show_exceptions</span><span class="p">,</span> <span class="kp">true</span>
+<span class="k">end</span>
+
+<span class="n">configure</span> <span class="ss">:production</span> <span class="k">do</span>
+ <span class="n">db</span> <span class="o">=</span> <span class="no">URI</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="no">ENV</span><span class="p">[</span><span class="s1">'DATABASE_URL'</span><span class="p">]</span> <span class="o">||</span> <span class="s1">'postgres:///localhost/mydb'</span><span class="p">)</span>
+
+ <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="p">.</span><span class="nf">establish_connection</span><span class="p">(</span>
+   <span class="ss">:adapter</span>  <span class="o">=&gt;</span> <span class="n">db</span><span class="p">.</span><span class="nf">scheme</span> <span class="o">==</span> <span class="s1">'postgres'</span> <span class="p">?</span> <span class="s1">'postgresql'</span> <span class="p">:</span> <span class="n">db</span><span class="p">.</span><span class="nf">scheme</span><span class="p">,</span>
+   <span class="ss">:host</span>     <span class="o">=&gt;</span> <span class="n">db</span><span class="p">.</span><span class="nf">host</span><span class="p">,</span>
+   <span class="ss">:username</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="p">.</span><span class="nf">user</span><span class="p">,</span>
+   <span class="ss">:password</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="p">.</span><span class="nf">password</span><span class="p">,</span>
+   <span class="ss">:database</span> <span class="o">=&gt;</span> <span class="n">db</span><span class="p">.</span><span class="nf">path</span><span class="p">[</span><span class="mi">1</span><span class="o">..-</span><span class="mi">1</span><span class="p">],</span>
+   <span class="ss">:encoding</span> <span class="o">=&gt;</span> <span class="s1">'utf8'</span>
+ <span class="p">)</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h3 id="next-create-the-main-application-file-apprb-make-sure-to-include-the-required-gems-and-the-environmentsrb-file-we-just-created">Next, create the main application file, “app.rb”. Make sure to include the required gems and the <em>environments.rb</em> file we just created.</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># app.rb</span>
+
+<span class="nb">require</span> <span class="s1">'sinatra'</span>
+<span class="nb">require</span> <span class="s1">'sinatra/activerecord'</span>
+<span class="nb">require</span> <span class="s1">'./environments'</span>
+
+
+<span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h3 id="create-a-rakefile-again-no-extension-so-we-can-use-migrations-for-setting-up-the-data-model">Create a <em>Rakefile</em> (again, no extension) so we can use migrations for setting up the data model:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Rakefile</span>
+
+<span class="nb">require</span> <span class="s1">'./app'</span>
+<span class="nb">require</span> <span class="s1">'sinatra/activerecord/rake'</span>
+</code></pre></div></div>
+
+<h3 id="now-run-the-following-command-to-setup-the-migration-files">Now run the following command to setup the migration files:</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>rake db:create_migration <span class="nv">NAME</span><span class="o">=</span>create_posts
+</code></pre></div></div>
+
+<p>If you look at your project structure. You’ll see a new folder called “db” and within that folder another folder called “migrate.” You should then see a Ruby script with a timestamp. This is a migration file. The timestamp tells ActiveRecord the order in which to apply the migrations in case there is more than one file.</p>
+
+<h3 id="essentially-these-migration-files-are-used-for-setting-up-your-database-tables-edit-the-file-now">Essentially, these migration files are used for setting up your database tables. Edit the file now.</h3>
+
+<blockquote>
+  <p>The up method is used when we complete the migration (<code class="highlighter-rouge">rake db:migrate</code>), while the down method is ran when we rollback the last migration (<code class="highlighter-rouge">rake db:rollback</code>).</p>
+</blockquote>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">CreatePosts</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
+ <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">up</span>
+   <span class="n">create_table</span> <span class="ss">:posts</span> <span class="k">do</span> <span class="o">|</span><span class="n">t</span><span class="o">|</span>
+     <span class="n">t</span><span class="p">.</span><span class="nf">string</span> <span class="ss">:title</span>
+     <span class="n">t</span><span class="p">.</span><span class="nf">text</span> <span class="ss">:body</span>
+     <span class="n">t</span><span class="p">.</span><span class="nf">timestamps</span>
+   <span class="k">end</span>
+ <span class="k">end</span>
+
+ <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">down</span>
+   <span class="n">drop_table</span> <span class="ss">:posts</span>
+ <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h3 id="run-the-migration">Run the migration</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>rake db:migrate
+</code></pre></div></div>
+
+<p>Just so you know, ActiveRecord created these table columns: <code class="highlighter-rouge">id</code>, <code class="highlighter-rouge">title</code>, <code class="highlighter-rouge">body</code>, <code class="highlighter-rouge">created_at</code>, <code class="highlighter-rouge">updated_at</code></p>
+
+<p>When you create a new post, you only need to specify the title and body; the remaining fields are generated automatically with ActiveRecord’s magic! Pretty cool, eh?</p>
+
+<h3 id="use-tux-in-order-to-add-some-data-to-the-database">Use tux in order to add some data to the database.</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ tux
+&gt;&gt; Post.create(title: 'Testing the title', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum venenatis eros eget lectus hendrerit, sed mattis quam pretium. Aenean accumsan eget leo non cursus. Aliquam sagittis luctus mi, quis suscipit neque venenatis et. Pellentesque vitae elementum diam. Quisque iaculis eget neque mattis fermentum. Donec et luctus eros. Suspendisse egestas pharetra elit vel bibendum.')
+&gt;&gt;
+&gt;&gt; Post.all
+D, [2013-06-08T12:26:44.929333 #42914] DEBUG -- :   Post Load (0.2ms)  SELECT "posts".* FROM "posts"
+=&gt; [#&lt;Post id: 1, title: "Testing the title", body: "Lorem ipsum dolor sit amet, consectetur adipiscing ...", created_at: "2013-06-08 12:24:12", updated_at: "2013-06-08 12:24:12"&gt;]
+</code></pre></div></div>
+
+<p>Did you notice the actual SQL syntax used for each command? No? Look again.</p>
+
+<p>Add a few more posts. Then exit:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">exit</span>
+</code></pre></div></div>
+
+<h2 id="version-control">Version Control</h2>
+
+<h3 id="before-moving-on-lets-get-this-app-under-version-control">Before moving on, let’s get this app under version control.</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git init
+<span class="nv">$ </span>git add <span class="nb">.</span>
+<span class="nv">$ </span>git commit <span class="nt">-am</span> <span class="s2">"initial commit"</span>
+</code></pre></div></div>
+
+<h2 id="templates-and-views">Templates and views</h2>
+
+<h3 id="add-the-following-code-to-apprb-to-setup-the-first-route">Add the following code to <em>app.rb</em> to setup the first route:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">get</span> <span class="s2">"/"</span> <span class="k">do</span>
+  <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">order</span><span class="p">(</span><span class="s2">"created_at DESC"</span><span class="p">)</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"Welcome."</span>
+  <span class="n">erb</span> <span class="ss">:"posts/index"</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>This maps the <code class="highlighter-rouge">/</code> url to the template <em>index.html</em> (or <em>index.erb</em> in Ruby terms), found in “views/posts/” directory.</p>
+
+<blockquote>
+  <p>Note: The <em>app.rb</em> file is the controller in MVC-style architecture.</p>
+</blockquote>
+
+<p>Add the helper for the title variable:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">helpers</span> <span class="k">do</span>
+  <span class="k">def</span> <span class="nf">title</span>
+    <span class="k">if</span> <span class="vi">@title</span>
+      <span class="s2">"</span><span class="si">#{</span><span class="vi">@title</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">else</span>
+      <span class="s2">"Welcome."</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Fire up the dev server:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="n">ruby</span> <span class="n">app</span><span class="p">.</span><span class="nf">rb</span>
+</code></pre></div></div>
+
+<p>Then navigate to <a href="http://localhost:4567/">http://localhost:4567/</a>. You should see an error indicating the template can’t be found - “/sinatra-blog/views/posts/index.erb”. In other words, the URL routing is working; we just need to set up a template.</p>
+
+<p>First create two new directories - “views/posts” …</p>
+
+<h3 id="now-setup-the-associated-template-called-indexerb">Now, setup the associated template called <em>index.erb</em>:</h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;ul&gt;</span>
+<span class="nt">&lt;</span><span class="err">%</span> <span class="err">@</span><span class="na">posts</span><span class="err">.</span><span class="na">each</span> <span class="na">do</span> <span class="err">|</span><span class="na">post</span><span class="err">|</span> <span class="err">%</span><span class="nt">&gt;</span>
+ <span class="nt">&lt;li&gt;</span>
+   <span class="nt">&lt;h4&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/posts/&lt;%= post.id %&gt;"</span><span class="nt">&gt;&lt;</span><span class="err">%=</span> <span class="na">post</span><span class="err">.</span><span class="na">title</span> <span class="err">%</span><span class="nt">&gt;&lt;/a&gt;&lt;/h4&gt;</span>
+   <span class="nt">&lt;p&gt;</span>Created: <span class="nt">&lt;</span><span class="err">%=</span> <span class="na">post</span><span class="err">.</span><span class="na">created_at</span> <span class="err">%</span><span class="nt">&gt;&lt;/p&gt;</span>
+ <span class="nt">&lt;/li&gt;</span>
+<span class="nt">&lt;</span><span class="err">%</span> <span class="na">end</span> <span class="err">%</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/ul&gt;</span>
+</code></pre></div></div>
+
+<p>Save this file within the “posts” directory.</p>
+
+<h3 id="now-set-up-the-layouterb-template-which-is-used-as-the-parent-template-for-all-other-templates-this-is-just-a-convention-used-to-speed-up-development-child-templates-such-as-indexerb-inherent-the-html-and-css-common-code-from-the-parent-template">Now set up the <em>layout.erb</em> template, which is used as the parent template for all other templates. This is just a convention used to speed up development. Child templates, such as <em>index.erb</em> inherent the HTML and CSS (common code) from the parent template.</h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+ <span class="nt">&lt;title&gt;&lt;</span><span class="err">%=</span> <span class="na">title</span> <span class="err">%</span><span class="nt">&gt;&lt;/title&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+ <span class="nt">&lt;ul&gt;</span>
+   <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/"</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+   <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/posts/create"</span><span class="nt">&gt;</span>New Post<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+ <span class="nt">&lt;/ul&gt;</span>
+ <span class="nt">&lt;</span><span class="err">%=</span> <span class="na">yield</span> <span class="err">%</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>Save this file within the “views” directory.</p>
+
+<blockquote>
+  <p>The yield method indicates where templates are embedded.</p>
+</blockquote>
+
+<h3 id="kill-the-server-fire-it-back-up-go-back-to-httplocalhost4567-refresh-you-should-see-your-basic-blog-click-on-a-link-for-one-of-the-posts-since-we-dont-have-a-route-associated-with-that-url-sinatra-gives-us-a-little-suggestion">Kill the server. Fire it back up. Go back to <a href="http://localhost:4567/">http://localhost:4567/</a>. Refresh. You should see your basic blog. Click on a link for one of the posts. Since we don’t have a route associated with that URL, Sinatra gives us a little suggestion.</h3>
+
+<h3 id="route-and-template-for-viewing-each-post">Route and template for viewing each post.</h3>
+
+<p>Route:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">get</span> <span class="s2">"/posts/:id"</span> <span class="k">do</span>
+ <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">])</span>
+ <span class="vi">@title</span> <span class="o">=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">title</span>
+ <span class="n">erb</span> <span class="ss">:"posts/view"</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Template (called <em>view.erb</em>):</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;h1&gt;&lt;</span><span class="err">%=</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">title</span> <span class="err">%</span><span class="nt">&gt;&lt;/h1&gt;</span>
+<span class="nt">&lt;p&gt;&lt;</span><span class="err">%=</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">body</span> <span class="err">%</span><span class="nt">&gt;&lt;/p&gt;</span>
+</code></pre></div></div>
+
+<h3 id="route-and-template-for-adding-new-posts">Route and template for adding new posts.</h3>
+
+<p>Route:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">get</span> <span class="s2">"/posts/create"</span> <span class="k">do</span>
+ <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"Create post"</span>
+ <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span>
+ <span class="n">erb</span> <span class="ss">:"posts/create"</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Template (called <em>create.erb</em>):</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;h2&gt;</span>Create Post<span class="nt">&lt;/h2&gt;</span>
+<span class="nt">&lt;br/&gt;</span>
+<span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/posts"</span> <span class="na">method=</span><span class="s">"post"</span><span class="na">role=</span><span class="s">"form"</span><span class="nt">&gt;</span>
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"form-group"</span><span class="nt">&gt;</span>
+   <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_title"</span><span class="nt">&gt;</span>Title:<span class="nt">&lt;/label&gt;</span>
+   <span class="nt">&lt;br&gt;</span>
+   <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">"post_title"</span> <span class="na">class=</span><span class="s">"form-control"</span> <span class="na">name=</span><span class="s">"post[title]"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">value=</span><span class="s">"&lt;%= @post.title %&gt;"</span> <span class="na">style=</span><span class="s">"width=90%"</span><span class="nt">/&gt;</span>
+ <span class="nt">&lt;/div&gt;</span>
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"form-group"</span><span class="nt">&gt;</span>
+   <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_body"</span><span class="nt">&gt;</span>Body:<span class="nt">&lt;/label&gt;</span>
+   <span class="nt">&lt;br&gt;</span>
+   <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">"post_body"</span> <span class="na">name=</span><span class="s">"post[body]"</span> <span class="na">class=</span><span class="s">"form-control"</span> <span class="na">rows=</span><span class="s">"10"</span><span class="nt">&gt;&lt;</span><span class="err">%=</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">body</span> <span class="err">%</span><span class="nt">&gt;&lt;/textarea&gt;</span>
+ <span class="nt">&lt;/div&gt;</span>
+ <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">class=</span><span class="s">"btn btn-success"</span><span class="nt">&gt;</span>Submit<span class="nt">&lt;/button&gt;</span>
+<span class="nt">&lt;/form&gt;</span>
+</code></pre></div></div>
+
+<h3 id="we-also-need-a-route-for-handling-the-post-requests">We also need a route for handling the POST requests.</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">post</span> <span class="s2">"/posts"</span> <span class="k">do</span>
+ <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:post</span><span class="p">])</span>
+ <span class="k">if</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">save</span>
+   <span class="n">redirect</span> <span class="s2">"posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="p">.</span><span class="nf">id</span><span class="si">}</span><span class="s2">"</span>
+ <span class="k">else</span>
+   <span class="n">erb</span> <span class="ss">:"posts/create"</span>
+ <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h3 id="test-this-out-did-it-work-if-you-get-this-error-couldnt-find-post-with-idnew-you-need-to-put-the-last-two-routes-above-the-route-for-viewing-each-post">Test this out. Did it work? If you get this error “Couldn’t find Post with ID=new” you need to put the last two routes above the route for viewing each post:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># app.rb</span>
+
+<span class="nb">require</span> <span class="s1">'sinatra'</span>
+<span class="nb">require</span> <span class="s1">'sinatra/activerecord'</span>
+<span class="nb">require</span> <span class="s1">'./environments'</span>
+
+
+<span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+<span class="k">end</span>
+
+<span class="n">get</span> <span class="s2">"/"</span> <span class="k">do</span>
+  <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">order</span><span class="p">(</span><span class="s2">"created_at DESC"</span><span class="p">)</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"Welcome."</span>
+  <span class="n">erb</span> <span class="ss">:"posts/index"</span>
+<span class="k">end</span>
+
+<span class="n">helpers</span> <span class="k">do</span>
+  <span class="k">def</span> <span class="nf">title</span>
+    <span class="k">if</span> <span class="vi">@title</span>
+      <span class="s2">"</span><span class="si">#{</span><span class="vi">@title</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">else</span>
+      <span class="s2">"Welcome."</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">get</span> <span class="s2">"/posts/create"</span> <span class="k">do</span>
+ <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"Create post"</span>
+ <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span>
+ <span class="n">erb</span> <span class="ss">:"posts/create"</span>
+<span class="k">end</span>
+
+<span class="n">post</span> <span class="s2">"/posts"</span> <span class="k">do</span>
+ <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:post</span><span class="p">])</span>
+ <span class="k">if</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">save</span>
+   <span class="n">redirect</span> <span class="s2">"posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="p">.</span><span class="nf">id</span><span class="si">}</span><span class="s2">"</span>
+ <span class="k">else</span>
+   <span class="n">erb</span> <span class="ss">:"posts/create"</span>
+ <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">get</span> <span class="s2">"/posts/:id"</span> <span class="k">do</span>
+ <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">])</span>
+ <span class="vi">@title</span> <span class="o">=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">title</span>
+ <span class="n">erb</span> <span class="ss">:"posts/view"</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h2 id="validation-and-flash-messages">Validation and Flash Messages</h2>
+
+<h3 id="add-some-basic-validation-to-apprb">Add some basic validation to <em>app.rb</em>:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+ <span class="n">validates</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">presence: </span><span class="kp">true</span><span class="p">,</span> <span class="ss">length: </span><span class="p">{</span> <span class="ss">minimum: </span><span class="mi">5</span> <span class="p">}</span>
+ <span class="n">validates</span> <span class="ss">:body</span><span class="p">,</span> <span class="ss">presence: </span><span class="kp">true</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>So, both the title and body cannot be null, and the title has to be at least 5 characters long.</p>
+
+<h3 id="navigate-to-httplocalhost4567postscreate-try-to-submit-a-blank-post-and-then-submit-a-real-one-its-a-bit-confusing-to-the-user-when-a-blank-post-is-submitted-and-nothing-happens-so-add-some-messages-indicating-that-an-error-has-occurred">Navigate to <a href="http://localhost:4567/posts/create">http://localhost:4567/posts/create</a>. Try to submit a blank post and then submit a real one. It’s a bit confusing to the user when a blank post is submitted and nothing happens, so add some messages indicating that an error has occurred.</h3>
+
+<h3 id="first-add-this-to-the-top-of-apprb">First, add this to the top of <em>app.rb</em>:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">require</span> <span class="s1">'sinatra/flash'</span>
+<span class="nb">require</span> <span class="s1">'sinatra/redirect_with_flash'</span>
+
+<span class="n">enable</span> <span class="ss">:sessions</span>
+</code></pre></div></div>
+
+<h3 id="update-the-post-request-route">Update the POST request route:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">post</span> <span class="s2">"/posts"</span> <span class="k">do</span>
+ <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:post</span><span class="p">])</span>
+ <span class="k">if</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">save</span>
+   <span class="n">redirect</span> <span class="s2">"posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="p">.</span><span class="nf">id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="ss">:notice</span> <span class="o">=&gt;</span> <span class="s1">'Congrats! Love the new post. (This message will disappear in 4 seconds.)'</span>
+ <span class="k">else</span>
+   <span class="n">redirect</span> <span class="s2">"posts/create"</span><span class="p">,</span> <span class="ss">:error</span> <span class="o">=&gt;</span> <span class="s1">'Something went wrong. Try again. (This message will disappear in 4 seconds.)'</span>
+ <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h3 id="add-the-following-code-to-the-layouterb-template-just-above-the-yield-method">Add the following code to the <em>layout.erb</em> template just above the yield method:</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="sx">% if </span><span class="n">flash</span><span class="p">[</span><span class="ss">:notice</span><span class="p">]</span> <span class="o">%&gt;</span>
+ <span class="o">&lt;</span><span class="nb">p</span> <span class="k">class</span><span class="o">=</span><span class="s2">"alert alert-success"</span><span class="o">&gt;&lt;</span><span class="sx">%= flash[:notice] %&gt;
+&lt;% end %&gt;
+&lt;% if flash[:error] %&gt;
+ &lt;p class=</span><span class="s2">"alert alert-error"</span><span class="o">&gt;&lt;</span><span class="sx">%= flash[:error] %&gt;
+&lt;% end %&gt;
+</span></code></pre></div></div>
+
+<p>Now test it again!</p>
+
+<h2 id="styles">Styles</h2>
+
+<p>The app is ugly. Add some quick bootstrap styling.</p>
+
+<h3 id="updated-layouterb">Updated <em>layout.erb</em>:</h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">"en"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"viewport"</span> <span class="na">content=</span><span class="s">"width=device-width, initial-scale=1.0"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"description"</span> <span class="na">content=</span><span class="s">""</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"author"</span> <span class="na">content=</span><span class="s">""</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;title&gt;&lt;</span><span class="err">%=</span> <span class="na">title</span> <span class="err">%</span><span class="nt">&gt;&lt;/title&gt;</span>
+    <span class="nt">&lt;link</span> <span class="na">href=</span><span class="s">"http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"</span> <span class="na">rel=</span><span class="s">"stylesheet"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;style&gt;</span>
+      <span class="nt">body</span> <span class="p">{</span>
+        <span class="nl">padding-top</span><span class="p">:</span> <span class="m">75px</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="nc">.starter-template</span> <span class="p">{</span>
+        <span class="nl">padding</span><span class="p">:</span> <span class="m">40px</span> <span class="m">15px</span><span class="p">;</span>
+        <span class="nl">text-align</span><span class="p">:</span> <span class="nb">center</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="nc">.container</span> <span class="p">{</span>
+        <span class="nl">max-width</span><span class="p">:</span><span class="m">1000px</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="nt">&lt;/style&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+
+  <span class="nt">&lt;body&gt;</span>
+
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"navbar navbar-inverse navbar-fixed-top"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"navbar-header"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">"button"</span> <span class="na">class=</span><span class="s">"navbar-toggle"</span> <span class="na">data-toggle=</span><span class="s">"collapse"</span> <span class="na">data-target=</span><span class="s">".navbar-collapse"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"icon-bar"</span><span class="nt">&gt;&lt;/span&gt;</span>
+            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"icon-bar"</span><span class="nt">&gt;&lt;/span&gt;</span>
+            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"icon-bar"</span><span class="nt">&gt;&lt;/span&gt;</span>
+          <span class="nt">&lt;/button&gt;</span>
+          <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">"navbar-brand"</span> <span class="na">href=</span><span class="s">"/"</span><span class="nt">&gt;</span>Sinatra Sings<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"collapse navbar-collapse"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">"nav navbar-nav"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">"active"</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/"</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+            <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/posts/create"</span><span class="nt">&gt;</span>New Post<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+          <span class="nt">&lt;/ul&gt;</span>
+        <span class="nt">&lt;/div&gt;</span><span class="c">&lt;!--/.nav-collapse --&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+
+
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"container"</span><span class="nt">&gt;</span>
+
+      <span class="nt">&lt;</span><span class="err">%</span> <span class="na">if</span> <span class="na">flash</span><span class="err">[</span><span class="na">:notice</span><span class="err">]</span> <span class="err">%</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"alert alert-success"</span><span class="nt">&gt;&lt;</span><span class="err">%=</span> <span class="na">flash</span><span class="err">[</span><span class="na">:notice</span><span class="err">]</span> <span class="err">%</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;</span><span class="err">%</span> <span class="na">end</span> <span class="err">%</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;</span><span class="err">%</span> <span class="na">if</span> <span class="na">flash</span><span class="err">[</span><span class="na">:error</span><span class="err">]</span> <span class="err">%</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"alert alert-warning"</span><span class="nt">&gt;&lt;</span><span class="err">%=</span> <span class="na">flash</span><span class="err">[</span><span class="na">:error</span><span class="err">]</span> <span class="err">%</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;</span><span class="err">%</span> <span class="na">end</span> <span class="err">%</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;</span><span class="err">%=</span> <span class="na">yield</span> <span class="err">%</span><span class="nt">&gt;</span>
+
+    <span class="nt">&lt;/div&gt;</span><span class="c">&lt;!-- /.container --&gt;</span>
+
+
+    <span class="c">&lt;!-- Bootstrap core JavaScript
+    ================================================== --&gt;</span>
+    <span class="c">&lt;!-- Placed at the end of the document so the pages load faster --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"http://code.jquery.com/jquery-1.10.2.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"http://getbootstrap.com/dist/js/bootstrap.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script&gt;</span>
+    <span class="c1">//** removes alerts after 4 seconds */</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s2">".alert"</span><span class="p">).</span><span class="nx">fadeTo</span><span class="p">(</span><span class="mi">4500</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">slideUp</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+            <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">remove</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">},</span> <span class="mi">4000</span><span class="p">);</span>
+    <span class="nt">&lt;/script&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>Looking good? Well, a little better.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git add <span class="nb">.</span>
+<span class="nv">$ </span>git commit <span class="nt">-am</span> <span class="s2">"updated"</span>
+</code></pre></div></div>
+
+<h2 id="edit-posts">Edit Posts</h2>
+
+<p>Alright. We need to be able to edit live posts.</p>
+
+<h3 id="update-apprb">Update app.rb</h3>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># app.rb</span>
+
+<span class="nb">require</span> <span class="s1">'sinatra'</span>
+<span class="nb">require</span> <span class="s1">'sinatra/activerecord'</span>
+<span class="nb">require</span> <span class="s1">'./environments'</span>
+<span class="nb">require</span> <span class="s1">'sinatra/flash'</span>
+<span class="nb">require</span> <span class="s1">'sinatra/redirect_with_flash'</span>
+
+<span class="n">enable</span> <span class="ss">:sessions</span>
+
+
+<span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+  <span class="n">validates</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">presence: </span><span class="kp">true</span><span class="p">,</span> <span class="ss">length: </span><span class="p">{</span> <span class="ss">minimum: </span><span class="mi">5</span> <span class="p">}</span>
+  <span class="n">validates</span> <span class="ss">:body</span><span class="p">,</span> <span class="ss">presence: </span><span class="kp">true</span>
+<span class="k">end</span>
+
+<span class="n">helpers</span> <span class="k">do</span>
+  <span class="k">def</span> <span class="nf">title</span>
+    <span class="k">if</span> <span class="vi">@title</span>
+      <span class="s2">"</span><span class="si">#{</span><span class="vi">@title</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">else</span>
+      <span class="s2">"Welcome."</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># get ALL posts</span>
+<span class="n">get</span> <span class="s2">"/"</span> <span class="k">do</span>
+  <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">order</span><span class="p">(</span><span class="s2">"created_at DESC"</span><span class="p">)</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"Welcome."</span>
+  <span class="n">erb</span> <span class="ss">:"posts/index"</span>
+<span class="k">end</span>
+
+<span class="c1"># create new post</span>
+<span class="n">get</span> <span class="s2">"/posts/create"</span> <span class="k">do</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"Create post"</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span>
+  <span class="n">erb</span> <span class="ss">:"posts/create"</span>
+<span class="k">end</span>
+<span class="n">post</span> <span class="s2">"/posts"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:post</span><span class="p">])</span>
+  <span class="k">if</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">save</span>
+    <span class="n">redirect</span> <span class="s2">"posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="p">.</span><span class="nf">id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="ss">:notice</span> <span class="o">=&gt;</span> <span class="s1">'Congrats! Love the new post. (This message will disapear in 4 seconds.)'</span>
+  <span class="k">else</span>
+    <span class="n">redirect</span> <span class="s2">"posts/create"</span><span class="p">,</span> <span class="ss">:error</span> <span class="o">=&gt;</span> <span class="s1">'Something went wrong. Try again. (This message will disapear in 4 seconds.)'</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># view post</span>
+<span class="n">get</span> <span class="s2">"/posts/:id"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">])</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">title</span>
+  <span class="n">erb</span> <span class="ss">:"posts/view"</span>
+<span class="k">end</span>
+
+<span class="c1"># edit post</span>
+<span class="n">get</span> <span class="s2">"/posts/:id/edit"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">])</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"Edit Form"</span>
+  <span class="n">erb</span> <span class="ss">:"posts/edit"</span>
+<span class="k">end</span>
+<span class="n">put</span> <span class="s2">"/posts/:id"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">])</span>
+  <span class="vi">@post</span><span class="p">.</span><span class="nf">update</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:post</span><span class="p">])</span>
+  <span class="n">redirect</span> <span class="s2">"/posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="p">.</span><span class="nf">id</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h3 id="add-an-edit-template">Add an edit template</h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;h2&gt;</span>Edit Post<span class="nt">&lt;/h2&gt;</span>
+<span class="nt">&lt;br/&gt;</span>
+<span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/posts/&lt;%= @post.id %&gt;"</span> <span class="na">method=</span><span class="s">"post"</span><span class="nt">&gt;</span>
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"form-group"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"hidden"</span> <span class="na">name=</span><span class="s">"_method"</span> <span class="na">value=</span><span class="s">"put"</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_title"</span><span class="nt">&gt;</span>Title:<span class="nt">&lt;/label&gt;</span>
+  <span class="nt">&lt;br&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">"post_title"</span> <span class="na">class=</span><span class="s">"form-control"</span> <span class="na">name=</span><span class="s">"post[title]"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">value=</span><span class="s">"&lt;%= @post.title %&gt;"</span> <span class="nt">/&gt;</span>
+ <span class="nt">&lt;/div&gt;</span>
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"form-group"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_body"</span><span class="nt">&gt;</span>Body:<span class="nt">&lt;/label&gt;</span>
+  <span class="nt">&lt;br&gt;</span>
+  <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">"post_body"</span> <span class="na">name=</span><span class="s">"post[body]"</span> <span class="na">class=</span><span class="s">"form-control"</span> <span class="na">rows=</span><span class="s">"5"</span><span class="nt">&gt;&lt;</span><span class="err">%=</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">body</span> <span class="err">%</span><span class="nt">&gt;&lt;/textarea&gt;</span>
+ <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">class=</span><span class="s">"btn btn-success"</span><span class="nt">&gt;</span>Submit<span class="nt">&lt;/button&gt;</span>
+<span class="nt">&lt;/form&gt;</span>
+</code></pre></div></div>
+
+<h3 id="update-the-view-template">Update the view template</h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;h1&gt;&lt;</span><span class="err">%=</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">title</span> <span class="err">%</span><span class="nt">&gt;&lt;/h1&gt;</span>
+<span class="nt">&lt;p&gt;&lt;</span><span class="err">%=</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">body</span> <span class="err">%</span><span class="nt">&gt;&lt;/p&gt;</span>
+<span class="nt">&lt;br&gt;</span>
+<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"/posts/&lt;%= @post.id %&gt;/edit"</span><span class="nt">&gt;</span>Edit Post<span class="nt">&lt;/a&gt;</span>
+</code></pre></div></div>
+
+<h2 id="test-and-commit-to-git">Test and Commit to Git</h2>
+
+<p>Yes, test to ensure you can edit posts locally, then add and commit to Git.</p>
+
+<h2 id="properly-escaping">Properly Escaping</h2>
+
+<p>Currently, you can enter really anything into the input boxes for the title and body, including HTML. Test this out. Enter these code snippets in the title and/or or body:</p>
+
+<ol>
+  <li><code class="highlighter-rouge">&lt;strong&gt;Very, very strong&lt;/strong&gt;</code></li>
+  <li><code class="highlighter-rouge">&lt;script&gt;alert('happy birthday');&lt;/script&gt;</code></li>
+</ol>
+
+<p>See the issue? We need to escape the text properly in order to avoid this.</p>
+
+<h3 id="update-apprb-1">Update app.rb</h3>
+
+<p>Add the following helper:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">helpers</span> <span class="k">do</span>
+  <span class="kp">include</span> <span class="no">Rack</span><span class="o">::</span><span class="no">Utils</span>
+  <span class="kp">alias_method</span> <span class="ss">:h</span><span class="p">,</span> <span class="ss">:escape_html</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h3 id="update-the-view-template-1">Update the view template</h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;h1&gt;&lt;</span><span class="err">%=</span><span class="na">h</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">title</span> <span class="err">%</span><span class="nt">&gt;&lt;/h1&gt;</span>
+<span class="nt">&lt;p&gt;&lt;</span><span class="err">%=</span><span class="na">h</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">body</span> <span class="err">%</span><span class="nt">&gt;&lt;/p&gt;</span>
+<span class="nt">&lt;br&gt;</span>
+<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"/posts/&lt;%= @post.id %&gt;/edit"</span><span class="nt">&gt;</span>Edit Post<span class="nt">&lt;/a&gt;</span>
+</code></pre></div></div>
+
+<h3 id="update-the-edit-template">Update the edit template</h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;h2&gt;</span>Edit Post<span class="nt">&lt;/h2&gt;</span>
+<span class="nt">&lt;br/&gt;</span>
+<span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/posts/&lt;%= @post.id %&gt;"</span> <span class="na">method=</span><span class="s">"post"</span><span class="nt">&gt;</span>
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"form-group"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"hidden"</span> <span class="na">name=</span><span class="s">"_method"</span> <span class="na">value=</span><span class="s">"put"</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_title"</span><span class="nt">&gt;</span>Title:<span class="nt">&lt;/label&gt;</span>
+  <span class="nt">&lt;br&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">"post_title"</span> <span class="na">class=</span><span class="s">"form-control"</span> <span class="na">name=</span><span class="s">"post[title]"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">value=</span><span class="s">"&lt;%=h @post.title %&gt;"</span> <span class="nt">/&gt;</span>
+ <span class="nt">&lt;/div&gt;</span>
+ <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"form-group"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_body"</span><span class="nt">&gt;</span>Body:<span class="nt">&lt;/label&gt;</span>
+  <span class="nt">&lt;br&gt;</span>
+  <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">"post_body"</span> <span class="na">name=</span><span class="s">"post[body]"</span> <span class="na">class=</span><span class="s">"form-control"</span> <span class="na">rows=</span><span class="s">"5"</span><span class="nt">&gt;&lt;</span><span class="err">%=</span><span class="na">h</span> <span class="err">@</span><span class="na">post</span><span class="err">.</span><span class="na">body</span> <span class="err">%</span><span class="nt">&gt;&lt;/textarea&gt;</span>
+ <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">class=</span><span class="s">"btn btn-success"</span><span class="nt">&gt;</span>Submit<span class="nt">&lt;/button&gt;</span>
+<span class="nt">&lt;/form&gt;</span>
+</code></pre></div></div>
+
+<h3 id="update-the-index-template">Update the index template</h3>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;ul&gt;</span>
+<span class="nt">&lt;</span><span class="err">%</span> <span class="err">@</span><span class="na">posts</span><span class="err">.</span><span class="na">each</span> <span class="na">do</span> <span class="err">|</span><span class="na">post</span><span class="err">|</span> <span class="err">%</span><span class="nt">&gt;</span>
+ <span class="nt">&lt;li&gt;</span>
+   <span class="nt">&lt;h4&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/posts/&lt;%= post.id %&gt;"</span><span class="nt">&gt;&lt;</span><span class="err">%=</span><span class="na">h</span> <span class="na">post</span><span class="err">.</span><span class="na">title</span> <span class="err">%</span><span class="nt">&gt;&lt;/a&gt;&lt;/h4&gt;</span>
+   <span class="nt">&lt;p&gt;</span>Created: <span class="nt">&lt;</span><span class="err">%=</span><span class="na">h</span> <span class="na">post</span><span class="err">.</span><span class="na">created_at</span> <span class="err">%</span><span class="nt">&gt;&lt;/p&gt;</span>
+ <span class="nt">&lt;/li&gt;</span>
+<span class="nt">&lt;</span><span class="err">%</span> <span class="na">end</span> <span class="err">%</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/ul&gt;</span>
+</code></pre></div></div>
+
+<p>Now try to enter <code class="highlighter-rouge">&lt;strong&gt;Very, very strong&lt;/strong&gt;</code>. Notice the difference? See <a href="http://www.sinatrarb.com/faq.html#escape_html">this</a> page for further explanation.</p>
+
+<p>Commit to Git again.</p>
+
+<h2 id="deploy">Deploy</h2>
+
+<p>Finally, let’s get this app live on Heroku!</p>
+
+<h3 id="create-an-account-on-heroku-if-needed">Create an account on Heroku. (if needed)</h3>
+<h3 id="install-the-gem---sudo-gem-install-heroku-if-needed">Install the gem - <code class="highlighter-rouge">sudo gem install heroku</code> (if needed)</h3>
+<h3 id="generate-an-ssh-key-if-needed">Generate an SSH key. (if needed)</h3>
+<h3 id="push-to-heroku">Push to Heroku:</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>heroku create &lt;my-app-name&gt;.
+<span class="nv">$ </span>git push heroku master
+</code></pre></div></div>
+
+<h3 id="rake-the-remote-database">Rake the remote database:</h3>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>heroku rake db:migrate
+</code></pre></div></div>
+
+<h3 id="boom-check-out-your-live-app">Boom! Check out your live app.</h3>
+
+<p>Links:</p>
+
+<ul>
+  <li>My app: <a href="http://sinatra-sings.herokuapp.com/">http://sinatra-sings.herokuapp.com/</a></li>
+  <li>Git Repo: <a href="https://github.com/mjhea0/sinatra-blog">https://github.com/mjhea0/sinatra-blog</a></li>
+</ul>
+
+<p><em>Sinatra has ended his set (crowd applauds as he exits the main stage).</em></p>
+
+<h2 id="add-a-captcha">Add a captcha</h2>
+
+<p>Help eliminate spam by adding a captcha to the new post form. View the blog post - <a href="http://mherman.org/blog/2014/05/04/adding-a-captcha-to-sinatra-to-minimize-spam/">Adding a Captcha to Sinatra to Minimize Spam</a>.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'http://localhost:4000/blog/designing-with-class-sinatra-plus-postgresql-plus-heroku/';
+    this.page.identifier = 'http://localhost:4000/blog/designing-with-class-sinatra-plus-postgresql-plus-heroku/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2018 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.linkedin.com/pub/michael-herman/3b/a94/4"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="http://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>
