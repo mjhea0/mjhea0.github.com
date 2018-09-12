@@ -278,7 +278,7 @@ test:
 
 Here, we install Docker Compose, create a new image, and run the container along with our unit tests.
 
-> Notice how we’re using the command `docker-compose run -d --no-deps web`, to run the web process, instead of `docker-compose up`. This is because CircleCI already has Redis [running](https://circleci.com/docs/environment#databases) and available to us for our tests. So, we just need to run the web process.
+> Notice how we’re using the command `docker-compose run -d --no-deps web`, to run the web process, instead of `docker-compose up`. This is because CircleCI already has Redis running and available to us for our tests. So, we just need to run the web process.
 
 Before we test this out, we need to change some settings on Docker Hub.
 
