@@ -173,10 +173,6 @@ node-2    Ready     <none>    3m        v1.11.2
 node-3    Ready     <none>    35s       v1.11.2
 ```
 
-That's it!
-
-<hr>
-
 Remove the droplets once done:
 
 ```sh
@@ -184,3 +180,9 @@ $ for i in 1 2 3; do
     doctl compute droplet delete node-$i
 done
 ```
+
+<hr>
+
+That's it!
+
+> Want to automate this process? Check out [Creating a Kubernetes Cluster on DigitalOcean with Python and Fabric](https://testdriven.io/creating-a-kubernetes-cluster-on-digitalocean).

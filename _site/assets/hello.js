@@ -4,10 +4,10 @@ config
 
 let content = {
   text: 'Check out my course, <em>Microservices with Docker, Flask, and React</em>!',
-  buttonText: 'Available Now',
+  buttonText: 'Download Now',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
-  cookieKey: 'cookieNotificationAug012018',
+  cookieKey: 'cookieNotificationSep262018',
   googleAnalytics: true
 };
 
