@@ -150,7 +150,7 @@ bootstrap-3: Provides bootstrap 3.
 
 Watch your browser as you add these. You should see the styles update almost immediately.
 
-You can read more about these packages [here](http://docs.meteor.com/#accountsui), [here](http://docs.meteor.com/#accounts_api), [here](https://github.com/mangasocial/meteor-bootstrap-3). It's pretty awesome that you can add these web components in just a matter of minutes! Awesome for prototyping!
+You can read more about these packages [here](http://docs.meteor.com/#accountsui), [here](http://docs.meteor.com/#accounts_api), [here](https://atmospherejs.com/mizzao/bootstrap-3). It's pretty awesome that you can add these web components in just a matter of minutes! Awesome for prototyping!
 
 > You can view the available packages from the terminal by running the command - `meteor list`
 

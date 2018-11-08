@@ -62,7 +62,7 @@ Perhaps it falls onto those within the community to start taking more notice of 
 
 These are the projects that have the power to affect us and our community on a more direct, everyday level. The issue is that finding such projects is quite difficult, which begs the question: Are people even looking for local projects on Kickstarter?
 
-I don't have an answer for you. I know that I seek out local projects, and I know that many of my acquaintances are as well. Cities such as Chicago have taken it a step further, beginning [seed Chicago](http://www.kickstarter.com/pages/seedchicago), a project to draw attention to all local Chicago Kickstarter projects.
+I don't have an answer for you. I know that I seek out local projects, and I know that many of my acquaintances are as well. Cities such as Chicago have taken it a step further, beginning [seed Chicago](hhttps://web.archive.org/web/20170807203247/https://www.kickstarter.com/pages/seedchicago), a project to draw attention to all local Chicago Kickstarter projects.
 
 Now if we can just take this even further: Create a way for all cities to have a way to quickly and easily identify the Kickstarters within their community.
 
