@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| November 28, 2018   | [Running Vault + Consul on Kubernetes][51] | [Denver Microservices][50] |
 | November 6, 2018   | [Kubernetes for Application Developers][40] | [NodeJS Denver/Boulder Meetup][6] |
 | September 12, 2018   | [Scaling Flask with Kubernetes][39] | [Boulder Python Meetup][11] |
 | July 27, 2018   | [Managing Secrets with Vault][38] | N/A |
@@ -84,3 +85,5 @@ Here's a list of talks and trainings I've given over the years...
 [38]: https://mherman.org/presentations/vault
 [39]: https://mherman.org/presentations/flask-kubernetes
 [40]: https://mherman.org/presentations/node-kubernetes
+[50]: https://www.meetup.com/DenverMicroservices/
+[51]: https://mherman.org/presentations/vault-kubernetes
