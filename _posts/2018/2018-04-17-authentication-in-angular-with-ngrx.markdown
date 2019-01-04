@@ -57,7 +57,7 @@ With token-based Authentication, users send their credentials to an authenticati
 
 1. *Cross-site Scripting (XSS) attacks*: Storing tokens in either local or session storage can lead to XSS attacks. Because of this, it's a good idea to store tokens in a cookie with `httpOnly` and `secure` flags.
 
-> Although we won't be covering server-side token creation in this post, it's worth nothing that a [JSON Web Token](https://jwt.io/) is a popular standard for creating tokens. Just keep in mind that since a JWT is [signed rather than encrypted](https://stackoverflow.com/questions/454048/what-is-the-difference-between-encrypting-and-signing-in-asymmetric-encryption) it should never contain sensitive information like a user's password.
+> Although we won't be covering server-side token creation in this post, it's worth noting that a [JSON Web Token](https://jwt.io/) is a popular standard for creating tokens. Just keep in mind that since a JWT is [signed rather than encrypted](https://stackoverflow.com/questions/454048/what-is-the-difference-between-encrypting-and-signing-in-asymmetric-encryption) it should never contain sensitive information like a user's password.
 
 With that, here’s the full user auth process:
 

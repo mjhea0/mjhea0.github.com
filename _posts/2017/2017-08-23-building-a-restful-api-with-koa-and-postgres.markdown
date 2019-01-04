@@ -70,7 +70,7 @@ Koa is a web framework for Node.js.
 
 Although it's designed by the same team that created Express, it's much lighter than Express though - so it comes with very little out of the box. It's really just a tiny wrapper on top of Node's [HTTP](https://nodejs.org/api/http.html#http_http) module. Koa allows you - the developer - to pick and choose the tools you want to use from the [community](https://github.com/koajs/koa/wiki).
 
-It has native support for [async/await](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), which makes it easier and faster to develop an API since you don't have to deal with [callbacks](https://en.wikipedia.org/wiki/Callback_(computer_programming%29) and [callback hell](http://callbackhell.com/).
+It has native support for [async/await](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), which makes it easier and faster to develop an API since you don't have to deal with <a href="https://en.wikipedia.org/wiki/Callback_(computer_programming)">callbacks</a> and [callback hell](http://callbackhell.com/).
 
 Finally, since Koa has similar patterns to Express, it's relatively easy to pick up if you've worked at all with Express.
 
