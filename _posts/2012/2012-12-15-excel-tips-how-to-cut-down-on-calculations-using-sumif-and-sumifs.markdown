@@ -30,11 +30,11 @@ The SUMIF and SUMIFS function in Microsoft Excel is a simple, yet powerful calcu
 
 Create a table called COST TABLE with the following headings: Month, Type, Sub-type, and Cost. Fill them in, as shown in the screenshot below:
 
-![2012-12-12_0935](http://www.backwardsteps.com/uploads/2012-12-12_0935.png)
+![2012-12-12_0935](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-12_0935.png)
 
 Create a table called CALCULATIONS, and add the following headings in the first column: October, Food, Non Edible, November, Food, Non Edible, and Total  - following the format below:
 
-![2012-12-12_0949](http://www.backwardsteps.com/uploads/2012-12-12_0949.png)
+![2012-12-12_0949](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-12_0949.png)
 
 **(2) Write the SUMIF Function in the CALCULATIONS table**
 
@@ -45,21 +45,21 @@ Meanwhile, the formula for cell C5 - _=SUMIF(G4:G8,"food",I4:I8)_
 Notice how the range only goes from G4:G8, as I only want to total food for October. If wanted to total food for November as well, I'd use the range G4:G13. Now, if the Month column was not sorted, then I'd need to use the SUMIFS function and specify to criteria - e.g., _=SUMIFS(I4:I13,F4:F13,"October",G4:G13,"Food")_
 
 This produces the exact same results - $4.24. The syntax is slightly different in that you specify the sum_range first, and it is mandatory. _ Proper syntax:_ =SUMIFS(sum_range, criteria_range1, criteria1, criteria_range2, criteria2, criteria_range3, criteria3 ...)
- ![2012-12-12_1013](http://www.backwardsteps.com/uploads/2012-12-12_1013.png)
+ ![2012-12-12_1013](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-12_1013.png)
 
 **(3) ** **Automatic Updates**
 
 In order for the calculation table to update when a number is changed or when a new row is added, you need to change the COST TABLE from a range to an actual table. To do that in Excel, click anywhere in the table and press Crtl+T on your keyboard. Make sure you do not include the COST TABLE label in your range selection:
 
-![2012-12-12_1022](http://www.backwardsteps.com/uploads/2012-12-12_1022.png)
+![2012-12-12_1022](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-12_1022.png)
 
 Now, you'll need to rewrite your functions. For example, cell C4 will now be - _=SUMIF(Table1[Month],"October",Table1[Cost])_
 
 See the difference? Instead of the range, there is the table name and header. Update all of the functions to match this syntax:
 
-![2012-12-12_1035](http://www.backwardsteps.com/uploads/2012-12-12_1035.png)
+![2012-12-12_1035](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-12_1035.png)
 
-Now when you make any changes the CALCULATIONS table will update automatically (compare the two Totals columns to see the changes). Click [here](http://www.backwardsteps.com/uploads/sumif-sumifs.mp4) to watch the video.
+Now when you make any changes the CALCULATIONS table will update automatically (compare the two Totals columns to see the changes). Click [here](https://www.backwardsteps.com/uploads/2012-11-30_2319.pngsumif-sumifs.mp4) to watch the video.
 
 **(4) More Examples**
 

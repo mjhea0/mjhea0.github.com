@@ -39,7 +39,7 @@ Essentially, *request.args()* pulls up a user record associated with a specific 
 
 Test this out by adding a new record to the database @ [http://127.0.0.1:8000/form/default/display\_your\_form.html](http://127.0.0.1:8000/form/default/display\_your\_form.html). Make note of the unique id in the *Accepted Fields* section.
 
-![web2py](http://www.backwardsteps.com/uploads/2012-12-08_2055.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-08_2055.png)
 
 Now append that unique id to the end of the base URL - e.g., [http://127.0.0.1:8000/form/default/display\_your\_form/21](http://127.0.0.1:8000/form/default/display_your_form/21) - and the record should appear on a new page, which the user can update.
 
@@ -47,7 +47,7 @@ Now append that unique id to the end of the base URL - e.g., [http://127.0.0.1:8
 
 Please note: you can add *writable=False* or *readable=False* to the fields in the database to prevent a user from either editing or viewing a particular field. In the example below, I added *writable=False* to the *first_name* field.
 
-![web2py](http://www.backwardsteps.com/uploads/2012-12-08_2111.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-08_2111.png)
 
 So, now the user can only edit the last name and email fields.
 
@@ -93,11 +93,11 @@ Take note of lines 5, 6, and 7.
 
 Test this by first trying two different email addresses:
 
-![web2py](http://www.backwardsteps.com/uploads/2012-12-08_2238.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-08_2238.png)
 
 Then test it again with an email you know is already in the database.
 
-![web2py](http://www.backwardsteps.com/uploads/2012-12-08_2240.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-08_2240.png)
 
 Perfect.
 

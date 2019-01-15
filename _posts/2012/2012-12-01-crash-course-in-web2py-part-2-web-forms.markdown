@@ -51,7 +51,7 @@ db.define_table('register',
 
 Create a new HTML file named default/display\_your\_form.html
 
-![web2py](http://www.backwardsteps.com/uploads/2012-11-30_2319.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-11-30_2319.png)
 
 And then add the following code to call the form-
 
@@ -84,7 +84,7 @@ def display_your_form():
 
 Check out your amazing form at [http://127.0.0.1:8000/form/default/display\_your\_form.html](http://127.0.0.1:8000/form/default/display_your_form.html). Now, Go ahead and test the form to make sure it works. If done correctly, after you input the data and hit submit, the values are displayed.
 
-![web2py](http://www.backwardsteps.com/uploads/2012-11-30_2330.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-11-30_2330.png)
 
 ## Recap
 

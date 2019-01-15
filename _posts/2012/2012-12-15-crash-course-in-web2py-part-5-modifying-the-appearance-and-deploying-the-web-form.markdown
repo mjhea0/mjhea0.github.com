@@ -35,7 +35,7 @@ First, go to the web2py layout plugin [page](http://web2py.com/layouts) to find 
 
 Back on the admin page for the form, scroll to the bottom of the page, and upload the .w2p file beneath the Plugins section. Now, click the link for plugin\_layouts and copy the name of the new file including the full path- *plugin_layouts/layouts/KeepitSimple.html*. Now, edit the display\_your\_form.html file and paste the new .html file in the very first line of the code, replacing layout.html-
 
-![web2py](http://www.backwardsteps.com/uploads/2012-12-09_2303.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-09_2303.png)
 
 
 Next, I'm going to remove the *Web Form* title between the h1 tags, remove the line breaks, and clean up the instructions. I'm also going to remove the *Submitted*, *Accepted*, and, *Errors*  sections, as the user does not need to see all that information. So the final code looks like this:
@@ -87,7 +87,7 @@ Again, since web2py uses the Twitter Bootstrap, you can make CSS changes quickly
 
 Now, what you need to do is view the *bootstrap.min.css* file by clicking download and then selecting the file. It should open in your browser. Copy all the text. Return to your web2py admin. Scroll down to the static files, click the CSS folder, edit the boootstrap.min.css file-
 
-![web2py](http://www.backwardsteps.com/uploads/2012-12-10_0824.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-10_0824.png)
 
 -and then delete all the current CSS and paste in the CSS that you copied before from the Spacelab theme. Refresh your form @ [http://127.0.0.1:8000/form/default/display_your_form.html](http://127.0.0.1:8000/form/default/display_your_form.html) and test it again to make sure nothing broke.
 
@@ -107,7 +107,7 @@ I'll go over this quick since I covered this in [detail](http://mherman.org/blog
 1. On the right side of the page, under the *Upload and install packed application section*, upload the w2p file you saved. Enter a name for your app ("form"). Click Install.
 1. Check out your form.
 
-![web2py](http://www.backwardsteps.com/uploads/2012-12-10_0917.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-10_0917.png)
 
 Now just test it out to make sure it all works. Make sure all the errors/validators are working and then add a new record. One thing you do need to change is the default for generic view. You can read more about it [here](http://web2py.com/books/default/chapter/29/10#Generic-views). Open up db.py and scroll down to line 28. You need to remove the if statement, so the line will look just like this:
 
