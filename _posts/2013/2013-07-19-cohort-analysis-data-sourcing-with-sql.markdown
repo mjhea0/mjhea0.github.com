@@ -152,7 +152,7 @@ GROUP BY cohort;
 
 Based on these tables, you can see the total engagement vs. the total users. Right off the bat you can tell that engagement decreases in the latter months? Will this trend continue?
 
-![decrease_in_enagement](http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/f11068c3-7905-4d7b-8c8e-8037a5905c94/00000212.png)
+![decrease_in_enagement](https://content.screencast.com/users/Mike_Extentech/folders/Jing/media/f11068c3-7905-4d7b-8c8e-8037a5905c94/00000212.png)
 
 ### Individual Cohorts
 
@@ -191,7 +191,7 @@ GROUP BY engagement_date;
 +---------------------+--------+
 ```
 
-![feb_cohort_engagement](http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png)
+![feb_cohort_engagement](https://content.screencast.com/users/Mike_Extentech/folders/Jing/media/38334d7b-39ae-4cf2-b943-35c2e03c7ad7/00000213.png)
 
 Continue to add cohorts to learn more about how your users are engaging. See if you can find any trends. Look at comments vs likes vs shares.
 
@@ -217,7 +217,7 @@ SELECT
 +----------------+--------+------------------+
 ```
 
-![twitter](http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png)
+![twitter](https://content.screencast.com/users/Mike_Extentech/folders/Jing/media/9ba9c7d0-e889-4140-9208-3b85f5501244/00000214.png)
 
 You can even zoom in on individual users:
 
@@ -304,7 +304,7 @@ To make such queries easier, make sure you -
 2. Break your query up into smaller, manageable pieces
 3. Conduct quick spot checks beforehand on a portion of the data to ensure that the results you get are correct (yes, add in test driven development for a quick sanity check)
 
-![final](http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png)
+![final](https://content.screencast.com/users/Mike_Extentech/folders/Jing/media/c099e4eb-b533-4b2e-930e-d5753effd3cc/00000216.png)
 
 Now, even though this is quite difficult, try to come up with the same results in Excel. It's much harder. Once you become comfortable with SQL - and can break each query down into small bits - it's actual much easier with SQL.
 

@@ -29,7 +29,7 @@ Real quick, web2py utilizes the Model View Control (MVC) architecture:
 
 Wikipedia has a great diagram of how each part works together-
 
-![mvc](http://upload.wikimedia.org/wikipedia/commons/f/fd/MVC-Process.png)
+![mvc](https://upload.wikimedia.org/wikipedia/commons/f/fd/MVC-Process.png)
 
 web2py essentially makes it easier for developers to design each part and create the overall workflow to ensure that each part works together. I hope that's clear. If not, please comment, and I'll go a little more in depth. It's important to understand this, as we will be utilizing this form of development from this point on.
 

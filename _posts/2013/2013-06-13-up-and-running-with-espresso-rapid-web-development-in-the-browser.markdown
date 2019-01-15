@@ -166,6 +166,6 @@ Then add the following code to *list.erb*:
 
 Then check out your live app at [http://localhost:5252/list](http://localhost:5252/list)
 
-![image](http://content.screencast.com/users/Mike_Extentech/folders/Jing/media/45d09f61-b994-4ee4-a8ac-6034723747ff/00000164.png)
+![image](https://content.screencast.com/users/Mike_Extentech/folders/Jing/media/45d09f61-b994-4ee4-a8ac-6034723747ff/00000164.png)
 
 Cheers!
