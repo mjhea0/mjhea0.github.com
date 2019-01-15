@@ -81,7 +81,7 @@ This adds an If Statement to display text based on whether the user submits your
 2.  Enter your first name, last name, and email.
 3.  Your output should look similar to this-
 
-![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-05_0954.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-12-05_0954.png)
 
 As long as no fields are blank, you won't see any errors - and the data will be added to the database. Notice how you can now see the unique identifier. The message "Thanks! The form has been submitted." is visible in the top right corner, as well.
 
@@ -93,7 +93,7 @@ Got it?
 
 See what happens when you enter an error.
 
-![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-05_1001.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-12-05_1001.png)
 
 So when Han forgets his last name and just decides to leave it blank, the field values that meet the requirement are still passed. But they are not added to the database, since there is an error. And you should see an error message in the top right corner. As soon as he remembers, he can go back and correct. Poor Han.
 
@@ -118,7 +118,7 @@ db.define_table('register',
 
 Now watch happens when you switch the last name and email address.
 
-![web2py](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-12-05_1007.png)
+![web2py](https://www.backwardsteps.com/uploads/2012-12-05_1007.png)
 
 Good. Now he just needs to enter the correct value in the correct fields.
 

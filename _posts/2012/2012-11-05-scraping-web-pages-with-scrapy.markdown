@@ -128,7 +128,7 @@ $ scrapy crawl craig -o items.csv -t csv
 
 You should now have a CSV file in your directory called items.csv full of data:
 
-![csv](https://www.backwardsteps.com/uploads/2012-11-30_2319.png2012-11-05_1411.png)
+![csv](https://www.backwardsteps.com/uploads/2012-11-05_1411.png)
 
 *Although this is relatively simple tutorial, there are still powerful things you can do by just customizing this basic script. Just remember to not overload the server on the website you are crawling. Scrapy allows you to set [delays](https://scrapy.readthedocs.org/en/0.16/topics/settings.html) to throttle the crawling speed.*
 
