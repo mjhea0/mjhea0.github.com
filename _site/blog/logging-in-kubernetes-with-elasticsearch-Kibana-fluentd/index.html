@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Logging in Kubernetes with Elasticsearch, Kibana, and Fluentd</title>
+  <meta name="description" content="This tutorial looks at how to handle logging in Kubernetes with Elasticsearch, Kibana, and Fluentd.">
+  
+    
+    <meta name="keywords" content="kubernetes, docker">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://mherman.org/blog/logging-in-kubernetes-with-elasticsearch-Kibana-fluentd/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="https://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Logging in Kubernetes with Elasticsearch, Kibana, and Fluentd">
+  <meta name="twitter:description" content="This tutorial looks at how to handle logging in Kubernetes with Elasticsearch, Kibana, and Fluentd.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Logging in Kubernetes with Elasticsearch, Kibana, and Fluentd</h1>
+    
+    <p class="post-meta"><time datetime="2019-01-20T00:00:00-07:00" itemprop="datePublished">Jan 20, 2019</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/kubernetes/">kubernetes</a>,
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/docker/">docker</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This tutorial looks at how to spin up a single node Elasticsearch cluster along with Kibana and Fluentd on Kubernetes.</p>
+
+<p><em>Dependencies</em>:</p>
+
+<ol>
+  <li>Docker v18.09.1</li>
+  <li>Kubernetes v1.13.2</li>
+  <li>Elasticsearch v6.5.4</li>
+  <li>Kibana v6.5.4</li>
+  <li>Fluentd v1.3.2</li>
+</ol>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#minikube" id="markdown-toc-minikube">Minikube</a></li>
+  <li><a href="#elastic" id="markdown-toc-elastic">Elastic</a></li>
+  <li><a href="#kibana" id="markdown-toc-kibana">Kibana</a></li>
+  <li><a href="#fluentd" id="markdown-toc-fluentd">Fluentd</a></li>
+  <li><a href="#sanity-check" id="markdown-toc-sanity-check">Sanity Check</a></li>
+</ul>
+
+<h2 id="minikube">Minikube</h2>
+
+<p><a href="https://kubernetes.io/docs/setup/minikube/">Minikube</a> is a tool that makes it easy for developers to use and run a “toy” Kubernetes cluster locally. It’s a great way to quickly get a cluster up and running so you can start interacting with the Kubernetes API.</p>
+
+<blockquote>
+  <p>If you already have a Kubernetes cluster up and running that you’d like to use, you can skip this section.</p>
+</blockquote>
+
+<p>Follow the official <a href="https://kubernetes.io/docs/setup/minikube/#quickstart">quickstart guide</a> to get Minikube installed along with:</p>
+
+<ol>
+  <li>A <a href="https://kubernetes.io/docs/tasks/tools/install-minikube/#install-a-hypervisor">Hypervisor</a> (like <a href="https://www.virtualbox.org/wiki/Downloads">VirtualBox</a> or <a href="https://github.com/moby/hyperkit">HyperKit</a>) to manage virtual machines</li>
+  <li><a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/">Kubectl</a> to deploy and manage apps on Kubernetes</li>
+</ol>
+
+<p>If you’re on a Mac, we recommend installing Kubectl, Hyperkit, and Minikube with <a href="https://brew.sh/">Homebrew</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>brew update
+<span class="nv">$ </span>brew install kubectl
+<span class="nv">$ </span>brew install docker-machine-driver-hyperkit
+<span class="nv">$ </span>brew cask install minikube
+</code></pre></div></div>
+
+<p>By default, the Minikube VM is configured to use 1GB of memory and 2 CPU cores. This is not sufficient for Elasticsearch, so be sure to increase the memory in your Docker <a href="https://docs.docker.com/docker-for-mac/#advanced">client</a> (for HyperKit) or directly in VirtualBox. Then, when you start Minikube, pass the memory and CPU options to it:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>minikube start <span class="nt">--vm-driver</span><span class="o">=</span>hyperkit <span class="nt">--memory</span> 8192 <span class="nt">--cpus</span> 4
+
+or
+
+<span class="nv">$ </span>minikube start <span class="nt">--memory</span> 8192 <span class="nt">--cpus</span> 4
+</code></pre></div></div>
+
+<p>Once up, make sure you can view the dashboard:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>minikube dashboard
+</code></pre></div></div>
+
+<p>Then, create a new namespace:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl create namespace logging
+
+namespace/logging created
+</code></pre></div></div>
+
+<p>If you run into problems with Minikube, it’s often best to remove it completely and start over.</p>
+
+<p>For example:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>minikube stop<span class="p">;</span> minikube delete
+<span class="nv">$ </span>rm /usr/local/bin/minikube
+<span class="nv">$ </span>rm <span class="nt">-rf</span> ~/.minikube
+<span class="c"># re-download minikube</span>
+<span class="nv">$ </span>minikube start
+</code></pre></div></div>
+
+<h2 id="elastic">Elastic</h2>
+
+<p>We’ll start with <a href="https://www.elastic.co/products/elasticsearch">Elasticsearch</a>.</p>
+
+<blockquote>
+  <p>You can find the code in the <a href="https://github.com/mjhea0/efk-kubernetes">efk-kubernetes</a> repo on GitHub.</p>
+</blockquote>
+
+<p><em>kubernetes/elastic.yaml</em>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Deployment</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">elasticsearch</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">matchLabels</span><span class="pi">:</span>
+      <span class="na">component</span><span class="pi">:</span> <span class="s">elasticsearch</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">component</span><span class="pi">:</span> <span class="s">elasticsearch</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">containers</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">elasticsearch</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">docker.elastic.co/elasticsearch/elasticsearch:6.5.4</span>
+        <span class="na">env</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">discovery.type</span>
+          <span class="na">value</span><span class="pi">:</span> <span class="s">single-node</span>
+        <span class="na">ports</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">containerPort</span><span class="pi">:</span> <span class="s">9200</span>
+          <span class="na">name</span><span class="pi">:</span> <span class="s">http</span>
+          <span class="na">protocol</span><span class="pi">:</span> <span class="s">TCP</span>
+        <span class="na">resources</span><span class="pi">:</span>
+          <span class="na">limits</span><span class="pi">:</span>
+            <span class="na">cpu</span><span class="pi">:</span> <span class="s">500m</span>
+            <span class="na">memory</span><span class="pi">:</span> <span class="s">4Gi</span>
+          <span class="na">requests</span><span class="pi">:</span>
+            <span class="na">cpu</span><span class="pi">:</span> <span class="s">500m</span>
+            <span class="na">memory</span><span class="pi">:</span> <span class="s">4Gi</span>
+
+<span class="nn">---</span>
+
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">elasticsearch</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">service</span><span class="pi">:</span> <span class="s">elasticsearch</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">type</span><span class="pi">:</span> <span class="s">NodePort</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">component</span><span class="pi">:</span> <span class="s">elasticsearch</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="s">9200</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="s">9200</span>
+</code></pre></div></div>
+
+<p>So, this will spin up a <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html#single-node-discovery">single node</a> Elasticsearch pod in the cluster along with a <a href="https://kubernetes.io/docs/concepts/services-networking/service/#nodeport">NodePort</a> service to expose the pod to the outside world.</p>
+
+<p>Create:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl create <span class="nt">-f</span> kubernetes/elastic.yaml <span class="nt">-n</span> logging
+
+deployment.extensions/elasticsearch created
+service/elasticsearch created
+</code></pre></div></div>
+
+<p>Verify that both the pod and service were created:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> logging
+
+NAME                          READY   STATUS    RESTARTS   AGE
+elasticsearch-bb9f879-d9kmg   1/1     Running   0          75s
+
+
+<span class="nv">$ </span>kubectl get service <span class="nt">-n</span> logging
+
+NAME            TYPE       CLUSTER-IP       EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>          AGE
+elasticsearch   NodePort   10.102.149.212   &lt;none&gt;        9200:30531/TCP   86s
+</code></pre></div></div>
+
+<p>Take note of the exposed port–e.g, <code class="highlighter-rouge">30531</code>. Then, grab the Minikube IP and make sure you can cURL that pod:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="k">$(</span>minikube ip<span class="k">)</span>:30531
+</code></pre></div></div>
+
+<p>You should see something similar to:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">{</span>
+  <span class="s2">"name"</span> : <span class="s2">"9b5Whvv"</span>,
+  <span class="s2">"cluster_name"</span> : <span class="s2">"docker-cluster"</span>,
+  <span class="s2">"cluster_uuid"</span> : <span class="s2">"-qMwo61ATv2KmbZsf2_Tpw"</span>,
+  <span class="s2">"version"</span> : <span class="o">{</span>
+    <span class="s2">"number"</span> : <span class="s2">"6.5.4"</span>,
+    <span class="s2">"build_flavor"</span> : <span class="s2">"default"</span>,
+    <span class="s2">"build_type"</span> : <span class="s2">"tar"</span>,
+    <span class="s2">"build_hash"</span> : <span class="s2">"d2ef93d"</span>,
+    <span class="s2">"build_date"</span> : <span class="s2">"2018-12-17T21:17:40.758843Z"</span>,
+    <span class="s2">"build_snapshot"</span> : <span class="nb">false</span>,
+    <span class="s2">"lucene_version"</span> : <span class="s2">"7.5.0"</span>,
+    <span class="s2">"minimum_wire_compatibility_version"</span> : <span class="s2">"5.6.0"</span>,
+    <span class="s2">"minimum_index_compatibility_version"</span> : <span class="s2">"5.0.0"</span>
+  <span class="o">}</span>,
+  <span class="s2">"tagline"</span> : <span class="s2">"You Know, for Search"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="kibana">Kibana</h2>
+
+<p>Next, let’s get <a href="https://www.elastic.co/products/kibana">Kibana</a> up and running.</p>
+
+<p><em>kubernetes/kibana.yaml</em>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Deployment</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kibana</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">matchLabels</span><span class="pi">:</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">kibana</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">run</span><span class="pi">:</span> <span class="s">kibana</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">containers</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">kibana</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">docker.elastic.co/kibana/kibana:6.5.4</span>
+        <span class="na">env</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ELASTICSEARCH_URL</span>
+          <span class="na">value</span><span class="pi">:</span> <span class="s">http://elasticsearch:9200</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">XPACK_SECURITY_ENABLED</span>
+          <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+        <span class="na">ports</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">containerPort</span><span class="pi">:</span> <span class="s">5601</span>
+          <span class="na">name</span><span class="pi">:</span> <span class="s">http</span>
+          <span class="na">protocol</span><span class="pi">:</span> <span class="s">TCP</span>
+
+<span class="nn">---</span>
+
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kibana</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">service</span><span class="pi">:</span> <span class="s">kibana</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">type</span><span class="pi">:</span> <span class="s">NodePort</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">run</span><span class="pi">:</span> <span class="s">kibana</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="s">5601</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="s">5601</span>
+</code></pre></div></div>
+
+<p>Like before, this deployment will spin up a single Kibana pod that gets exposed via a NodePort service. Take note of the two environment variables:</p>
+
+<ol>
+  <li><code class="highlighter-rouge">ELASTICSEARCH_URL</code> - URL of the Elasticsearch instance</li>
+  <li><code class="highlighter-rouge">XPACK_SECURITY_ENABLED</code> - enables <a href="https://www.elastic.co/guide/en/x-pack/current/elasticsearch-security.html">X-Pack security</a></li>
+</ol>
+
+<p>Refer to the <a href="https://www.elastic.co/guide/en/kibana/current/docker.html">Running Kibana on Docker</a> guide for more info on these variables.</p>
+
+<p>Create:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl create <span class="nt">-f</span> kubernetes/kibana.yaml <span class="nt">-n</span> logging
+</code></pre></div></div>
+
+<p>Verify:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> logging
+
+NAME                          READY   STATUS    RESTARTS   AGE
+elasticsearch-bb9f879-d9kmg   1/1     Running   0          17m
+kibana-7f6686674c-mjlb2       1/1     Running   0          60s
+
+
+<span class="nv">$ </span>kubectl get service <span class="nt">-n</span> logging
+
+NAME            TYPE       CLUSTER-IP       EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>          AGE
+elasticsearch   NodePort   10.102.149.212   &lt;none&gt;        9200:30531/TCP   17m
+kibana          NodePort   10.106.226.34    &lt;none&gt;        5601:32683/TCP   74s
+</code></pre></div></div>
+
+<p>Test this in your browser at <a href="http://MINIKUBE_IP:KIBANA_EXPOSED_PORT">http://MINIKUBE_IP:KIBANA_EXPOSED_PORT</a>.</p>
+
+<p><img src="/assets/img/blog/kibana/kibana.png" alt="kibana" /></p>
+
+<h2 id="fluentd">Fluentd</h2>
+
+<p>In this example, we’ll deploy a Fluentd logging agent to each node in the Kubernetes cluster, which will collect each container’s log files running on that node. We can use a <a href="https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/">DaemonSet</a> for this. First, we need to configure RBAC (role-based access control) permissions so that Fluentd can access the appropriate components.</p>
+
+<p><em>kubernetes/fluentd-rbac.yaml</em>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+
+<span class="nn">---</span>
+
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s2">"</span><span class="s">"</span>
+  <span class="na">resources</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">pods</span>
+  <span class="pi">-</span> <span class="s">namespaces</span>
+  <span class="na">verbs</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">get</span>
+  <span class="pi">-</span> <span class="s">list</span>
+  <span class="pi">-</span> <span class="s">watch</span>
+
+<span class="nn">---</span>
+
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRoleBinding</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1beta1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+<span class="na">roleRef</span><span class="pi">:</span>
+  <span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+  <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io</span>
+<span class="na">subjects</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+</code></pre></div></div>
+
+<p>In short, this will create a ClusterRole which grants get, list, and watch permissions on pods and namespace objects. The ClusterRoleBinding then binds the ClusterRole to the ServiceAccount within the <code class="highlighter-rouge">kube-system</code> namespace. Refer to the <a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">Using RBAC Authorization</a> guide to learn more about RBAC and ClusterRoles.</p>
+
+<p>Create:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl create <span class="nt">-f</span> kubernetes/fluentd-rbac.yaml
+</code></pre></div></div>
+
+<p>Now, we can create the DaemonSet.</p>
+
+<p><em>kubernetes/fluentd-daemonset.yaml</em>:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">DaemonSet</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">fluentd-logging</span>
+    <span class="na">version</span><span class="pi">:</span> <span class="s">v1</span>
+    <span class="s">kubernetes.io/cluster-service</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">k8s-app</span><span class="pi">:</span> <span class="s">fluentd-logging</span>
+        <span class="na">version</span><span class="pi">:</span> <span class="s">v1</span>
+        <span class="s">kubernetes.io/cluster-service</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">serviceAccount</span><span class="pi">:</span> <span class="s">fluentd</span>
+      <span class="na">serviceAccountName</span><span class="pi">:</span> <span class="s">fluentd</span>
+      <span class="na">tolerations</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">key</span><span class="pi">:</span> <span class="s">node-role.kubernetes.io/master</span>
+        <span class="na">effect</span><span class="pi">:</span> <span class="s">NoSchedule</span>
+      <span class="na">containers</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">fluent/fluentd-kubernetes-daemonset:v1.3-debian-elasticsearch</span>
+        <span class="na">env</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span>  <span class="s">FLUENT_ELASTICSEARCH_HOST</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">elasticsearch.logging"</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span>  <span class="s">FLUENT_ELASTICSEARCH_PORT</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">9200"</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">FLUENT_ELASTICSEARCH_SCHEME</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">http"</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">FLUENT_UID</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">0"</span>
+        <span class="na">resources</span><span class="pi">:</span>
+          <span class="na">limits</span><span class="pi">:</span>
+            <span class="na">memory</span><span class="pi">:</span> <span class="s">200Mi</span>
+          <span class="na">requests</span><span class="pi">:</span>
+            <span class="na">cpu</span><span class="pi">:</span> <span class="s">100m</span>
+            <span class="na">memory</span><span class="pi">:</span> <span class="s">200Mi</span>
+        <span class="na">volumeMounts</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">varlog</span>
+          <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/var/log</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">varlibdockercontainers</span>
+          <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/var/lib/docker/containers</span>
+          <span class="na">readOnly</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="na">terminationGracePeriodSeconds</span><span class="pi">:</span> <span class="s">30</span>
+      <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">varlog</span>
+        <span class="na">hostPath</span><span class="pi">:</span>
+          <span class="na">path</span><span class="pi">:</span> <span class="s">/var/log</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">varlibdockercontainers</span>
+        <span class="na">hostPath</span><span class="pi">:</span>
+          <span class="na">path</span><span class="pi">:</span> <span class="s">/var/lib/docker/containers</span>
+</code></pre></div></div>
+
+<p>Be sure to review <a href="https://docs.fluentd.org/v0.12/articles/kubernetes-fluentd">Kubernetes Logging with Fluentd</a> along with the <a href="https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml">sample Daemonset</a>. Make sure <code class="highlighter-rouge">FLUENT_ELASTICSEARCH_HOST</code> aligns with the <code class="highlighter-rouge">SERVICE_NAME.NAMESPACE</code> of Elasticsearch within your cluster.</p>
+
+<p>Deploy:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl create <span class="nt">-f</span> kubernetes/fluentd-daemonset.yaml
+</code></pre></div></div>
+
+<p>If you’re running Kubernetes as a single node with Minikube, this will create a single Fluentd pod in the <code class="highlighter-rouge">kube-system</code>  namespace.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get pods <span class="nt">-n</span> kube-system
+
+coredns-576cbf47c7-mhxbp                1/1     Running   0          120m
+coredns-576cbf47c7-vx7m7                1/1     Running   0          120m
+etcd-minikube                           1/1     Running   0          119m
+fluentd-kxc46                           1/1     Running   0          89s
+kube-addon-manager-minikube             1/1     Running   0          119m
+kube-apiserver-minikube                 1/1     Running   0          119m
+kube-controller-manager-minikube        1/1     Running   0          119m
+kube-proxy-m4vzt                        1/1     Running   0          120m
+kube-scheduler-minikube                 1/1     Running   0          119m
+kubernetes-dashboard-5bff5f8fb8-d64qs   1/1     Running   0          120m
+storage-provisioner                     1/1     Running   0          120m
+</code></pre></div></div>
+
+<p>Take note of the logs:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl logs fluentd-kxc46 <span class="nt">-n</span> kube-system
+</code></pre></div></div>
+
+<p>You should see that Fluentd connect to Elasticsearch within the logs:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Connection opened to Elasticsearch cluster <span class="o">=&gt;</span>
+  <span class="o">{</span>:host<span class="o">=&gt;</span><span class="s2">"elasticsearch.logging"</span>, :port<span class="o">=&gt;</span>9200, :scheme<span class="o">=&gt;</span><span class="s2">"http"</span><span class="o">}</span>
+</code></pre></div></div>
+
+<p>To see the logs collected by Fluentd in Kibana, click “Management” and then select “Index Patterns” under “Kibana”.</p>
+
+<p><img src="/assets/img/blog/kibana/kibana2.png" alt="kibana" /></p>
+
+<p>Click the “Create index pattern” button. Select the new Logstash index that is generated by the Fluentd DaemonSet. Click “Next step”.</p>
+
+<p><img src="/assets/img/blog/kibana/kibana3.png" alt="kibana" /></p>
+
+<p>Set the “Time Filter field name” to “@timestamp”. Then, click “Create index pattern”.</p>
+
+<p><img src="/assets/img/blog/kibana/kibana4.png" alt="kibana" /></p>
+
+<p>Click “Discover” to view your application logs.</p>
+
+<h2 id="sanity-check">Sanity Check</h2>
+
+<p>Let’s spin up a quick Node.js app to test.</p>
+
+<p>Point your local Docker client at the Minikube Docker daemon, and then build the image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">eval</span> <span class="k">$(</span>minikube docker-env<span class="k">)</span>
+<span class="nv">$ </span>docker build <span class="nt">-t</span> fluentd-node-sample:latest <span class="nt">-f</span> sample-app/Dockerfile sample-app
+</code></pre></div></div>
+
+<p>Create the deployment:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl create <span class="nt">-f</span> kubernetes/node-deployment.yaml
+</code></pre></div></div>
+
+<p>Take a quick look at the app in <em>sample-app/index.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">SimpleNodeLogger</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'simple-node-logger'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">opts</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">timestampFormat</span><span class="p">:</span><span class="s1">'YYYY-MM-DD HH:mm:ss.SSS'</span>
+<span class="p">};</span>
+<span class="kd">const</span> <span class="nx">log</span> <span class="o">=</span> <span class="nx">SimpleNodeLogger</span><span class="p">.</span><span class="nx">createSimpleLogger</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+
+<span class="p">(</span><span class="kd">function</span> <span class="nx">repeatMe</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">setTimeout</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">'it works'</span><span class="p">);</span>
+    <span class="nx">repeatMe</span><span class="p">();</span>
+  <span class="p">},</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="p">})();</span>
+</code></pre></div></div>
+
+<p>So, it just logs <code class="highlighter-rouge">'it works'</code> to stdout every second.</p>
+
+<p>Back in “Discover” on the Kibana dashboard, add the following filter:</p>
+
+<ol>
+  <li>Field: <code class="highlighter-rouge">kubernetes.pod_name</code></li>
+  <li>Operator: <code class="highlighter-rouge">is</code></li>
+  <li>Value: <code class="highlighter-rouge">node</code></li>
+</ol>
+
+<p><img src="/assets/img/blog/kibana/kibana5.png" alt="kibana" /></p>
+
+<p>Now, you should be able to see the <code class="highlighter-rouge">it works</code> log in the stream.</p>
+
+<p><img src="/assets/img/blog/kibana/kibana6.png" alt="kibana" /></p>
+
+<hr />
+
+<p>Again, you can find the code in the <a href="https://github.com/mjhea0/efk-kubernetes">efk-kubernetes</a> repo on GitHub.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'https://mherman.org/blog/logging-in-kubernetes-with-elasticsearch-Kibana-fluentd/';
+    this.page.identifier = 'https://mherman.org/blog/logging-in-kubernetes-with-elasticsearch-Kibana-fluentd/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2019 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://www.linkedin.com/in/mjhea0/"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>
