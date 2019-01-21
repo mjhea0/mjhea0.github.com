@@ -270,7 +270,7 @@ elasticsearch   NodePort   10.102.149.212   <none>        9200:30531/TCP   17m
 kibana          NodePort   10.106.226.34    <none>        5601:32683/TCP   74s
 ```
 
-Test this in your browser at [http://MINIKUBE_IP:KIBANA_EXPOSED_PORT](http://MINIKUBE_IP:KIBANA_EXPOSED_PORT).
+Test this in your browser at `http://MINIKUBE_IP:KIBANA_EXPOSED_PORT`.
 
 ![kibana](/assets/img/blog/kibana/kibana.png)
 
