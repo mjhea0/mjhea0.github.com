@@ -21,10 +21,9 @@ You can view my full resume in JSON @ [http://mherman.org/herman-resume.json](ht
 
 ### Major Projects
 
-1. [Real Python](http://www.realpython.com)
 1. [Microservices with Docker, Flask, and React](http://testdriven.io/)
+1. [Real Python](http://www.realpython.com)
 1. [Starter Financial Model](http://www.starterfinancialmodel.com/)
-1. [GoScrape](http://www.goscrape.com)
 1. [DiscoverFlask](http://discoverflask.com)
 1. KickStarter Projects
     - [Real Python](https://www.kickstarter.com/projects/fletcher/practical-python-learn-programming-for-the-real-wo)
