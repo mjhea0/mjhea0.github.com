@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| January 29, 2019   | [Cypress'ing Your Way to a Better Night's Sleep][52] | [DenverScript][53] |
 | November 28, 2018   | [Running Vault + Consul on Kubernetes][51] | [Denver Microservices][50] |
 | November 6, 2018   | [Kubernetes for Application Developers][40] | [NodeJS Denver/Boulder Meetup][6] |
 | September 12, 2018   | [Scaling Flask with Kubernetes][39] | [Boulder Python Meetup][11] |
@@ -87,3 +88,5 @@ Here's a list of talks and trainings I've given over the years...
 [40]: https://mherman.org/presentations/node-kubernetes
 [50]: https://www.meetup.com/DenverMicroservices/
 [51]: https://mherman.org/presentations/vault-kubernetes
+[52]: https://mherman.org/presentations/cypress
+[53]: https://www.meetup.com/DenverScript
