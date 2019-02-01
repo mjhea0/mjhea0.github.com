@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Node, gRPC, and Postgres</title>
+  <meta name="description" content="This tutorial looks at how to implement an API with Node, gRPC, and Postgres.">
+  
+    
+    <meta name="keywords" content="grpc, node">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://mherman.org/blog/node-grpc-postgres/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="https://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Node, gRPC, and Postgres">
+  <meta name="twitter:description" content="This tutorial looks at how to implement an API with Node, gRPC, and Postgres.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Node, gRPC, and Postgres</h1>
+    
+    <p class="post-meta"><time datetime="2019-02-01T00:00:00-07:00" itemprop="datePublished">Feb 1, 2019</time> • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/grpc/">grpc</a>,
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/node/">node</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p><a href="https://grpc.io/">gRPC</a> is an open source <a href="https://en.wikipedia.org/wiki/Remote_procedure_call">remote procedure call</a> (RPC) framework developed by Google. It’s built on top of <a href="https://en.wikipedia.org/wiki/HTTP/2">HTTP/2</a>, and it uses <a href="https://developers.google.com/protocol-buffers/">Protocol Buffers</a> as the underlying data serialization format.</p>
+
+<p>This tutorial looks at how to implement an API with Node, gRPC, and Postgres.</p>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#learning-objectives" id="markdown-toc-learning-objectives">Learning Objectives</a></li>
+  <li><a href="#grpc" id="markdown-toc-grpc">gRPC</a></li>
+  <li><a href="#project-setup" id="markdown-toc-project-setup">Project Setup</a></li>
+  <li><a href="#grpc-service" id="markdown-toc-grpc-service">gRPC Service</a></li>
+  <li><a href="#server" id="markdown-toc-server">Server</a></li>
+  <li><a href="#client" id="markdown-toc-client">Client</a></li>
+  <li><a href="#crud" id="markdown-toc-crud">CRUD</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="learning-objectives">Learning Objectives</h2>
+
+<ol>
+  <li>Explain what gRPC is and how it compares to REST</li>
+  <li>Define the service definition and payload message structure using a Protocol Buffer</li>
+  <li>Describe the four types of methods–unary, client streaming, server streaming, and bidirectional streaming</li>
+  <li>Create a gRPC server and client in Node</li>
+  <li>Invoke the gRPC server from the client via the gRPC stubs</li>
+  <li>Describe the static and dynamic approaches to Protocol Buffers in Node</li>
+</ol>
+
+<h2 id="grpc">gRPC</h2>
+
+<p>As mentioned, gRPC is an RPC framework that leverages HTTP/2 and Protocol Buffers, making it a fast, secure, and reliable communication protocol for microservices.</p>
+
+<blockquote>
+  <p>New to gRPC? Start with the official <a href="https://grpc.io/docs/">What is gRPC?</a> guide.</p>
+</blockquote>
+
+<p><em>So, how does gRPC compare to REST?</em></p>
+
+<p>We’ll use the most common implementation of REST for this comparison: An API that uses the HTTP verbs–GET, POST, PUT, DELETE–to accept and return JSON.</p>
+
+<ol>
+  <li><em>Speed</em>: HTTP/2 supports bidirectional streams (and flow control), so once a connection is established the client or server can push and pull data. Check out this <a href="http://www.http2demo.io/">demo</a> of HTTP/1.1 vs. HTTP/2 for a performance comparison. Also, you can read all about the features in HTTP/2 <a href="https://http2.github.io/faq/">here</a>.</li>
+  <li><em>Messages</em> (instead of resources and verbs): With gRPC you are no longer constrained to a limited set of methods. You can create your own methods, like <code class="highlighter-rouge">getCustomerList</code> or <code class="highlighter-rouge">emailCustomerOrderReceipt</code>, that can be leveraged by simply calling the method. And, from a developer’s perspective, calling a gRPC method looks and feels just like calling any other native local method–it’s just making a network call beneath the scenes.</li>
+  <li><em>Protocol Buffers</em>: gRPC uses Protocol Buffers (strongly typed, binary-based) rather than JSON (loosely typed, text-based), which is much more efficient and introduces type safety. The service definitions themselves are defined declaratively and are used to generate client libraries. Further, Protocol Buffers, when compared to JSON, can decrease the size of the payloads being transmitted, which, at scale, can reduce bandwidth cost.</li>
+</ol>
+
+<blockquote>
+  <p>For more on gRPC vs REST, review the <a href="https://code.tutsplus.com/tutorials/rest-vs-grpc-battle-of-the-apis--cms-30711">REST vs. gRPC: Battle of the APIs</a> blog post.</p>
+</blockquote>
+
+<h2 id="project-setup">Project Setup</h2>
+
+<p>Create a new directory to hold the project:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mkdir node-grpc-crud
+<span class="nv">$ </span><span class="nb">cd </span>node-grpc-crud
+</code></pre></div></div>
+
+<blockquote>
+  <p>If you don’t want to code along, you can find the <a href="https://github.com/mjhea0/node-grpc-crud">final code on GitHub</a>.</p>
+</blockquote>
+
+<p>Then, add the following files and folders:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── client
+│   ├── app.js
+│   └── package.json
+├── protos
+└── server
+    ├── index.js
+    └── package.json
+</code></pre></div></div>
+
+<p>Finally, spin up <a href="https://www.postgresql.org/">PostgreSQL</a> on port 5432 and create a new database called <code class="highlighter-rouge">grpc_products</code>.</p>
+
+<h2 id="grpc-service">gRPC Service</h2>
+
+<p>Throughout this tutorial, you’ll be building a product API backed by gRPC that handles the basic CRUD functionality.</p>
+
+<p>Let’s start by <a href="https://developers.google.com/protocol-buffers/docs/proto3#services">implementing a gRPC Service</a>, which is defined by the methods it exposes along with it’s associated parameters and return message types.</p>
+
+<p>Add a new file to the “protos” folder called <em>product.proto</em> to hold the gRPC service definition and message type definitions:</p>
+
+<div class="language-protobuf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">syntax</span> <span class="o">=</span> <span class="s">"proto3"</span><span class="p">;</span>
+<span class="kn">package</span> <span class="nn">product</span><span class="p">;</span>
+
+<span class="c1">// service definition
+</span>
+<span class="kd">service</span> <span class="n">ProductService</span> <span class="p">{</span>
+  <span class="k">rpc</span> <span class="n">listProducts</span><span class="p">(</span><span class="n">Empty</span><span class="p">)</span> <span class="k">returns</span> <span class="p">(</span><span class="n">ProductList</span><span class="p">)</span> <span class="p">{}</span>
+  <span class="k">rpc</span> <span class="n">readProduct</span><span class="p">(</span><span class="n">ProductId</span><span class="p">)</span> <span class="k">returns</span> <span class="p">(</span><span class="n">Product</span><span class="p">)</span> <span class="p">{}</span>
+  <span class="k">rpc</span> <span class="n">createProduct</span><span class="p">(</span><span class="n">newProduct</span><span class="p">)</span> <span class="k">returns</span> <span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="p">{}</span>
+  <span class="k">rpc</span> <span class="n">updateProduct</span><span class="p">(</span><span class="n">Product</span><span class="p">)</span> <span class="k">returns</span> <span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="p">{}</span>
+  <span class="k">rpc</span> <span class="n">deleteProduct</span><span class="p">(</span><span class="n">ProductId</span><span class="p">)</span> <span class="k">returns</span> <span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="p">{}</span>
+<span class="p">}</span>
+
+<span class="c1">// message type definitions
+</span>
+<span class="kd">message</span> <span class="nc">Empty</span> <span class="p">{}</span>
+
+<span class="kd">message</span> <span class="nc">ProductList</span> <span class="p">{</span>
+  <span class="k">repeated</span> <span class="n">Product</span> <span class="na">products</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">ProductId</span> <span class="p">{</span>
+  <span class="kt">int32</span> <span class="na">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Product</span> <span class="p">{</span>
+  <span class="kt">int32</span> <span class="na">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="kt">string</span> <span class="na">price</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">newProduct</span> <span class="p">{</span>
+  <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="kt">string</span> <span class="na">price</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">result</span> <span class="p">{</span>
+  <span class="kt">string</span> <span class="na">status</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>Using VSCode? Check out the <a href="https://marketplace.visualstudio.com/items?itemName=zxh404.vscode-proto3">proto3 vscode extension</a>.</p>
+</blockquote>
+
+<p>First, we used the <a href="https://developers.google.com/protocol-buffers/docs/proto3">proto3</a> version of the Protocol Buffer language:</p>
+
+<div class="language-protobuf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">syntax</span> <span class="o">=</span> <span class="s">"proto3"</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Then, we defined a <a href="https://developers.google.com/protocol-buffers/docs/proto3#packages">package specifier</a>:</p>
+
+<div class="language-protobuf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">product</span><span class="p">;</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>The package specifier is optional but it’s generally a good idea to use to avoid name clashes. Review the <a href="https://developers.google.com/protocol-buffers/docs/reference/javascript-generated#package">JavaScript Generated Code</a> reference guide for more info.</p>
+</blockquote>
+
+<p>Next, we defined five RPC methods that align to the basic CRUD operations:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>CRUD</th>
+      <th>gRPC method</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Read</td>
+      <td>listProducts</td>
+    </tr>
+    <tr>
+      <td>Create</td>
+      <td>createProduct</td>
+    </tr>
+    <tr>
+      <td>Read</td>
+      <td>readProduct</td>
+    </tr>
+    <tr>
+      <td>Update</td>
+      <td>updateProduct</td>
+    </tr>
+    <tr>
+      <td>Delete</td>
+      <td>deleteProduct</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>There are <a href="https://grpc.io/docs/guides/concepts.html#rpc-life-cycle">four types of methods</a> in gRPC-land:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Unary</td>
+      <td>client sends a single request and gets a single response</td>
+      <td><code class="highlighter-rouge">rpc getData(req) returns (rsp) {}</code></td>
+    </tr>
+    <tr>
+      <td>Server streaming</td>
+      <td>client sends a single request and gets back a stream</td>
+      <td><code class="highlighter-rouge">rpc getData(req) returns (stream rsp) {}</code></td>
+    </tr>
+    <tr>
+      <td>Client streaming</td>
+      <td>client sends stream and gets back a single response</td>
+      <td><code class="highlighter-rouge">rpc getData(stream req) returns (rsp) {}</code></td>
+    </tr>
+    <tr>
+      <td>Bidirectional streaming</td>
+      <td>both the client and server send and receive streams</td>
+      <td><code class="highlighter-rouge">rpc getData(stream req) returns (stream rsp) {}</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Our example uses the Unary approach.</p>
+
+<p>The first method, <code class="highlighter-rouge">listProducts</code>, takes an <code class="highlighter-rouge">Empty</code> message and returns a <code class="highlighter-rouge">ProductList</code> message, which has a repeated <code class="highlighter-rouge">Product</code> field called <code class="highlighter-rouge">products</code>:</p>
+
+<div class="language-protobuf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">message</span> <span class="nc">ProductList</span> <span class="p">{</span>
+  <span class="k">repeated</span> <span class="n">Product</span> <span class="na">products</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>The <a href="https://developers.google.com/protocol-buffers/docs/proto3#specifying-field-rules">repeated</a> keyword is used to define an array of objects.</p>
+</blockquote>
+
+<p>We also created an <code class="highlighter-rouge">Empty</code> message as the empty stub for empty requests and responses:</p>
+
+<div class="language-protobuf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">message</span> <span class="nc">Empty</span> <span class="p">{}</span>
+</code></pre></div></div>
+
+<p>The next method, <code class="highlighter-rouge">readProduct</code>, takes a <code class="highlighter-rouge">ProductId</code> and returns a <code class="highlighter-rouge">Product</code>:</p>
+
+<div class="language-protobuf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">message</span> <span class="nc">Product</span> <span class="p">{</span>
+  <span class="kt">int32</span> <span class="na">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="kt">string</span> <span class="na">price</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This has three <a href="https://developers.google.com/protocol-buffers/docs/proto3#scalar">scalar value fields</a>, each with a <a href="https://developers.google.com/protocol-buffers/docs/proto3#assigning-field-numbers">unique numbered tag</a>:</p>
+
+<ol>
+  <li>id (int32)</li>
+  <li>name (string)</li>
+  <li>price (string)</li>
+</ol>
+
+<p>We created a <code class="highlighter-rouge">ProductId</code> as well with a single int32 field:</p>
+
+<div class="language-protobuf highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">message</span> <span class="nc">ProductId</span> <span class="p">{</span>
+  <span class="kt">int32</span> <span class="na">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Next, <code class="highlighter-rouge">createProduct</code> takes a <code class="highlighter-rouge">newProduct</code> and returns a <code class="highlighter-rouge">result</code>, which will be just a status message of “success” or “failure”. Take note of the <code class="highlighter-rouge">newProduct</code> message and the <code class="highlighter-rouge">updateProduct</code> and <code class="highlighter-rouge">deleteProduct</code> methods on your own.</p>
+
+<p>With the service defined, you can now generate interfaces in a number of different languages.</p>
+
+<h2 id="server">Server</h2>
+
+<p>Moving on, let’s create the gRPC server that will be used to serve up the remote procedure calls.</p>
+
+<h3 id="setup">Setup</h3>
+
+<p>Start by updating the <em>package.json</em> file in the “server” folder:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node-grpc-server"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"dependencies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"@grpc/proto-loader"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^0.4.0"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"google-protobuf"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.6.1"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"grpc"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.18.0"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"knex"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^0.16.3"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"pg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^7.8.0"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"scripts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node index.js"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Take note of the dependencies:</p>
+
+<ol>
+  <li><a href="https://www.npmjs.com/package/@grpc/proto-loader">@grpc/proto-loader</a>: loads <em>.proto</em> files</li>
+  <li><a href="https://www.npmjs.com/package/google-protobuf">google-protobuf</a>: JavaScript version of the Protocol Buffers runtime library</li>
+  <li><a href="https://www.npmjs.com/package/grpc">grpc</a>: Node gRPC Library</li>
+  <li><a href="https://www.npmjs.com/package/knex">knex</a>: SQL query builder for Node</li>
+  <li><a href="https://www.npmjs.com/package/pg">pg</a>: PostgreSQL client for Node</li>
+</ol>
+
+<p>Before installing, you will need to install <code class="highlighter-rouge">protoc</code>, the Protobuf Compiler. If you’re on a Mac, it’s easiest to install with <a href="https://brew.sh/">Homebrew</a>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>brew install protobuf
+</code></pre></div></div>
+
+<p>Otherwise, you can manually download and install it from <a href="https://github.com/protocolbuffers/protobuf/releases/tag/v3.6.1">here</a>.</p>
+
+<p>Now you can install the NPM dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd </span>server
+<span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Next, add a <em>knexfile.js</em> file to the “server” folder:, which is used for configuring knex for different environments–e.g., local, development, production:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'path'</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">development</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">client</span><span class="p">:</span> <span class="s1">'postgresql'</span><span class="p">,</span>
+    <span class="na">connection</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">host</span><span class="p">:</span> <span class="s1">'127.0.0.1'</span><span class="p">,</span>
+      <span class="na">user</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
+      <span class="na">password</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
+      <span class="na">port</span><span class="p">:</span> <span class="s1">'5432'</span><span class="p">,</span>
+      <span class="na">database</span><span class="p">:</span> <span class="s1">'grpc_products'</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">pool</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">min</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+      <span class="na">max</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="na">migrations</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'db'</span><span class="p">,</span> <span class="s1">'migrations'</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="na">seeds</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">directory</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'db'</span><span class="p">,</span> <span class="s1">'seeds'</span><span class="p">),</span>
+    <span class="p">},</span>
+  <span class="p">},</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Add the appropriate username and password. Then, create the a “db” directory along with the “migrations” and “seeds” directories. Your project structure should now look like:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── client
+│   ├── app.js
+│   └── package.json
+├── protos
+│   └── product.proto
+└── server
+    ├── db
+    │   ├── migrations
+    │   └── seeds
+    ├── index.js
+    ├── knexfile.js
+    ├── package-lock.json
+    └── package.json
+</code></pre></div></div>
+
+<p>Create a new migration file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./node_modules/.bin/knex migrate:make products
+</code></pre></div></div>
+
+<p>Then, add the following code to the migration stub in “server/db/migrations”:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">up</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">createTable</span><span class="p">(</span><span class="s1">'products'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">increments</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'name'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="nx">table</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="s1">'price'</span><span class="p">).</span><span class="nx">notNullable</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">down</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">dropTable</span><span class="p">(</span><span class="s1">'products'</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Apply the migration:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./node_modules/.bin/knex migrate:latest
+</code></pre></div></div>
+
+<p>Create a new seed file:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./node_modules/.bin/knex seed:make products
+</code></pre></div></div>
+
+<p>Add the code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">exports</span><span class="p">.</span><span class="nx">seed</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">knex</span><span class="p">,</span> <span class="nb">Promise</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Deletes ALL existing entries</span>
+  <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'products'</span><span class="p">).</span><span class="nx">del</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="c1">// Inserts seed entries</span>
+      <span class="k">return</span> <span class="nx">knex</span><span class="p">(</span><span class="s1">'products'</span><span class="p">).</span><span class="nx">insert</span><span class="p">([</span>
+        <span class="p">{</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'pencil'</span><span class="p">,</span> <span class="na">price</span><span class="p">:</span> <span class="s1">'1.99'</span> <span class="p">},</span>
+        <span class="p">{</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'pen'</span><span class="p">,</span> <span class="na">price</span><span class="p">:</span> <span class="s1">'2.99'</span> <span class="p">},</span>
+      <span class="p">]);</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Apply the seed:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./node_modules/.bin/knex seed:run
+</code></pre></div></div>
+
+<p>Finally, wire up the basic server in <em>index.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// requirements</span>
+<span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'path'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">protoLoader</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'@grpc/proto-loader'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">grpc</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'grpc'</span><span class="p">);</span>
+
+<span class="c1">// knex</span>
+<span class="kd">const</span> <span class="nx">environment</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">ENVIRONMENT</span> <span class="o">||</span> <span class="s1">'development'</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./knexfile.js'</span><span class="p">)[</span><span class="nx">environment</span><span class="p">];</span>
+<span class="kd">const</span> <span class="nx">knex</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'knex'</span><span class="p">)(</span><span class="nx">config</span><span class="p">);</span>
+
+<span class="c1">// grpc service definition</span>
+<span class="kd">const</span> <span class="nx">productProtoPath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'protos'</span><span class="p">,</span> <span class="s1">'product.proto'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">productProtoDefinition</span> <span class="o">=</span> <span class="nx">protoLoader</span><span class="p">.</span><span class="nx">loadSync</span><span class="p">(</span><span class="nx">productProtoPath</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">productPackageDefinition</span> <span class="o">=</span> <span class="nx">grpc</span><span class="p">.</span><span class="nx">loadPackageDefinition</span><span class="p">(</span><span class="nx">productProtoDefinition</span><span class="p">).</span><span class="nx">product</span><span class="p">;</span>
+<span class="cm">/*
+Using an older version of gRPC?
+(1) You won't need the @grpc/proto-loader package
+(2) const productPackageDefinition = grpc.load(productProtoPath).product;
+*/</span>
+
+<span class="c1">// knex queries</span>
+<span class="kd">function</span> <span class="nx">listProducts</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{}</span>
+<span class="kd">function</span> <span class="nx">readProduct</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{}</span>
+<span class="kd">function</span> <span class="nx">createProduct</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{}</span>
+<span class="kd">function</span> <span class="nx">updateProduct</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{}</span>
+<span class="kd">function</span> <span class="nx">deleteProduct</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{}</span>
+
+<span class="c1">// main</span>
+<span class="kd">function</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">grpc</span><span class="p">.</span><span class="nx">Server</span><span class="p">();</span>
+  <span class="c1">// gRPC service</span>
+  <span class="nx">server</span><span class="p">.</span><span class="nx">addService</span><span class="p">(</span><span class="nx">productPackageDefinition</span><span class="p">.</span><span class="nx">ProductService</span><span class="p">.</span><span class="nx">service</span><span class="p">,</span> <span class="p">{</span>
+    <span class="na">listProducts</span><span class="p">:</span> <span class="nx">listProducts</span><span class="p">,</span>
+    <span class="na">readProduct</span><span class="p">:</span> <span class="nx">readProduct</span><span class="p">,</span>
+    <span class="na">createProduct</span><span class="p">:</span> <span class="nx">createProduct</span><span class="p">,</span>
+    <span class="na">updateProduct</span><span class="p">:</span> <span class="nx">updateProduct</span><span class="p">,</span>
+    <span class="na">deleteProduct</span><span class="p">:</span> <span class="nx">deleteProduct</span><span class="p">,</span>
+  <span class="p">});</span>
+  <span class="c1">// gRPC server</span>
+  <span class="nx">server</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">'localhost:50051'</span><span class="p">,</span> <span class="nx">grpc</span><span class="p">.</span><span class="nx">ServerCredentials</span><span class="p">.</span><span class="nx">createInsecure</span><span class="p">());</span>
+  <span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">();</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'gRPC server running at http://127.0.0.1:50051'</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">main</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>Here, we load the gRPC service definition, create a new gRPC server, add the service to the server, and then run the server on <a href="http://localhost:50051">http://localhost:50051</a>.</p>
+
+<p>Take note of the <code class="highlighter-rouge">addService</code> method:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">server</span><span class="p">.</span><span class="nx">addService</span><span class="p">(</span><span class="nx">productPackageDefinition</span><span class="p">.</span><span class="nx">ProductService</span><span class="p">.</span><span class="nx">service</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">listProducts</span><span class="p">:</span> <span class="nx">listProducts</span><span class="p">,</span>
+  <span class="na">readProduct</span><span class="p">:</span> <span class="nx">readProduct</span><span class="p">,</span>
+  <span class="na">createProduct</span><span class="p">:</span> <span class="nx">createProduct</span><span class="p">,</span>
+  <span class="na">updateProduct</span><span class="p">:</span> <span class="nx">updateProduct</span><span class="p">,</span>
+  <span class="na">deleteProduct</span><span class="p">:</span> <span class="nx">deleteProduct</span><span class="p">,</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>This method adds the gRPC service, defined in the <em>product.proto</em>, to the server. It takes the service definition–e.g., <code class="highlighter-rouge">ProductService</code>–along with an object which maps the method names from the gRPC service to the method implementations defined above.</p>
+
+<h3 id="dynamic-vs-static-code-generation">Dynamic vs Static Code Generation</h3>
+
+<p>There are two ways of working with Protocol Buffers in Node:</p>
+
+<ol>
+  <li><em>Dynamically</em>: with dynamic code generation, the Protocol Buffer is loaded and parsed at run time with <a href="https://github.com/dcodeIO/ProtoBuf.js/">Protobuf.js</a></li>
+  <li><em>Statically</em>: with the static approach, the Protocol Buffer is pre-processed into JavaScript</li>
+</ol>
+
+<p>We used the dynamic approach above. The dynamic approach is quite a bit simpler to implement, but it differs from the workflow of other gRPC-supported languages, since they require static code generation.</p>
+
+<p>Want to use the static approach?</p>
+
+<p>First, install <a href="https://github.com/grpc/grpc-node#grpc-tools">grpc-tools</a> globally:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> grpc-tools
+</code></pre></div></div>
+
+<p>Then, run the following from the project root:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>protoc <span class="nt">-I</span><span class="o">=</span><span class="nb">.</span> ./protos/product.proto <span class="se">\</span>
+  <span class="nt">--js_out</span><span class="o">=</span><span class="nv">import_style</span><span class="o">=</span>commonjs,binary:./server <span class="se">\</span>
+  <span class="nt">--grpc_out</span><span class="o">=</span>./server <span class="se">\</span>
+  <span class="nt">--plugin</span><span class="o">=</span>protoc-gen-grpc<span class="o">=</span><span class="sb">`</span>which grpc_tools_node_protoc_plugin<span class="sb">`</span>
+</code></pre></div></div>
+
+<p>The generated code should now be in the “server/protos” directory:</p>
+
+<ol>
+  <li><em>product_grpc_pb.js</em></li>
+  <li><em>product_pb.js</em></li>
+</ol>
+
+<p>You’ll then import the generated code into your <em>index.js</em> file and use them directly rather than loading the service definition.</p>
+
+<h3 id="sanity-check">Sanity Check</h3>
+
+<p>Try running the server at this point:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm start
+</code></pre></div></div>
+
+<p>You should see:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gRPC server running at http://127.0.0.1:50051
+</code></pre></div></div>
+
+<p>Let’s wire up the gRPC client before adding the knex query functions.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── client
+│   ├── app.js
+│   └── package.json
+├── protos
+│   └── product.proto
+└── server
+    ├── db
+    │   ├── migrations
+    │   │   └── 20190131084532_products.js
+    │   └── seeds
+    │       └── products.js
+    ├── index.js
+    ├── knexfile.js
+    ├── package-lock.json
+    └── package.json
+</code></pre></div></div>
+
+<h2 id="client">Client</h2>
+
+<p>Like before, update the <em>package.json</em> file the “client” directory:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node-grpc-client"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"dependencies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"@grpc/proto-loader"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^0.4.0"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"body-parser"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.18.3"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"express"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^4.16.4"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"google-protobuf"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.6.1"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"grpc"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.18.0"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"scripts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node app.js"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>From the “client” directory, install the dependencies:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install
+</code></pre></div></div>
+
+<p>Update <em>app.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// requirements</span>
+<span class="kd">const</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">bodyParser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'body-parser'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">productRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./routes/productRoutes'</span><span class="p">);</span>
+
+<span class="c1">// express</span>
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">urlencoded</span><span class="p">({</span> <span class="na">extended</span><span class="p">:</span> <span class="kc">false</span> <span class="p">}));</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">bodyParser</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+
+<span class="c1">// routes</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/api'</span><span class="p">,</span> <span class="nx">productRoutes</span><span class="p">);</span>
+
+<span class="c1">// run server</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="mi">3000</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Server listing on port 3000'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Here, we instantiate a new Express server, define our routes, and then run the server. Add a “routes” folder along with the <a href="https://expressjs.com/en/api.html#router">Express router</a> in a <em>product.js</em> file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// requirements</span>
+<span class="kd">const</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">grpcRoutes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./grpcRoutes'</span><span class="p">);</span>
+
+<span class="c1">// new router</span>
+<span class="kd">const</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">();</span>
+
+<span class="c1">// routes</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/products'</span><span class="p">,</span> <span class="nx">grpcRoutes</span><span class="p">.</span><span class="nx">listProducts</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="kd">get</span><span class="p">(</span><span class="s1">'/products/:id'</span><span class="p">,</span> <span class="nx">grpcRoutes</span><span class="p">.</span><span class="nx">readProduct</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">'/products'</span><span class="p">,</span> <span class="nx">grpcRoutes</span><span class="p">.</span><span class="nx">createProduct</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">'/products/:id'</span><span class="p">,</span> <span class="nx">grpcRoutes</span><span class="p">.</span><span class="nx">updateProduct</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="s1">'/products/:id'</span><span class="p">,</span> <span class="nx">grpcRoutes</span><span class="p">.</span><span class="nx">deleteProduct</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">router</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Finally, add the boilerplate for the gRPC client in <em>client/routes/grpcRoutes.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// requirements</span>
+<span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'path'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">protoLoader</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'@grpc/proto-loader'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">grpc</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'grpc'</span><span class="p">);</span>
+
+<span class="c1">// gRPC client</span>
+<span class="kd">const</span> <span class="nx">productProtoPath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'protos'</span><span class="p">,</span> <span class="s1">'product.proto'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">productProtoDefinition</span> <span class="o">=</span> <span class="nx">protoLoader</span><span class="p">.</span><span class="nx">loadSync</span><span class="p">(</span><span class="nx">productProtoPath</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">productPackageDefinition</span> <span class="o">=</span> <span class="nx">grpc</span><span class="p">.</span><span class="nx">loadPackageDefinition</span><span class="p">(</span><span class="nx">productProtoDefinition</span><span class="p">).</span><span class="nx">product</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">productPackageDefinition</span><span class="p">.</span><span class="nx">ProductService</span><span class="p">(</span>
+  <span class="s1">'localhost:50051'</span><span class="p">,</span> <span class="nx">grpc</span><span class="p">.</span><span class="nx">credentials</span><span class="p">.</span><span class="nx">createInsecure</span><span class="p">());</span>
+<span class="cm">/*
+Using an older version of gRPC?
+(1) You won't need the @grpc/proto-loader package
+(2) const productPackageDefinition = grpc.load(productProtoPath).product;
+(3) const client = new productPackageDefinition.ProductService(
+  'localhost:50051', grpc.credentials.createInsecure());
+*/</span>
+
+<span class="c1">// handlers</span>
+<span class="kd">const</span> <span class="nx">listProducts</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{};</span>
+<span class="kd">const</span> <span class="nx">readProduct</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{};</span>
+<span class="kd">const</span> <span class="nx">createProduct</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{};</span>
+<span class="kd">const</span> <span class="nx">updateProduct</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{};</span>
+<span class="kd">const</span> <span class="nx">deleteProduct</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">listProducts</span><span class="p">,</span>
+  <span class="nx">readProduct</span><span class="p">,</span>
+  <span class="nx">createProduct</span><span class="p">,</span>
+  <span class="nx">updateProduct</span><span class="p">,</span>
+  <span class="nx">deleteProduct</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Test it out:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm start
+</code></pre></div></div>
+
+<p>You should see:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Server listing on port 3000
+</code></pre></div></div>
+
+<p>Kill the server before moving on.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── client
+│   ├── app.js
+│   ├── package-lock.json
+│   ├── package.json
+│   └── routes
+│       ├── grpcRoutes.js
+│       └── productRoutes.js
+├── protos
+│   └── product.proto
+└── server
+    ├── db
+    │   ├── migrations
+    │   │   └── 20190131084532_products.js
+    │   └── seeds
+    │       └── products.js
+    ├── index.js
+    ├── knexfile.js
+    ├── package-lock.json
+    └── package.json
+</code></pre></div></div>
+
+<p>With that, we’re now ready to tie everything together.</p>
+
+<h2 id="crud">CRUD</h2>
+
+<p>We’ll use the following workflow for wiring up the gRPC stubs:</p>
+
+<ol>
+  <li>Add the appropriate knex query to the server (<em>server/index.js</em>)</li>
+  <li>Add the associated handler to the client (<em>client/routes/grpcRoutes.js</em>)</li>
+  <li>Test it via cURL</li>
+</ol>
+
+<h3 id="listproducts">listProducts</h3>
+
+<p>Server:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">listProducts</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="cm">/*
+  Using 'grpc.load'? Send back an array: 'callback(null, { data });'
+  */</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'products'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">{</span> <span class="na">products</span><span class="p">:</span> <span class="nx">data</span> <span class="p">});</span> <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Client:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">listProducts</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="cm">/*
+  gRPC method for reference:
+  listProducts(Empty) returns (ProductList)
+  */</span>
+  <span class="nx">client</span><span class="p">.</span><span class="nx">listProducts</span><span class="p">({},</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>To test, run the client in one terminal window and the server in another. Then, run the following command:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl http://127.0.0.1:3000/api/products
+</code></pre></div></div>
+
+<p>You should see the products:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"products"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pencil"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"price"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.99"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pen"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"price"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.99"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="readproduct">readProduct</h3>
+
+<p>Server:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">readProduct</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'products'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">where</span><span class="p">({</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">call</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">callback</span><span class="p">(</span><span class="s1">'That product does not exist'</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Client:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">readProduct</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">};</span>
+  <span class="cm">/*
+  gRPC method for reference:
+  readProduct(ProductId) returns (Product)
+  */</span>
+  <span class="nx">client</span><span class="p">.</span><span class="nx">readProduct</span><span class="p">(</span><span class="nx">payload</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="s1">'That product does not exist.'</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Test success:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl http://127.0.0.1:3000/api/products/1
+
+<span class="o">{</span>
+  <span class="s2">"id"</span>: 1,
+  <span class="s2">"name"</span>: <span class="s2">"pencil"</span>,
+  <span class="s2">"price"</span>: <span class="s2">"1.99"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Test failure:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl http://127.0.0.1:3000/api/products/99999
+
+<span class="s2">"That product does not exist."</span>
+</code></pre></div></div>
+
+<h3 id="createproduct">createProduct</h3>
+
+<p>Server:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">createProduct</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'products'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">insert</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="nx">call</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+      <span class="na">price</span><span class="p">:</span> <span class="nx">call</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">price</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">{</span> <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span> <span class="p">});</span> <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Client:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">createProduct</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span> <span class="na">name</span><span class="p">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="na">price</span><span class="p">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">price</span> <span class="p">};</span>
+  <span class="cm">/*
+  gRPC method for reference:
+  createProduct(newProduct) returns (result)
+  */</span>
+  <span class="nx">client</span><span class="p">.</span><span class="nx">createProduct</span><span class="p">(</span><span class="nx">payload</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Test:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-X</span> POST <span class="nt">-d</span> <span class="s1">'{"name":"lamp","price":"29.99"}'</span> <span class="se">\</span>
+    <span class="nt">-H</span> <span class="s2">"Content-Type: application/json"</span> http://127.0.0.1:3000/api/products
+<span class="o">{</span>
+  <span class="s2">"status"</span>: <span class="s2">"success"</span>
+<span class="o">}</span>
+
+<span class="nv">$ </span>curl http://127.0.0.1:3000/api/products
+<span class="o">{</span>
+  <span class="s2">"products"</span>: <span class="o">[</span>
+    <span class="o">{</span>
+      <span class="s2">"id"</span>: 1,
+      <span class="s2">"name"</span>: <span class="s2">"pencil"</span>,
+      <span class="s2">"price"</span>: <span class="s2">"1.99"</span>
+    <span class="o">}</span>,
+    <span class="o">{</span>
+      <span class="s2">"id"</span>: 2,
+      <span class="s2">"name"</span>: <span class="s2">"pen"</span>,
+      <span class="s2">"price"</span>: <span class="s2">"2.99"</span>
+    <span class="o">}</span>,
+    <span class="o">{</span>
+      <span class="s2">"id"</span>: 3,
+      <span class="s2">"name"</span>: <span class="s2">"lamp"</span>,
+      <span class="s2">"price"</span>: <span class="s2">"29.99"</span>
+    <span class="o">}</span>
+  <span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="updateproduct">updateProduct</h3>
+
+<p>Server:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">updateProduct</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'products'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">where</span><span class="p">({</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">call</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">update</span><span class="p">({</span>
+      <span class="na">name</span><span class="p">:</span> <span class="nx">call</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+      <span class="na">price</span><span class="p">:</span> <span class="nx">call</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">price</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="nx">returning</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">{</span> <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span> <span class="p">});</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">callback</span><span class="p">(</span><span class="s1">'That product does not exist'</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Client:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">updateProduct</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">),</span> <span class="na">name</span><span class="p">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="na">price</span><span class="p">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">price</span> <span class="p">};</span>
+  <span class="cm">/*
+  gRPC method for reference:
+  updateProduct(Product) returns (result)
+  */</span>
+  <span class="nx">client</span><span class="p">.</span><span class="nx">updateProduct</span><span class="p">(</span><span class="nx">payload</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="s1">'That product does not exist.'</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Test:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-X</span> PUT <span class="nt">-d</span> <span class="s1">'{"name":"lamp","price":"49.99"}'</span> <span class="se">\</span>
+    <span class="nt">-H</span> <span class="s2">"Content-Type: application/json"</span> http://127.0.0.1:3000/api/products/3
+
+<span class="o">{</span>
+  <span class="s2">"status"</span>: <span class="s2">"success"</span>
+<span class="o">}</span>
+
+
+<span class="nv">$ </span>curl http://127.0.0.1:3000/api/products/3
+<span class="o">{</span>
+  <span class="s2">"id"</span>: 3,
+  <span class="s2">"name"</span>: <span class="s2">"lamp"</span>,
+  <span class="s2">"price"</span>: <span class="s2">"49.99"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="deleteproduct">deleteProduct</h3>
+
+<p>Server:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">deleteProduct</span><span class="p">(</span><span class="nx">call</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">knex</span><span class="p">(</span><span class="s1">'products'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">where</span><span class="p">({</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">call</span><span class="p">.</span><span class="nx">request</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">})</span>
+    <span class="p">.</span><span class="k">delete</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">returning</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">{</span> <span class="na">status</span><span class="p">:</span> <span class="s1">'success'</span> <span class="p">});</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">callback</span><span class="p">(</span><span class="s1">'That product does not exist'</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Client:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">deleteProduct</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span> <span class="na">id</span><span class="p">:</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">};</span>
+  <span class="cm">/*
+  gRPC method for reference:
+  deleteProduct(ProductId) returns (result)
+  */</span>
+  <span class="nx">client</span><span class="p">.</span><span class="nx">deleteProduct</span><span class="p">(</span><span class="nx">payload</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="s1">'That product does not exist.'</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Test:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-X</span> DELETE http://127.0.0.1:3000/api/products/3
+
+<span class="o">{</span>
+  <span class="s2">"status"</span>: <span class="s2">"success"</span>
+<span class="o">}</span>
+
+
+<span class="nv">$ </span>curl http://127.0.0.1:3000/api/products
+
+<span class="o">{</span>
+  <span class="s2">"products"</span>: <span class="o">[</span>
+    <span class="o">{</span>
+      <span class="s2">"id"</span>: 1,
+      <span class="s2">"name"</span>: <span class="s2">"pencil"</span>,
+      <span class="s2">"price"</span>: <span class="s2">"1.99"</span>
+    <span class="o">}</span>,
+    <span class="o">{</span>
+      <span class="s2">"id"</span>: 2,
+      <span class="s2">"name"</span>: <span class="s2">"pen"</span>,
+      <span class="s2">"price"</span>: <span class="s2">"2.99"</span>
+    <span class="o">}</span>
+  <span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>What if the product doesn’t exist?</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl <span class="nt">-X</span> DELETE http://127.0.0.1:3000/api/products/9999
+
+<span class="s2">"That product does not exist."</span>
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>gRPC provides a declarative, strongly typed mechanism for defining an API.</p>
+
+<p>Workflow:</p>
+
+<ol>
+  <li>Define the API (service definition and message structure) using a Protocol Buffer</li>
+  <li>Implement the server using the generated interface</li>
+  <li>Add the message stubs to the client</li>
+</ol>
+
+<p>Resources:</p>
+
+<ol>
+  <li><a href="https://github.com/mjhea0/node-grpc-crud">Final code</a></li>
+  <li><a href="https://grpc.io/docs/guides/index.html">What is gRPC?</a> guide</li>
+  <li><a href="https://blog.bugsnag.com/grpc-and-microservices-architecture/">Building scalable microservices with gRPC</a></li>
+  <li><a href="https://github.com/grpc/grpc-web">gRPC for Web Clients</a></li>
+</ol>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'https://mherman.org/blog/node-grpc-postgres/';
+    this.page.identifier = 'https://mherman.org/blog/node-grpc-postgres/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2019 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://www.linkedin.com/in/mjhea0/"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+
+</html>
