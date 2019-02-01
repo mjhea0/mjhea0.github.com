@@ -276,7 +276,11 @@ Test this in your browser at `http://MINIKUBE_IP:KIBANA_EXPOSED_PORT`.
 
 ## Fluentd
 
-In this example, we'll deploy a Fluentd logging agent to each node in the Kubernetes cluster, which will collect each container's log files running on that node. We can use a [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) for this. First, we need to configure RBAC (role-based access control) permissions so that Fluentd can access the appropriate components.
+In this example, we'll deploy a Fluentd logging agent to each node in the Kubernetes cluster, which will collect each container's log files running on that node. We can use a [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) for this.
+
+![fluentd and kubernetes](/assets/img/blog/kibana/fluentd-kubernetes.png)
+
+First, we need to configure RBAC (role-based access control) permissions so that Fluentd can access the appropriate components.
 
 *kubernetes/fluentd-rbac.yaml*:
 
