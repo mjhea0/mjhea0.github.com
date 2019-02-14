@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| February 14, 2019   | [Modern Front-End Testing with Cypress][54] | N/A |
 | January 29, 2019   | [Cypress'ing Your Way to a Better Night's Sleep][52] | [DenverScript][53] |
 | November 28, 2018   | [Running Vault + Consul on Kubernetes][51] | [Denver Microservices][50] |
 | November 6, 2018   | [Kubernetes for Application Developers][40] | [NodeJS Denver/Boulder Meetup][6] |
@@ -90,3 +91,4 @@ Here's a list of talks and trainings I've given over the years...
 [51]: https://mherman.org/presentations/vault-kubernetes
 [52]: https://mherman.org/presentations/cypress
 [53]: https://www.meetup.com/DenverScript
+[54]: https://mherman.org/presentations/cypress-testing

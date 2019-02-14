@@ -3,7 +3,7 @@ config
  */
 
 let content = {
-  text: 'Check out my course, <em>Microservices with Docker, Flask, and React</em>!',
+  text: 'Check out the <em>Microservices with Docker, Flask, and React</em> course!',
   buttonText: 'Download Now',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
