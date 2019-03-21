@@ -44,8 +44,9 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date(s)            | Title                                 | Event/Venue |
 |-----------------|---------------------------------------|-------|
+| March 2019 | [Test-Driven Writing][55] | Twilio |
 | February - April 2017  | [Node Workshop][18] (6 sessions) | N/A |
-| January March 2017  | [Python Web Development for Data Scientists][12] (5 sessions) | [PyData Denver Meetup][13] |
+| January - March 2017  | [Python Web Development for Data Scientists][12] (5 sessions) | [PyData Denver Meetup][13] |
 | January - February 2017  | [Node Workshop][17] (4 sessions) | Twitter Boulder |
 
 [1]: http://mherman.org/testcafe-example
@@ -92,3 +93,4 @@ Here's a list of talks and trainings I've given over the years...
 [52]: https://mherman.org/presentations/cypress
 [53]: https://www.meetup.com/DenverScript
 [54]: https://mherman.org/presentations/cypress-testing
+[55]: https://mherman.org/presentations/test-driven-writing
