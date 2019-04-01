@@ -44,7 +44,8 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date(s)            | Title                                 | Event/Venue |
 |-----------------|---------------------------------------|-------|
-| March 2019 | [Test-Driven Writing][55] | Twilio |
+| March 2019 | [Introduction to OAuth 2.0 and OpenID Connect][56] (2 Sessions) | N/A  |
+| March 2019 | [Test-Driven Writing][55] (1 Session) | Twilio |
 | February - April 2017  | [Node Workshop][18] (6 sessions) | N/A |
 | January - March 2017  | [Python Web Development for Data Scientists][12] (5 sessions) | [PyData Denver Meetup][13] |
 | January - February 2017  | [Node Workshop][17] (4 sessions) | Twitter Boulder |
@@ -94,3 +95,4 @@ Here's a list of talks and trainings I've given over the years...
 [53]: https://www.meetup.com/DenverScript
 [54]: https://mherman.org/presentations/cypress-testing
 [55]: https://mherman.org/presentations/test-driven-writing
+[56]: https://mherman.org/presentations/node-oauth-openid
