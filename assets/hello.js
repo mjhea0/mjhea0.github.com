@@ -7,7 +7,7 @@ let content = {
   buttonText: 'Download Now',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
-  cookieKey: 'cookieNotificationFeb092019',
+  cookieKey: 'cookieNotificationApr252019',
   googleAnalytics: true
 };
 
