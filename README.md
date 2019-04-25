@@ -20,3 +20,7 @@ $ git push origin master:backup
 # if travis build passes, deploy
 $ git subtree push --prefix _site origin master
 ```
+
+### Hello Bar
+
+The [Hello Bar](https://github.com/mjhea0/hellobar) can be updated via the `content` object in *assets/hello.js*.
