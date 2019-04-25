@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Functional Testing with TestCafe"
-date: 2017-03-19 16:37:53
+date: 2017-03-19
 comments: true
 toc: true
 categories: [node, testing]

@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Crash Course in web2py (part 1)"
-date: 2012-11-27 19:53
+date: 2012-11-27
 comments: true
 toc: true
 categories: [python, web2py]

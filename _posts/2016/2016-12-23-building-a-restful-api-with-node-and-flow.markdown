@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Building a RESTful API with Node, Flow, and Jest"
-date: 2016-12-23 07:59:54
+date: 2016-12-23
 comments: true
 toc: true
 categories:

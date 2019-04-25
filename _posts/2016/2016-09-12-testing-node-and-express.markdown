@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Testing Node and Express"
-date: 2016-09-12 07:09:13
+date: 2016-09-12
 comments: true
 toc: true
 categories: [node, mocha, testing]

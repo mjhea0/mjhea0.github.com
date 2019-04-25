@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Node Twitter Sentiment - Part 2"
-date: 2014-03-18 11:55
+date: 2014-03-18
 comments: true
 toc: true
 categories: node

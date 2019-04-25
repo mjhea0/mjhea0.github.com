@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Designing with Class: Sinatra + PostgreSQL +  Heroku"
-date: 2013-06-08 07:37
+date: 2013-06-08
 comments: true
 toc: true
 categories: ruby

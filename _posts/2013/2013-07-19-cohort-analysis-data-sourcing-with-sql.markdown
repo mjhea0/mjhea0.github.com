@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Cohort Analysis: Data Sourcing with SQL"
-date: 2013-07-19 09:48
+date: 2013-07-19
 comments: true
 toc: true
 categories: analytics

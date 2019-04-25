@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Authentication in Angular with NGRX"
-date: 2018-04-17 08:00:00
+date: 2018-04-17
 comments: true
 toc: true
 categories: [angular, auth]

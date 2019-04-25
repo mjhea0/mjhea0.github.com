@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Adding a Captcha to Sinatra to Minimize Spam"
-date: 2014-05-04 18:43
+date: 2014-05-04
 comments: true
 toc: true
 categories: ruby

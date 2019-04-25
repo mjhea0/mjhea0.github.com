@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Meteor.js in Action: Create an App, Test with Laika"
-date: 2014-01-29 10:51
+date: 2014-01-29
 comments: true
 toc: true
 categories: meteor

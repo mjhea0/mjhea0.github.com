@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Basic Git Commands"
-date: 2013-10-11 11:19
+date: 2013-10-11
 comments: true
 toc: true
 categories: git

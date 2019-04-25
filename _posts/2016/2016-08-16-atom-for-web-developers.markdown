@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Atom for Web Developers"
-date: 2016-08-16 07:25:39
+date: 2016-08-16
 comments: true
 toc: true
 categories: [atom, code editor]

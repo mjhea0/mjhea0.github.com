@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Token-Based Authentication with Angular"
-date: 2017-01-05 07:30:21
+date: 2017-01-05
 comments: true
 toc: true
 categories: [angular, auth]

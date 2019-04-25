@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Django Basics - Installing Django and Setting up a Project and App"
-date: 2012-12-30 09:48
+date: 2012-12-30
 comments: true
 toc: true
 categories: [python, django]

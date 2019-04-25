@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Building a RESTful API with Koa and Postgres"
-date: 2017-08-23 08:31:03
+date: 2017-08-23
 comments: true
 toc: true
 categories: [node, mocha, koa, testing]

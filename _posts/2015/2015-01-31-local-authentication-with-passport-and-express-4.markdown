@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "User Authentication with Passport and Express 4"
-date: 2015-01-31 07:07
+date: 2015-01-31
 comments: true
 toc: true
 categories: [node, auth]

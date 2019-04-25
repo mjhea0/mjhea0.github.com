@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Stubbing Node Authentication Middleware with Sinon"
-date: 2018-01-22 08:10:05
+date: 2018-01-22
 comments: true
 toc: true
 categories: [node, koa, auth, mocha, testing]

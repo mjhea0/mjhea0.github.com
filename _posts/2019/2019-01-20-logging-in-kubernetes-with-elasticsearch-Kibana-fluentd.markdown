@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Logging in Kubernetes with Elasticsearch, Kibana, and Fluentd"
-date: 2019-01-20 07:00:00
+date: 2019-01-20
 comments: true
 toc: true
 categories: [kubernetes, docker]

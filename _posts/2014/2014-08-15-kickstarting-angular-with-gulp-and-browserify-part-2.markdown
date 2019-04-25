@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Kickstarting Angular with Gulp and Browserify, Part 2 - Browserify"
-date: 2014-08-15 09:56
+date: 2014-08-15
 comments: true
 toc: true
 categories: angular

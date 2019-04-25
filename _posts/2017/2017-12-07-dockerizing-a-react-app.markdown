@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Dockerizing a React App"
-date: 2017-12-07 08:23:24
+date: 2017-12-07
 comments: true
 toc: true
 categories: [docker, react]

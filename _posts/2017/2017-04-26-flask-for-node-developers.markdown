@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Flask for Node Developers"
-date: 2017-04-26 08:46:05
+date: 2017-04-26
 comments: true
 toc: true
 categories: [node, python]

@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Crash Course in web2py (part 5 - modifying the appearance and deploying the web form)"
-date: 2012-12-10 07:39
+date: 2012-12-10
 comments: true
 toc: true
 categories: [python, web2py]

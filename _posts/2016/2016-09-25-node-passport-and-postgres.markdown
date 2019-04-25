@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Node, Passport, and Postgres"
-date: 2016-09-25 13:10:34
+date: 2016-09-25
 comments: true
 toc: true
 categories: [node, mocha, testing, auth]

@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "What am I good at?"
-date: 2013-05-27 20:43
+date: 2013-05-27
 comments: true
 toc: true
 categories: news

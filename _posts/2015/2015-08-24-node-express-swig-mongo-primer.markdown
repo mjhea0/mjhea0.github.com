@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Node, Express, Swig, and MongoDB - getting started with CRUD"
-date: 2015-08-24 08:11
+date: 2015-08-24
 comments: true
 toc: true
 categories: [node]

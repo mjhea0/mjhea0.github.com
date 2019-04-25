@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "User Authentication with Passport.js"
-date: 2013-11-11 07:45
+date: 2013-11-11
 comments: true
 toc: true
 categories: [node, auth]

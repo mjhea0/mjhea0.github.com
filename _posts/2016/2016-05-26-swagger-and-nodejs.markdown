@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Swagger and NodeJS"
-date: 2016-05-26 07:22:46
+date: 2016-05-26
 comments: true
 toc: true
 categories: [node, swagger]

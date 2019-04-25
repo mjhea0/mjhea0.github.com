@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Web Scraping with Regular Expressions"
-date: 2012-10-05 13:26
+date: 2012-10-05
 comments: true
 toc: true
 categories: python

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Developing and Testing Microservices with Docker"
-date: 2017-04-18 08:16:46
+date: 2017-04-18
 comments: true
 toc: true
 categories: [docker, microservices, node, testing]

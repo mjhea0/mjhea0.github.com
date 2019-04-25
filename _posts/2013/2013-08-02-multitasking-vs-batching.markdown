@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Multitasking vs. Batching"
-date: 2013-08-02 17:14
+date: 2013-08-02
 comments: true
 toc: true
 categories: news

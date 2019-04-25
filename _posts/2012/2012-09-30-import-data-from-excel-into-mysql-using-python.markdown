@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Import data from Excel into MySQL using Python"
-date: 2012-09-30 13:13
+date: 2012-09-30
 comments: true
 toc: true
 categories: excel

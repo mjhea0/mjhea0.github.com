@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Node with Docker - continuous integration and delivery"
-date: 2015-03-06 08:05
+date: 2015-03-06
 comments: true
 toc: true
 categories: [docker, node, devops]

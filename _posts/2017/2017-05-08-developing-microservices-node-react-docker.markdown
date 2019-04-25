@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Developing Microservices - Node, React, and Docker"
-date: 2017-05-11 08:16:46
+date: 2017-05-11
 comments: true
 toc: true
 categories: [docker, microservices, node, react]

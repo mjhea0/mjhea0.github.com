@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Handling User Authentication with the MEAN Stack"
-date: 2015-07-02 07:04
+date: 2015-07-02
 comments: true
 toc: true
 categories: [angular, node, auth]

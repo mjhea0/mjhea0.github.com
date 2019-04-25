@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Sentiment Analysis: Feelings, not Facts"
-date: 2012-10-19 14:32
+date: 2012-10-19
 comments: true
 toc: true
 categories: analytics

@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Scraping Web Pages with Scrapy"
-date: 2012-11-05 14:59
+date: 2012-11-05
 comments: true
 toc: true
 categories: python

@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Handling AJAX Calls With Node.js and Express (part 2)"
-date: 2013-11-01 07:01
+date: 2013-11-01
 comments: true
 toc: true
 categories: node

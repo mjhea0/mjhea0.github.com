@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Node, Postgres, and Sequelize"
-date: 2015-10-22 10:52
+date: 2015-10-22
 comments: true
 toc: true
 categories: [node]

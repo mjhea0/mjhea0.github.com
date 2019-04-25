@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Custom Apache Config for PHP and Web2Py"
-date: 2013-08-25 15:34
+date: 2013-08-25
 comments: true
 toc: true
 categories: [python, web2py]

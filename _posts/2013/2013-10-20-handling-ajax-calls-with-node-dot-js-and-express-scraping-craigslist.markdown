@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Handling AJAX calls with Node.js and Express (scraping Craigslist)"
-date: 2013-10-20 01:12
+date: 2013-10-20
 comments: true
 toc: true
 categories: node

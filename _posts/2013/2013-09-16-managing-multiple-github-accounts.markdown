@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Managing Multiple Github Accounts"
-date: 2013-09-16 07:43
+date: 2013-09-16
 comments: true
 toc: true
 categories: github

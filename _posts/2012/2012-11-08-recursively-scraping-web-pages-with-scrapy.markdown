@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Recursively Scraping Web Pages with Scrapy"
-date: 2012-11-08 15:39
+date: 2012-11-08
 comments: true
 toc: true
 categories: python

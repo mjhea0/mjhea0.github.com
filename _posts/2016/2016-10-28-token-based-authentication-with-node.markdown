@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Token-Based Authentication with Node"
-date: 2016-10-28 07:36:51
+date: 2016-10-28
 comments: true
 toc: true
 categories: [node, mocha, testing, auth]

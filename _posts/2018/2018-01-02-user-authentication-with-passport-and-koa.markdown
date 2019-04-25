@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "User Authentication with Passport and Koa"
-date: 2018-01-02 08:17:05
+date: 2018-01-02
 comments: true
 toc: true
 categories: [node, koa, auth, mocha, testing]

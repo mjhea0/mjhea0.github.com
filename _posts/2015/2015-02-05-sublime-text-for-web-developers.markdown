@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Sublime Text for Web Developers"
-date: 2015-02-05 19:07
+date: 2015-02-05
 comments: true
 toc: true
 categories: [sublime, code editor]

@@ -2,7 +2,7 @@
 layout: post
 toc: true
 title: "Mad Libs with jQuery: A gentle introduction to Javascript and jQuery"
-date: 2014-01-15 19:39
+date: 2014-01-15
 comments: true
 toc: true
 categories: front-end
