@@ -530,7 +530,7 @@ app.listen(3000, () => {
 });
 ```
 
-Here, we instantiate a new Express server, define our routes, and then run the server. Add a "routes" folder along with the [Express router](https://expressjs.com/en/api.html#router) in a *product.js* file:
+Here, we instantiate a new Express server, define our routes, and then run the server. Add a "routes" folder along with the [Express router](https://expressjs.com/en/api.html#router) in a *productRoutes.js* file:
 
 ```javascript
 // requirements
