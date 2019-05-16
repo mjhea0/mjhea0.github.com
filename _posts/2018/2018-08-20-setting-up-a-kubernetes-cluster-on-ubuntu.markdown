@@ -2,6 +2,7 @@
 layout: post
 title: "Setting Up a Kubernetes Cluster on Ubuntu 18.04"
 date: 2018-08-20
+last_modified_at: 2018-08-20
 comments: true
 toc: true
 categories: [kubernetes, docker]

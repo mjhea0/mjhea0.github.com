@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "So you want be an Entrepreneur?"
 date: 2014-01-23
+last_modified_at: 2014-01-23
 comments: true
 toc: true
 categories: startups

@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "PostgreSQL and NodeJS"
 date: 2015-02-12
+last_modified_at: 2015-02-12
 comments: true
 toc: true
 categories: [node, angular]

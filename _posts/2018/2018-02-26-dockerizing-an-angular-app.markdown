@@ -2,6 +2,7 @@
 layout: post
 title: "Dockerizing an Angular App"
 date: 2018-02-26
+last_modified_at: 2018-02-26
 comments: true
 toc: true
 categories: [docker, angular]

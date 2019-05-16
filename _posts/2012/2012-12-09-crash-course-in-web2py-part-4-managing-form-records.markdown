@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Crash Course in web2py (part 4 - managing form records)"
 date: 2012-12-09
+last_modified_at: 2012-12-09
 comments: true
 toc: true
 categories: [python, web2py]

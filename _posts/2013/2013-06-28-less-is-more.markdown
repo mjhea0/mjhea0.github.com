@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Less is More"
 date: 2013-06-28
+last_modified_at: 2013-06-28
 comments: true
 toc: true
 categories: startups

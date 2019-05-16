@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "51 New Excel 2013 Functions"
 date: 2012-11-09
+last_modified_at: 2012-11-09
 comments: true
 toc: true
 categories: excel

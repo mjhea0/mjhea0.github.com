@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Differentiating Between Bounce Rates"
 date: 2012-10-06
+last_modified_at: 2012-10-06
 comments: true
 toc: true
 categories: analytics

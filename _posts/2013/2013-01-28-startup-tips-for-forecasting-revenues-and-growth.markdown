@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Startup Tips for Forecasting Revenues and Growth"
 date: 2013-01-28
+last_modified_at: 2013-01-28
 comments: true
 toc: true
 categories: finance

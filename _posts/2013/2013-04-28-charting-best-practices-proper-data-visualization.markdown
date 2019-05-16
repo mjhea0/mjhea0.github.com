@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Charting Best Practices - Proper Data Visualization"
 date: 2013-04-28
+last_modified_at: 2013-04-28
 comments: true
 toc: true
 categories: analytics

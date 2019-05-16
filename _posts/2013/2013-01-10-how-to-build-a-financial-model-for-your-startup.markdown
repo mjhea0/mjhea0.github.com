@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "How to Build a Financial Model for Your Startup"
 date: 2013-01-10
+last_modified_at: 2013-01-10
 comments: true
 toc: true
 categories: finance

@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Primer on Swig Templating"
 date: 2015-08-23
+last_modified_at: 2015-08-23
 comments: true
 toc: true
 categories: node

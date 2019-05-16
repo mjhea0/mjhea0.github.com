@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Kickstarting at the Local Level"
 date: 2013-08-06
+last_modified_at: 2013-08-06
 comments: true
 toc: true
 categories: crowdfunding

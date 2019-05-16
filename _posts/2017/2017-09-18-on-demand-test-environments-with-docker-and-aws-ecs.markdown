@@ -2,6 +2,7 @@
 layout: post
 title: "On-Demand Environments with Docker and AWS ECS"
 date: 2017-09-18
+last_modified_at: 2017-09-18
 comments: true
 toc: true
 categories: [aws, docker, microservices, node, react, devops]

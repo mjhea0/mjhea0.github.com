@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Testing AngularJS with Protractor and Karma - part 1"
 date: 2015-04-09
+last_modified_at: 2015-04-09
 comments: true
 toc: true
 categories: [angular, testing]

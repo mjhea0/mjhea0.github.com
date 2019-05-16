@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Scraping Web Pages with Scrapy"
 date: 2012-11-05
+last_modified_at: 2012-11-05
 comments: true
 toc: true
 categories: python

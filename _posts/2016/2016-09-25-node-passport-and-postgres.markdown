@@ -2,6 +2,7 @@
 layout: post
 title: "Node, Passport, and Postgres"
 date: 2016-09-25
+last_modified_at: 2016-09-25
 comments: true
 toc: true
 categories: [node, mocha, testing, auth]

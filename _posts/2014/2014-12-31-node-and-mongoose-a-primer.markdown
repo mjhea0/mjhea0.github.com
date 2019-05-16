@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Node, Express, and MongoDB - a primer"
 date: 2014-12-31
+last_modified_at: 2014-12-31
 comments: true
 toc: true
 categories: node

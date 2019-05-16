@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Basic Git Commands"
 date: 2013-10-11
+last_modified_at: 2013-10-11
 comments: true
 toc: true
 categories: git

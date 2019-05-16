@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Getting Started with Node"
 date: 2014-02-16
+last_modified_at: 2014-02-16
 comments: true
 toc: true
 categories: node

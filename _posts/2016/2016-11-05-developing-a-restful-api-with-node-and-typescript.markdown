@@ -2,6 +2,7 @@
 layout: post
 title: "Developing a RESTful API with Node and TypeScript"
 date: 2016-11-05
+last_modified_at: 2016-11-05
 comments: true
 toc: true
 categories: [node, static types, testing]

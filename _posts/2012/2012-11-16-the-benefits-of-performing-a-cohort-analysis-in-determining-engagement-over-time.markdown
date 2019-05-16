@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "The Benefits of Performing a Cohort Analysis in Determining Engagement Over Time"
 date: 2012-11-16
+last_modified_at: 2012-11-16
 comments: true
 toc: true
 categories: analytics

@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Up and Running with Espresso: Rapid web development in the browser"
 date: 2013-06-13
+last_modified_at: 2013-06-13
 comments: true
 toc: true
 categories: ruby

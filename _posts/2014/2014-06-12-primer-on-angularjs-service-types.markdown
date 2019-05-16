@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Primer on AngularJS Services"
 date: 2014-06-12
+last_modified_at: 2014-06-12
 comments: true
 toc: true
 categories: angular

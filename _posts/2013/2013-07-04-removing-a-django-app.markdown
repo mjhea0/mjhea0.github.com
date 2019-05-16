@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Removing a Django App"
 date: 2013-07-04
+last_modified_at: 2013-07-04
 comments: true
 toc: true
 categories: [python, django]

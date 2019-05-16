@@ -2,7 +2,7 @@
 layout: post
 title: "Node, gRPC, and Postgres"
 date: 2019-02-01
-last_modified: 2019-02-01
+last_modified_at: 2019-02-01
 comments: true
 toc: true
 categories: [grpc, node]

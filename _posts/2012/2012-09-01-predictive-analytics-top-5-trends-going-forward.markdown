@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Predictive Analytics - Top 5 Trends Going Forward"
 date: 2012-09-01
+last_modified_at: 2012-09-01
 comments: true
 toc: true
 categories: analytics

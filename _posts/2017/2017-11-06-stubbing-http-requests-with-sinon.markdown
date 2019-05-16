@@ -2,6 +2,7 @@
 layout: post
 title: "Stubbing HTTP Requests with Sinon"
 date: 2017-11-06
+last_modified_at: 2017-11-06
 comments: true
 toc: true
 categories: [node, mocha, testing]

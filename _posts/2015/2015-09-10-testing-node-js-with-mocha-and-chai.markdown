@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Testing Node.js with Mocha and Chai"
 date: 2015-09-10
+last_modified_at: 2015-09-10
 comments: true
 toc: true
 categories: [node, mocha, testing]

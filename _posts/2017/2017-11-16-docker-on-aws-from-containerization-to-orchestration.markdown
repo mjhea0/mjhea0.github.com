@@ -2,6 +2,7 @@
 layout: post
 title: "Docker on AWS: from containerization to orchestration"
 date: 2017-11-16
+last_modified_at: 2017-11-16
 comments: true
 toc: true
 categories: [aws, docker, microservices, node, react, devops]

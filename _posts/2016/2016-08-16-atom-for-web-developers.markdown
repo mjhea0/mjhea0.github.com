@@ -2,6 +2,7 @@
 layout: post
 title: "Atom for Web Developers"
 date: 2016-08-16
+last_modified_at: 2016-08-16
 comments: true
 toc: true
 categories: [atom, code editor]

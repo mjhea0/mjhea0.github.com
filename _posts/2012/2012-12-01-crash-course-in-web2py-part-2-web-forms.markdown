@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Crash Course in web2py (part 2 - web forms)"
 date: 2012-12-01
+last_modified_at: 2012-12-01
 comments: true
 toc: true
 categories: [python, web2py]

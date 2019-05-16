@@ -3,6 +3,7 @@ layout: post
 toc: true
 title: "Crash Course in web2py (part 1)"
 date: 2012-11-27
+last_modified_at: 2012-11-27
 comments: true
 toc: true
 categories: [python, web2py]
