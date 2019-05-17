@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "Dockerizing a React App"
-date: 2019-05-16
-last_modified_at: 2019-05-16
+date: 2019-05-17
+last_modified_at: 2019-05-17
 comments: true
 toc: true
 categories: [docker, react]
