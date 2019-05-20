@@ -395,7 +395,7 @@ spec:
           path: /var/lib/docker/containers
 ```
 
-Be sure to review [Kubernetes Logging with Fluentd](https://docs.fluentd.org/v0.12/articles/kubernetes-fluentd) along with the [sample Daemonset](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml). Make sure `FLUENT_ELASTICSEARCH_HOST` aligns with the `SERVICE_NAME.NAMESPACE` of Elasticsearch within your cluster.
+Be sure to review [Kubernetes Logging with Fluentd](https://docs.fluentd.org/v/0.12/articles/kubernetes-fluentd) along with the [sample Daemonset](https://github.com/fluent/fluentd-kubernetes-daemonset/blob/master/fluentd-daemonset-elasticsearch-rbac.yaml). Make sure `FLUENT_ELASTICSEARCH_HOST` aligns with the `SERVICE_NAME.NAMESPACE` of Elasticsearch within your cluster.
 
 Deploy:
 
