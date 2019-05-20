@@ -114,7 +114,7 @@
       <h1 class="post-title" itemprop="name headline">Dockerizing an Angular App</h1>
     
     <p class="post-meta">
-      Last update: <time datetime="2018-02-26T00:00:00-07:00" itemprop="datePublished">Feb 26, 2018</time>
+      Last update: <time datetime="2019-05-20T00:00:00-06:00" itemprop="datePublished">May 20, 2019</time>
        • 
   
   
@@ -263,16 +263,29 @@
 <p>This tutorial shows how to Dockerize an <a href="https://angular.io/">Angular</a> app, built with the <a href="https://cli.angular.io/">Angular CLI</a>, using Docker along with Docker Compose and Docker Machine for both development and production. We’ll specifically focus on-</p>
 
 <ol>
-  <li>Setting up an image for development with code hot-reloading that includes an instance of Chrome for Karma testing</li>
+  <li>Setting up an image for development with code hot-reloading that includes an instance of Chrome for Karma and Protractor testing</li>
   <li>Configuring a lean, production-ready image using multistage builds</li>
 </ol>
 
-<p><em>Dependencies:</em></p>
+<p><em>Updates:</em></p>
 
 <ul>
-  <li>Docker v17.12.0-ce</li>
-  <li>Angular CLI v1.7.1</li>
-  <li>Node v9.6.1</li>
+  <li>May 2019:
+    <ul>
+      <li>Updated to the latest versions of Docker, Node, Angular, and Nginx.</li>
+      <li>Added explanations for various Docker commands and flags.</li>
+      <li>Added a number of notes based on reader comments and feedback.</li>
+      <li>Fixed the running of Protractor e2e tests.</li>
+    </ul>
+  </li>
+</ul>
+
+<p><em>We will be using:</em></p>
+
+<ul>
+  <li>Docker v18.09.2</li>
+  <li>Angular CLI v7.3.9</li>
+  <li>Node v12.2.0</li>
 </ul>
 
 <h2 class="no_toc" id="contents">Contents</h2>
@@ -286,137 +299,231 @@
 
 <h2 id="project-setup">Project Setup</h2>
 
-<p>Install the <a href="https://github.com/angular/angular-cli">Angular CLI</a>:</p>
+<p>Install the <a href="https://github.com/angular/angular-cli">Angular CLI</a> globally:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> @angular/cli@1.7.1
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>npm install <span class="nt">-g</span> @angular/cli@7.3.9
 </code></pre></div></div>
 
 <p>Generate a new app:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ng new something-clever
-<span class="nv">$ </span><span class="nb">cd </span>something-clever
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ng new example
+<span class="nv">$ </span><span class="nb">cd </span>example
 </code></pre></div></div>
 
 <h2 id="docker">Docker</h2>
 
 <p>Add a <em>Dockerfile</em> to the project root:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># base image
-FROM node:9.6.1
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># base image</span>
+<span class="k">FROM</span><span class="s"> node:12.2.0</span>
 
-# install chrome for protractor tests
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" &gt;&gt; /etc/apt/sources.list.d/google.list'
-RUN apt-get update &amp;&amp; apt-get install -yq google-chrome-stable
+<span class="c"># install chrome for protractor tests</span>
+<span class="k">RUN </span>wget <span class="nt">-q</span> <span class="nt">-O</span> - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+<span class="k">RUN </span>sh <span class="nt">-c</span> <span class="s1">'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" &gt;&gt; /etc/apt/sources.list.d/google.list'</span>
+<span class="k">RUN </span>apt-get update <span class="o">&amp;&amp;</span> apt-get install <span class="nt">-yq</span> google-chrome-stable
 
-# set working directory
-RUN mkdir /usr/src/app
-WORKDIR /usr/src/app
+<span class="c"># set working directory</span>
+<span class="k">WORKDIR</span><span class="s"> /app</span>
 
-# add `/usr/src/app/node_modules/.bin` to $PATH
-ENV PATH /usr/src/app/node_modules/.bin:$PATH
+<span class="c"># add `/app/node_modules/.bin` to $PATH</span>
+<span class="k">ENV</span><span class="s"> PATH /app/node_modules/.bin:$PATH</span>
 
-# install and cache app dependencies
-COPY package.json /usr/src/app/package.json
-RUN npm install
-RUN npm install -g @angular/cli@1.7.1
+<span class="c"># install and cache app dependencies</span>
+<span class="k">COPY</span><span class="s"> package.json /app/package.json</span>
+<span class="k">RUN </span>npm install
+<span class="k">RUN </span>npm install <span class="nt">-g</span> @angular/cli@7.3.9
 
-# add app
-COPY . /usr/src/app
+<span class="c"># add app</span>
+<span class="k">COPY</span><span class="s"> . /app</span>
 
-# start app
-CMD ng serve --host 0.0.0.0
+<span class="c"># start app</span>
+<span class="k">CMD</span><span class="s"> ng serve --host 0.0.0.0</span>
 </code></pre></div></div>
 
 <p>Add a <em>.dockerignore</em> as well:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node_modules
 .git
+.gitignore
 </code></pre></div></div>
 
-<p>This will greatly speed up the Docker build process as our local dependencies and git repo will not be sent to the Docker daemon.</p>
+<p>This will speed up the Docker build process as our local dependencies and git repo will not be sent to the Docker daemon.</p>
 
 <p>Build and tag the Docker image:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> something-clever <span class="nb">.</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> example:dev <span class="nb">.</span>
 </code></pre></div></div>
 
 <blockquote>
-  <p>If the <code class="highlighter-rouge">RUN npm install -g @angular/cli@1.7.1</code> results in an infinite loop, you may need to add an <code class="highlighter-rouge">--unsafe</code> flag:</p>
+  <p>If <code class="highlighter-rouge">RUN npm install -g @angular/cli@7.3.9</code> results in an infinite loop, you may need to add an <code class="highlighter-rouge">--unsafe</code> flag:</p>
 
-  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RUN npm install -g @angular/cli@1.7.1 --unsafe
+  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RUN npm install -g @angular/cli@7.3.9 --unsafe
 </code></pre></div>  </div>
   <p>Review this <a href="https://github.com/angular/angular-cli/issues/7389">issue</a> for more info.</p>
 </blockquote>
 
 <p>Then, spin up the container once the build is done:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
-  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
-  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
-  <span class="nt">-p</span> 4200:4200 <span class="se">\</span>
-  <span class="nt">--rm</span> <span class="se">\</span>
-  something-clever
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/app <span class="nt">-v</span> /app/node_modules <span class="nt">-p</span> 4201:4200 <span class="nt">--rm</span> example:dev
 </code></pre></div></div>
 
-<p>Open your browser to <a href="http://localhost:4200">http://localhost:4200</a> and you should see the app. Try making a change to the <code class="highlighter-rouge">AppComponent</code>’s template (<em>src/app/app.component.html</em>) within your code editor. You should see the app hot-reload. Kill the server once done.</p>
+<p>What’s happening here?</p>
+
+<ol>
+  <li>The <a href="https://docs.docker.com/engine/reference/commandline/run/">docker run</a> command creates a new container instance, from the image we just created, and runs it.</li>
+  <li>
+    <p><code class="highlighter-rouge">-v ${PWD}:/app</code> mounts the code into the container at “/app”.</p>
+
+    <blockquote>
+      <p><code class="highlighter-rouge">{PWD}</code> may not work on Windows. See <a href="https://stackoverflow.com/questions/41485217/mount-current-directory-as-a-volume-in-docker-on-windows-10">this</a> Stack Overflow question for more info.</p>
+    </blockquote>
+  </li>
+  <li>Since we want to use the container version of the “node_modules” folder, we configured another volume: <code class="highlighter-rouge">-v /app/node_modules</code>. You should now be able to remove the local “node_modules” flavor.</li>
+  <li>
+    <p><code class="highlighter-rouge">-p 4201:4200</code> exposes port 4200 to other Docker containers on the same network (for inter-container communication) and port 4201 to the host.</p>
+
+    <blockquote>
+      <p>For more, review <a href="https://stackoverflow.com/questions/22111060/what-is-the-difference-between-expose-and-publish-in-docker">this</a> Stack Overflow question.</p>
+    </blockquote>
+  </li>
+  <li>Finally, <code class="highlighter-rouge">--rm</code> <a href="https://docs.docker.com/engine/reference/run/#clean-up---rm">removes</a> the container and volumes after the container exits.</li>
+</ol>
+
+<p>Open your browser to <a href="http://localhost:4201">http://localhost:4201</a> and you should see the app. Try making a change to the <code class="highlighter-rouge">AppComponent</code>’s template (<em>src/app/app.component.html</em>) within your code editor. You should see the app hot-reload. Kill the server once done.</p>
+
+<blockquote>
+  <p>What happens when you add <code class="highlighter-rouge">-it</code>?</p>
+
+  <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/app <span class="nt">-v</span> /app/node_modules <span class="nt">-p</span> 4201:4200 <span class="nt">--rm</span> example:dev
+</code></pre></div>  </div>
+
+  <p>Check your understanding and look this up on your own.</p>
+</blockquote>
 
 <p>Use the <code class="highlighter-rouge">-d</code> flag to run the container in the background:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-d</span> <span class="se">\</span>
-  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
-  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
-  <span class="nt">-p</span> 4200:4200 <span class="se">\</span>
-  <span class="nt">--name</span> something-clever-container <span class="se">\</span>
-  something-clever
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-d</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/app <span class="nt">-v</span> /app/node_modules <span class="nt">-p</span> 4201:4200 <span class="nt">--name</span> foo <span class="nt">--rm</span> example:dev
 </code></pre></div></div>
 
-<p>Once up, update the Karma config to run Chrome in headless mode:</p>
+<p>Once up, update the Karma and Protractor config files to run Chrome in headless mode.</p>
 
-<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">browsers</span><span class="p">:</span> <span class="p">[</span><span class="s1">'ChromeHeadless'</span><span class="p">],</span>
-<span class="nx">customLaunchers</span><span class="p">:</span> <span class="p">{</span>
-  <span class="s1">'ChromeHeadless'</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nl">base</span><span class="p">:</span> <span class="s1">'Chrome'</span><span class="p">,</span>
-    <span class="nx">flags</span><span class="p">:</span> <span class="p">[</span><span class="s1">'--no-sandbox'</span><span class="p">,</span> <span class="s1">'--headless'</span><span class="p">,</span> <span class="s1">'--disable-gpu'</span><span class="p">,</span> <span class="s1">'--remote-debugging-port=9222'</span><span class="p">]</span>
+<p><em>src/karma.conf.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">config</span><span class="p">.</span><span class="kd">set</span><span class="p">({</span>
+    <span class="na">basePath</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
+    <span class="na">frameworks</span><span class="p">:</span> <span class="p">[</span><span class="s1">'jasmine'</span><span class="p">,</span> <span class="s1">'@angular-devkit/build-angular'</span><span class="p">],</span>
+    <span class="na">plugins</span><span class="p">:</span> <span class="p">[</span>
+      <span class="nx">require</span><span class="p">(</span><span class="s1">'karma-jasmine'</span><span class="p">),</span>
+      <span class="nx">require</span><span class="p">(</span><span class="s1">'karma-chrome-launcher'</span><span class="p">),</span>
+      <span class="nx">require</span><span class="p">(</span><span class="s1">'karma-jasmine-html-reporter'</span><span class="p">),</span>
+      <span class="nx">require</span><span class="p">(</span><span class="s1">'karma-coverage-istanbul-reporter'</span><span class="p">),</span>
+      <span class="nx">require</span><span class="p">(</span><span class="s1">'@angular-devkit/build-angular/plugins/karma'</span><span class="p">)</span>
+    <span class="p">],</span>
+    <span class="na">client</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">clearContext</span><span class="p">:</span> <span class="kc">false</span>
+    <span class="p">},</span>
+    <span class="na">coverageIstanbulReporter</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">dir</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'path'</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'../coverage/example'</span><span class="p">),</span>
+      <span class="na">reports</span><span class="p">:</span> <span class="p">[</span><span class="s1">'html'</span><span class="p">,</span> <span class="s1">'lcovonly'</span><span class="p">,</span> <span class="s1">'text-summary'</span><span class="p">],</span>
+      <span class="na">fixWebpackSourcePaths</span><span class="p">:</span> <span class="kc">true</span>
+    <span class="p">},</span>
+    <span class="na">reporters</span><span class="p">:</span> <span class="p">[</span><span class="s1">'progress'</span><span class="p">,</span> <span class="s1">'kjhtml'</span><span class="p">],</span>
+    <span class="na">port</span><span class="p">:</span> <span class="mi">9876</span><span class="p">,</span>
+    <span class="na">colors</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="na">logLevel</span><span class="p">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">LOG_INFO</span><span class="p">,</span>
+    <span class="na">autoWatch</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="c1">// updated</span>
+    <span class="na">browsers</span><span class="p">:</span> <span class="p">[</span><span class="s1">'ChromeHeadless'</span><span class="p">],</span>
+    <span class="c1">// new</span>
+    <span class="na">customLaunchers</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">'ChromeHeadless'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="na">base</span><span class="p">:</span> <span class="s1">'Chrome'</span><span class="p">,</span>
+        <span class="na">flags</span><span class="p">:</span> <span class="p">[</span>
+          <span class="s1">'--no-sandbox'</span><span class="p">,</span>
+          <span class="s1">'--headless'</span><span class="p">,</span>
+          <span class="s1">'--disable-gpu'</span><span class="p">,</span>
+          <span class="s1">'--remote-debugging-port=9222'</span>
+        <span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="na">singleRun</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="na">restartOnFileChange</span><span class="p">:</span> <span class="kc">true</span>
+  <span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p><em>e2e/protractor.conf.js</em>:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="p">{</span> <span class="nx">SpecReporter</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'jasmine-spec-reporter'</span><span class="p">);</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">allScriptsTimeout</span><span class="p">:</span> <span class="mi">11000</span><span class="p">,</span>
+  <span class="na">specs</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s1">'./src/**/*.e2e-spec.ts'</span>
+  <span class="p">],</span>
+  <span class="na">capabilities</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s1">'browserName'</span><span class="p">:</span> <span class="s1">'chrome'</span><span class="p">,</span>
+    <span class="c1">// new</span>
+    <span class="s1">'chromeOptions'</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">'args'</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">'--no-sandbox'</span><span class="p">,</span>
+        <span class="s1">'--headless'</span><span class="p">,</span>
+        <span class="s1">'--window-size=1024,768'</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="na">directConnect</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="na">baseUrl</span><span class="p">:</span> <span class="s1">'http://localhost:4200/'</span><span class="p">,</span>
+  <span class="na">framework</span><span class="p">:</span> <span class="s1">'jasmine'</span><span class="p">,</span>
+  <span class="na">jasmineNodeOpts</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">showColors</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="na">defaultTimeoutInterval</span><span class="p">:</span> <span class="mi">30000</span><span class="p">,</span>
+    <span class="na">print</span><span class="p">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{}</span>
+  <span class="p">},</span>
+  <span class="nx">onPrepare</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">require</span><span class="p">(</span><span class="s1">'ts-node'</span><span class="p">).</span><span class="nx">register</span><span class="p">({</span>
+      <span class="na">project</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'path'</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">'./tsconfig.e2e.json'</span><span class="p">)</span>
+    <span class="p">});</span>
+    <span class="nx">jasmine</span><span class="p">.</span><span class="nx">getEnv</span><span class="p">().</span><span class="nx">addReporter</span><span class="p">(</span><span class="k">new</span> <span class="nx">SpecReporter</span><span class="p">({</span> <span class="na">spec</span><span class="p">:</span> <span class="p">{</span> <span class="na">displayStacktrace</span><span class="p">:</span> <span class="kc">true</span> <span class="p">}</span> <span class="p">}));</span>
   <span class="p">}</span>
-<span class="p">},</span>
+<span class="p">};</span>
 </code></pre></div></div>
 
 <p>Run the unit and e2e tests:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker <span class="nb">exec</span> <span class="nt">-it</span> something-clever-container ng <span class="nb">test</span> <span class="nt">--watch</span><span class="o">=</span><span class="nb">false</span>
-<span class="nv">$ </span>ng e2e
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker <span class="nb">exec</span> <span class="nt">-it</span> foo ng <span class="nb">test</span> <span class="nt">--watch</span><span class="o">=</span><span class="nb">false</span>
+<span class="nv">$ </span>docker <span class="nb">exec</span> <span class="nt">-it</span> foo ng e2e <span class="nt">--port</span> 4202
 </code></pre></div></div>
 
-<p>Stop and then remove the container once done:</p>
+<p>Stop the container once done:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker stop something-clever-container
-<span class="nv">$ </span>docker rm something-clever-container
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker stop foo
 </code></pre></div></div>
 
 <p>Want to use <a href="https://docs.docker.com/compose/">Docker Compose</a>? Add a <em>docker-compose.yml</em> file to the project root:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.7'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
-  <span class="na">something-clever</span><span class="pi">:</span>
-    <span class="na">container_name</span><span class="pi">:</span> <span class="s">something-clever</span>
+  <span class="na">example</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">example</span>
     <span class="na">build</span><span class="pi">:</span>
       <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
       <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
     <span class="na">volumes</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">/usr/src/app/node_modules'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/app'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">/app/node_modules'</span>
     <span class="na">ports</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">4200:4200'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">4201:4200'</span>
 </code></pre></div></div>
 
-<p>Take note of the volumes. Without the <a href="https://success.docker.com/article/Different_Types_of_Volumes">anonymous</a> volume (<code class="highlighter-rouge">'/usr/src/app/node_modules'</code>), the <em>node_modules</em> directory would essentially disappear by the mounting of the host directory at runtime:</p>
+<p>Take note of the volumes. Without the <a href="https://success.docker.com/article/Different_Types_of_Volumes">anonymous</a> volume (<code class="highlighter-rouge">'/app/node_modules'</code>), the <em>node_modules</em> directory would be overwritten by the mounting of the host directory at runtime. In other words, this would happen:</p>
 
 <ul>
-  <li><em>Build</em> - The <code class="highlighter-rouge">node_modules</code> directory is created.</li>
-  <li><em>Run</em> - The current directory is copied into the container, overwriting the <code class="highlighter-rouge">node_modules</code> that were just installed when the container was built.</li>
+  <li><em>Build</em> - The <code class="highlighter-rouge">node_modules</code> directory is created in the image.</li>
+  <li><em>Run</em> - The current directory is mounted into the container, overwriting the <code class="highlighter-rouge">node_modules</code> that were installed during the build.</li>
 </ul>
 
 <p>Build the image and fire up the container:</p>
@@ -426,14 +533,25 @@ CMD ng serve --host 0.0.0.0
 
 <p>Ensure the app is running in the browser and test hot-reloading again. Try both the unit and e2e tests as well:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose run something-clever ng <span class="nb">test</span> <span class="nt">--watch</span><span class="o">=</span><span class="nb">false</span>
-<span class="nv">$ </span>ng e2e
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose <span class="nb">exec </span>example ng <span class="nb">test</span> <span class="nt">--watch</span><span class="o">=</span><span class="nb">false</span>
+<span class="nv">$ </span>docker-compose <span class="nb">exec </span>example ng e2e <span class="nt">--port</span> 4202
 </code></pre></div></div>
 
 <p>Stop the container before moving on:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker-compose stop
 </code></pre></div></div>
+
+<blockquote>
+  <p><em>Windows Users</em>: Having problems getting the volumes to work properly? Review the following resources:</p>
+
+  <ol>
+    <li><a href="https://rominirani.com/docker-on-windows-mounting-host-directories-d96f3f056a2c">Docker on Windows–Mounting Host Directories</a></li>
+    <li><a href="https://blogs.msdn.microsoft.com/stevelasker/2016/06/14/configuring-docker-for-windows-volumes/">Configuring Docker for Windows Shared Drives</a></li>
+  </ol>
+
+  <p>You also may need to add <code class="highlighter-rouge">COMPOSE_CONVERT_WINDOWS_PATHS=1</code> to the environment portion of your Docker Compose file. Review the <a href="https://docs.docker.com/compose/env-file/">Declare default environment variables in file</a> guide for more info.</p>
+</blockquote>
 
 <h2 id="docker-machine">Docker Machine</h2>
 
@@ -453,113 +571,102 @@ CMD ng serve --host 0.0.0.0
 
 <p>Then, build the images:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> something-clever <span class="nb">.</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> example:dev <span class="nb">.</span>
 </code></pre></div></div>
 
 <p>And run the container:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
-  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
-  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
-  <span class="nt">-p</span> 4200:4200 <span class="se">\</span>
-  <span class="nt">--rm</span> <span class="se">\</span>
-  something-clever
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/app <span class="nt">-v</span> /app/node_modules <span class="nt">-p</span> 4201:4200 <span class="nt">--rm</span> example:dev
 </code></pre></div></div>
 
-<p>Test the app again in the browser at <a href="http://DOCKER_MACHINE_IP:4200">http://DOCKER_MACHINE_IP:4200</a>. Also, confirm that auto reload is <em>not</em> working. You can try with Docker Compose as well, but the result will be the same.</p>
+<p>Test the app again in the browser at <a href="http://DOCKER_MACHINE_IP:4201">http://DOCKER_MACHINE_IP:4201</a> (make sure to replace <code class="highlighter-rouge">DOCKER_MACHINE_IP</code> with the actual IP address of the Docker Machine). Also, confirm that auto reload is <em>not</em> working. You can try with Docker Compose as well, but the result will be the same.</p>
 
-<p>To get hot-reload working, we need to add an environment variable:</p>
+<p>To get hot-reload working, we need to add an environment variable: <code class="highlighter-rouge">CHOKIDAR_USEPOLLING=true</code>.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="se">\</span>
-  <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/usr/src/app <span class="se">\</span>
-  <span class="nt">-v</span> /usr/src/app/node_modules <span class="se">\</span>
-  <span class="nt">-p</span> 4200:4200 <span class="se">\</span>
-  <span class="nt">-e</span> <span class="nv">CHOKIDAR_USEPOLLING</span><span class="o">=</span><span class="nb">true</span> <span class="se">\</span>
-  <span class="nt">--rm</span> <span class="se">\</span>
-  something-clever
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-v</span> <span class="k">${</span><span class="nv">PWD</span><span class="k">}</span>:/app <span class="nt">-v</span> /app/node_modules <span class="nt">-p</span> 4201:4200 <span class="nt">-e</span> <span class="nv">CHOKIDAR_USEPOLLING</span><span class="o">=</span><span class="nb">true</span> <span class="nt">--rm</span> example:dev
 </code></pre></div></div>
 
 <p>Test it out again. Then, kill the server and add the environment variable to the <em>docker-compose.yml</em> file:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.7'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
-  <span class="na">something-clever</span><span class="pi">:</span>
-    <span class="na">container_name</span><span class="pi">:</span> <span class="s">something-clever</span>
+  <span class="na">example</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">example</span>
     <span class="na">build</span><span class="pi">:</span>
       <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
       <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile</span>
     <span class="na">volumes</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/usr/src/app'</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">/usr/src/app/node_modules'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">.:/app'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">/app/node_modules'</span>
     <span class="na">ports</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">4200:4200'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">4201:4200'</span>
     <span class="na">environment</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">CHOKIDAR_USEPOLLING=true</span>
 </code></pre></div></div>
 
-<p>Spin up the container. Run the unit tests. Update the <code class="highlighter-rouge">baseUrl</code> in <em>protractor.conf.js</em> with the Docker Machine IP before running the e2e tests.</p>
+<p>Spin up the container. Run the unit tests and e2e tests.</p>
 
 <h2 id="production">Production</h2>
 
 <p>Let’s create a separate Dockerfile for use in production called <em>Dockerfile-prod</em>:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#########################
-### build environment ###
-#########################
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#############</span>
+<span class="c">### build ###</span>
+<span class="c">#############</span>
 
-# base image
-FROM node:9.6.1 as builder
+<span class="c"># base image</span>
+<span class="k">FROM</span><span class="s"> node:12.2.0 as build</span>
 
-# install chrome for protractor tests
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" &gt;&gt; /etc/apt/sources.list.d/google.list'
-RUN apt-get update &amp;&amp; apt-get install -yq google-chrome-stable
+<span class="c"># install chrome for protractor tests</span>
+<span class="k">RUN </span>wget <span class="nt">-q</span> <span class="nt">-O</span> - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+<span class="k">RUN </span>sh <span class="nt">-c</span> <span class="s1">'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" &gt;&gt; /etc/apt/sources.list.d/google.list'</span>
+<span class="k">RUN </span>apt-get update <span class="o">&amp;&amp;</span> apt-get install <span class="nt">-yq</span> google-chrome-stable
 
-# set working directory
-RUN mkdir /usr/src/app
-WORKDIR /usr/src/app
+<span class="c"># set working directory</span>
+<span class="k">WORKDIR</span><span class="s"> /app</span>
 
-# add `/usr/src/app/node_modules/.bin` to $PATH
-ENV PATH /usr/src/app/node_modules/.bin:$PATH
+<span class="c"># add `/app/node_modules/.bin` to $PATH</span>
+<span class="k">ENV</span><span class="s"> PATH /app/node_modules/.bin:$PATH</span>
 
-# install and cache app dependencies
-COPY package.json /usr/src/app/package.json
-RUN npm install
-RUN npm install -g @angular/cli@1.7.1 --unsafe
+<span class="c"># install and cache app dependencies</span>
+<span class="k">COPY</span><span class="s"> package.json /app/package.json</span>
+<span class="k">RUN </span>npm install
+<span class="k">RUN </span>npm install <span class="nt">-g</span> @angular/cli@7.3.9
 
-# add app
-COPY . /usr/src/app
+<span class="c"># add app</span>
+<span class="k">COPY</span><span class="s"> . /app</span>
 
-# run tests
-RUN ng test --watch=false
+<span class="c"># run tests</span>
+<span class="k">RUN </span>ng <span class="nb">test</span> <span class="nt">--watch</span><span class="o">=</span><span class="nb">false</span>
+<span class="k">RUN </span>ng e2e <span class="nt">--port</span> 4202
 
-# generate build
-RUN npm run build
+<span class="c"># generate build</span>
+<span class="k">RUN </span>ng build <span class="nt">--output-path</span><span class="o">=</span>dist
 
-##################
-### production ###
-##################
+<span class="c">############</span>
+<span class="c">### prod ###</span>
+<span class="c">############</span>
 
-# base image
-FROM nginx:1.13.9-alpine
+<span class="c"># base image</span>
+<span class="k">FROM</span><span class="s"> nginx:1.16.0-alpine</span>
 
-# copy artifact build from the 'build environment'
-COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
+<span class="c"># copy artifact build from the 'build environment'</span>
+<span class="k">COPY</span><span class="s"> --from=build /app/dist /usr/share/nginx/html</span>
 
-# expose port 80
-EXPOSE 80
+<span class="c"># expose port 80</span>
+<span class="k">EXPOSE</span><span class="s"> 80</span>
 
-# run nginx
-CMD ["nginx", "-g", "daemon off;"]
+<span class="c"># run nginx</span>
+<span class="k">CMD</span><span class="s"> ["nginx", "-g", "daemon off;"]</span>
 </code></pre></div></div>
 
 <p>Two important things to note:</p>
 
 <ol>
   <li>
-    <p>First, we take advantage of <a href="https://docs.docker.com/engine/userguide/eng-image/multistage-build/">multistage builds</a> to create a temporary image used for building the artifact that is then copied over to the production image. The temporary build image is discarded along with the original files, folders, and dependencies associated with the image. This produces a lean, production-ready image.</p>
+    <p>First, we take advantage of the <a href="https://docs.docker.com/engine/userguide/eng-image/multistage-build/">multistage build</a> pattern to create a temporary image used for building the artifact – the production-ready Angular static files – that is then copied over to the production image. The temporary build image is discarded along with the original files, folders, and dependencies associated with the image. This produces a lean, production-ready image.</p>
 
     <p>In other words, the only thing kept from the first image is the compiled distribution code.</p>
 
@@ -568,30 +675,30 @@ CMD ["nginx", "-g", "daemon off;"]
     </blockquote>
   </li>
   <li>
-    <p>Next, the unit tests are run in the build process, so the build will fail if the tests do not succeed.</p>
+    <p>Next, the unit and e2e tests are run in the build process, so the build will fail if the tests do not succeed.</p>
   </li>
 </ol>
 
 <p>Using the production Dockerfile, build and tag the Docker image:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-f</span> Dockerfile-prod <span class="nt">-t</span> something-clever-prod <span class="nb">.</span>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-f</span> Dockerfile-prod <span class="nt">-t</span> example:prod <span class="nb">.</span>
 </code></pre></div></div>
 
 <p>Spin up the container:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-p</span> 80:80 <span class="nt">--rm</span> something-clever-prod
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-p</span> 80:80 <span class="nt">--rm</span> example:prod
 </code></pre></div></div>
 
-<p>Assuming you are still using the same Docker Machine, navigate to <a href="http://DOCKER_MACHINE_IP">http://DOCKER_MACHINE_IP</a> in your browser.</p>
+<p>Assuming you are still using the same Docker Machine, navigate to <a href="http://DOCKER_MACHINE_IP/">http://DOCKER_MACHINE_IP/</a> in your browser.</p>
 
 <p>Test with a new Docker Compose file as well called <em>docker-compose-prod.yml</em>:</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.5'</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">3.7'</span>
 
 <span class="na">services</span><span class="pi">:</span>
 
-  <span class="na">something-clever-prod</span><span class="pi">:</span>
-    <span class="na">container_name</span><span class="pi">:</span> <span class="s">something-clever-prod</span>
+  <span class="na">example-prod</span><span class="pi">:</span>
+    <span class="na">container_name</span><span class="pi">:</span> <span class="s">example-prod</span>
     <span class="na">build</span><span class="pi">:</span>
       <span class="na">context</span><span class="pi">:</span> <span class="s">.</span>
       <span class="na">dockerfile</span><span class="pi">:</span> <span class="s">Dockerfile-prod</span>
@@ -606,7 +713,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 <p>Test it out once more in your browser. Then, break a test in <em>src/app/app.component.spec.ts</em> and re-build. It should fail:</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ERROR: Service <span class="s1">'something-clever-prod'</span> failed to build:
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ERROR: Service <span class="s1">'example-prod'</span> failed to build:
 The <span class="nb">command</span> <span class="s1">'/bin/sh -c ng test --watch=false'</span> returned a non-zero code: 1
 </code></pre></div></div>
 
