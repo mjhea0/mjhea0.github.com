@@ -154,7 +154,7 @@ services:
       - NODE_ENV=development
 ```
 
-Take note of the volumes. Without the data volume (`'/app/node_modules'`), the *node_modules* directory would be overwritten by the mounting of the host directory at runtime. In other words, this would happen:
+Take note of the volumes. Without the [anonymous](https://success.docker.com/article/Different_Types_of_Volumes) volume (`'/app/node_modules'`), the *node_modules* directory would be overwritten by the mounting of the host directory at runtime. In other words, this would happen:
 
 - *Build* - The `node_modules` directory is created in the image.
 - *Run* - The current directory is mounted into the container, overwriting the `node_modules` that were installed during the build.
