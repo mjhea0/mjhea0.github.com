@@ -641,7 +641,7 @@ That's it!
 1. [Slides](http://mherman.org/presentations/microservice-ping-pong)
 1. [Repo](https://github.com/mjhea0/microservice-ping-pong)
 1. ***[Testdriven.io](http://testdriven.io/) - full tutorial!*** ❤️
-1. [How to Build 12 Factor Microservices on Docker](https://www.packtpub.com/books/content/how-to-build-12-factor-design-microservices-on-docker-part-1)
+1. [How to Build 12 Factor Microservices on Docker](https://hub.packtpub.com/how-to-build-12-factor-design-microservices-on-docker-part-1/)
 1. [Docker Cheat Sheet](https://github.com/wsargent/docker-cheat-sheet)
 
 Cheers!
