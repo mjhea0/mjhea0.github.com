@@ -11,6 +11,7 @@ Here's a list of talks and trainings I've given over the years...
 
 | Date            | Title                                 | Event |
 |-----------------|---------------------------------------|-------|
+| October 2, 2019   | [Flask on Fargate][57] | [vBrownBag][58] |
 | February 14, 2019   | [Modern Front-End Testing with Cypress][54] | N/A |
 | January 29, 2019   | [Cypress'ing Your Way to a Better Night's Sleep][52] | [DenverScript][53] |
 | November 28, 2018   | [Running Vault + Consul on Kubernetes][51] | [Denver Microservices][50] |
@@ -96,3 +97,5 @@ Here's a list of talks and trainings I've given over the years...
 [54]: https://mherman.org/presentations/cypress-testing
 [55]: https://mherman.org/presentations/test-driven-writing
 [56]: https://mherman.org/presentations/node-oauth-openid
+[57]: https://mherman.org/presentations/flask-on-fargate/
+[58]: https://vbrownbag.com/2019/10/episode-followup-flask-on-aws-farget-by-michael-herman/
