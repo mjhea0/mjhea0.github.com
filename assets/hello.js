@@ -3,11 +3,11 @@ config
  */
 
 let content = {
-  text: 'Check out the <em>Microservices with Docker, Flask, and React</em> course!',
-  buttonText: 'Download Now',
+  text: 'Check out my course, <em>Test-Driven Development with Python, Flask, and Docker</em> !',
+  buttonText: 'Available Now',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
-  cookieKey: 'cookieNotificationApr252019',
+  cookieKey: 'cookieNotificationOct312019',
   googleAnalytics: true
 };
 
