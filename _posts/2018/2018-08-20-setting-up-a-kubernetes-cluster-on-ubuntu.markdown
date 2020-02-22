@@ -92,7 +92,7 @@ $ echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" \
 $ apt-get update && apt-get install -y kubeadm kubelet kubectl
 ```
 
-> As of writing, Kubernetes for Ubuntu 18.04 (Bionic) is not yet available, but Ubuntu 16.04 (Xenial) works just fine. Also, Kubernetes 1.11 does *not* officially [support](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.11.md#external-dependencies) Docker 18.06. It should work fine, but it could bring up some unexpected issues.
+> As of writing, Kubernetes for Ubuntu 18.04 (Bionic) is not yet available, but Ubuntu 16.04 (Xenial) works just fine. Also, Kubernetes 1.11 does *not* officially [support](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.11.md#external-dependencies) Docker 18.06. It should work fine, but it could bring up some unexpected issues.
 
 ### Configure Kubernetes
 
