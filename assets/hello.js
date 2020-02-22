@@ -7,7 +7,7 @@ let content = {
   buttonText: 'Available Now',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
-  cookieKey: 'cookieNotificationOct312019',
+  cookieKey: 'cookieNotificationFeb222020',
   googleAnalytics: true
 };
 
