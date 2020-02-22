@@ -4,7 +4,12 @@ title: "About Me"
 permalink: /about
 ---
 
-I’ve worked in various industries, companies large and small, wearing multiple hats. My languages/weapons of choice are Python and JavaScript. Besides development, I enjoy building financial models, tech writing, content marketing, and teaching.
+
+I'm a full-stack web application developer and software architect that specializes in taking products from inception to delivery across the entire stack. I was an early adopter of Docker and the microservices design pattern. I like working on infrastructure and developer tools since it helps make other engineers more productive.
+
+On a personal note, I'm passionate about educating and developing engineers. I co-founded [Real Python](http://www.realpython.com) (which was a successful exit) and led three cohorts teaching full-stack JavaScript at [Galvanize](https://www.galvanize.com/). I also founded [TestDriven Labs](http://testdriven.io/), a platform for mid-level engineers to learn Test-Driven Development (TDD), microservices, and AWS infrastructure.
+
+Besides development, I enjoy running, building financial models, tech writing, content marketing, teaching, and reading well-crafted project READMEs.
 
 <p style="display:none">
 Hey I'm Michael - a ginger since I was born and a Radiohead fan since I developed taste. I can't dance - though there's a video of me on YouTube giving it a try. Seinfeld is the best thing ever, made better when paired with a Colorado IPA. Ask me about the NBA sometime - I absorb what I can before I fall asleep. There's a tattoo under my t-shirt - surprise!
@@ -14,14 +19,15 @@ You can view my full resume in JSON @ [http://mherman.org/herman-resume.json](ht
 
 <img src="/assets/img/me.png" style="max-width: 35%; border:0; box-shadow: none;" alt="me">
 
-### Quotes
+### Thoughts
 
 1. *Programming languages are all different ways of expressing the same thing. A software developer should be able to understand all of them.*
 1. *Open source software is free as in free house. If you want to fix or improve something, either learn to do it yourself or pay a contractor.*
+1. *If you don't know how to solve a problem, start by breaking it down into small, manageable pieces. What do you need in order to solve it? What do you already know? Web developers don't need to know everything; they just need to be able to break a problem up into smaller chunks in order to find the missing information required to solve the problem at hand.*
 
 ### Major Projects
 
-1. [Microservices with Docker, Flask, and React](http://testdriven.io/)
+1. [Microservices with Docker, Flask, and React](https://testdriven.io/bundle/microservices-with-docker-flask-and-react/)
 1. [Real Python](http://www.realpython.com)
 1. [Starter Financial Model](http://www.starterfinancialmodel.com/)
 1. [DiscoverFlask](http://discoverflask.com)
@@ -44,7 +50,7 @@ Tech recruiters: please use "i am the walrus" in your cold email so I know you a
 
 Besides my posts on [this site](/), [Real Python](http://www.realpython.com/blog), and [TestDriven.io](https://testdriven.io/authors/herman), I've published the following articles:
 
-- [The Newest Lean Startup Tool: Kickstarter](https://segment.io/academy/the-newest-lean-startup-tool-is-kickstarter/) (#1 on HackerNews)
+- [The Newest Lean Startup Tool: Kickstarter](https://web.archive.org/web/20160602223034/https://segment.com/academy/archives/the-newest-lean-startup-tool-is-kickstarter/) (#1 on HackerNews)
 - [Learn SQL, dammit!](http://gun.io/blog/learn-sql/) (#1 on HackerNews)
 - [Content Marketing, Evolved](http://gun.io/blog/content-marketing-evolved)
 - [Setting up a Django Project for the Non-Programmer](http://gun.io/blog/setting-up-a-django-project)
@@ -59,4 +65,36 @@ Besides my posts on [this site](/), [Real Python](http://www.realpython.com/blog
 ### Articles about me
 
 - [PyDev of the Week: Michael Herman](http://www.blog.pythonlibrary.org/2014/11/17/pydev-of-the-week-michael-herman/)
-- [Employee Spotlight: Jeff & Michael of Galvanize](https://www.coursereport.com/schools/galvanize#/news/employee-spotlight-jeff-michael-of-galvanize)
+- [Employee Spotlight: Jeff & Michael of Galvanize](https://www.coursereport.com/blog/employee-spotlight-jeff-michael-of-galvanize)
+
+### Uses
+
+#### Hardware
+
+- iPhone SE
+- MacBook Pro 15-inch, Mid 2015
+
+#### Editor and Terminal
+
+- iTerm2 + zsh + oh-my-zsh
+- Sublime Text
+- Visual Studio Code
+
+#### Desktop Apps
+
+- Backblaze
+- Caffeine App
+- Chrome
+- Docker
+- Filezilla
+- Firefox
+- ImageOptim
+- LibreOffice
+- Postgres.app
+- Slack
+- Skitch
+- Skype
+- Spectacle
+- SQLite DB Browser
+- Thunderbird email client
+- VirtualBox
