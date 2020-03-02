@@ -6,7 +6,7 @@ last_modified_at: 2019-05-21
 comments: true
 toc: true
 categories: [docker, vue]
-keywords: "docker, vue, 'vuejs', 'javascript, containerization, vue-cli, vue cli, multistage builds, nginx"
+keywords: "docker, vue, vuejs, javascript, containerization, vue-cli, vue cli, multistage builds, nginx"
 description: "This tutorial looks at how to Dockerize a Vue app."
 ---
 
