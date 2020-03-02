@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Deploying a Jekyll Site to Netlify with Docker and GitLab CI</title>
+  <meta name="description" content="Step-by-step guide covering how to automatically deploy a Jekyll site to Netlify using Docker and GitLab CI.">
+  
+    
+    <meta name="keywords" content="jekyll netlify, docker jekyll, gitlab netlify, gitlab docker, girtlab jekyll">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://mherman.org/blog/deploying-jekyll-netlify-docker-gitlab-ci/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="https://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Deploying a Jekyll Site to Netlify with Docker and GitLab CI">
+  <meta name="twitter:description" content="Step-by-step guide covering how to automatically deploy a Jekyll site to Netlify using Docker and GitLab CI.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+  <link rel="stylesheet" href="/assets/carbon.css">
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?serve=CE7DT27Y&placement=mhermanorg" id="_carbonads_js"></script>
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Deploying a Jekyll Site to Netlify with Docker and GitLab CI</h1>
+    
+    <p class="post-meta">
+      Last updated: <time datetime="2020-03-01T00:00:00-05:00" itemprop="datePublished">Mar 1, 2020</time>
+       • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/docker/">docker</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/devops/">devops</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>This is a step-by-step guide covering how to automatically deploy a <a href="https://jekyllrb.com/">Jekyll</a> site to <a href="https://www.netlify.com/">Netlify</a> using <a href="https://www.docker.com/">Docker</a> and <a href="https://about.gitlab.com/stages-devops-lifecycle/continuous-integration/">GitLab CI/CD</a>.</p>
+
+<h2 class="no_toc" id="contents">Contents</h2>
+
+<ul id="markdown-toc">
+  <li><a href="#assumptions" id="markdown-toc-assumptions">Assumptions</a></li>
+  <li><a href="#docker-setup" id="markdown-toc-docker-setup">Docker Setup</a></li>
+  <li><a href="#gitlab-build" id="markdown-toc-gitlab-build">GitLab Build</a></li>
+  <li><a href="#netlify-api-deployment" id="markdown-toc-netlify-api-deployment">Netlify API Deployment</a></li>
+  <li><a href="#gitlab-deploy" id="markdown-toc-gitlab-deploy">GitLab Deploy</a></li>
+</ul>
+
+<h2 id="assumptions">Assumptions</h2>
+
+<p>This post assumes that have already set up a GitLab repository and a Netlify site. Your Jekyll site should have the following project structure as well:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>├── .gitignore
+└── src
+    ├── 404.html
+    ├── Gemfile
+    ├── Gemfile.lock
+    ├── _config.yml
+    ├── _posts
+    ├── about.markdown
+    └── index.markdown
+</code></pre></div></div>
+
+<h2 id="docker-setup">Docker Setup</h2>
+
+<p>Let’s start by setting up a Dockerfile based on the <a href="https://hub.docker.com/r/jekyll/jekyll/">jekyll/jekyll</a> Docker image to manage a compatible Ruby version for Jekyll along with <a href="https://bundler.io/">bundler</a> and all the <a href="https://rubygems.org/">RubyGems</a>.</p>
+
+<p>Add the <em>Dockerfile</em> to the project root:</p>
+
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> jekyll/jekyll:3.8.0</span>
+
+<span class="k">WORKDIR</span><span class="s"> /tmp</span>
+
+<span class="k">ENV</span><span class="s"> BUNDLER_VERSION 2.1.4</span>
+<span class="k">ENV</span><span class="s"> NOKOGIRI_USE_SYSTEM_LIBRARIES 1</span>
+
+<span class="k">ADD</span><span class="s"> ./src/Gemfile /tmp/</span>
+<span class="k">ADD</span><span class="s"> ./src/Gemfile.lock /tmp/</span>
+
+<span class="k">RUN </span>gem install bundler <span class="nt">-i</span> /usr/gem <span class="nt">-v</span> 2.1.4
+<span class="k">RUN </span>bundle install
+
+<span class="k">WORKDIR</span><span class="s"> /srv/jekyll</span>
+</code></pre></div></div>
+
+<p>Build and tag the image:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">--tag</span> jekyll-docker <span class="nb">.</span>
+</code></pre></div></div>
+
+<p>Once built, spin up the container like so to serve up the site locally on port 4000:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="se">\</span>
+  <span class="nt">-d</span> <span class="nt">-v</span> <span class="nv">$PWD</span>/src:/srv/jekyll <span class="nt">-p</span> 4000:4000 <span class="se">\</span>
+  jekyll-docker bundle <span class="nb">exec </span>jekyll serve <span class="nt">-H</span> 0.0.0.0
+</code></pre></div></div>
+
+<p>Make sure the site is up at <a href="http://localhost:4000/">http://localhost:4000/</a>.</p>
+
+<p>Bring down the container once done:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sh docker stop $(docker ps -q --filter ancestor=jekyll-docker)
+</code></pre></div></div>
+
+<h2 id="gitlab-build">GitLab Build</h2>
+
+<p>With that, to configure the GitLab CI pipeline associated with the repo, add a <em>.gitlab-ci.yml</em> file to the project root:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">image</span><span class="pi">:</span> <span class="s">docker:stable</span>
+
+<span class="na">services</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">docker:dind</span>
+
+<span class="na">stages</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">build</span>
+
+<span class="na">variables</span><span class="pi">:</span>
+  <span class="na">IMAGE</span><span class="pi">:</span> <span class="s">${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}</span>
+
+<span class="na">build</span><span class="pi">:</span>
+  <span class="na">stage</span><span class="pi">:</span> <span class="s">build</span>
+  <span class="na">script</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY</span>
+    <span class="pi">-</span> <span class="s">docker pull $IMAGE:latest || </span><span class="no">true</span>
+    <span class="pi">-</span> <span class="s">docker build --cache-from $IMAGE:latest --tag $IMAGE:latest .</span>
+    <span class="pi">-</span> <span class="s">docker push $IMAGE:latest</span>
+    <span class="pi">-</span> <span class="s">docker run -v $PWD/src:/srv/jekyll $IMAGE:latest bundle exec jekyll build</span>
+</code></pre></div></div>
+
+<p>Here, using <a href="https://hub.docker.com/_/docker">Docker-in-Docker</a>, we defined a single <a href="https://docs.gitlab.com/ee/ci/yaml/#stages">stage</a> called <code class="highlighter-rouge">build</code> that:</p>
+
+<ol>
+  <li>Logs in to the GitLab Container Registry</li>
+  <li>Pulls the previously pushed image (if it exists)</li>
+  <li>Builds and tags the new image</li>
+  <li>Pushes the image up to the GitLab <a href="https://docs.gitlab.com/ee/user/packages/container_registry/">Container Registry</a></li>
+  <li>Creates a Jekyll build</li>
+</ol>
+
+<p>Commit your code and push it up to GitLab. This should trigger a new build, which should pass. You should also see the image in the Container Registry:</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/jekyll-netlify-gitlab/gitlab-container-registry.png" style="max-width:90%;border:0;box-shadow:none;margin-bottom:20px;" alt="gitlab container registry" />
+</div>
+
+<p>This first build should take between five to six minutes to complete. Subsequent builds will be much faster since they will leverage Docker layer caching.</p>
+
+<blockquote>
+  <p>For more on caching check out <a href="https://testdriven.io/blog/faster-ci-builds-with-docker-cache/">Faster CI Builds with Docker Cache</a>.</p>
+</blockquote>
+
+<h2 id="netlify-api-deployment">Netlify API Deployment</h2>
+
+<p>Next, to use the <a href="https://docs.netlify.com/api/get-started/">Netlify API</a> to <a href="https://docs.netlify.com/api/get-started/#deploy-via-api">deploy</a> the Jekyll site, add the following to a <em>deploy.sh</em> script in the project root:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/usr/bin/env bash</span>
+
+zip <span class="nt">-r</span> website.zip ./src/_site
+
+curl <span class="nt">-H</span> <span class="s2">"Content-Type: application/zip"</span> <span class="se">\</span>
+      <span class="nt">-H</span> <span class="s2">"Authorization: Bearer </span><span class="nv">$NETLIFY_ACCESS_TOKEN</span><span class="s2">"</span> <span class="se">\</span>
+      <span class="nt">--data-binary</span> <span class="s2">"@website.zip"</span> <span class="se">\</span>
+      https://api.netlify.com/api/v1/sites/<span class="nv">$NETLIFY_SUBDOMAIN</span>.netlify.com/deploys
+</code></pre></div></div>
+
+<p>To test locally, you’ll first need to create an access token (if you haven’t already done so), which can be <a href="https://docs.netlify.com/cli/get-started/#authentication">obtained</a> from either the command line or the Netlify UI.</p>
+
+<p>Once obtained, set it as an environment variable along with your Netlify subdomain:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">export </span><span class="nv">NETLIFY_ACCESS_TOKEN</span><span class="o">=</span>&lt;your_access_token&gt;
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">NETLIFY_SUBDOMAIN</span><span class="o">=</span>&lt;your_subdomain&gt;
+</code></pre></div></div>
+
+<p>Generate the static files:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="se">\</span>
+  <span class="nt">-v</span> <span class="nv">$PWD</span>/src:/srv/jekyll <span class="nt">-p</span> 4000:4000 <span class="se">\</span>
+  jekyll-docker bundle <span class="nb">exec </span>jekyll build
+</code></pre></div></div>
+
+<p>Make sure the “src/_site” directory was created before deploying the site:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>chmod +x deploy.sh
+<span class="nv">$ </span>./deploy.sh
+</code></pre></div></div>
+
+<p>So, after zipping the “src/_site” directory, we sent a POST request to <code class="highlighter-rouge">https://api.netlify.com/api/v1/sites/$NETLIFY_SUBDOMAIN.netlify.com/deploys</code> with the zip file in the HTTP request body.</p>
+
+<p>Make sure the site was deployed before moving on.</p>
+
+<h2 id="gitlab-deploy">GitLab Deploy</h2>
+
+<p>Finally, to automate the deploy, add a new stage to the <em>.gitlab-ci.yml</em> file, called <code class="highlighter-rouge">deploy</code>, to deploy the site to Netlify after a successful build:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">image</span><span class="pi">:</span> <span class="s">docker:stable</span>
+
+<span class="na">services</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">docker:dind</span>
+
+<span class="na">stages</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">build</span>
+  <span class="pi">-</span> <span class="s">deploy</span>
+
+<span class="na">variables</span><span class="pi">:</span>
+  <span class="na">IMAGE</span><span class="pi">:</span> <span class="s">${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}</span>
+
+<span class="na">build</span><span class="pi">:</span>
+  <span class="na">stage</span><span class="pi">:</span> <span class="s">build</span>
+  <span class="na">script</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY</span>
+    <span class="pi">-</span> <span class="s">docker pull $IMAGE:latest || </span><span class="no">true</span>
+    <span class="pi">-</span> <span class="s">docker build --cache-from $IMAGE:latest --tag $IMAGE:latest .</span>
+    <span class="pi">-</span> <span class="s">docker push $IMAGE:latest</span>
+    <span class="pi">-</span> <span class="s">docker run -v $PWD/src:/srv/jekyll $IMAGE:latest bundle exec jekyll build</span>
+  <span class="na">artifacts</span><span class="pi">:</span>
+    <span class="na">paths</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">src/_site</span>
+
+<span class="na">deploy</span><span class="pi">:</span>
+  <span class="na">stage</span><span class="pi">:</span> <span class="s">deploy</span>
+  <span class="na">script</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">apk add --update zip curl</span>
+    <span class="pi">-</span> <span class="s">chmod +x ./deploy.sh</span>
+    <span class="pi">-</span> <span class="s">/bin/sh ./deploy.sh</span>
+
+
+  <span class="na">artifacts</span><span class="pi">:</span>
+    <span class="na">paths</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">src/_site</span>
+</code></pre></div></div>
+
+<p>Take note of the new <a href="https://docs.gitlab.com/ee/user/project/pipelines/job_artifacts.html">artifacts</a> definition added to the <code class="highlighter-rouge">build</code> stage:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">artifacts</span><span class="pi">:</span>
+  <span class="na">paths</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">src/_site</span>
+</code></pre></div></div>
+
+<p>If the <code class="highlighter-rouge">build</code> stage succeeds, the generated static files from the <em>src/_site</em> directory – the result of <code class="highlighter-rouge">docker run -v $PWD/src:/srv/jekyll $IMAGE:latest bundle exec jekyll build</code> – will be passed on to subsequent stages.</p>
+
+<p>Add the <code class="highlighter-rouge">NETLIFY_ACCESS_TOKEN</code> and <code class="highlighter-rouge">NETLIFY_SUBDOMAIN</code> variables to your project’s CI/CD settings: Settings &gt; CI / CD &gt; Variables:</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/jekyll-netlify-gitlab/gitlab-variables.png" style="max-width:90%;border:0;box-shadow:none;margin-bottom:20px;" alt="gitlab variables" />
+</div>
+
+<p>Commit your code and push it up again to GitLab to trigger a new build. After the <code class="highlighter-rouge">build</code> stage completes, you should be able to see the artifact on the job page:</p>
+
+<div style="text-align:center;">
+  <img src="/assets/img/blog/jekyll-netlify-gitlab/gitlab-job-artifact.png" style="max-width:90%;border:0;box-shadow:none;margin-bottom:20px;" alt="gitlab job artifact" />
+</div>
+
+<p>The site should be deployed during the <code class="highlighter-rouge">deploy</code> stage.</p>
+
+<hr />
+
+<p>You can find the code in the <a href="https://gitlab.com/michaelherman/jekyll-netlify-gitlab">jekyll-netlify-gitlab</a> repo on GitLab.</p>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'https://mherman.org/blog/deploying-jekyll-netlify-docker-gitlab-ci/';
+    this.page.identifier = 'https://mherman.org/blog/deploying-jekyll-netlify-docker-gitlab-ci/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2020 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://www.linkedin.com/in/mjhea0/"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+</html>
