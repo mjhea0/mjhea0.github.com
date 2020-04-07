@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "Dockerizing a React App"
-date: 2019-05-17
-last_modified_at: 2019-05-17
+date: 2020-04-07
+last_modified_at: 2020-04-07
 comments: true
 toc: true
 categories: [docker, react]
@@ -12,7 +12,7 @@ redirect_from:
   - /blog/2017/12/07/dockerizing-a-react-app/
 ---
 
-[Docker](https://www.docker.com/) is a containerization tool that helps speed up the development and deployment processes. If you're working with microservices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.
+[Docker](https://www.docker.com/) is a containerization tool used to speed up the development and deployment processes. If you're working with microservices, Docker makes it much easier to link together small, independent services. It also helps to eliminate environment-specific bugs since you can replicate your production environment locally.
 
 This tutorial demonstrates how to Dockerize a React app using the [Create React App](https://facebook.github.io/create-react-app/) generator. We'll specifically focus on-
 
@@ -27,6 +27,10 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 
 *Updates:*
 
+- April 2020:
+  - Updated to the latest versions of Docker, Node, React, and Nginx.
+  - Removed the Docker Machine section.
+  - Updated the `docker run` commands to account for [changes]((https://github.com/facebook/create-react-app/issues/8688)) in `react-scripts` v3.4.1.
 - May 2019:
   - Updated to the latest versions of Docker, Node, React, and Nginx.
   - Added explanations for various Docker commands and flags.
@@ -39,9 +43,9 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 
 *We will be using:*
 
-- Docker v18.09.2
-- Create React App v3.0.1
-- Node v12.2.0
+- Docker v19.03.8.
+- Create React App v3.4.1
+- Node v13.12.0
 
 {% if page.toc %}
 {% include contents.html %}
@@ -52,13 +56,13 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 Install [Create React App](https://github.com/facebookincubator/create-react-app) globally:
 
 ```sh
-$ npm install -g create-react-app@3.0.1
+$ npm install -g create-react-app@3.4.1
 ```
 
 Generate a new app:
 
 ```sh
-$ create-react-app sample
+$ npm init react-app sample --use-npm
 $ cd sample
 ```
 
@@ -67,8 +71,8 @@ $ cd sample
 Add a *Dockerfile* to the project root:
 
 ```dockerfile
-# base image
-FROM node:12.2.0-alpine
+# pull official base image
+FROM node:13.12.0-alpine
 
 # set working directory
 WORKDIR /app
@@ -76,10 +80,14 @@ WORKDIR /app
 # add `/app/node_modules/.bin` to $PATH
 ENV PATH /app/node_modules/.bin:$PATH
 
-# install and cache app dependencies
-COPY package.json /app/package.json
+# install app dependencies
+COPY package.json ./
+COPY package-lock.json ./
 RUN npm install --silent
-RUN npm install react-scripts@3.0.1 -g --silent
+RUN npm install react-scripts@3.4.1 -g --silent
+
+# add app
+COPY . ./
 
 # start app
 CMD ["npm", "start"]
@@ -91,9 +99,13 @@ Add a *.dockerignore*:
 
 ```
 node_modules
+build
+.dockerignore
+Dockerfile
+Dockerfile.prod
 ```
 
-This will speed up the Docker build process as our local dependencies will not be sent to the Docker daemon.
+This will speed up the Docker build process as our local dependencies inside the "node_modules" directory will not be sent to the Docker daemon.
 
 Build and tag the Docker image:
 
@@ -104,14 +116,24 @@ $ docker build -t sample:dev .
 Then, spin up the container once the build is done:
 
 ```sh
-$ docker run -v ${PWD}:/app -v /app/node_modules -p 3001:3000 --rm sample:dev
+$ docker run \
+    -it \
+    --rm \
+    -v ${PWD}:/app \
+    -v /app/node_modules \
+    -p 3001:3000 \
+    -e CHOKIDAR_USEPOLLING=true \
+    sample:dev
 ```
 
 > If you run into an `"ENOENT: no such file or directory, open '/app/package.json".` error, you may need to add an additional volume: `-v /app/package.json`.
 
 What's happening here?
 
-1. The [docker run](https://docs.docker.com/engine/reference/commandline/run/) command creates a new container instance, from the image we just created, and runs it.
+1. The [docker run](https://docs.docker.com/engine/reference/commandline/run/) command creates and runs a new container instance from the image we just created.
+1. `-it` starts the container in [interactive mode](https://stackoverflow.com/questions/48368411/what-is-docker-run-it-flag). Why is this necessary? As of [version 3.4.1](https://github.com/facebook/create-react-app/issues/8688), `react-scripts`  exits after start-up (unless CI mode is specified) which will cause the container to exit. Thus the need for interactive mode.
+
+1. `--rm` [removes](https://docs.docker.com/engine/reference/run/#clean-up---rm) the container and volumes after the container exits.
 1. `-v ${PWD}:/app` mounts the code into the container at "/app".
 
     > `{PWD}` may not work on Windows. See [this](https://stackoverflow.com/questions/41485217/mount-current-directory-as-a-volume-in-docker-on-windows-10) Stack Overflow question for more info.
@@ -121,14 +143,21 @@ What's happening here?
 
     > For more, review [this](https://stackoverflow.com/questions/22111060/what-is-the-difference-between-expose-and-publish-in-docker) Stack Overflow question.
 
-1. Finally, `--rm` [removes](https://docs.docker.com/engine/reference/run/#clean-up---rm) the container and volumes after the container exits.
+1. Finally, `-e CHOKIDAR_USEPOLLING=true` [enables](https://create-react-app.dev/docs/troubleshooting/#npm-start-doesn-t-detect-changes) a polling mechanism via [chokidar](https://github.com/paulmillr/chokidar) (which wraps `fs.watch`, `fs.watchFile`, and `fsevents`) so that hot-reloading will work.
 
 Open your browser to [http://localhost:3001/](http://localhost:3001/) and you should see the app. Try making a change to the `App` component within your code editor. You should see the app hot-reload. Kill the server once done.
 
-> What happens when you add `-it`?
+> What happens when you add `d` to ` -it`?
 >
 ```sh
-$ docker run -it -v ${PWD}:/app -v /app/node_modules -p 3001:3000 --rm sample:dev
+$ docker run \
+    -itd \
+    --rm \
+    -v ${PWD}:/app \
+    -v /app/node_modules \
+    -p 3001:3000 \
+    -e CHOKIDAR_USEPOLLING=true \
+    sample:dev
 ```
 >
 > Check your understanding and look this up on your own.
@@ -149,9 +178,9 @@ services:
       - '.:/app'
       - '/app/node_modules'
     ports:
-      - '3001:3000'
+      - 3001:3000
     environment:
-      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
 ```
 
 Take note of the volumes. Without the [anonymous](https://success.docker.com/article/Different_Types_of_Volumes) volume (`'/app/node_modules'`), the *node_modules* directory would be overwritten by the mounting of the host directory at runtime. In other words, this would happen:
@@ -178,81 +207,24 @@ $ docker-compose stop
 >
 > You also may need to add `COMPOSE_CONVERT_WINDOWS_PATHS=1` to the environment portion of your Docker Compose file. Review the [Declare default environment variables in file](https://docs.docker.com/compose/env-file/) guide for more info.
 
-## Docker Machine
-
-To get hot-reloading to work with [Docker Machine](https://docs.docker.com/machine/) and [VirtualBox](https://docs.docker.com/machine/get-started/) you'll need to [enable](https://create-react-app.dev/docs/troubleshooting/#npm-start-doesn-t-detect-changes) a polling mechanism via [chokidar](https://github.com/paulmillr/chokidar) (which wraps `fs.watch`, `fs.watchFile`, and `fsevents`).
-
-Create a new Machine:
-
-```sh
-$ docker-machine create -d virtualbox sample
-$ docker-machine env sample
-$ eval $(docker-machine env sample)
-```
-
-Grab the IP address:
-
-```sh
-$ docker-machine ip sample
-```
-
-Then, build the images and run the container:
-
-```sh
-$ docker build -t sample:dev .
-
-$ docker run -v ${PWD}:/app -v /app/node_modules -p 3001:3000 --rm sample:dev
-```
-
-Test the app again in the browser at [http://DOCKER_MACHINE_IP:3001/](http://DOCKER_MACHINE_IP:3001/) (make sure to replace `DOCKER_MACHINE_IP` with the actual IP address of the Docker Machine). Also, confirm that hot reload is *not* working. You can try with Docker Compose as well, but the result will be the same.
-
-To get hot-reload working, we need to add an environment variable: `CHOKIDAR_USEPOLLING=true`.
-
-```sh
-$ docker run -v ${PWD}:/app -v /app/node_modules -p 3001:3000 -e CHOKIDAR_USEPOLLING=true --rm sample:dev
-```
-
-Test it out again. Ensure that hot reload works again.
-
-Updated *docker-compose.yml* file:
-
-```yaml
-version: '3.7'
-
-services:
-
-  sample:
-    container_name: sample
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - '.:/app'
-      - '/app/node_modules'
-    ports:
-      - '3001:3000'
-    environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
-```
-
 ## Production
 
-Let's create a separate Dockerfile for use in production called *Dockerfile-prod*:
+Let's create a separate Dockerfile for use in production called *Dockerfile.prod*:
 
 ```dockerfile
 # build environment
-FROM node:12.2.0-alpine as build
+FROM node:13.12.0-alpine as build
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
-COPY package.json /app/package.json
-RUN npm install --silent
-RUN npm install react-scripts@3.0.1 -g --silent
-COPY . /app
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm ci --silent
+RUN npm install react-scripts@3.4.1 -g --silent
+COPY . ./
 RUN npm run build
 
 # production environment
-FROM nginx:1.16.0-alpine
+FROM nginx:stable-alpine
 COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
@@ -265,18 +237,18 @@ Here, we take advantage of the [multistage build](https://docs.docker.com/engine
 Using the production Dockerfile, build and tag the Docker image:
 
 ```sh
-$ docker build -f Dockerfile-prod -t sample:prod .
+$ docker build -f Dockerfile.prod -t sample:prod .
 ```
 
 Spin up the container:
 
 ```sh
-$ docker run -it -p 80:80 --rm sample:prod
+$ docker run -it --rm -p 1337:80 sample:prod
 ```
 
-Assuming you are still using the same Docker Machine, navigate to [http://DOCKER_MACHINE_IP](http://DOCKER_MACHINE_IP) in your browser.
+Navigate to [http://localhost:1337/](http://localhost:1337/) in your browser to view the app.
 
-Test with a new Docker Compose file as well called *docker-compose-prod.yml*:
+Test with a new Docker Compose file as well called *docker-compose.prod.yml*:
 
 ```yaml
 version: '3.7'
@@ -287,51 +259,46 @@ services:
     container_name: sample-prod
     build:
       context: .
-      dockerfile: Dockerfile-prod
+      dockerfile: Dockerfile.prod
     ports:
-      - '80:80'
+      - '1337:80'
 ```
 
 Fire up the container:
 
 ```sh
-$ docker-compose -f docker-compose-prod.yml up -d --build
+$ docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
-Test it out once more in your browser. Then, if you're done, go ahead and destroy the Machine:
-
-```sh
-$ eval $(docker-machine env -u)
-$ docker-machine rm sample
-```
+Test it out once more in your browser.
 
 ## React Router and Nginx
 
 If you're using [React Router](https://reacttraining.com/react-router/), then you'll need to change the default Nginx config at build time:
 
 ```dockerfile
-RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx/nginx.conf /etc/nginx/conf.d
+COPY --from=build /app/build /usr/share/nginx/html
 ```
 
-Add the changes to *Dockerfile-prod*:
+Add the change to *Dockerfile.prod*:
 
 ```dockerfile
 # build environment
-FROM node:12.2.0-alpine as build
+FROM node:13.12.0-alpine as build
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
-COPY package.json /app/package.json
-RUN npm install --silent
-RUN npm install react-scripts@3.0.1 -g --silent
-COPY . /app
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm ci --silent
+RUN npm install react-scripts@3.4.1 -g --silent
+COPY . ./
 RUN npm run build
 
 # production environment
-FROM nginx:1.16.0-alpine
+FROM nginx:stable-alpine
 COPY --from=build /app/build /usr/share/nginx/html
-RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx/nginx.conf /etc/nginx/conf.d
+# new
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
@@ -367,4 +334,4 @@ server {
 
 ## Next Steps
 
-With that, you should now be able to add React to a larger Docker-powered project for both development and production environments. If you'd like to learn more about working with React and Docker along with building and testing microservices, check out the [Microservices with Docker, Flask, and React](https://testdriven.io/) course.
+With that, you should now be able to add React to a larger Docker-powered project for both development and production environments. If you'd like to learn more about working with React and Docker along with building and testing microservices, check out the [Microservices with Docker, Flask, and React](https://testdriven.io/bundle/microservices-with-docker-flask-and-react/) course bundle at [TestDriven.io](https://testdriven.io).
