@@ -3,13 +3,15 @@ config
  */
 
 let content = {
-  text: 'Check out my course, <em>Test-Driven Development with Python, Flask, and Docker</em> !',
-  buttonText: 'Available Now',
+  text: 'Check out my courses on <em>Test-Driven Development, Docker, and Microservices</em> !',
+  buttonText: 'Click Here',
   buttonLink: 'https://testdriven.io',
   cookieExpiration: 30,
-  cookieKey: 'cookieNotificationFeb222020',
+  cookieKey: 'cookieNotificationApr082020',
   googleAnalytics: true
 };
+
+
 
 /*
 hellobar html string
