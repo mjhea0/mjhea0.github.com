@@ -1121,7 +1121,7 @@ LogInSuccess: Observable<any> = this.actions.pipe(
 );
 ```
 
-Version 5.5 of RXJS introduced the `pipe` [method](https://github.com/ReactiveX/rxjs/blob/master/doc/pipeable-operators.md), which is used to compose a number of functions to act on the observable.  Again, `ofType` associates the effect with an action while `tap` performs a side effect transparently. In other words, it returns an observable identical to the source. In our case, we're adding the token to localStorage and then redirecting the user to `/`.
+Version 5.5 of RXJS introduced the `pipe` [method](https://rxjs.dev/guide/v6/pipeable-operators), which is used to compose a number of functions to act on the observable.  Again, `ofType` associates the effect with an action while `tap` performs a side effect transparently. In other words, it returns an observable identical to the source. In our case, we're adding the token to localStorage and then redirecting the user to `/`.
 
 > Check out the comments for [pipe](https://github.com/ReactiveX/rxjs/blob/5.5.5/src/Observable.ts#L305) and [tap](https://github.com/ReactiveX/rxjs/blob/5.5.5/src/operators/tap.ts#L14), respectively, from the source code.
 

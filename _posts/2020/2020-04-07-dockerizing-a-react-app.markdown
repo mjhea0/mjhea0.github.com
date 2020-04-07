@@ -30,7 +30,7 @@ This tutorial demonstrates how to Dockerize a React app using the [Create React 
 - April 2020:
   - Updated to the latest versions of Docker, Node, React, and Nginx.
   - Removed the Docker Machine section.
-  - Updated the `docker run` commands to account for [changes]((https://github.com/facebook/create-react-app/issues/8688)) in `react-scripts` v3.4.1.
+  - Updated the `docker run` commands to account for [changes](https://github.com/facebook/create-react-app/issues/8688) in `react-scripts` v3.4.1.
 - May 2019:
   - Updated to the latest versions of Docker, Node, React, and Nginx.
   - Added explanations for various Docker commands and flags.
