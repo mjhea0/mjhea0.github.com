@@ -97,7 +97,7 @@ For example -
 
 Simply add this to that same file.
 
-You can find and test themes online before applying them [here](http://colorsublime.com/).
+You can find and test themes online before applying them [here](https://colorsublime.github.io/).
 
 > Advanced users should look into customizing [key bindings](http://sublime-text-unofficial-documentation.readthedocs.org/en/latest/reference/key_bindings.html), [macros](http://sublime-text-unofficial-documentation.readthedocs.org/en/latest/extensibility/macros.html), and [code snippets](http://sublime-text-unofficial-documentation.readthedocs.org/en/latest/extensibility/snippets.html).
 
