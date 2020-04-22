@@ -4,6 +4,9 @@ title: "About Me"
 permalink: /about
 ---
 
+Current status: Co-founder / Lead Engineer at [Monitaur](https://monitaur.ai/).
+
+--
 
 I'm a full-stack web application developer and software architect that specializes in taking products from inception to delivery across the entire stack. I was an early adopter of Docker and the microservices design pattern. I like working on infrastructure and developer tools since it helps make other engineers more productive.
 
