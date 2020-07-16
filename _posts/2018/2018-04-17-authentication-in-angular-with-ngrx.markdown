@@ -553,9 +553,9 @@ With that, let's move on to NGRX!
 
 ### Install NGRX Store
 
-State management is difficult. As your application scales, state generally scatters across your application, tucked away in various nooks and crannies. Although it's not an issue yet, it's a good idea to set a solid foundation to help ensure that, going forward, state management is easier and more predictable. This is where [NGRX Store](https://github.com/ngrx/platform/blob/master/docs/effects/README.md) comes into play. It helps to solve this problem by managing state in a single, immutable data store.
+State management is difficult. As your application scales, state generally scatters across your application, tucked away in various nooks and crannies. Although it's not an issue yet, it's a good idea to set a solid foundation to help ensure that, going forward, state management is easier and more predictable. This is where [NGRX Store](https://ngrx.io/guide/store) comes into play. It helps to solve this problem by managing state in a single, immutable data store.
 
-[Core tenets](https://github.com/ngrx/platform/blob/master/docs/store/README.md):
+Core tenets
 
 1. State is a single immutable data structure
 1. Actions describe state changes
@@ -762,7 +762,7 @@ Both the `logIn` and `signUp` methods return `Observable`s and create new `User`
 
 ### Install NGRX Effects
 
-[NGRX Effects](https://github.com/ngrx/platform/blob/master/docs/effects/README.md) listen for actions dispatched from the NGRX Store, perform some logic (e.g., a side effect), and then dispatch a new action.
+[NGRX Effects](https://ngrx.io/guide/effects) listen for actions dispatched from the NGRX Store, perform some logic (e.g., a side effect), and then dispatch a new action.
 
 <div style="text-align:left;padding-top:10px;padding-left:10px;padding-bottom:20px;">
   <img src="/assets/img/blog/angular-auth-ngrx/angular-ngrx-store-effects-flow.png" style="max-width:90%;border:0;box-shadow:none;" alt="angular ngrx store + effects flow">
@@ -1686,7 +1686,7 @@ export const reducers = {
 export const selectAuthState = createFeatureSelector<AppState>('auth');
 ```
 
-`createFeatureSelector` is a [selector](https://github.com/ngrx/platform/blob/master/docs/store/selectors.md) used to query the state.
+`createFeatureSelector` is a [selector](https://ngrx.io/guide/store/selectors) used to query the state.
 
 `SignUpComponent`:
 
@@ -2454,8 +2454,7 @@ Looking for some challenges?
 1. Add some additional actions and effects: `[Auth] Signup Redirect` and `[Auth] Login Redirect`
 1. Refactor out native form validation (`ngNativeValidate`) and add in reactive Angular form validation
 1. Add unit and end-to-end tests
-1. Configure NGRX [Router Store](https://github.com/ngrx/platform/blob/master/docs/router-store/README.md) so that the Angular Router has access to state
-1. Add Docker to simplify the development workflow (see [Dockerizing an Angular App
-](http://mherman.org/blog/2018/02/26/dockerizing-an-angular-app) for more info)
+1. Configure NGRX [Router Store](https://ngrx.io/guide/router-store) so that the Angular Router has access to state
+1. Add Docker to simplify the development workflow (see [Dockerizing an Angular App](http://mherman.org/blog/2018/02/26/dockerizing-an-angular-app) for more info)
 1. Remove all `console.log` statements
 1. Use a [cookie instead of localStorage](https://stackoverflow.com/questions/43466159/how-to-set-a-cookie-for-jwt-token-in-angular-2/43475915)
