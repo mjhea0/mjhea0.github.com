@@ -6,7 +6,7 @@ last_modified_at: 2020-03-01
 comments: true
 toc: true
 categories: [docker, devops]
-keywords: "jekyll netlify, docker jekyll, gitlab netlify, gitlab docker, girtlab jekyll"
+keywords: "jekyll netlify, docker jekyll, gitlab netlify, gitlab docker, gitlab jekyll"
 description: "Step-by-step guide covering how to automatically deploy a Jekyll site to Netlify using Docker and GitLab CI."
 ---
 
