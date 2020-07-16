@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  
+  
+  <title>Pulling Images From Private Docker Registries on GitLab CI</title>
+  <meta name="description" content="Step-by-step guide covering how to use an image from a private Docker registry as the base for GitLab Runner&#39;s Docker executor.">
+  
+    
+    <meta name="keywords" content="gitlab docker, gitlab docker private registry, gitlab ecr">
+  
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="https://mherman.org/blog/gitlab-ci-private-docker-registry/">
+  
+  
+  <link rel="alternate" type="application/rss+xml" title="Michael Herman" href="https://mherman.org/feed.xml">
+
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:title" content="Pulling Images From Private Docker Registries on GitLab CI">
+  <meta name="twitter:description" content="Step-by-step guide covering how to use an image from a private Docker registry as the base for GitLab Runner&#39;s Docker executor.">
+  
+  
+
+  <script type="text/javascript">
+  WebFontConfig = {
+    google: { families: [ 'Bitter:400,700,400italic:latin' ] }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  
+    
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-37074204-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+
+  
+</head>
+
+
+  <link rel="stylesheet" href="/assets/hello.css">
+  
+    
+      <link rel="stylesheet" href="/assets/carbon.css">
+    
+  
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="color-bar">
+    <div class="bar bar1"></div>
+    <div class="bar bar2"></div>
+    <div class="bar bar3"></div>
+    <div class="bar bar4"></div>
+    <div class="bar bar5"></div>
+    <div class="bar bar6"></div>
+  </div>
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Michael Herman</a>
+
+    <nav class="site-nav">
+      
+        
+        <a class="page-link" href="/">Blog</a>
+      
+        
+        <a class="page-link" href="/about">About</a>
+      
+        
+        <a class="page-link" href="/talks">Talks</a>
+      
+        
+        <a class="page-link" href="/feed.xml">RSS</a>
+      
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        
+          
+            <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?serve=CE7DT27Y&placement=mhermanorg" id="_carbonads_js"></script>
+          
+        
+
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    
+      <h1 class="post-title" itemprop="name headline">Pulling Images From Private Docker Registries on GitLab CI</h1>
+    
+    <p class="post-meta">
+      Last updated: <time datetime="2020-07-16T00:00:00-05:00" itemprop="datePublished">Jul 16, 2020</time>
+       • 
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/docker/">docker</a>,
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <a href="/categories/devops/">devops</a>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+</p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Want to use an image from a private Docker registry as the base for GitLab Runner’s Docker executor?</p>
+
+<p><a href="https://aws.amazon.com/ecr/">ECR</a> example:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">&lt;AWS_ACCOUNT_ID&gt;.dkr.ecr.&lt;AWS_REGION&gt;.amazonaws.com/&lt;NAMESPACE&gt;:&lt;TAG&gt;</span>
+</code></pre></div></div>
+
+<p>Full job:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">test:api:dev</span><span class="pi">:</span>
+  <span class="na">stage</span><span class="pi">:</span> <span class="s">test</span>
+  <span class="na">image</span><span class="pi">:</span> <span class="s">&lt;AWS_ACCOUNT_ID&gt;.dkr.ecr.&lt;AWS_REGION&gt;.amazonaws.com/&lt;NAMESPACE&gt;:&lt;TAG&gt;</span>
+  <span class="na">services</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">postgres:latest</span>
+    <span class="pi">-</span> <span class="s">redis:latest</span>
+  <span class="na">variables</span><span class="pi">:</span>
+    <span class="na">POSTGRES_DB</span><span class="pi">:</span> <span class="s">data_api</span>
+    <span class="na">POSTGRES_USER</span><span class="pi">:</span> <span class="s">runner</span>
+    <span class="na">POSTGRES_PASSWORD</span><span class="pi">:</span> <span class="s">runner</span>
+    <span class="na">DATABASE_URL</span><span class="pi">:</span> <span class="s">postgres://runner:runner@postgres:5432/data_api</span>
+  <span class="na">script</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">cd api</span>
+    <span class="pi">-</span> <span class="s">export DEBUG=1</span>
+    <span class="pi">-</span> <span class="s">export ENVIRONMENT=dev</span>
+    <span class="pi">-</span> <span class="s">export CELERY_BROKER_URL=redis://redis</span>
+    <span class="pi">-</span> <span class="s">export CELERY_RESULT_BACKEND=redis://redis</span>
+    <span class="pi">-</span> <span class="s">python -m pytest -p no:warnings .</span>
+    <span class="pi">-</span> <span class="s">flake8 .</span>
+    <span class="pi">-</span> <span class="s">black --exclude="migrations|env" --check .</span>
+    <span class="pi">-</span> <span class="s">isort --skip=migrations --skip=env --check-only</span>
+    <span class="pi">-</span> <span class="s">export DEBUG=0</span>
+    <span class="pi">-</span> <span class="s">export ENVIRONMENT=prod</span>
+    <span class="pi">-</span> <span class="s">python manage.py check --deploy --fail-level=WARNING</span>
+</code></pre></div></div>
+
+<p>Assuming the image exists on the registry, you can set the <code class="highlighter-rouge">DOCKER_AUTH_CONFIG</code> variable within your project’s Settings &gt; CI/CD page:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"auths"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"registry.example.com:5000"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"auth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TBD"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>The value of <code class="highlighter-rouge">auth</code> is a base64-encoded version of your username and password that you use to authenticate into the registry:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">echo</span> <span class="nt">-n</span> <span class="s2">"my_username:my_password"</span> | base64
+</code></pre></div></div>
+
+<p>Continuing with the ECR example, you can generate a password using the following command:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">--rm</span> <span class="se">\</span>
+    <span class="nt">-e</span> <span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span>&lt;AWS_ACCESS_KEY_ID&gt; <span class="se">\</span>
+    <span class="nt">-e</span> <span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span>&lt;AWS_SECRET_ACCESS_KEY&gt; <span class="se">\</span>
+    amazon/aws-cli ecr get-login-password <span class="se">\</span>
+        <span class="nt">--region</span> &lt;AWS_REGION&gt;
+</code></pre></div></div>
+
+<p>To test, run:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker login <span class="nt">-u</span> AWS <span class="nt">-p</span> &lt;GENERATED_PASSWORD&gt; &lt;AWS_ACCOUNT_ID&gt;.dkr.ecr.&lt;AWS_REGION&gt;.amazonaws.com
+
+Login Succeeded
+</code></pre></div></div>
+
+<p>Now, add the <code class="highlighter-rouge">DOCKER_AUTH_CONFIG</code> variable to your project’s Settings &gt; CI/CD page:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s2">"auths"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="s2">"registry.example.com:5000"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"auth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;GENERATED_PASSWORD&gt;"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Test out your build. You should see something similar to the following in your logs, indicating that the login was successful:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Authenticating with credentials from <span class="nv">$DOCKER_AUTH_CONFIG</span>
+Pulling docker image <span class="o">[</span>MASKED].dkr.ecr.us-east-1.amazonaws.com/api:latest ...
+</code></pre></div></div>
+
+<p>Unfortunately, we’re not done yet since the generated password/token from the <a href="https://docs.aws.amazon.com/cli/latest/reference/ecr/get-login-password.html">get-login-password</a> command is only valid for 12 hours. So, we need to dynamically update the <code class="highlighter-rouge">DOCKER_AUTH_CONFIG</code> variable with a new password. We can set up a new job for this:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">build:aws_auth</span><span class="pi">:</span>
+  <span class="na">stage</span><span class="pi">:</span> <span class="s">build</span>
+  <span class="na">services</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">docker:dind</span>
+  <span class="na">image</span><span class="pi">:</span> <span class="s">docker:stable</span>
+  <span class="na">variables</span><span class="pi">:</span>
+    <span class="na">DOCKER_DRIVER</span><span class="pi">:</span> <span class="s">overlay2</span>
+    <span class="na">DOCKER_BUILDKIT</span><span class="pi">:</span> <span class="s">1</span>
+  <span class="na">script</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID</span>
+    <span class="pi">-</span> <span class="s">export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY</span>
+    <span class="pi">-</span> <span class="s">export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY</span>
+    <span class="pi">-</span> <span class="s">export AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION</span>
+    <span class="pi">-</span> <span class="s">export TOKEN=$TOKEN</span>
+    <span class="pi">-</span> <span class="s">export PROJECT_ID=$PROJECT_ID</span>
+    <span class="pi">-</span> <span class="s">apk add --no-cache curl jq bash</span>
+    <span class="pi">-</span> <span class="s">chmod +x ./aws_auth.sh</span>
+    <span class="pi">-</span> <span class="s">bash ./aws_auth.sh</span>
+</code></pre></div></div>
+
+<p>Here, after exporting the appropriate environment variables (so we can access them in the <em>aws_auth.sh</em> script), we installed the appropriate dependencies, and then ran the <em>aws_auth.sh</em> script.</p>
+
+<p><em>aws_auth.sh</em>:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+<span class="nb">set</span> <span class="nt">-e</span>
+
+<span class="nv">AWS_PASSWORD</span><span class="o">=</span><span class="k">$(</span>docker run <span class="nt">--rm</span> <span class="se">\</span>
+    <span class="nt">-e</span> <span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="nv">$AWS_ACCESS_KEY_ID</span> <span class="se">\</span>
+    <span class="nt">-e</span> <span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span><span class="nv">$AWS_SECRET_ACCESS_KEY</span> <span class="se">\</span>
+    amazon/aws-cli ecr get-login-password <span class="se">\</span>
+    <span class="nt">--region</span> <span class="nv">$AWS_DEFAULT_REGION</span><span class="k">)</span>
+<span class="nv">ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="nt">-n</span> <span class="s2">"AWS:</span><span class="nv">$AWS_PASSWORD</span><span class="s2">"</span> | base64<span class="k">)</span>
+<span class="nv">PAYLOAD</span><span class="o">=</span><span class="k">$(</span> jq <span class="nt">-n</span> <span class="nt">--arg</span> userpass <span class="s2">"</span><span class="nv">$ENCODED</span><span class="s2">"</span> <span class="s1">'{"auths": {"263993132376.dkr.ecr.us-east-1.amazonaws.com": {"auth": $userpass}}}'</span> <span class="k">)</span>
+curl <span class="nt">--request</span> PUT <span class="nt">--header</span> <span class="s2">"PRIVATE-TOKEN:</span><span class="nv">$TOKEN</span><span class="s2">"</span> <span class="s2">"https://gitlab.com/api/v4/projects/</span><span class="nv">$PROJECT_ID</span><span class="s2">/variables/DOCKER_AUTH_CONFIG"</span> <span class="nt">--form</span> <span class="s2">"value=</span><span class="nv">$PAYLOAD</span><span class="s2">"</span>
+</code></pre></div></div>
+
+<p>What’s happening?</p>
+
+<ol>
+  <li>We generated a new password from the <code class="highlighter-rouge">get-login-password</code> command and assigned it to <code class="highlighter-rouge">AWS_PASSWORD</code></li>
+  <li>We then base64 encoded the username and password and assigned it to <code class="highlighter-rouge">ENCODED</code></li>
+  <li>We used jq to create the necessary JSON for the value of the <code class="highlighter-rouge">DOCKER_AUTH_CONFIG</code> variable</li>
+  <li>Finally, using a GitLab <a href="https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html">Personal access token</a> we updated the <code class="highlighter-rouge">DOCKER_AUTH_CONFIG</code> variable</li>
+</ol>
+
+<p>Make sure to add all variables you project’s Settings &gt; CI/CD page.</p>
+
+<p>Now, the <code class="highlighter-rouge">DOCKER_AUTH_CONFIG</code> variable should be updated with a new password for each build.</p>
+
+<p>That’s it!</p>
+
+<p>–</p>
+
+<p>Helpful Resources:</p>
+
+<ol>
+  <li>GitLab Runner Issue Thread - <a href="https://gitlab.com/gitlab-org/gitlab-runner/-/issues/1583">Pull images from aws ecr or private registry</a></li>
+  <li>GitLab Docs - <a href="https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#define-an-image-from-a-private-container-registry">Define an image from a private Container Registry</a></li>
+</ol>
+
+  </div>
+
+  <!-- addthis -->
+  
+    <div class="sharing">
+  <br>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
+  </div>
+  <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50e5f1cc35ad077d"></script>
+  <!-- AddThis Button END -->
+  <br>
+</div>
+
+  
+
+  <!-- disqus -->
+  
+    <div id="disqus_thread"></div>
+
+<script>
+  var disqus_config = function () {
+    this.page.url = 'https://mherman.org/blog/gitlab-ci-private-docker-registry/';
+    this.page.identifier = 'https://mherman.org/blog/gitlab-ci-private-docker-registry/';
+  };
+
+  (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = '//' + 'michaelherman' + '.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  
+
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <p>
+      
+
+
+
+
+<div>
+  <hr>
+  <p>
+    <span>Copyright &copy; 2020 - Michael Herman</span>
+    <br>
+    <small>Questions? michael at mherman dot org</small><br>
+    <small><a href="#">Back to top</a></small>
+    <br>
+    <span>
+      <a href="https://github.com/mjhea0"><i class="fa fa-github-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://twitter.com/mikeherman"><i class="fa fa-twitter-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://www.linkedin.com/in/mjhea0/"><i class="fa fa-linkedin-square" style="font-size:2em" aria-hidden="true"></i></a>
+      <a href="https://www.youtube.com/hermanmu"><i class="fa fa-youtube-square" style="font-size:2em" aria-hidden="true"></i></a>
+    </span>
+  </p>
+</div>
+
+    </p>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+  <script type="text/javascript" src="/assets/hello.js"></script>
+</html>
